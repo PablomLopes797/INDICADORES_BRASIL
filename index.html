@@ -10,39 +10,17 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
 <style>
-/* ============================================================
-   DESIGN SYSTEM — PAINEL EXECUTIVO
-   ============================================================ */
 :root{
-  --bg:#060a13;
-  --bg-grad-1:#0b1426;
-  --bg-grad-2:#060a13;
-  --card:#0f1729;
-  --card-2:#141f36;
-  --card-3:#1a2742;
-  --line:#1e2b47;
-  --line-soft:#182339;
-  --txt:#e9eefb;
-  --txt-2:#b8c5e0;
-  --muted:#7d8dae;
-  --muted-2:#4d5a75;
-
-  --blue:#3b82f6;
-  --cyan:#22d3ee;
-  --green:#22c55e;
-  --amber:#f59e0b;
-  --orange:#fb923c;
-  --red:#ef4444;
-  --rose:#f43f5e;
-  --purple:#a855f7;
-
-  --radius:14px;
-  --radius-sm:9px;
+  --bg:#060a13;--bg-grad-1:#0b1426;--bg-grad-2:#060a13;
+  --card:#0f1729;--line:#1e2b47;--line-soft:#182339;
+  --txt:#e9eefb;--txt-2:#b8c5e0;--muted:#7d8dae;--muted-2:#4d5a75;
+  --blue:#3b82f6;--cyan:#22d3ee;--green:#22c55e;--amber:#f59e0b;
+  --orange:#fb923c;--red:#ef4444;--rose:#f43f5e;--purple:#a855f7;
+  --radius:14px;--radius-sm:9px;
   --shadow:0 10px 30px -12px rgba(0,0,0,.75);
   --mono:'SF Mono',ui-monospace,'JetBrains Mono',Menlo,Consolas,monospace;
   --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
 }
-
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{
@@ -51,29 +29,22 @@ body{
     radial-gradient(1200px 700px at 12% -12%, #14224a 0%, transparent 55%),
     radial-gradient(900px 600px at 95% 0%, #0d2b3d 0%, transparent 50%),
     linear-gradient(180deg,var(--bg-grad-1) 0%,var(--bg-grad-2) 42%);
-  background-attachment:fixed;
-  color:var(--txt);
-  -webkit-font-smoothing:antialiased;
-  font-size:14px;
-  min-height:100%;
+  background-attachment:fixed;color:var(--txt);-webkit-font-smoothing:antialiased;
+  font-size:14px;min-height:100%;
 }
-
 ::-webkit-scrollbar{height:10px;width:10px}
 ::-webkit-scrollbar-track{background:#0a1120}
 ::-webkit-scrollbar-thumb{background:#243352;border-radius:8px;border:2px solid #0a1120}
 ::-webkit-scrollbar-thumb:hover{background:#31456c}
-
 .wrap{max-width:1920px;margin:0 auto;padding:20px 24px 70px}
 
-/* ===================== TOPBAR ===================== */
+/* TOPBAR */
 .topbar{
   display:flex;align-items:center;gap:20px;flex-wrap:wrap;
   padding:16px 20px;margin-bottom:18px;
   background:linear-gradient(135deg,rgba(20,31,54,.92),rgba(12,19,35,.92));
-  border:1px solid var(--line);
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
-  backdrop-filter:blur(14px);
+  border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);backdrop-filter:blur(14px);
   position:relative;overflow:hidden;
 }
 .topbar::before{
@@ -91,37 +62,22 @@ body{
 .brand-logo svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .brand-text h1{font-size:17px;font-weight:700;letter-spacing:-.3px;line-height:1.15}
 .brand-text p{font-size:11.5px;color:var(--muted);letter-spacing:.7px;text-transform:uppercase;font-weight:600;margin-top:2px}
-
 .topbar-spacer{flex:1;min-width:10px}
-
 .filters{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
 .field{display:flex;flex-direction:column;gap:5px}
-.field label{
-  font-size:10px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;
-  color:var(--muted);padding-left:2px;
-}
+.field label{font-size:10px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:var(--muted);padding-left:2px}
 .field select,.field input{
-  background:#0b1323;color:var(--txt);
-  border:1px solid var(--line);
-  border-radius:var(--radius-sm);
-  padding:9px 12px;font-size:13px;font-family:var(--sans);
-  font-weight:600;outline:none;min-width:132px;
-  transition:border-color .16s, box-shadow .16s, background .16s;
-  cursor:pointer;
+  background:#0b1323;color:var(--txt);border:1px solid var(--line);
+  border-radius:var(--radius-sm);padding:9px 12px;font-size:13px;
+  font-family:var(--sans);font-weight:600;outline:none;min-width:132px;
+  transition:border-color .16s, box-shadow .16s, background .16s;cursor:pointer;
 }
 .field input[type=month]{min-width:150px}
 .field select:hover,.field input:hover{border-color:#2c3d61;background:#0e1729}
-.field select:focus,.field input:focus{
-  border-color:var(--blue);
-  box-shadow:0 0 0 3px rgba(59,130,246,.18);
-}
+.field select:focus,.field input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.18)}
 .field select option{background:#0b1323}
 
-/* segmented */
-.seg{
-  display:flex;background:#0b1323;border:1px solid var(--line);
-  border-radius:var(--radius-sm);padding:3px;gap:3px;
-}
+.seg{display:flex;background:#0b1323;border:1px solid var(--line);border-radius:var(--radius-sm);padding:3px;gap:3px}
 .seg button{
   background:transparent;border:0;color:var(--muted);
   font-family:var(--sans);font-size:12px;font-weight:700;
@@ -129,16 +85,11 @@ body{
   transition:all .16s;white-space:nowrap;letter-spacing:.2px;
 }
 .seg button:hover{color:var(--txt-2);background:rgba(255,255,255,.04)}
-.seg button.active{
-  background:linear-gradient(135deg,#2563eb,#1d4ed8);
-  color:#fff;box-shadow:0 4px 12px -4px rgba(37,99,235,.8);
-}
+.seg button.active{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;box-shadow:0 4px 12px -4px rgba(37,99,235,.8)}
 
-/* buttons */
 .btn{
   display:inline-flex;align-items:center;gap:8px;
-  background:#16223c;color:var(--txt-2);
-  border:1px solid var(--line);
+  background:#16223c;color:var(--txt-2);border:1px solid var(--line);
   padding:10px 15px;border-radius:var(--radius-sm);
   font-family:var(--sans);font-size:12.5px;font-weight:700;
   cursor:pointer;transition:all .16s;white-space:nowrap;letter-spacing:.2px;
@@ -146,122 +97,66 @@ body{
 .btn:hover{background:#1d2c4b;color:#fff;border-color:#2f4269;transform:translateY(-1px)}
 .btn:active{transform:translateY(0)}
 .btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.btn-primary{
-  background:linear-gradient(135deg,#2563eb,#0891b2);
-  color:#fff;border-color:transparent;
-  box-shadow:0 8px 20px -8px rgba(37,99,235,.9);
-}
+.btn-primary{background:linear-gradient(135deg,#2563eb,#0891b2);color:#fff;border-color:transparent;box-shadow:0 8px 20px -8px rgba(37,99,235,.9)}
 .btn-primary:hover{background:linear-gradient(135deg,#3b82f6,#06b6d4);border-color:transparent}
-.btn-danger:hover{background:#3b1218;border-color:#7f1d1d;color:#fca5a5}
 .btn-ghost{background:transparent}
 
-/* ===================== KPI ===================== */
-.kpis{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(196px,1fr));
-  gap:14px;margin-bottom:18px;
-}
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(196px,1fr));gap:14px;margin-bottom:18px}
 .kpi{
   position:relative;overflow:hidden;
   background:linear-gradient(150deg,rgba(20,31,54,.95),rgba(11,18,33,.95));
-  border:1px solid var(--line);
-  border-radius:var(--radius);
-  padding:16px 17px 15px;
-  box-shadow:var(--shadow);
+  border:1px solid var(--line);border-radius:var(--radius);
+  padding:16px 17px 15px;box-shadow:var(--shadow);
   transition:transform .18s, border-color .18s;
 }
 .kpi:hover{transform:translateY(-2px);border-color:#2b3d62}
 .kpi::after{
   content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
-  background:var(--c,var(--blue));
-  box-shadow:0 0 18px -2px var(--c,var(--blue));
+  background:var(--c,var(--blue));box-shadow:0 0 18px -2px var(--c,var(--blue));
 }
 .kpi-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
-.kpi-label{
-  font-size:10.5px;font-weight:800;letter-spacing:1.2px;
-  text-transform:uppercase;color:var(--muted);
-}
-.kpi-badge{
-  font-size:10px;font-weight:800;padding:3px 7px;border-radius:20px;
-  background:rgba(255,255,255,.06);color:var(--muted);letter-spacing:.4px;
-  border:1px solid rgba(255,255,255,.07);
-}
-.kpi-value{
-  font-family:var(--mono);
-  font-size:30px;font-weight:700;letter-spacing:-1.2px;line-height:1;
-  color:var(--c,var(--txt));
-  text-shadow:0 0 26px color-mix(in srgb, var(--c,#3b82f6) 40%, transparent);
-}
-.kpi-sub{
-  margin-top:9px;font-size:11.5px;color:var(--muted);
-  display:flex;align-items:center;gap:6px;font-weight:600;
-}
+.kpi-label{font-size:10.5px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted)}
+.kpi-badge{font-size:10px;font-weight:800;padding:3px 7px;border-radius:20px;background:rgba(255,255,255,.06);color:var(--muted);letter-spacing:.4px;border:1px solid rgba(255,255,255,.07)}
+.kpi-value{font-family:var(--mono);font-size:30px;font-weight:700;letter-spacing:-1.2px;line-height:1;color:var(--c,var(--txt));text-shadow:0 0 26px color-mix(in srgb, var(--c,#3b82f6) 40%, transparent)}
+.kpi-sub{margin-top:9px;font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:6px;font-weight:600}
 .kpi-sub b{color:var(--txt-2);font-family:var(--mono);font-weight:700}
 
-/* ===================== CHARTS ===================== */
-.charts{
-  display:grid;grid-template-columns:1fr 340px;gap:14px;margin-bottom:18px;
-}
+/* CHARTS */
+.charts{display:grid;grid-template-columns:1fr 340px;gap:14px;margin-bottom:18px}
 @media(max-width:1100px){.charts{grid-template-columns:1fr}}
 .card{
   background:linear-gradient(150deg,rgba(17,26,45,.95),rgba(10,17,31,.95));
-  border:1px solid var(--line);
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
-  overflow:hidden;
+  border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);overflow:hidden;
 }
-.card-head{
-  display:flex;align-items:center;justify-content:space-between;gap:12px;
-  padding:14px 18px;border-bottom:1px solid var(--line-soft);
-}
-.card-title{
-  font-size:12px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;
-  color:var(--txt-2);display:flex;align-items:center;gap:9px;
-}
-.card-title::before{
-  content:'';width:3px;height:14px;border-radius:2px;
-  background:linear-gradient(180deg,var(--cyan),var(--blue));
-}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line-soft)}
+.card-title{font-size:12px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;color:var(--txt-2);display:flex;align-items:center;gap:9px}
+.card-title::before{content:'';width:3px;height:14px;border-radius:2px;background:linear-gradient(180deg,var(--cyan),var(--blue))}
 .card-body{padding:14px 16px}
 .chart-box{height:250px;position:relative}
 .chart-box canvas{max-width:100%}
 
-/* ===================== TABELA ===================== */
+/* TABLE */
 .table-card{margin-bottom:18px}
-.table-scroll{
-  overflow:auto;max-height:min(66vh,760px);
-  border-top:1px solid var(--line-soft);
-}
-table.grid{
-  border-collapse:separate;border-spacing:0;
-  font-size:12.5px;width:100%;
-}
-
-/* header */
+.table-scroll{overflow:auto;max-height:min(66vh,760px);border-top:1px solid var(--line-soft)}
+table.grid{border-collapse:separate;border-spacing:0;font-size:12.5px;width:100%}
 table.grid thead th{
   position:sticky;top:0;z-index:4;
   background:linear-gradient(180deg,#16223c,#111a2e);
   border-bottom:1px solid var(--line);
   padding:9px 6px;
   font-family:var(--mono);font-size:11px;font-weight:700;
-  color:var(--txt-2);text-align:center;
-  min-width:52px;letter-spacing:.3px;
+  color:var(--txt-2);text-align:center;min-width:60px;letter-spacing:.3px;
   box-shadow:inset -1px 0 0 rgba(255,255,255,.03);
 }
 table.grid thead th b{display:block;font-size:12.5px;color:#fff;font-weight:800}
-table.grid thead th i{
-  display:block;font-style:normal;font-size:8.5px;color:var(--muted-2);
-  font-weight:700;letter-spacing:.6px;margin-top:2px;
-}
+table.grid thead th i{display:block;font-style:normal;font-size:8.5px;color:var(--muted-2);font-weight:700;letter-spacing:.6px;margin-top:2px}
 table.grid thead th.we{background:linear-gradient(180deg,#1a1c30,#141727)}
 table.grid thead th.we b{color:#8ea3c9}
-table.grid thead th.today{
-  background:linear-gradient(180deg,#1d3a6b,#152a52);
-  box-shadow:inset 0 -2px 0 var(--cyan);
-}
+table.grid thead th.today{background:linear-gradient(180deg,#1d3a6b,#152a52);box-shadow:inset 0 -2px 0 var(--cyan)}
 table.grid thead th.today b{color:#7dd3fc}
 
-/* sticky col */
 table.grid th.corner{
   position:sticky;left:0;z-index:6;
   background:linear-gradient(135deg,#16223c,#111a2e);
@@ -277,23 +172,18 @@ table.grid th.total-col{
   min-width:96px;width:96px;font-size:11.5px;color:#fff;
 }
 
-/* cells */
 table.grid td{
   padding:8px 6px;text-align:right;
-  font-family:var(--mono);font-size:12.5px;font-weight:600;
-  color:var(--txt);
-  border-bottom:1px solid rgba(30,43,71,.45);
-  white-space:nowrap;
+  font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--txt);
+  border-bottom:1px solid rgba(30,43,71,.45);white-space:nowrap;
   transition:background .12s;
 }
 table.grid tbody tr:hover td{filter:brightness(1.18)}
 table.grid td.zero{color:var(--muted-2) !important;background:transparent !important}
-table.grid td.empty{color:#2b3category;color:#2b364d !important;background:transparent !important}
+table.grid td.empty{color:#2b364d !important;background:transparent !important}
 
-/* row label */
 table.grid td.rowlabel{
-  position:sticky;left:0;z-index:3;
-  background:#0e1729;
+  position:sticky;left:0;z-index:3;background:#0e1729;
   text-align:left;padding-left:18px;
   font-family:var(--sans);font-size:12px;font-weight:700;
   letter-spacing:.35px;color:var(--txt-2);
@@ -302,165 +192,95 @@ table.grid td.rowlabel{
   box-shadow:1px 0 0 var(--line), 8px 0 14px -10px rgba(0,0,0,.9);
   border-bottom:1px solid rgba(30,43,71,.6);
 }
-table.grid td.rowlabel .dot{
-  width:8px;height:8px;border-radius:50%;flex:none;
-  background:var(--c,var(--blue));
-  box-shadow:0 0 10px 0 var(--c,var(--blue));
-}
+table.grid td.rowlabel .dot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--c,var(--blue));box-shadow:0 0 10px 0 var(--c,var(--blue))}
 table.grid tbody tr:hover td.rowlabel{background:#131f36}
 
 table.grid td.total-cell{
-  position:sticky;right:0;z-index:3;
-  background:#141f36;color:#fff;font-weight:800;font-size:13px;
+  position:sticky;right:0;z-index:3;background:#141f36;color:#fff;
+  font-weight:800;font-size:13px;
   box-shadow:-1px 0 0 var(--line), -8px 0 14px -10px rgba(0,0,0,.9);
 }
 table.grid tbody tr:hover td.total-cell{background:#1b2843}
-
-/* derived row */
 table.grid tr.derived td.rowlabel{background:#120f22;color:#c4b5fd}
 table.grid tr.derived td.total-cell{background:#1a1430;color:#ddd6fe}
 
-/* legenda */
-.legend{
-  display:flex;flex-wrap:wrap;gap:16px;
-  padding:12px 18px;border-top:1px solid var(--line-soft);
-  background:rgba(9,15,28,.6);
-}
-.legend span{
-  display:flex;align-items:center;gap:7px;
-  font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.3px;
-}
-.legend span i{
-  width:9px;height:9px;border-radius:2px;display:block;
-  box-shadow:0 0 8px -1px currentColor;
-}
+.legend{display:flex;flex-wrap:wrap;gap:16px;padding:12px 18px;border-top:1px solid var(--line-soft);background:rgba(9,15,28,.6)}
+.legend span{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.3px}
+.legend span i{width:9px;height:9px;border-radius:2px;display:block;box-shadow:0 0 8px -1px currentColor}
 
-/* ===================== MODAL ===================== */
-.overlay{
-  position:fixed;inset:0;background:rgba(3,6,13,.82);
-  backdrop-filter:blur(6px);
-  display:none;align-items:center;justify-content:center;
-  z-index:100;padding:24px;
-}
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(3,6,13,.82);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:100;padding:24px}
 .overlay.show{display:flex}
-.modal{
-  background:linear-gradient(150deg,#131e35,#0c1425);
-  border:1px solid var(--line);
-  border-radius:18px;
-  width:min(880px,100%);max-height:88vh;
-  display:flex;flex-direction:column;
-  box-shadow:0 40px 90px -30px #000;
-  animation:pop .22s cubic-bezier(.2,.9,.3,1.2);
-  overflow:hidden;
-}
+.modal{background:linear-gradient(150deg,#131e35,#0c1425);border:1px solid var(--line);border-radius:18px;width:min(880px,100%);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 40px 90px -30px #000;animation:pop .22s cubic-bezier(.2,.9,.3,1.2);overflow:hidden}
 @keyframes pop{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
-.modal-head{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:18px 22px;border-bottom:1px solid var(--line-soft);
-}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line-soft)}
 .modal-head h2{font-size:15px;font-weight:800;letter-spacing:.4px}
 .modal-head p{font-size:11.5px;color:var(--muted);margin-top:3px;font-weight:500}
 .modal-body{padding:20px 22px;overflow:auto;flex:1}
-.modal-foot{
-  display:flex;justify-content:flex-end;gap:10px;
-  padding:16px 22px;border-top:1px solid var(--line-soft);
-  background:rgba(9,15,28,.5);
-}
-.x-btn{
-  background:transparent;border:0;color:var(--muted);cursor:pointer;
-  font-size:22px;line-height:1;padding:4px 8px;border-radius:8px;transition:.15s;
-}
+.modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:16px 22px;border-top:1px solid var(--line-soft);background:rgba(9,15,28,.5)}
+.x-btn{background:transparent;border:0;color:var(--muted);cursor:pointer;font-size:22px;line-height:1;padding:4px 8px;border-radius:8px;transition:.15s}
 .x-btn:hover{background:rgba(255,255,255,.07);color:#fff}
-
-/* dropzone */
-.drop{
-  border:2px dashed #26375a;border-radius:14px;
-  padding:38px 24px;text-align:center;cursor:pointer;
-  transition:.2s;background:rgba(13,21,38,.6);
-}
+.drop{border:2px dashed #26375a;border-radius:14px;padding:38px 24px;text-align:center;cursor:pointer;transition:.2s;background:rgba(13,21,38,.6)}
 .drop:hover,.drop.over{border-color:var(--blue);background:rgba(37,99,235,.09)}
 .drop svg{width:40px;height:40px;stroke:var(--blue);fill:none;stroke-width:1.6;margin-bottom:12px;opacity:.85}
 .drop h3{font-size:14px;font-weight:700;margin-bottom:5px}
 .drop p{font-size:12px;color:var(--muted)}
-
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:18px 0}
-.stat{
-  background:rgba(13,21,38,.75);border:1px solid var(--line);
-  border-radius:10px;padding:12px 14px;
-}
+.stat{background:rgba(13,21,38,.75);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
 .stat span{display:block;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:6px}
 .stat b{font-family:var(--mono);font-size:20px;font-weight:700}
 .stat.ok b{color:var(--green)}
 .stat.warn b{color:var(--amber)}
 .stat.err b{color:var(--red)}
-
 .preview{overflow:auto;max-height:250px;border:1px solid var(--line);border-radius:10px}
 .preview table{border-collapse:collapse;width:100%;font-size:11.5px;font-family:var(--mono)}
-.preview th{
-  position:sticky;top:0;background:#16223c;padding:8px 10px;text-align:left;
-  font-family:var(--sans);font-size:10px;letter-spacing:.8px;text-transform:uppercase;
-  color:var(--muted);font-weight:700;border-bottom:1px solid var(--line);
-}
+.preview th{position:sticky;top:0;background:#16223c;padding:8px 10px;text-align:left;font-family:var(--sans);font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);font-weight:700;border-bottom:1px solid var(--line)}
 .preview td{padding:7px 10px;border-bottom:1px solid rgba(30,43,71,.5);color:var(--txt-2);white-space:nowrap}
 .preview tr:last-child td{border-bottom:0}
 
-/* toast */
 .toasts{position:fixed;right:22px;bottom:22px;display:flex;flex-direction:column;gap:10px;z-index:200}
-.toast{
-  display:flex;align-items:center;gap:11px;
-  background:linear-gradient(135deg,#16223c,#101a2e);
-  border:1px solid var(--line);border-left:3px solid var(--blue);
-  border-radius:11px;padding:13px 17px;min-width:270px;max-width:400px;
-  box-shadow:0 20px 44px -16px #000;font-size:12.5px;font-weight:600;
-  animation:slideIn .26s cubic-bezier(.2,.9,.3,1.2);
-}
+.toast{display:flex;align-items:center;gap:11px;background:linear-gradient(135deg,#16223c,#101a2e);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:11px;padding:13px 17px;min-width:270px;max-width:400px;box-shadow:0 20px 44px -16px #000;font-size:12.5px;font-weight:600;animation:slideIn .26s cubic-bezier(.2,.9,.3,1.2)}
 @keyframes slideIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
 .toast.ok{border-left-color:var(--green)}
 .toast.err{border-left-color:var(--red)}
 .toast.warn{border-left-color:var(--amber)}
 .toast small{display:block;color:var(--muted);font-weight:500;margin-top:2px;font-size:11px}
 
-/* loader */
-.loader{
-  position:fixed;inset:0;background:rgba(4,7,14,.72);backdrop-filter:blur(4px);
-  display:none;align-items:center;justify-content:center;z-index:300;flex-direction:column;gap:16px;
-}
+.loader{position:fixed;inset:0;background:rgba(4,7,14,.72);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:300;flex-direction:column;gap:16px}
 .loader.show{display:flex}
-.spinner{
-  width:44px;height:44px;border-radius:50%;
-  border:3px solid rgba(59,130,246,.18);border-top-color:var(--blue);
-  animation:spin .8s linear infinite;
-}
+.spinner{width:44px;height:44px;border-radius:50%;border:3px solid rgba(59,130,246,.18);border-top-color:var(--blue);animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loader p{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase}
 
-/* banner modo demo */
-.demo-banner{
-  display:none;align-items:center;gap:11px;
-  background:linear-gradient(90deg,rgba(245,158,11,.14),rgba(245,158,11,.04));
-  border:1px solid rgba(245,158,11,.35);border-radius:11px;
-  padding:11px 16px;margin-bottom:16px;font-size:12.5px;color:#fcd34d;font-weight:600;
-}
+.demo-banner{display:none;align-items:center;gap:11px;background:linear-gradient(90deg,rgba(245,158,11,.14),rgba(245,158,11,.04));border:1px solid rgba(245,158,11,.35);border-radius:11px;padding:11px 16px;margin-bottom:16px;font-size:12.5px;color:#fcd34d;font-weight:600}
 .demo-banner.show{display:flex}
 .demo-banner svg{width:16px;height:16px;stroke:#fbbf24;fill:none;stroke-width:2;flex:none}
-.demo-banner code{
-  background:rgba(0,0,0,.35);padding:2px 7px;border-radius:5px;
-  font-family:var(--mono);font-size:11.5px;color:#fde68a;
-}
+.demo-banner code{background:rgba(0,0,0,.35);padding:2px 7px;border-radius:5px;font-family:var(--mono);font-size:11.5px;color:#fde68a}
 
-.empty-state{
-  padding:60px 24px;text-align:center;color:var(--muted);
-}
+.empty-state{padding:60px 24px;text-align:center;color:var(--muted)}
 .empty-state svg{width:46px;height:46px;stroke:var(--muted-2);fill:none;stroke-width:1.4;margin-bottom:14px}
 .empty-state h3{font-size:15px;color:var(--txt-2);margin-bottom:6px;font-weight:700}
 .empty-state p{font-size:12.5px}
+
+/* Seletor de granularidade (chips) */
+.gran-chips{display:flex;gap:6px;background:#0b1323;border:1px solid var(--line);border-radius:var(--radius-sm);padding:4px}
+.gran-chips button{
+  background:transparent;border:0;color:var(--muted);
+  font-family:var(--sans);font-size:11.5px;font-weight:800;letter-spacing:.5px;
+  padding:8px 12px;border-radius:7px;cursor:pointer;transition:all .16s;
+  text-transform:uppercase;white-space:nowrap;
+}
+.gran-chips button:hover{color:var(--txt);background:rgba(255,255,255,.05)}
+.gran-chips button.active{
+  background:linear-gradient(135deg,#0891b2,#2563eb);
+  color:#fff;box-shadow:0 4px 14px -4px rgba(34,211,238,.6);
+}
 </style>
 </head>
 <body>
 
 <div class="wrap">
 
-  <!-- ============ TOPBAR ============ -->
   <header class="topbar">
     <div class="brand">
       <div class="brand-logo">
@@ -476,7 +296,7 @@ table.grid tr.derived td.total-cell{background:#1a1430;color:#ddd6fe}
 
     <div class="filters">
       <div class="field">
-        <label>Mês de Referência</label>
+        <label id="lblPeriodo">Mês de Referência</label>
         <input type="month" id="fMes">
       </div>
 
@@ -510,7 +330,7 @@ table.grid tr.derived td.total-cell{background:#1a1430;color:#ddd6fe}
         <div style="display:flex;gap:8px">
           <button class="btn btn-primary" id="btnImport">
             <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
-            Importar Base
+            Importar
           </button>
           <button class="btn" id="btnRefresh" title="Atualizar dados">
             <svg viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>
@@ -523,20 +343,29 @@ table.grid tr.derived td.total-cell{background:#1a1430;color:#ddd6fe}
     </div>
   </header>
 
-  <!-- ============ BANNER DEMO ============ -->
-  <div class="demo-banner" id="demoBanner">
-    <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-    <span>Modo Demonstração ativo (dados simulados no navegador). Configure <code>SUPABASE_URL</code> e <code>SUPABASE_ANON_KEY</code> no topo do arquivo para persistir em produção.</span>
+  <!-- Seletor de granularidade -->
+  <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px">
+    <div class="gran-chips" id="granChips">
+      <button data-gran="dia" class="active">Por Dia</button>
+      <button data-gran="semana">Por Semana</button>
+      <button data-gran="mes">Por Mês</button>
+      <button data-gran="ano">Por Ano</button>
+      <button data-gran="decada">10 Anos</button>
+    </div>
+    <div id="granHint" style="font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:.3px"></div>
   </div>
 
-  <!-- ============ KPIs ============ -->
+  <div class="demo-banner" id="demoBanner">
+    <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+    <span>Modo Demonstração ativo. Configure <code>SUPABASE_URL</code> e <code>SUPABASE_ANON_KEY</code> para persistir em produção.</span>
+  </div>
+
   <section class="kpis" id="kpis"></section>
 
-  <!-- ============ CHARTS ============ -->
   <section class="charts">
     <div class="card">
       <div class="card-head">
-        <div class="card-title">Evolução Diária · Agenda x Recebido x % No Prazo</div>
+        <div class="card-title" id="chartTitle">Evolução do Período · Agenda x Recebido x % No Prazo</div>
       </div>
       <div class="card-body">
         <div class="chart-box"><canvas id="chartDia"></canvas></div>
@@ -552,10 +381,9 @@ table.grid tr.derived td.total-cell{background:#1a1430;color:#ddd6fe}
     </div>
   </section>
 
-  <!-- ============ TABELA ============ -->
   <section class="card table-card">
     <div class="card-head">
-      <div class="card-title" id="tableTitle">Recebimento Diário</div>
+      <div class="card-title" id="tableTitle">Recebimento</div>
       <div style="display:flex;gap:8px">
         <button class="btn btn-ghost" id="btnClear">
           <svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
@@ -571,7 +399,7 @@ table.grid tr.derived td.total-cell{background:#1a1430;color:#ddd6fe}
 
 </div>
 
-<!-- ============ MODAL IMPORTAÇÃO ============ -->
+<!-- MODAL IMPORTAÇÃO -->
 <div class="overlay" id="modalImport">
   <div class="modal">
     <div class="modal-head">
@@ -581,7 +409,6 @@ table.grid tr.derived td.total-cell{background:#1a1430;color:#ddd6fe}
       </div>
       <button class="x-btn" id="closeImport">×</button>
     </div>
-
     <div class="modal-body">
       <div class="drop" id="dropZone">
         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
@@ -589,13 +416,11 @@ table.grid tr.derived td.total-cell{background:#1a1430;color:#ddd6fe}
         <p>Colunas esperadas: DATA, CD, TURNO, AGENDA, AGENDA - NOSHOW, NOSHOW, RECEBIDO, NO PRAZO, &lt; 4 HRS, RECUSADO</p>
         <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" hidden>
       </div>
-
       <div id="importResult" style="display:none">
         <div class="stats" id="importStats"></div>
         <div class="preview" id="importPreview"></div>
       </div>
     </div>
-
     <div class="modal-foot">
       <button class="btn" id="btnTemplate">
         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
@@ -607,17 +432,12 @@ table.grid tr.derived td.total-cell{background:#1a1430;color:#ddd6fe}
   </div>
 </div>
 
-<!-- ============ LOADER / TOASTS ============ -->
 <div class="loader" id="loader"><div class="spinner"></div><p>Processando…</p></div>
 <div class="toasts" id="toasts"></div>
 
 <script>
 /* ============================================================================
-   1. CONFIGURAÇÃO SUPABASE
-   ----------------------------------------------------------------------------
-   Substitua pelos dados do seu projeto (Supabase → Settings → API).
-   Se deixar os placeholders, o painel entra em MODO DEMONSTRAÇÃO
-   (dados simulados em localStorage) — ideal para validar o layout.
+   CONFIG SUPABASE
    ============================================================================ */
 const SUPABASE_URL      = "https://SEU-PROJETO.supabase.co";
 const SUPABASE_ANON_KEY = "SUA_CHAVE_ANON_AQUI";
@@ -629,7 +449,7 @@ if (!DEMO) sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 
 /* ============================================================================
-   2. CONSTANTES / DEFINIÇÕES DE LINHA
+   CONSTANTES
    ============================================================================ */
 const ROWS = [
   { key:'agenda',        label:'AGENDA',         color:'#60a5fa' },
@@ -642,23 +462,25 @@ const ROWS = [
 ];
 const KEYS = ROWS.map(r => r.key);
 const WD = ['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
+const MES_ABREV = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+const MES_EXT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
 const state = {
   mes: todayISO().slice(0,7),
   cd: '910',
   turno: 'TODOS',
   view: 'abs',
+  gran: 'dia',       // dia | semana | mes | ano | decada
   rows: [],
   cds: []
 };
 
 
 /* ============================================================================
-   3. UTILITÁRIOS
+   UTILITÁRIOS
    ============================================================================ */
 const nfInt = new Intl.NumberFormat('pt-BR', { maximumFractionDigits:0 });
 const nfDec = new Intl.NumberFormat('pt-BR', { minimumFractionDigits:1, maximumFractionDigits:1 });
-
 function intFmt(v){ return nfInt.format(Math.round(v||0)); }
 function pctFmt(v){ return nfDec.format(v||0) + '%'; }
 
@@ -670,17 +492,11 @@ function isToday(y,m,d){
   const t = new Date();
   return t.getFullYear()===y && (t.getMonth()+1)===m && t.getDate()===d;
 }
-function monthRange(mes){
-  const [y,m] = mes.split('-').map(Number);
-  const last = new Date(y, m, 0).getDate();
-  return { start:`${mes}-01`, end:`${mes}-${String(last).padStart(2,'0')}`, y, m, last };
-}
 function norm(s){
-  return String(s ?? '')
-    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+  return String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
     .toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 }
-function hexA(hex, a){
+function hexA(hex,a){
   const h = hex.replace('#','');
   const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
   return `rgba(${r},${g},${b},${a.toFixed(3)})`;
@@ -688,9 +504,7 @@ function hexA(hex, a){
 function emptyBucket(){
   return { agenda:0, agenda_noshow:0, noshow:0, recebido:0, no_prazo:0, abaixo_4hrs:0, recusado:0 };
 }
-function addTo(bucket, r){
-  for (const k of KEYS) bucket[k] += Number(r[k]) || 0;
-}
+function addTo(b,r){ for(const k of KEYS) b[k] += Number(r[k])||0; }
 function normTurno(t){
   const v = norm(t);
   if (!v) return 'GERAL';
@@ -706,190 +520,148 @@ function normTurno(t){
 
 
 /* ============================================================================
-   4. PARSER DE DATA (Excel serial, dd/mm/aaaa, ISO)
+   PERÍODO E GRANULARIDADE
    ============================================================================ */
-function parseDate(v){
-  if (v === null || v === undefined || v === '') return null;
-  if (v instanceof Date) {
-    return `${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,'0')}-${String(v.getDate()).padStart(2,'0')}`;
-  }
-  if (typeof v === 'number') {
-    const ms = Date.UTC(1899,11,30) + v*86400000;
-    const d = new Date(ms);
-    return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
-  }
-  const s = String(v).trim();
-  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (m) return `${m[1]}-${m[2]}-${m[3]}`;
-  m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);
-  if (m) {
-    let [, a, b, y] = m;
-    if (y.length === 2) y = '20' + y;
-    return `${y}-${b.padStart(2,'0')}-${a.padStart(2,'0')}`;
-  }
-  const d = new Date(s);
-  if (!isNaN(d.getTime())) {
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  }
-  return null;
+function getBaseYM(){
+  const [y,m] = state.mes.split('-').map(Number);
+  return { y, m };
 }
 
+/* Define o range de datas que será buscado do banco, conforme granularidade */
+function getFetchRange(){
+  const { y, m } = getBaseYM();
+  if (state.gran === 'dia' || state.gran === 'semana'){
+    const last = new Date(y, m, 0).getDate();
+    return {
+      start: `${y}-${String(m).padStart(2,'0')}-01`,
+      end:   `${y}-${String(m).padStart(2,'0')}-${String(last).padStart(2,'0')}`,
+      y, m, last
+    };
+  }
+  if (state.gran === 'mes'){
+    return { start: `${y}-01-01`, end: `${y}-12-31`, y };
+  }
+  if (state.gran === 'ano'){
+    return { start: `${y-4}-01-01`, end: `${y}-12-31`, y, startY: y-4 };
+  }
+  // decada
+  return { start: `${y-9}-01-01`, end: `${y}-12-31`, y, startY: y-9 };
+}
 
-/* ============================================================================
-   5. MAPEAMENTO DE CABEÇALHOS DA PLANILHA
-   ============================================================================ */
-const HEADER_ALIASES = {
-  data:          ['data','dia','dt','date','data recebimento','data do recebimento','data base'],
-  cd:            ['cd','c d','centro','filial','unidade','loja','cd destino','centro de distribuicao'],
-  turno:         ['turno','periodo','faixa','shift','shif','turno operacional'],
-  agenda:        ['agenda','agendado','agendados','agenda total','total agenda'],
-  agenda_noshow: ['agenda noshow','agenda - noshow','agenda c noshow','ag noshow','agenda com noshow'],
-  noshow:        ['noshow','no show','nao compareceu','ausente'],
-  recebido:      ['recebido','recebidos','recebimento','total recebido','recebido total'],
-  no_prazo:      ['no prazo','noprazo','prazo','dentro do prazo','recebido no prazo'],
-  abaixo_4hrs:   ['4 hrs','menor 4 hrs','abaixo 4 hrs','ate 4 hrs','4hrs','menor que 4 hrs','menor 4 horas','abaixo de 4 hrs'],
-  recusado:      ['recusado','recusados','recusa','devolvido','devolvidos']
-};
-const ALIAS_LOOKUP = (() => {
-  const m = {};
-  for (const [field, list] of Object.entries(HEADER_ALIASES))
-    for (const a of list) m[norm(a)] = field;
-  return m;
-})();
-
-
-/* ============================================================================
-   6. CAMADA DE DADOS (Supabase ou Demo)
-   ============================================================================ */
-const DEMO_KEY = 'painel_recebimento_demo_v1';
-
-function demoSeed(){
-  const out = [];
-  const cds = ['910','911','912'];
-  const turnos = ['MANHÃ','TARDE','NOITE'];
+/* Constrói a lista de colunas (buckets) para a tabela */
+function buildColumns(){
+  const { y, m, last } = getFetchRange();
+  const cols = [];
   const now = new Date();
-  for (let mo = 0; mo < 2; mo++) {
-    const ref = new Date(now.getFullYear(), now.getMonth() - mo, 1);
-    const y = ref.getFullYear(), m = ref.getMonth() + 1;
-    const days = new Date(y, m, 0).getDate();
-    for (let d = 1; d <= days; d++) {
+
+  if (state.gran === 'dia'){
+    for (let d=1; d<=last; d++){
       const wd = new Date(y, m-1, d).getDay();
-      const we = wd === 0 || wd === 6;
-      for (const cd of cds) {
-        for (const t of turnos) {
-          const base = we ? 45 : 130;
-          const agenda = Math.round(base * (0.72 + Math.random() * 0.55));
-          const recebido = Math.round(agenda * (0.82 + Math.random() * 0.15));
-          const noPrazo = Math.round(recebido * (0.70 + Math.random() * 0.24));
-          const recusado = Math.round(recebido * Math.random() * 0.05);
-          const abaixo = Math.max(0, recebido - noPrazo - recusado);
-          const noshow = Math.max(0, agenda - recebido);
-          out.push({
-            data: `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`,
-            cd, turno: t, agenda,
-            agenda_noshow: Math.round(noshow * (0.28 + Math.random() * 0.45)),
-            noshow, recebido, no_prazo: noPrazo,
-            abaixo_4hrs: abaixo, recusado
-          });
-        }
-      }
+      cols.push({
+        key: `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`,
+        label: String(d).padStart(2,'0'),
+        sub:   WD[wd],
+        isWE:  wd === 0 || wd === 6,
+        isToday: isToday(y,m,d),
+        bucket: emptyBucket()
+      });
     }
   }
-  return out;
-}
-
-const api = {
-  async listCDs(){
-    if (DEMO) {
-      const all = demoSync();
-      return [...new Set(all.map(r => r.cd))].sort();
+  else if (state.gran === 'semana'){
+    const nWeeks = Math.ceil(last / 7);
+    for (let w=0; w<nWeeks; w++){
+      const d1 = w*7 + 1;
+      const d2 = Math.min((w+1)*7, last);
+      const curWeek = Math.floor((now.getDate()-1)/7) + 1;
+      cols.push({
+        key: `w${w+1}`,
+        label: `SEM ${w+1}`,
+        sub:   `${String(d1).padStart(2,'0')}–${String(d2).padStart(2,'0')}`,
+        isToday: (now.getFullYear() === y && (now.getMonth()+1) === m && curWeek === w+1),
+        d1, d2, bucket: emptyBucket()
+      });
     }
-    const { data, error } = await sb.from(TABLE).select('cd').limit(20000);
-    if (error) throw error;
-    return [...new Set((data || []).map(r => r.cd))].sort();
-  },
-
-  async fetch(mes, cd){
-    const { start, end } = monthRange(mes);
-    if (DEMO) {
-      return demoSync().filter(r =>
-        r.data >= start && r.data <= end && (cd === 'TODOS' || r.cd === cd)
-      );
-    }
-    let q = sb.from(TABLE).select('*').gte('data', start).lte('data', end);
-    if (cd !== 'TODOS') q = q.eq('cd', cd);
-    const { data, error } = await q;
-    if (error) throw error;
-    return data || [];
-  },
-
-  async upsert(rows){
-    if (DEMO) {
-      const all = demoSync();
-      const map = new Map(all.map(r => [`${r.data}|${r.cd}|${r.turno}`, r]));
-      rows.forEach(r => map.set(`${r.data}|${r.cd}|${r.turno}`, r));
-      demoSave([...map.values()]);
-      return rows.length;
-    }
-    const CHUNK = 500;
-    let total = 0;
-    for (let i = 0; i < rows.length; i += CHUNK) {
-      const slice = rows.slice(i, i + CHUNK);
-      const { error } = await sb.from(TABLE).upsert(slice, { onConflict: 'data,cd,turno' });
-      if (error) throw error;
-      total += slice.length;
-    }
-    return total;
-  },
-
-  async remove(mes, cd){
-    const { start, end } = monthRange(mes);
-    if (DEMO) {
-      const all = demoSync().filter(r =>
-        !(r.data >= start && r.data <= end && (cd === 'TODOS' || r.cd === cd))
-      );
-      demoSave(all);
-      return;
-    }
-    let q = sb.from(TABLE).delete().gte('data', start).lte('data', end);
-    if (cd !== 'TODOS') q = q.eq('cd', cd);
-    const { error } = await q;
-    if (error) throw error;
   }
-};
-
-function demoAll(){
-  try { return JSON.parse(localStorage.getItem(DEMO_KEY)) || []; }
-  catch(e){ return []; }
-}
-function demoSave(rows){ localStorage.setItem(DEMO_KEY, JSON.stringify(rows)); }
-function demoSync(){
-  let rows = demoAll();
-  if (!rows.length) { rows = demoSeed(); demoSave(rows); }
-  return rows;
+  else if (state.gran === 'mes'){
+    for (let mi=1; mi<=12; mi++){
+      cols.push({
+        key: `${y}-${String(mi).padStart(2,'0')}`,
+        label: MES_ABREV[mi-1],
+        sub:   String(y),
+        isToday: (now.getFullYear() === y && (now.getMonth()+1) === mi),
+        month: mi, bucket: emptyBucket()
+      });
+    }
+  }
+  else if (state.gran === 'ano'){
+    for (let yi = y-4; yi <= y; yi++){
+      cols.push({
+        key: String(yi),
+        label: String(yi),
+        sub:   'ano',
+        isToday: (now.getFullYear() === yi),
+        year: yi, bucket: emptyBucket()
+      });
+    }
+  }
+  else {
+    for (let yi = y-9; yi <= y; yi++){
+      cols.push({
+        key: String(yi),
+        label: String(yi),
+        sub:   `Y${(yi-(y-9))+1}`,
+        isToday: (now.getFullYear() === yi),
+        year: yi, bucket: emptyBucket()
+      });
+    }
+  }
+  return cols;
 }
 
 
 /* ============================================================================
-   7. AGREGAÇÃO
+   AGREGAÇÃO
    ============================================================================ */
 function aggregate(){
-  const { y, m, last } = monthRange(state.mes);
-  const daysArr = Array.from({ length:last }, (_, i) => i + 1);
-  const byDay = daysArr.map(() => emptyBucket());
+  const cols = buildColumns();
   const total = emptyBucket();
+  const range = getFetchRange();
 
-  for (const r of state.rows) {
+  for (const r of state.rows){
     if (state.turno !== 'TODOS' && normTurno(r.turno) !== state.turno) continue;
-    const day = Number(String(r.data).slice(8,10));
-    if (!day || day < 1 || day > last) continue;
-    addTo(byDay[day-1], r);
-    addTo(total, r);
+    const ds = String(r.data);
+    const ry = Number(ds.slice(0,4));
+    const rm = Number(ds.slice(5,7));
+    const rd = Number(ds.slice(8,10));
+
+    let col = null;
+
+    if (state.gran === 'dia'){
+      if (ry === range.y && rm === range.m) col = cols[rd-1];
+    }
+    else if (state.gran === 'semana'){
+      if (ry === range.y && rm === range.m){
+        const w = Math.floor((rd-1)/7);
+        col = cols[w];
+      }
+    }
+    else if (state.gran === 'mes'){
+      if (ry === range.y) col = cols[rm-1];
+    }
+    else if (state.gran === 'ano'){
+      const idx = ry - (range.y-4);
+      if (idx >= 0 && idx < cols.length) col = cols[idx];
+    }
+    else { // decada
+      const idx = ry - (range.y-9);
+      if (idx >= 0 && idx < cols.length) col = cols[idx];
+    }
+
+    if (col){ addTo(col.bucket, r); addTo(total, r); }
   }
-  return { y, m, last, daysArr, byDay, total };
+  return { cols, total, range };
 }
 
-/* valor de uma linha em um bucket, conforme modo de visualização */
 function rowValue(bucket, key, mode){
   const v = bucket[key] || 0;
   if (mode === 'abs') return v;
@@ -899,7 +671,7 @@ function rowValue(bucket, key, mode){
 
 
 /* ============================================================================
-   8. RENDER — KPIs
+   KPIs
    ============================================================================ */
 function renderKPIs(agg){
   const t = agg.total;
@@ -910,30 +682,18 @@ function renderKPIs(agg){
   const pctNoshow   = t.agenda   > 0 ? (t.noshow    / t.agenda)   * 100 : 0;
 
   const cards = [
-    {
-      label:'Agenda Total', value: intFmt(t.agenda), color:'var(--blue)',
-      badge:'Base', sub:`Recebido: <b>${intFmt(t.recebido)}</b>`
-    },
-    {
-      label:'Recebido', value: intFmt(t.recebido), color:'var(--cyan)',
-      badge:'Volume', sub:`Aderência: <b>${pctFmt(aderencia)}</b>`
-    },
-    {
-      label:'No Prazo', value: pctFmt(pctNoPrazo), color:'var(--green)',
-      badge:'SLA', sub:`${intFmt(t.no_prazo)} entregas no prazo`
-    },
-    {
-      label:'< 4 HRS', value: pctFmt(pctAbaixo), color:'var(--amber)',
-      badge:'Antecip.', sub:`${intFmt(t.abaixo_4hrs)} fora do SLA`
-    },
-    {
-      label:'Recusado', value: pctFmt(pctRecusado), color:'var(--rose)',
-      badge:'Perda', sub:`${intFmt(t.recusado)} recusas no período`
-    },
-    {
-      label:'Noshow', value: intFmt(t.noshow), color:'var(--red)',
-      badge:`${pctFmt(pctNoshow)}`, sub:`Agenda-Noshow: <b>${intFmt(t.agenda_noshow)}</b>`
-    }
+    { label:'Agenda Total', value:intFmt(t.agenda), color:'var(--blue)', badge:'Base',
+      sub:`Recebido: <b>${intFmt(t.recebido)}</b>` },
+    { label:'Recebido', value:intFmt(t.recebido), color:'var(--cyan)', badge:'Volume',
+      sub:`Aderência: <b>${pctFmt(aderencia)}</b>` },
+    { label:'No Prazo', value:pctFmt(pctNoPrazo), color:'var(--green)', badge:'SLA',
+      sub:`${intFmt(t.no_prazo)} entregas no prazo` },
+    { label:'< 4 HRS', value:pctFmt(pctAbaixo), color:'var(--amber)', badge:'Antecip.',
+      sub:`${intFmt(t.abaixo_4hrs)} fora do SLA` },
+    { label:'Recusado', value:pctFmt(pctRecusado), color:'var(--rose)', badge:'Perda',
+      sub:`${intFmt(t.recusado)} recusas no período` },
+    { label:'Noshow', value:intFmt(t.noshow), color:'var(--red)', badge:`${pctFmt(pctNoshow)}`,
+      sub:`Agenda-Noshow: <b>${intFmt(t.agenda_noshow)}</b>` }
   ];
 
   document.getElementById('kpis').innerHTML = cards.map(c => `
@@ -950,59 +710,48 @@ function renderKPIs(agg){
 
 
 /* ============================================================================
-   9. RENDER — TABELA
+   TABELA
    ============================================================================ */
 function tdHTML(val, opts){
-  if (val === null || val === undefined) {
-    return `<td class="empty">–</td>`;
-  }
-  const zero = Math.abs(val) < 0.0001;
-  if (zero) return `<td class="zero">–</td>`;
-
-  const alpha = opts.max > 0
-    ? 0.05 + 0.26 * Math.min(1, Math.abs(val) / opts.max)
-    : 0.05;
-
+  if (val === null || val === undefined) return `<td class="empty">–</td>`;
+  if (Math.abs(val) < 0.0001) return `<td class="zero">–</td>`;
+  const alpha = opts.max > 0 ? 0.05 + 0.26 * Math.min(1, Math.abs(val)/opts.max) : 0.05;
   const bg = hexA(opts.color, alpha);
   const txt = opts.pct ? pctFmt(val) : intFmt(val);
   const cls = opts.total ? 'total-cell' : 'cell';
   const weight = opts.total ? 'font-weight:800;' : '';
-
-  return `<td class="${cls}" style="background:${bg};${weight}">${txt}</td>`;
+  return `<td class="${cls}" style="${bg?`background:${bg};`:''}${weight}">${txt}</td>`;
 }
 
 function renderTable(agg){
-  const { y, m, daysArr, byDay, total } = agg;
+  const { cols, total } = agg;
   const pct = state.view === 'pct';
   const host = document.getElementById('tableHost');
 
-  const hasData = state.rows.length > 0;
-  if (!hasData) {
+  if (!state.rows.length){
     host.innerHTML = `
       <div class="empty-state">
         <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
         <h3>Nenhum dado para o período selecionado</h3>
-        <p>Importe uma base ou ajuste os filtros de CD, turno e mês.</p>
+        <p>Importe uma base ou ajuste os filtros de CD, turno e período.</p>
       </div>`;
     return;
   }
 
-  /* ---- Cabeçalho ---- */
+  /* HEADER */
   let head = '<thead><tr><th class="corner">Indicador</th>';
-  daysArr.forEach(d => {
-    const wd = new Date(y, m-1, d).getDay();
-    const cls = [ (wd === 0 || wd === 6) ? 'we' : '', isToday(y,m,d) ? 'today' : '' ].join(' ').trim();
-    head += `<th class="${cls}"><b>${String(d).padStart(2,'0')}</b><i>${WD[wd]}</i></th>`;
+  cols.forEach(c => {
+    const cls = [c.isWE ? 'we' : '', c.isToday ? 'today' : ''].join(' ').trim();
+    head += `<th class="${cls}"><b>${c.label}</b><i>${c.sub||''}</i></th>`;
   });
   head += '<th class="total-col">TOTAL</th></tr></thead>';
 
-  /* ---- Corpo ---- */
+  /* BODY */
   let body = '<tbody>';
 
   ROWS.forEach(r => {
-    const vals = byDay.map(b => rowValue(b, r.key, state.view));
-    const max = vals.reduce((mx, v) => v === null ? mx : Math.max(mx, Math.abs(v)), 0);
-
+    const vals = cols.map(c => rowValue(c.bucket, r.key, state.view));
+    const max = vals.reduce((mx,v) => v===null?mx:Math.max(mx,Math.abs(v)),0);
     body += `<tr>
       <td class="rowlabel" style="--c:${r.color}">
         <span class="dot"></span><span>${r.label}</span>
@@ -1012,24 +761,21 @@ function renderTable(agg){
     body += '</tr>';
   });
 
-  /* ---- Linha derivada: % NO PRAZO (sobre RECEBIDO) ---- */
+  /* Linha % NO PRAZO */
   {
     const color = '#a855f7';
-    const vals = byDay.map(b => b.recebido > 0 ? (b.no_prazo / b.recebido) * 100 : null);
-    const max = vals.reduce((mx, v) => v === null ? mx : Math.max(mx, v), 0);
-    const totVal = total.recebido > 0 ? (total.no_prazo / total.recebido) * 100 : null;
-
+    const vals = cols.map(c => c.bucket.recebido>0 ? (c.bucket.no_prazo/c.bucket.recebido)*100 : null);
+    const max = vals.reduce((mx,v)=>v===null?mx:Math.max(mx,v),0);
+    const totVal = total.recebido>0 ? (total.no_prazo/total.recebido)*100 : null;
     body += `<tr class="derived">
       <td class="rowlabel" style="--c:${color}">
         <span class="dot"></span><span>% NO PRAZO</span>
       </td>`;
     vals.forEach(v => {
-      body += v === null
-        ? `<td class="empty">–</td>`
-        : `<td class="cell" style="background:${hexA(color, 0.06 + 0.28*(v/max || 0))}">${pctFmt(v)}</td>`;
+      body += v===null ? `<td class="empty">–</td>`
+        : `<td class="cell" style="background:${hexA(color,0.06+0.28*(v/max||0))}">${pctFmt(v)}</td>`;
     });
-    body += totVal === null
-      ? `<td class="total-cell">–</td>`
+    body += totVal===null ? `<td class="total-cell">–</td>`
       : `<td class="total-cell">${pctFmt(totVal)}</td>`;
     body += '</tr>';
   }
@@ -1037,75 +783,72 @@ function renderTable(agg){
   body += '</tbody>';
   host.innerHTML = `<table class="grid">${head}${body}</table>`;
 
-  /* ---- Título / legenda ---- */
-  const [yy, mm] = state.mes.split('-');
-  const mesNome = new Date(Number(yy), Number(mm)-1, 1)
-    .toLocaleDateString('pt-BR', { month:'long', year:'numeric' });
-  document.getElementById('tableTitle').textContent =
-    `Recebimento Diário · ${mesNome.charAt(0).toUpperCase() + mesNome.slice(1)} · CD ${state.cd} · ${state.turno === 'TODOS' ? 'Todos os turnos' : state.turno}`;
-
+  document.getElementById('tableTitle').textContent = buildTitle();
   document.getElementById('legend').innerHTML = [
     ...ROWS.map(r => `<span><i style="background:${r.color};color:${r.color}"></i>${r.label}</span>`),
     `<span><i style="background:#a855f7;color:#a855f7"></i>% NO PRAZO (sobre recebido)</span>`,
-    `<span style="margin-left:auto;color:var(--muted-2)">Intensidade de cor proporcional ao volume do dia</span>`
+    `<span style="margin-left:auto;color:var(--muted-2)">Intensidade de cor proporcional ao volume do período</span>`
   ].join('');
+}
+
+function buildTitle(){
+  const { y, m } = getBaseYM();
+  const sufix = ` · CD ${state.cd} · ${state.turno === 'TODOS' ? 'Todos os turnos' : state.turno}`;
+  if (state.gran === 'dia')
+    return `Recebimento Diário · ${MES_EXT[m-1]} ${y}${sufix}`;
+  if (state.gran === 'semana')
+    return `Recebimento Semanal · ${MES_EXT[m-1]} ${y}${sufix}`;
+  if (state.gran === 'mes')
+    return `Recebimento Mensal · ${y}${sufix}`;
+  if (state.gran === 'ano')
+    return `Recebimento Anual · ${y-4}–${y}${sufix}`;
+  return `Recebimento Decadal · ${y-9}–${y}${sufix}`;
 }
 
 
 /* ============================================================================
-   10. RENDER — GRÁFICOS
+   GRÁFICOS
    ============================================================================ */
 let chartDia = null, chartComp = null;
 
 function renderCharts(agg){
   if (typeof Chart === 'undefined') return;
-  const { daysArr, byDay, total } = agg;
+  const { cols, total } = agg;
 
-  const labels  = daysArr.map(d => String(d).padStart(2,'0'));
-  const agenda  = byDay.map(b => b.agenda);
-  const recebido= byDay.map(b => b.recebido);
-  const noPrazo = byDay.map(b => b.no_prazo);
-  const pctNP   = byDay.map(b => b.recebido > 0 ? +((b.no_prazo / b.recebido) * 100).toFixed(1) : null);
+  const labels   = cols.map(c => c.label);
+  const agenda   = cols.map(c => c.bucket.agenda);
+  const recebido = cols.map(c => c.bucket.recebido);
+  const noPrazo  = cols.map(c => c.bucket.no_prazo);
+  const pctNP    = cols.map(c => c.bucket.recebido>0 ? +((c.bucket.no_prazo/c.bucket.recebido)*100).toFixed(1) : null);
 
   Chart.defaults.color = '#7d8dae';
   Chart.defaults.font.family = "'Inter',sans-serif";
   Chart.defaults.font.size = 11;
 
-  /* --- Gráfico diário --- */
   if (chartDia) chartDia.destroy();
   chartDia = new Chart(document.getElementById('chartDia'), {
     type: 'bar',
     data: {
       labels,
       datasets: [
-        {
-          label:'Agenda', data: agenda, backgroundColor:'rgba(96,165,250,.55)',
-          borderRadius:4, borderSkipped:false, order:2, barPercentage:.8, categoryPercentage:.72
-        },
-        {
-          label:'Recebido', data: recebido, backgroundColor:'rgba(34,211,238,.85)',
-          borderRadius:4, borderSkipped:false, order:1, barPercentage:.8, categoryPercentage:.72
-        },
-        {
-          label:'No Prazo', data: noPrazo, backgroundColor:'rgba(34,197,94,.9)',
-          borderRadius:4, borderSkipped:false, order:0, barPercentage:.8, categoryPercentage:.72
-        },
-        {
-          label:'% No Prazo', data: pctNP, type:'line', yAxisID:'y1',
+        { label:'Agenda', data:agenda, backgroundColor:'rgba(96,165,250,.55)',
+          borderRadius:4, borderSkipped:false, order:2, barPercentage:.82, categoryPercentage:.74 },
+        { label:'Recebido', data:recebido, backgroundColor:'rgba(34,211,238,.85)',
+          borderRadius:4, borderSkipped:false, order:1, barPercentage:.82, categoryPercentage:.74 },
+        { label:'No Prazo', data:noPrazo, backgroundColor:'rgba(34,197,94,.9)',
+          borderRadius:4, borderSkipped:false, order:0, barPercentage:.82, categoryPercentage:.74 },
+        { label:'% No Prazo', data:pctNP, type:'line', yAxisID:'y1',
           borderColor:'#a855f7', backgroundColor:'#a855f7',
-          borderWidth:2, pointRadius:0, pointHoverRadius:4,
-          tension:.35, spanGaps:true, order:-1
-        }
+          borderWidth:2, pointRadius: cols.length<=14 ? 3 : 0, pointHoverRadius:4,
+          tension:.35, spanGaps:true, order:-1 }
       ]
     },
-    options: {
+    options:{
       responsive:true, maintainAspectRatio:false,
       interaction:{ mode:'index', intersect:false },
       plugins:{
-        legend:{
-          position:'top', align:'end',
-          labels:{ boxWidth:9, boxHeight:9, usePointStyle:true, pointStyle:'rectRounded', padding:14 }
-        },
+        legend:{ position:'top', align:'end',
+          labels:{ boxWidth:9, boxHeight:9, usePointStyle:true, pointStyle:'rectRounded', padding:14 } },
         tooltip:{
           backgroundColor:'#0f1729', borderColor:'#1e2b47', borderWidth:1,
           titleColor:'#e9eefb', bodyColor:'#b8c5e0', padding:11, cornerRadius:8,
@@ -1121,25 +864,18 @@ function renderCharts(agg){
         }
       },
       scales:{
-        x:{
-          grid:{ display:false },
-          ticks:{ color:'#5d6d8c', maxRotation:0, autoSkip:true, maxTicksLimit:31 }
-        },
-        y:{
-          beginAtZero:true,
-          grid:{ color:'rgba(30,43,71,.55)', drawBorder:false },
-          ticks:{ color:'#5d6d8c', callback: v => nfInt.format(v) }
-        },
-        y1:{
-          position:'right', beginAtZero:true, max:100,
-          grid:{ display:false },
-          ticks:{ color:'#a855f7', callback: v => v + '%' }
-        }
+        x:{ grid:{ display:false },
+            ticks:{ color:'#5d6d8c', maxRotation: cols.length>16 ? 45 : 0,
+                    autoSkip:true, maxTicksLimit:31 } },
+        y:{ beginAtZero:true,
+            grid:{ color:'rgba(30,43,71,.55)', drawBorder:false },
+            ticks:{ color:'#5d6d8c', callback: v => nfInt.format(v) } },
+        y1:{ position:'right', beginAtZero:true, max:100, grid:{ display:false },
+             ticks:{ color:'#a855f7', callback: v => v + '%' } }
       }
     }
   });
 
-  /* --- Doughnut composição --- */
   if (chartComp) chartComp.destroy();
   chartComp = new Chart(document.getElementById('chartComp'), {
     type:'doughnut',
@@ -1148,32 +884,26 @@ function renderCharts(agg){
       datasets:[{
         data: ROWS.map(r => total[r.key] || 0),
         backgroundColor: ROWS.map(r => hexA(r.color, .82)),
-        borderColor:'#0d1425',
-        borderWidth:3,
-        hoverOffset:7
+        borderColor:'#0d1425', borderWidth:3, hoverOffset:7
       }]
     },
     options:{
       responsive:true, maintainAspectRatio:false, cutout:'64%',
       plugins:{
-        legend:{
-          position:'bottom',
-          labels:{ boxWidth:9, boxHeight:9, usePointStyle:true, pointStyle:'circle', padding:11, font:{ size:10.5 } }
-        },
-        tooltip:{
-          backgroundColor:'#0f1729', borderColor:'#1e2b47', borderWidth:1,
+        legend:{ position:'bottom',
+          labels:{ boxWidth:9, boxHeight:9, usePointStyle:true, pointStyle:'circle',
+                   padding:11, font:{ size:10.5 } } },
+        tooltip:{ backgroundColor:'#0f1729', borderColor:'#1e2b47', borderWidth:1,
           padding:11, cornerRadius:8,
-          callbacks:{ label: ctx => ` ${ctx.label}: ${nfInt.format(ctx.parsed)}` }
-        }
+          callbacks:{ label: ctx => ` ${ctx.label}: ${nfInt.format(ctx.parsed)}` } }
       }
     }
   });
+
+  document.getElementById('chartTitle').textContent =
+    `Evolução · ${buildTitle().replace(/^Recebimento /,'')}`;
 }
 
-
-/* ============================================================================
-   11. PIPELINE DE RENDER
-   ============================================================================ */
 function render(){
   const agg = aggregate();
   renderKPIs(agg);
@@ -1183,40 +913,166 @@ function render(){
 
 
 /* ============================================================================
-   12. CARREGAMENTO DE DADOS
+   CAMADA DE DADOS
    ============================================================================ */
-async function loadCDs(){
-  const sel = document.getElementById('fCd');
-  try {
-    let cds = await api.listCDs();
-    if (!cds.length) cds = ['910'];
-    if (!cds.includes('910')) cds.unshift('910');
-    state.cds = cds;
-    sel.innerHTML = cds.map(c => `<option value="${c}">CD ${c}</option>`).join('')
-      + `<option value="TODOS">Todos os CDs</option>`;
-    sel.value = cds.includes(state.cd) ? state.cd : cds[0];
-    state.cd = sel.value;
-  } catch(e) {
-    sel.innerHTML = `<option value="910">CD 910</option><option value="TODOS">Todos os CDs</option>`;
+const DEMO_KEY = 'painel_recebimento_demo_v1';
+
+function demoSeed(){
+  const out = [];
+  const cds = ['910','911','912'];
+  const turnos = ['MANHÃ','TARDE','NOITE'];
+  const now = new Date();
+  // gera 24 meses para viabilizar views de ano/década
+  for (let mo = 0; mo < 24; mo++){
+    const ref = new Date(now.getFullYear(), now.getMonth() - mo, 1);
+    const y = ref.getFullYear(), m = ref.getMonth() + 1;
+    const days = new Date(y, m, 0).getDate();
+    for (let d = 1; d <= days; d++){
+      const wd = new Date(y, m-1, d).getDay();
+      const we = wd === 0 || wd === 6;
+      for (const cd of cds){
+        for (const t of turnos){
+          const base = we ? 45 : 130;
+          const agenda = Math.round(base * (0.72 + Math.random()*0.55));
+          const recebido = Math.round(agenda * (0.82 + Math.random()*0.15));
+          const noPrazo = Math.round(recebido * (0.70 + Math.random()*0.24));
+          const recusado = Math.round(recebido * Math.random() * 0.05);
+          const abaixo = Math.max(0, recebido - noPrazo - recusado);
+          const noshow = Math.max(0, agenda - recebido);
+          out.push({
+            data: `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`,
+            cd, turno: t, agenda,
+            agenda_noshow: Math.round(noshow * (0.28 + Math.random()*0.45)),
+            noshow, recebido, no_prazo: noPrazo,
+            abaixo_4hrs: abaixo, recusado
+          });
+        }
+      }
+    }
   }
+  return out;
 }
 
-async function loadData(){
-  showLoader(true);
-  try {
-    state.rows = await api.fetch(state.mes, state.cd);
-    render();
-  } catch(e) {
-    console.error(e);
-    toast('Erro ao carregar dados', e.message || String(e), 'err');
-  } finally {
-    showLoader(false);
-  }
+function demoAll(){
+  try { return JSON.parse(localStorage.getItem(DEMO_KEY)) || []; } catch(e){ return []; }
 }
+function demoSave(rows){ localStorage.setItem(DEMO_KEY, JSON.stringify(rows)); }
+function demoSync(){
+  let rows = demoAll();
+  if (!rows.length){ rows = demoSeed(); demoSave(rows); }
+  return rows;
+}
+
+const api = {
+  async listCDs(){
+    if (DEMO){
+      const all = demoSync();
+      return [...new Set(all.map(r => r.cd))].sort();
+    }
+    const { data, error } = await sb.from(TABLE).select('cd').limit(20000);
+    if (error) throw error;
+    return [...new Set((data||[]).map(r => r.cd))].sort();
+  },
+
+  async fetchRange(start, end, cd){
+    if (DEMO){
+      return demoSync().filter(r =>
+        r.data >= start && r.data <= end && (cd === 'TODOS' || r.cd === cd)
+      );
+    }
+    let q = sb.from(TABLE).select('*').gte('data', start).lte('data', end);
+    if (cd !== 'TODOS') q = q.eq('cd', cd);
+    const { data, error } = await q;
+    if (error) throw error;
+    return data || [];
+  },
+
+  async upsert(rows){
+    if (DEMO){
+      const all = demoSync();
+      const map = new Map(all.map(r => [`${r.data}|${r.cd}|${r.turno}`, r]));
+      rows.forEach(r => map.set(`${r.data}|${r.cd}|${r.turno}`, r));
+      demoSave([...map.values()]);
+      return rows.length;
+    }
+    const CHUNK = 500;
+    let total = 0;
+    for (let i=0; i<rows.length; i+=CHUNK){
+      const slice = rows.slice(i, i+CHUNK);
+      const { error } = await sb.from(TABLE).upsert(slice, { onConflict:'data,cd,turno' });
+      if (error) throw error;
+      total += slice.length;
+    }
+    return total;
+  },
+
+  async remove(start, end, cd){
+    if (DEMO){
+      const all = demoSync().filter(r =>
+        !(r.data >= start && r.data <= end && (cd === 'TODOS' || r.cd === cd))
+      );
+      demoSave(all);
+      return;
+    }
+    let q = sb.from(TABLE).delete().gte('data', start).lte('data', end);
+    if (cd !== 'TODOS') q = q.eq('cd', cd);
+    const { error } = await q;
+    if (error) throw error;
+  }
+};
 
 
 /* ============================================================================
-   13. IMPORTAÇÃO DE BASE
+   PARSER DE DATA / HEADERS
+   ============================================================================ */
+function parseDate(v){
+  if (v === null || v === undefined || v === '') return null;
+  if (v instanceof Date){
+    return `${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,'0')}-${String(v.getDate()).padStart(2,'0')}`;
+  }
+  if (typeof v === 'number'){
+    const ms = Date.UTC(1899,11,30) + v*86400000;
+    const d = new Date(ms);
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
+  }
+  const s = String(v).trim();
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+  m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);
+  if (m){
+    let [, a, b, y] = m;
+    if (y.length === 2) y = '20' + y;
+    return `${y}-${b.padStart(2,'0')}-${a.padStart(2,'0')}`;
+  }
+  const d = new Date(s);
+  if (!isNaN(d.getTime())){
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  return null;
+}
+
+const HEADER_ALIASES = {
+  data:          ['data','dia','dt','date','data recebimento','data do recebimento','data base'],
+  cd:            ['cd','c d','centro','filial','unidade','loja','cd destino','centro de distribuicao'],
+  turno:         ['turno','periodo','faixa','shift','shif','turno operacional'],
+  agenda:        ['agenda','agendado','agendados','agenda total','total agenda'],
+  agenda_noshow: ['agenda noshow','agenda - noshow','agenda c noshow','ag noshow','agenda com noshow'],
+  noshow:        ['noshow','no show','nao compareceu','ausente'],
+  recebido:      ['recebido','recebidos','recebimento','total recebido','recebido total'],
+  no_prazo:      ['no prazo','noprazo','prazo','dentro do prazo','recebido no prazo'],
+  abaixo_4hrs:   ['4 hrs','menor 4 hrs','abaixo 4 hrs','ate 4 hrs','4hrs','menor que 4 hrs','menor 4 horas','abaixo de 4 hrs'],
+  recusado:      ['recusado','recusados','recusa','devolvido','devolvidos']
+};
+const ALIAS_LOOKUP = (() => {
+  const m = {};
+  for (const [f, list] of Object.entries(HEADER_ALIASES))
+    for (const a of list) m[norm(a)] = f;
+  return m;
+})();
+
+
+/* ============================================================================
+   IMPORT
    ============================================================================ */
 let pendingRows = [];
 
@@ -1227,9 +1083,7 @@ function openImport(){
   document.getElementById('fileInput').value = '';
   document.getElementById('modalImport').classList.add('show');
 }
-function closeImport(){
-  document.getElementById('modalImport').classList.remove('show');
-}
+function closeImport(){ document.getElementById('modalImport').classList.remove('show'); }
 
 async function handleFile(file){
   if (!file) return;
@@ -1239,11 +1093,9 @@ async function handleFile(file){
     const wb = XLSX.read(buf, { type:'array', cellDates:true });
     const ws = wb.Sheets[wb.SheetNames[0]];
     if (!ws) throw new Error('Planilha vazia ou inválida.');
-
     const json = XLSX.utils.sheet_to_json(ws, { defval:null, raw:true });
     if (!json.length) throw new Error('Nenhuma linha encontrada na planilha.');
 
-    /* mapeia cabeçalhos */
     const headerMap = {};
     Object.keys(json[0]).forEach(h => {
       const field = ALIAS_LOOKUP[norm(h)];
@@ -1251,31 +1103,28 @@ async function handleFile(file){
     });
 
     const missing = ['data','agenda','recebido'].filter(f => !Object.values(headerMap).includes(f));
-    if (missing.length) {
-      throw new Error(`Colunas obrigatórias não encontradas: ${missing.join(', ')}. Verifique o cabeçalho do arquivo.`);
-    }
+    if (missing.length)
+      throw new Error(`Colunas obrigatórias não encontradas: ${missing.join(', ')}.`);
 
-    /* converte linhas */
     const parsed = [], errors = [];
     json.forEach((raw, idx) => {
-      const rec = { data:null, cd:state.cd === 'TODOS' ? '910' : state.cd, turno:'GERAL',
+      const rec = { data:null, cd: state.cd === 'TODOS' ? '910' : state.cd, turno:'GERAL',
                     agenda:0, agenda_noshow:0, noshow:0, recebido:0, no_prazo:0, abaixo_4hrs:0, recusado:0 };
-      for (const [h, field] of Object.entries(headerMap)) {
+      for (const [h, field] of Object.entries(headerMap)){
         const v = raw[h];
         if (field === 'data')       rec.data  = parseDate(v);
         else if (field === 'cd')    rec.cd    = v ? String(v).trim() : rec.cd;
         else if (field === 'turno') rec.turno = normTurno(v);
         else                        rec[field] = Math.max(0, Math.round(Number(v) || 0));
       }
-      if (!rec.data) { errors.push(`Linha ${idx + 2}: data inválida`); return; }
+      if (!rec.data){ errors.push(`Linha ${idx+2}: data inválida`); return; }
       if (!rec.turno) rec.turno = 'GERAL';
       parsed.push(rec);
     });
 
     pendingRows = parsed;
     renderImportPreview(parsed, errors, json.length);
-
-  } catch(e) {
+  } catch(e){
     console.error(e);
     toast('Falha na leitura do arquivo', e.message || String(e), 'err');
   } finally {
@@ -1285,8 +1134,7 @@ async function handleFile(file){
 
 function renderImportPreview(rows, errors, totalLidas){
   document.getElementById('importResult').style.display = 'block';
-
-  const soma = k => rows.reduce((s, r) => s + (r[k] || 0), 0);
+  const soma = k => rows.reduce((s,r) => s + (r[k]||0), 0);
   const periodos = [...new Set(rows.map(r => r.data))].sort();
   const cds = [...new Set(rows.map(r => r.cd))];
 
@@ -1294,8 +1142,8 @@ function renderImportPreview(rows, errors, totalLidas){
     <div class="stat ok"><span>Linhas Válidas</span><b>${nfInt.format(rows.length)}</b></div>
     <div class="stat ${errors.length ? 'warn' : ''}"><span>Linhas c/ Erro</span><b>${nfInt.format(errors.length)}</b></div>
     <div class="stat"><span>Total Lidas</span><b>${nfInt.format(totalLidas)}</b></div>
-    <div class="stat"><span>Período</span><b style="font-size:13px">${periodos[0] || '–'} → ${periodos[periodos.length-1] || '–'}</b></div>
-    <div class="stat"><span>CDs</span><b style="font-size:13px">${cds.join(', ') || '–'}</b></div>
+    <div class="stat"><span>Período</span><b style="font-size:13px">${periodos[0]||'–'} → ${periodos[periodos.length-1]||'–'}</b></div>
+    <div class="stat"><span>CDs</span><b style="font-size:13px">${cds.join(', ')||'–'}</b></div>
     <div class="stat"><span>Agenda</span><b>${nfInt.format(soma('agenda'))}</b></div>
     <div class="stat ok"><span>Recebido</span><b>${nfInt.format(soma('recebido'))}</b></div>
     <div class="stat"><span>No Prazo</span><b>${nfInt.format(soma('no_prazo'))}</b></div>
@@ -1316,9 +1164,8 @@ function renderImportPreview(rows, errors, totalLidas){
         </tr>`).join('')}
       </tbody>
     </table>
-    ${rows.length > 40 ? `<div style="padding:10px;text-align:center;color:var(--muted);font-size:11.5px">… e mais ${nfInt.format(rows.length - 40)} linhas</div>` : ''}
+    ${rows.length > 40 ? `<div style="padding:10px;text-align:center;color:var(--muted);font-size:11.5px">… e mais ${nfInt.format(rows.length-40)} linhas</div>` : ''}
   `;
-
   document.getElementById('confirmImport').disabled = rows.length === 0;
 }
 
@@ -1331,18 +1178,15 @@ async function confirmImport(){
     closeImport();
     await loadCDs();
     await loadData();
-  } catch(e) {
+  } catch(e){
     console.error(e);
     toast('Erro ao gravar no Supabase', e.message || String(e), 'err');
-  } finally {
-    showLoader(false);
-  }
+  } finally { showLoader(false); }
 }
 
 function downloadTemplate(){
   const headers = ['DATA','CD','TURNO','AGENDA','AGENDA - NOSHOW','NOSHOW','RECEBIDO','NO PRAZO','< 4 HRS','RECUSADO'];
-  const hoje = todayISO();
-  const exemplo = [hoje, '910', 'MANHÃ', 120, 8, 15, 105, 88, 12, 5];
+  const exemplo = [todayISO(), '910', 'MANHÃ', 120, 8, 15, 105, 88, 12, 5];
   const csv = [headers.join(';'), exemplo.join(';')].join('\n');
   const blob = new Blob(['\uFEFF' + csv], { type:'text/csv;charset=utf-8;' });
   const a = document.createElement('a');
@@ -1355,34 +1199,27 @@ function downloadTemplate(){
 
 
 /* ============================================================================
-   14. EXPORTAÇÃO
+   EXPORTAÇÃO
    ============================================================================ */
 function exportData(){
+  if (!state.rows.length){ toast('Nada para exportar', 'Sem dados no período.', 'warn'); return; }
   const agg = aggregate();
-  if (!state.rows.length) { toast('Nada para exportar', 'Sem dados no período.', 'warn'); return; }
+  const { cols, total } = agg;
 
-  const { y, m, daysArr, byDay, total } = agg;
-  const head = ['INDICADOR', ...daysArr.map(d => String(d).padStart(2,'0')), 'TOTAL'];
+  const head = ['INDICADOR', ...cols.map(c => `${c.label}${c.sub?' ('+c.sub+')':''}`), 'TOTAL'];
   const linhas = [];
-
   ROWS.forEach(r => {
-    linhas.push([
-      r.label,
-      ...byDay.map(b => b[r.key] || 0),
-      total[r.key] || 0
-    ]);
+    linhas.push([r.label, ...cols.map(c => c.bucket[r.key]||0), total[r.key]||0]);
   });
-  linhas.push([
-    '% NO PRAZO',
-    ...byDay.map(b => b.recebido > 0 ? +((b.no_prazo / b.recebido) * 100).toFixed(1) : ''),
-    total.recebido > 0 ? +((total.no_prazo / total.recebido) * 100).toFixed(1) : ''
-  ]);
+  linhas.push(['% NO PRAZO',
+    ...cols.map(c => c.bucket.recebido>0 ? +((c.bucket.no_prazo/c.bucket.recebido)*100).toFixed(1) : ''),
+    total.recebido>0 ? +((total.no_prazo/total.recebido)*100).toFixed(1) : '']);
 
   const csv = [head.join(';'), ...linhas.map(l => l.join(';'))].join('\n');
   const blob = new Blob(['\uFEFF' + csv], { type:'text/csv;charset=utf-8;' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `recebimento_${state.mes}_CD${state.cd}.csv`;
+  a.download = `recebimento_${state.gran}_${state.mes}_CD${state.cd}.csv`;
   a.click();
   URL.revokeObjectURL(a.href);
   toast('Exportação concluída', 'Arquivo CSV gerado.', 'ok');
@@ -1390,11 +1227,10 @@ function exportData(){
 
 
 /* ============================================================================
-   15. UI HELPERS
+   UI HELPERS
    ============================================================================ */
 function showLoader(on){ document.getElementById('loader').classList.toggle('show', !!on); }
-
-function toast(title, msg, type = 'ok'){
+function toast(title, msg, type='ok'){
   const el = document.createElement('div');
   el.className = `toast ${type}`;
   el.innerHTML = `<div><strong>${title}</strong>${msg ? `<small>${msg}</small>` : ''}</div>`;
@@ -1407,9 +1243,65 @@ function toast(title, msg, type = 'ok'){
   }, 4200);
 }
 
+/* Atualiza o rótulo do campo de período e o hint da granularidade */
+function updatePeriodHints(){
+  const lbl = document.getElementById('lblPeriodo');
+  const hint = document.getElementById('granHint');
+  const [y, m] = state.mes.split('-').map(Number);
+
+  if (state.gran === 'dia' || state.gran === 'semana'){
+    lbl.textContent = 'Mês de Referência';
+    hint.textContent = state.gran === 'dia'
+      ? `Exibindo cada dia de ${MES_EXT[m-1]} / ${y}`
+      : `Exibindo as semanas de ${MES_EXT[m-1]} / ${y}`;
+  } else if (state.gran === 'mes'){
+    lbl.textContent = 'Ano de Referência';
+    hint.textContent = `Exibindo os 12 meses de ${y}`;
+  } else if (state.gran === 'ano'){
+    lbl.textContent = 'Ano Final';
+    hint.textContent = `Exibindo últimos 5 anos: ${y-4} → ${y}`;
+  } else {
+    lbl.textContent = 'Ano Final';
+    hint.textContent = `Exibindo últimos 10 anos: ${y-9} → ${y}`;
+  }
+}
+
 
 /* ============================================================================
-   16. EVENTOS
+   CARREGAMENTO
+   ============================================================================ */
+async function loadCDs(){
+  const sel = document.getElementById('fCd');
+  try {
+    let cds = await api.listCDs();
+    if (!cds.length) cds = ['910'];
+    if (!cds.includes('910')) cds.unshift('910');
+    state.cds = cds;
+    sel.innerHTML = cds.map(c => `<option value="${c}">CD ${c}</option>`).join('')
+      + `<option value="TODOS">Todos os CDs</option>`;
+    sel.value = cds.includes(state.cd) ? state.cd : cds[0];
+    state.cd = sel.value;
+  } catch(e){
+    sel.innerHTML = `<option value="910">CD 910</option><option value="TODOS">Todos os CDs</option>`;
+  }
+}
+
+async function loadData(){
+  showLoader(true);
+  try {
+    const range = getFetchRange();
+    state.rows = await api.fetchRange(range.start, range.end, state.cd);
+    updatePeriodHints();
+    render();
+  } catch(e){
+    console.error(e);
+    toast('Erro ao carregar dados', e.message || String(e), 'err');
+  } finally { showLoader(false); }
+}
+
+
+/* ============================================================================
+   EVENTOS
    ============================================================================ */
 function bindEvents(){
   document.getElementById('fMes').addEventListener('change', e => {
@@ -1436,6 +1328,16 @@ function bindEvents(){
     render();
   });
 
+  /* Granularidade */
+  document.getElementById('granChips').addEventListener('click', e => {
+    const btn = e.target.closest('button[data-gran]');
+    if (!btn) return;
+    document.querySelectorAll('#granChips button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.gran = btn.dataset.gran;
+    loadData(); // precisa refetch pois o range muda
+  });
+
   document.getElementById('btnRefresh').addEventListener('click', async () => {
     await loadCDs();
     await loadData();
@@ -1453,16 +1355,14 @@ function bindEvents(){
 
   const drop = document.getElementById('dropZone');
   const fileInput = document.getElementById('fileInput');
-
   drop.addEventListener('click', () => fileInput.click());
   fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
-
-  ['dragenter','dragover'].forEach(ev =>
-    drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); })
-  );
-  ['dragleave','drop'].forEach(ev =>
-    drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); })
-  );
+  ['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => {
+    e.preventDefault(); drop.classList.add('over');
+  }));
+  ['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => {
+    e.preventDefault(); drop.classList.remove('over');
+  }));
   drop.addEventListener('drop', e => {
     const f = e.dataTransfer.files[0];
     if (f) handleFile(f);
@@ -1471,30 +1371,28 @@ function bindEvents(){
   document.getElementById('modalImport').addEventListener('click', e => {
     if (e.target.id === 'modalImport') closeImport();
   });
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeImport();
-  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeImport(); });
 
-  /* Limpar período */
+  /* Limpar período (respeita o range atual) */
   document.getElementById('btnClear').addEventListener('click', async () => {
-    const [y, m] = state.mes.split('-');
-    const nome = new Date(Number(y), Number(m)-1, 1)
-      .toLocaleDateString('pt-BR', { month:'long', year:'numeric' });
-    if (!confirm(`Confirma EXCLUIR todos os registros de ${nome} para o CD ${state.cd}?\n\nEsta ação não pode ser desfeita.`)) return;
+    const range = getFetchRange();
+    const granularidadeTxt = {
+      dia:'do mês', semana:'do mês', mes:'do ano',
+      ano:'dos últimos 5 anos', decada:'dos últimos 10 anos'
+    }[state.gran];
+
+    if (!confirm(`Confirma EXCLUIR todos os registros ${granularidadeTxt} (${range.start} → ${range.end}) para o CD ${state.cd}?\n\nEsta ação não pode ser desfeita.`)) return;
 
     showLoader(true);
     try {
-      await api.remove(state.mes, state.cd);
+      await api.remove(range.start, range.end, state.cd);
       toast('Período limpo', 'Registros removidos com sucesso.', 'ok');
       await loadData();
-    } catch(e) {
+    } catch(e){
       toast('Erro ao limpar', e.message || String(e), 'err');
-    } finally {
-      showLoader(false);
-    }
+    } finally { showLoader(false); }
   });
 
-  /* Re-render ao redimensionar (ajusta gráficos) */
   let rt;
   window.addEventListener('resize', () => {
     clearTimeout(rt);
@@ -1504,13 +1402,13 @@ function bindEvents(){
 
 
 /* ============================================================================
-   17. BOOTSTRAP
+   BOOTSTRAP
    ============================================================================ */
 (async function init(){
   document.getElementById('fMes').value = state.mes;
   if (DEMO) document.getElementById('demoBanner').classList.add('show');
-
   bindEvents();
+  updatePeriodHints();
   await loadCDs();
   await loadData();
 })();
