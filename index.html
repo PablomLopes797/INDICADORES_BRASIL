@@ -149,6 +149,7 @@ body.locked{overflow:hidden}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:16px}
 .kpi{position:relative;overflow:hidden;background:linear-gradient(150deg,var(--card-1),var(--card-2));border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px 13px;box-shadow:var(--shadow);transition:transform .18s,border-color .18s}
 .kpi:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--blue) 40%,var(--line))}
+.kpi.focused{border-color:var(--c,var(--blue));box-shadow:0 0 0 2px color-mix(in srgb,var(--c,var(--blue)) 35%,transparent),var(--shadow)}
 .kpi::after{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--c,var(--blue));box-shadow:0 0 18px -2px var(--c,var(--blue))}
 .kpi-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
 .kpi-label{font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted)}
@@ -225,7 +226,6 @@ table.grid td.numcell:hover{background-color:color-mix(in srgb,var(--cyan) 22%,t
 .focus-bar .clr{background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.4);color:#c4b5fd;border-radius:8px;padding:5px 11px;font-size:10.5px;font-weight:800;letter-spacing:.5px;cursor:pointer;transition:.15s;text-transform:uppercase}
 .focus-bar .clr:hover{background:rgba(168,85,247,.25);color:#ddd6fe}
 
-/* Drill down */
 .drill-card{margin-bottom:16px;display:none}
 .drill-card.show{display:block}
 .drill-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:14px 16px}
@@ -245,7 +245,6 @@ table.grid td.numcell:hover{background-color:color-mix(in srgb,var(--cyan) 22%,t
 .drill-item .qty{font-family:var(--mono);font-weight:800;color:var(--cyan);font-size:13px}
 .drill-item .pct{font-family:var(--mono);font-size:10px;color:var(--muted);font-weight:700}
 
-/* Tooltip */
 .hover-tip{position:fixed;z-index:900;pointer-events:none;display:none;padding:10px 13px;background:linear-gradient(150deg,#1a2742,#0f1729);border:1px solid #3b82f6;border-radius:10px;box-shadow:0 12px 32px -8px rgba(0,0,0,.9),0 0 0 1px rgba(96,165,250,.3);max-width:320px;font-size:11.5px;color:#e9eefb;font-weight:600}
 .hover-tip.show{display:block;animation:tipIn .12s ease}
 @keyframes tipIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
@@ -474,7 +473,6 @@ footer.app-footer span.dot{color:var(--muted-2);margin:0 6px}
     <div class="legend" id="legend"></div>
   </section>
 
-  <!-- DRILL DOWN TOP 10 FORNECEDORES -->
   <section class="card drill-card" id="drillCard">
     <div class="card-head">
       <div class="card-title" id="drillTitle">Detalhamento</div>
@@ -502,7 +500,6 @@ footer.app-footer span.dot{color:var(--muted-2);margin:0 6px}
   </footer>
 </div>
 
-<!-- Tooltip flutuante -->
 <div class="hover-tip" id="hoverTip"></div>
 
 <!-- MODAL COMENTÁRIOS -->
@@ -568,12 +565,11 @@ footer.app-footer span.dot{color:var(--muted-2);margin:0 6px}
    ============================================================================ */
 const SUPABASE_URL      = "https://iykukdzmdxbluehylkse.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_AOnZKBKy9NpHheU_VN-bcQ_y5Ldcgce";
-const TABLE_USERS = "USERS";
+const TABLE_USERS  = "USERS";
 const TABLE_AGENDA = "BD_AGENDA";
-const TABLE_OBS = "OBS_REC";
+const TABLE_OBS    = "OBS_REC";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-/* Weather config */
 const WEATHER_LAT = -23.5505;
 const WEATHER_LON = -46.6333;
 const WEATHER_TZ  = 'America/Sao_Paulo';
@@ -585,7 +581,7 @@ const S = {
 
 const ROWS = [
   { key:'agenda',           label:'AGENDA',           color:'#60a5fa' },
-  { key:'agenda_noshow',    label:'AGENDA - NOSHOW',  color:'#38bdf8', derived:'agenda_noshow' },
+  { key:'agenda_noshow',    label:'AGENDA - NOSHOW',  color:'#38bdf8', derived:true },
   { key:'recebido',         label:'RECEBIDO',         color:'#22d3ee' },
   { key:'no_prazo',         label:'NO PRAZO',         color:'#22c55e' },
   { key:'abaixo_4hrs',      label:'< 4 HRS',          color:'#facc15' },
@@ -599,7 +595,16 @@ const KEYS = ROWS.map(r => r.key);
 const WD = ['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
 const MES_ABREV = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
 const MES_EXT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-const COL = { cd:'CD', status:'STATUS', agenda:'DATA/HORA AGENDA', tempoCrit:'TEMPO CRIT', turnoAgenda:'TURNO AGENDA', turnoConf:'TURNO CONF', fornecedor:'FORNECEDOR', carga:'CARGA' };
+const COL = {
+  cd:'CD',
+  status:'STATUS',
+  agenda:'DATA/HORA AGENDA',
+  tempoCrit:'TEMPO CRIT',
+  turnoAgenda:'TURNO AGENDA',
+  turnoConf:'TURNO CONF',
+  fornecedor:'FORNECEDOR',
+  carga:'CARGA'
+};
 const COL_OBS = { dta:'DTA', usuario:'USUARIO', observacao:'OBSERVAÇÃO' };
 const CD_PADRAO = '910';
 
@@ -621,8 +626,7 @@ const state = {
   user: null,
   comments: {},
   weather: {},
-  obsAvailable: true,
-  _cacheKey: null
+  obsAvailable: true
 };
 
 /* ============================================================================
@@ -700,7 +704,7 @@ function escapeHTML(s){
 }
 
 /* ============================================================================
-   WEATHER — open-meteo (no key required)
+   WEATHER
    ============================================================================ */
 const WMO = {
   0:{icon:'☀️',label:'Céu limpo'}, 1:{icon:'🌤️',label:'Predomínio sol'}, 2:{icon:'⛅',label:'Parcial nublado'},
@@ -724,11 +728,7 @@ async function loadWeather(){
     const map = {};
     if (j.daily && j.daily.time){
       j.daily.time.forEach((t,i) => {
-        map[t] = {
-          code: j.daily.weather_code[i],
-          max: j.daily.temperature_2m_max[i],
-          min: j.daily.temperature_2m_min[i]
-        };
+        map[t] = { code: j.daily.weather_code[i], max: j.daily.temperature_2m_max[i], min: j.daily.temperature_2m_min[i] };
       });
     }
     state.weather = map;
@@ -787,11 +787,6 @@ function registrosDoPeriodo(){
     out.push(r);
   }
   return out;
-}
-/* Aplica filtro de seleção de dias (para KPIs e gráficos) */
-function applySelection(regs){
-  if (!state.selectedDates.size) return regs;
-  return regs.filter(r => state.selectedDates.has(r.data));
 }
 
 /* ============================================================================
@@ -860,12 +855,10 @@ function aggregate(){
     if (col){ for (const k of KEYS) if (k !== 'agenda_noshow') col.bucket[k] += r[k] || 0; }
     for (const k of KEYS) if (k !== 'agenda_noshow') total[k] += r[k] || 0;
   }
-  /* Agenda - No Show = AGENDA - NO SHOW */
   cols.forEach(c => c.bucket.agenda_noshow = c.bucket.agenda - c.bucket.no_show);
   total.agenda_noshow = total.agenda - total.no_show;
   return { cols, total, registros: regs };
 }
-/* Foca nos dias selecionados */
 function aggregateFocus(agg){
   if (!state.selectedDates.size || state.gran !== 'dia') return { total: agg.total, focused:false };
   const t = emptyBucket();
@@ -876,13 +869,11 @@ function aggregateFocus(agg){
   t.agenda_noshow = t.agenda - t.no_show;
   return { total: t, focused: true };
 }
-/* Valor de linha (ou derivada) para um bucket */
 function rowValue(bucket, key, mode){
   let v;
   if (key === 'agenda_noshow') v = (bucket.agenda||0) - (bucket.no_show||0);
   else v = bucket[key] || 0;
   if (mode === 'abs') return v;
-  /* Modo % - cada linha tem seu denominador conforme regras do usuário */
   const agenda = bucket.agenda || 0;
   const recebido = bucket.recebido || 0;
   const agendaSemNoShow = agenda - (bucket.no_show||0);
@@ -901,7 +892,7 @@ function rowValue(bucket, key, mode){
 }
 
 /* ============================================================================
-   KPIs (novas fórmulas)
+   KPIs
    ============================================================================ */
 function renderKPIs(agg){
   const { total: t, focused } = aggregateFocus(agg);
@@ -923,7 +914,7 @@ function renderKPIs(agg){
     { label:'Agenda', value:intFmt(agenda), color:'var(--blue)', badge,
       sub:`Recebido: <b>${intFmt(recebido)}</b> · No Show: <b>${intFmt(noShow)}</b>` },
     { label:'Recebido', value:pctFmt(pctRecebido), color:'var(--cyan)', badge:'Receb./Ag-NS',
-      sub:`<b>${intFmt(recebido)}</b> de <b>${intFmt(agendaSemNoShow)}</b> (agenda - no show)` },
+      sub:`<b>${intFmt(recebido)}</b> de <b>${intFmt(agendaSemNoShow)}</b>` },
     { label:'No Prazo', value:pctFmt(pctNoPrazo), color:'var(--green)', badge:'Prazo/Receb.',
       sub:`<b>${intFmt(t.no_prazo)}</b> de <b>${intFmt(recebido)}</b> recebidos` },
     { label:'< 4 HRS', value:pctFmt(pctAbaixo), color:'var(--amber)', badge:'<4h/Receb.',
@@ -963,7 +954,6 @@ function renderTable(agg){
     return;
   }
 
-  /* HEADER */
   let head = '<thead><tr><th class="corner">Indicador</th>';
   cols.forEach(c => {
     const cls = [
@@ -979,14 +969,12 @@ function renderTable(agg){
   });
   head += '<th class="total-col">TOTAL</th><th class="avg-col">MÉDIA</th></tr></thead>';
 
-  /* BODY */
   let body = '<tbody>';
   ROWS.forEach(r => {
     const vals = cols.map(c => rowValue(c.bucket, r.key, state.view));
     const max = vals.reduce((mx,v) => v===null?mx:Math.max(mx,Math.abs(v)),0);
     const totalVal = rowValue(total, r.key, state.view);
 
-    /* Média = soma / nº de colunas (para % = média dos % válidos) */
     let avgVal;
     if (state.view === 'abs'){
       avgVal = cols.length ? (vals.reduce((s,v)=>s+(v||0),0) / cols.length) : 0;
@@ -1011,11 +999,9 @@ function renderTable(agg){
       body += `<td class="${cls}${extra}" style="${bg}" ${rowAttr}>${txt}</td>`;
     });
 
-    /* Total */
     const tTxt = totalVal===null ? '–' : (pct ? pctFmt(totalVal) : intFmt(totalVal));
     body += `<td class="total-cell">${tTxt}</td>`;
 
-    /* Média */
     const aTxt = avgVal===null ? '–' : (pct ? pctFmt(avgVal) : intFmt(avgVal));
     body += `<td class="avg-cell">${aTxt}</td></tr>`;
   });
@@ -1154,7 +1140,9 @@ function renderCharts(agg){
         if (!key) return;
         state.statusFilter = state.statusFilter === key ? null : key;
         render();
-        toast(state.statusFilter ? 'Filtro aplicado' : 'Filtro removido', state.statusFilter ? `Mostrando apenas "${ROWS[idx].label}"` : 'Exibindo todos os status.', state.statusFilter ? 'ok' : 'warn');
+        toast(state.statusFilter ? 'Filtro aplicado' : 'Filtro removido',
+          state.statusFilter ? `Mostrando apenas "${ROWS[idx].label}"` : 'Exibindo todos os status.',
+          state.statusFilter ? 'ok' : 'warn');
       },
       onHover: (evt, els) => { evt.native.target.style.cursor = els.length ? 'pointer' : 'default'; },
       plugins:{
@@ -1173,9 +1161,6 @@ function renderCharts(agg){
     : 'Composição do Período';
 }
 
-/* ============================================================================
-   RENDER GERAL
-   ============================================================================ */
 function render(){
   const agg = aggregate();
   renderKPIs(agg);
@@ -1206,7 +1191,6 @@ function updateFocusBar(){
 function toggleDateSelection(dateKey, shiftKey){
   const s = state.selectedDates;
   if (shiftKey && state.lastClickedDate && state.gran === 'dia'){
-    /* Adiciona intervalo entre lastClicked e dateKey */
     const a = state.lastClickedDate, b = dateKey;
     const [lo, hi] = a <= b ? [a, b] : [b, a];
     const { y, m, last } = getFetchRange();
@@ -1218,12 +1202,10 @@ function toggleDateSelection(dateKey, shiftKey){
     if (s.has(dateKey)) s.delete(dateKey); else s.add(dateKey);
   }
   state.lastClickedDate = dateKey;
-  /* Se sobrou apenas 1, mantém. Se 0, limpa. */
   if (s.size === 0) state.lastClickedDate = null;
 }
 
 let clickTimer = null;
-let lastClickWasCtrl = false;
 
 function handleDateClick(dateKey, ctrl, shift){
   if (shift){ clearTimeout(clickTimer); clickTimer = null; toggleDateSelection(dateKey, true); render(); return; }
@@ -1231,7 +1213,6 @@ function handleDateClick(dateKey, ctrl, shift){
   if (clickTimer){ clearTimeout(clickTimer); clickTimer = null; openCommentModal(dateKey); return; }
   clickTimer = setTimeout(() => {
     clickTimer = null;
-    /* Clique simples: se já é a única selecionada, limpa tudo; senão, define só ela */
     if (state.selectedDates.size === 1 && state.selectedDates.has(dateKey)){
       state.selectedDates.clear();
       state.lastClickedDate = null;
@@ -1245,12 +1226,12 @@ function handleDateClick(dateKey, ctrl, shift){
 }
 
 /* ============================================================================
-   DRILL DOWN TOP 10
+   DRILL DOWN
    ============================================================================ */
 function rowFilterFor(key, r){
   switch(key){
     case 'agenda':           return true;
-    case 'agenda_noshow':    return r.status !== S.NO_SHOW; /* cargas que efetivamente tinham agenda */
+    case 'agenda_noshow':    return r.status !== S.NO_SHOW;
     case 'recebido':         return r.status === S.RECEBIDO;
     case 'no_prazo':         return r.status === S.RECEBIDO && r.tempoH != null && r.tempoH <= 4;
     case 'abaixo_4hrs':      return r.tempoH != null && r.tempoH < 4;
@@ -1268,9 +1249,7 @@ function openDrill(rowKey, colKey, colIdx){
   const col = agg.cols[colIdx];
   if (!col) return;
 
-  /* Filtra registros: pelo bucket da coluna + filtro da linha */
   const regs = agg.registros.filter(r => {
-    /* Data dentro do bucket */
     const c = colForDate(agg.cols, r.data);
     if (!c || c.key !== col.key) return false;
     return rowFilterFor(rowKey, r);
@@ -1319,7 +1298,6 @@ function closeDrill(){
 }
 
 function renderDrill(agg){
-  /* Recalcula drill quando os dados mudam */
   if (!state.drill) return;
   const { rowKey, colKey } = state.drill;
   const colIdx = agg.cols.findIndex(c => c.key === colKey);
@@ -1409,7 +1387,7 @@ async function loadComments(start, end){
 }
 
 /* ============================================================================
-   TOOLTIP HOVER NAS DATAS
+   TOOLTIP HOVER
    ============================================================================ */
 const hoverTip = document.getElementById('hoverTip');
 let hoverTimer = null;
@@ -1448,7 +1426,6 @@ function showHoverTip(th, dateKey){
   hoverTip.innerHTML = inner;
   hoverTip.classList.add('show');
 
-  /* Posicionar */
   const r = th.getBoundingClientRect();
   const tipW = hoverTip.offsetWidth;
   const tipH = hoverTip.offsetHeight;
@@ -1466,7 +1443,7 @@ function hideHoverTip(){
 }
 
 /* ============================================================================
-   COPIAR PARA EXCEL (TSV)
+   COPIAR TABELA (Ctrl+C / botão)
    ============================================================================ */
 function buildTSV(){
   const table = document.getElementById('mainTable');
@@ -1475,7 +1452,6 @@ function buildTSV(){
   table.querySelectorAll('tr').forEach(tr => {
     const cells = [];
     tr.querySelectorAll('th,td').forEach(td => {
-      /* Remove ícones/decoração, pega só o texto principal */
       let txt = td.cloneNode(true);
       txt.querySelectorAll('svg,.wicon,.obs-dot,.dot').forEach(el => el.remove());
       let t = (txt.textContent || '').trim().replace(/\s+/g,' ');
@@ -1492,7 +1468,6 @@ async function copyTable(){
     await navigator.clipboard.writeText(tsv);
     toast('Tabela copiada', 'Cole no Excel (Ctrl+V).', 'ok');
   } catch(e){
-    /* Fallback antigo */
     const ta = document.createElement('textarea');
     ta.value = tsv; document.body.appendChild(ta);
     ta.select(); document.execCommand('copy'); ta.remove();
@@ -1500,10 +1475,8 @@ async function copyTable(){
   }
 }
 document.addEventListener('copy', e => {
-  /* Intercepta Ctrl+C apenas se o foco estiver em table-card */
   const inTable = e.target.closest && e.target.closest('.table-card');
   if (!inTable) return;
-  /* Se o usuário tem seleção de texto própria, deixa o browser copiar */
   const sel = window.getSelection();
   if (sel && sel.toString().trim().length > 0) return;
   e.preventDefault();
@@ -1643,8 +1616,8 @@ async function confirmImport(){
     toast('Base importada', `${nfInt.format(total)} registros em BD_AGENDA.`, 'ok');
     closeImport();
     await loadCDs();
-    state._cacheKey = null; /* invalida cache */
-    await loadData();
+    state.raw = [];
+    await loadData(true);
   } catch(e){
     console.error(e);
     toast('Erro ao gravar', e.message || String(e), 'err');
@@ -1652,7 +1625,7 @@ async function confirmImport(){
 }
 
 function downloadTemplate(){
-  const headers = ['SENHA','CARGA','CD','FORNECEDOR','STATUS','DATA/HORA AGENDA','DATA/HORA CHEG','ACIONADO','INI_CONF','FIM_CONF','HORA LIBERAÇÃO','TERMO','TEMPO CRIT','TEMPO DIV COM','TEMPO DIV TRIB','TEMPO S/ DIV','RANGE TEMPO','TURNO CONF','TURNO AGENDA'];
+  const headers = ['SENHA','CARGA','CD','FORNECEDOR','STATUS','DATA/HORA AGENDA','DATA/HORA CHEG','ACIONADO','INI_CONF','FIM_CONF','HORA LIBERAÇÃO','TERMO','TEMPO CRIT','TEMPO DIV COM','TEMPO DIV TRIBO','TEMPO S/ DIV','RANGE TEMPO','TURNO CONF','TURNO AGENDA'];
   const now = new Date();
   const dt = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} 08:30`;
   const ex = ['0001','CARGA123','910','FORNECEDOR EXEMPLO','RECEBIDO', dt, dt, '','','','','','03:45','00:15','00:20','00:30','0-4H','MANHÃ','MANHÃ'];
@@ -1729,12 +1702,13 @@ function updatePeriodHints(){
 }
 
 /* ============================================================================
-   CARREGAMENTO (com cache e filtro server-side)
+   CARREGAMENTO — busca por CD, filtro de data no cliente
    ============================================================================ */
 async function loadCDs(){
   const sel = document.getElementById('fCd');
   try {
-    const { data, error } = await sb.from(TABLE_AGENDA).select(`"${COL.cd}"`).limit(50000);
+    /* Busca só a coluna CD — leve e rápida */
+    const { data, error } = await sb.from(TABLE_AGENDA).select(COL.cd).limit(50000);
     if (error) throw error;
     const set = new Set();
     (data||[]).forEach(r => { const cd = String(r[COL.cd] ?? '').trim(); if (cd) set.add(cd); });
@@ -1751,43 +1725,40 @@ async function loadCDs(){
   }
 }
 
-/* Busca APENAS o range de datas do período atual — muito mais rápido */
-async function fetchRangeFromDB(start, end){
+/* Busca paginada filtrando apenas pelo CD (coluna simples, funciona).
+   O filtro de data é aplicado depois, no cliente. */
+async function fetchAllFromDB(){
   const PAGE = 1000;
   const all = [];
   let from = 0;
   while (true){
-    const { data, error } = await sb.from(TABLE_AGENDA)
-      .select(`"${COL.cd}","${COL.status}","${COL.agenda}","${COL.tempoCrit}","${COL.turnoAgenda}","${COL.turnoConf}","${COL.fornecedor}","${COL.carga}"`)
-      .gte(COL.agenda, start)
-      .lte(COL.agenda, end + 'T23:59:59')
-      .range(from, from + PAGE - 1);
+    let q = sb.from(TABLE_AGENDA).select('*').range(from, from + PAGE - 1);
+    if (state.cd !== 'TODOS') q = q.eq(COL.cd, state.cd);
+    const { data, error } = await q;
     if (error) throw error;
     if (!data || !data.length) break;
     all.push(...data);
     if (data.length < PAGE) break;
     from += PAGE;
+    if (all.length > 300000) break;
   }
   return all;
 }
 
 async function loadData(force){
-  const { start, end } = getFetchRange();
-  const key = `${start}|${end}`;
-  if (!force && state._cacheKey === key && state.raw.length){
-    /* Já temos os dados — apenas re-renderiza */
+  if (!force && state.raw.length){
     render();
     return;
   }
   showLoader(true, 'Carregando BD_AGENDA…');
   try {
     const [rows] = await Promise.all([
-      fetchRangeFromDB(start, end),
+      fetchAllFromDB(),
       Object.keys(state.weather).length ? Promise.resolve() : loadWeather()
     ]);
     state.raw = rows;
-    state._cacheKey = key;
     document.getElementById('footerConexao').textContent = `BD_AGENDA · ${nfInt.format(rows.length)} registros`;
+    const { start, end } = getFetchRange();
     await loadComments(start, end);
     updatePeriodHints();
     render();
@@ -1898,13 +1869,14 @@ function bindEvents(){
   document.getElementById('fMes').addEventListener('change', e => {
     state.mes = e.target.value || todayISO().slice(0,7);
     state.selectedDates.clear(); state.lastClickedDate = null;
-    state._cacheKey = null;
-    loadData();
+    state.raw = [];                     /* invalida cache local */
+    loadData(true);
   });
   document.getElementById('fCd').addEventListener('change', e => {
     state.cd = e.target.value;
     state.selectedDates.clear(); state.lastClickedDate = null;
-    render();
+    state.raw = [];
+    loadData(true);
   });
   document.getElementById('fTurno').addEventListener('change', e => {
     state.turno = e.target.value;
@@ -1924,27 +1896,17 @@ function bindEvents(){
     btn.classList.add('active');
     state.gran = btn.dataset.gran;
     state.selectedDates.clear(); state.lastClickedDate = null;
-    state._cacheKey = null;
     updatePeriodHints();
-    loadData();
+    render();
   });
 
-  /* Delegação para cliques na tabela */
   const host = document.getElementById('tableHost');
   host.addEventListener('click', e => {
-    /* Clique em data do header */
     const th = e.target.closest('th[data-date]');
-    if (th){
-      handleDateClick(th.dataset.date, e.ctrlKey || e.metaKey, e.shiftKey);
-      return;
-    }
-    /* Clique em número de célula → drill down */
+    if (th){ handleDateClick(th.dataset.date, e.ctrlKey || e.metaKey, e.shiftKey); return; }
     const td = e.target.closest('td.numcell[data-row]');
     if (td){
-      const rowKey = td.dataset.row;
-      const colKey = td.dataset.col;
-      const colIdx = Number(td.dataset.colidx);
-      openDrill(rowKey, colKey, colIdx);
+      openDrill(td.dataset.row, td.dataset.col, Number(td.dataset.colidx));
     }
   });
   host.addEventListener('dblclick', e => {
@@ -1953,7 +1915,6 @@ function bindEvents(){
     if (clickTimer){ clearTimeout(clickTimer); clickTimer = null; }
     openCommentModal(th.dataset.date);
   });
-  /* Hover tooltip nas datas */
   host.addEventListener('mouseover', e => {
     const th = e.target.closest('th[data-date]');
     if (!th) return;
@@ -1973,14 +1934,13 @@ function bindEvents(){
   document.getElementById('btnCloseDrill').addEventListener('click', closeDrill);
 
   document.getElementById('btnRefresh').addEventListener('click', async () => {
+    state.raw = [];
     await loadCDs();
-    state._cacheKey = null;
     await loadData(true);
     toast('Atualizado', 'Painel sincronizado com BD_AGENDA.', 'ok');
   });
   document.getElementById('btnExport').addEventListener('click', exportData);
   document.getElementById('btnCopy').addEventListener('click', copyTable);
-
   document.getElementById('btnTheme').addEventListener('click', () => {
     applyTheme(isLight() ? 'dark' : 'light');
   });
@@ -1995,7 +1955,6 @@ function bindEvents(){
     toast('Sessão encerrada', 'Faça login novamente.', 'warn');
   });
 
-  /* Comentários */
   document.getElementById('closeComment').addEventListener('click', closeCommentModal);
   document.getElementById('cancelComment').addEventListener('click', closeCommentModal);
   document.getElementById('saveComment').addEventListener('click', saveComment);
@@ -2003,7 +1962,6 @@ function bindEvents(){
     if (e.target.id === 'modalComment') closeCommentModal();
   });
 
-  /* Import */
   document.getElementById('btnImport').addEventListener('click', openImport);
   document.getElementById('closeImport').addEventListener('click', closeImport);
   document.getElementById('cancelImport').addEventListener('click', closeImport);
@@ -2022,20 +1980,51 @@ function bindEvents(){
     if (e.key === 'Escape'){ closeImport(); closeCommentModal(); }
   });
 
-  /* Limpar período */
+  /* Limpar período — busca registros, filtra por data no cliente, deleta por ID */
   document.getElementById('btnClear').addEventListener('click', async () => {
     const range = getFetchRange();
-    const granTxt = { dia:'do mês', semana:'do mês', mes:'do ano', ano:'dos últimos 5 anos', decada:'dos últimos 10 anos' }[state.gran];
+    const granTxt = {
+      dia:'do mês', semana:'do mês', mes:'do ano',
+      ano:'dos últimos 5 anos', decada:'dos últimos 10 anos'
+    }[state.gran];
+
     if (!confirm(`Confirma EXCLUIR os registros ${granTxt} (${range.start} → ${range.end})?\n\nEsta ação não pode ser desfeita.`)) return;
+
     showLoader(true, 'Excluindo…');
     try {
-      const { error } = await sb.from(TABLE_AGENDA).delete()
-        .gte(COL.agenda, range.start).lte(COL.agenda, range.end + 'T23:59:59');
-      if (error) throw error;
-      toast('Período limpo', 'Registros removidos.', 'ok');
-      state._cacheKey = null;
+      /* 1. Puxa todos os registros do CD atual */
+      const all = await fetchAllFromDB();
+
+      /* 2. Identifica os IDs dos que estão no período */
+      const ids = [];
+      for (const r of all){
+        const dt = extractDate(r[COL.agenda]);
+        if (!dt) continue;
+        if (dt < range.start || dt > range.end) continue;
+        const pk = r.id ?? r.ID ?? r.Id ?? r._id;
+        if (pk != null) ids.push(pk);
+      }
+
+      if (!ids.length){
+        toast('Nada para limpar', 'Nenhum registro no período selecionado.', 'warn');
+        return;
+      }
+
+      /* 3. Deleta em blocos de 500 por ID (coluna simples, funciona) */
+      const CHUNK = 500;
+      let removidos = 0;
+      for (let i=0; i<ids.length; i+=CHUNK){
+        const slice = ids.slice(i, i+CHUNK);
+        const { error } = await sb.from(TABLE_AGENDA).delete().in('id', slice);
+        if (error) throw error;
+        removidos += slice.length;
+      }
+
+      toast('Período limpo', `${nfInt.format(removidos)} registros removidos.`, 'ok');
+      state.raw = [];
       await loadData(true);
     } catch(e){
+      console.error(e);
       toast('Erro ao limpar', e.message || String(e), 'err');
     } finally { showLoader(false); }
   });
@@ -2057,7 +2046,6 @@ async function bootstrapApp(){
   appBooted = true;
   bindEvents();
   updatePeriodHints();
-  /* Limita o input month ao mês atual (não permite meses futuros) */
   const mesInput = document.getElementById('fMes');
   mesInput.max = todayISO().slice(0,7);
   await loadCDs();
