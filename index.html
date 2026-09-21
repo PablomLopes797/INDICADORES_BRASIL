@@ -3,46 +3,70 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Painel Executivo | Recebimento</title>
+<title>Painel Executivo · Recebimento</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
 <style>
+/* ============================================================================
+   TEMA (dark padrão / light toggle)
+   ============================================================================ */
 :root{
-  --bg:#060a13;--bg-grad-1:#0b1426;--bg-grad-2:#060a13;
-  --card:#0f1729;--line:#1e2b47;--line-soft:#182339;
-  --txt:#e9eefb;--txt-2:#b8c5e0;--muted:#7d8dae;--muted-2:#4d5a75;
-  --blue:#3b82f6;--cyan:#22d3ee;--green:#22c55e;--amber:#f59e0b;
-  --orange:#fb923c;--red:#ef4444;--rose:#f43f5e;--purple:#a855f7;
-  --radius:14px;--radius-sm:9px;
+  --bg-1:#0b1426; --bg-2:#060a13;
+  --card-1:rgba(20,31,54,.95); --card-2:rgba(11,18,33,.95);
+  --card-head-1:#16223c; --card-head-2:#111a2e;
+  --line:#1e2b47; --line-soft:#182339;
+  --txt:#e9eefb; --txt-2:#b8c5e0; --muted:#7d8dae; --muted-2:#4d5a75;
+  --input-bg:#0b1323; --input-bg-h:#0e1729;
+  --row-label:#0e1729; --row-label-h:#131f36;
+  --total-cell:#141f36; --total-cell-h:#1b2843;
+  --derived-label:#120f22; --derived-total:#1a1430;
+  --overlay:rgba(3,6,13,.82);
+  --blue:#3b82f6; --cyan:#22d3ee; --green:#22c55e; --amber:#f59e0b;
+  --orange:#fb923c; --red:#ef4444; --rose:#f43f5e; --purple:#a855f7;
+  --radius:14px; --radius-sm:9px;
   --shadow:0 10px 30px -12px rgba(0,0,0,.75);
   --mono:'SF Mono',ui-monospace,'JetBrains Mono',Menlo,Consolas,monospace;
   --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+}
+body.light{
+  --bg-1:#eef3fb; --bg-2:#e2e9f5;
+  --card-1:rgba(255,255,255,.98); --card-2:rgba(248,251,255,.98);
+  --card-head-1:#eaf1fb; --card-head-2:#e1eaf7;
+  --line:#cfd9ea; --line-soft:#e2e9f3;
+  --txt:#101a2e; --txt-2:#33415c; --muted:#5c6b88; --muted-2:#93a0b8;
+  --input-bg:#f4f8ff; --input-bg-h:#eaf1fb;
+  --row-label:#f4f8ff; --row-label-h:#e7effc;
+  --total-cell:#e7effc; --total-cell-h:#dbe6f8;
+  --derived-label:#f3ecff; --derived-total:#e8dcff;
+  --overlay:rgba(15,25,45,.55);
+  --shadow:0 10px 26px -14px rgba(28,50,90,.35);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{
   font-family:var(--sans);
   background:
-    radial-gradient(1200px 700px at 12% -12%, #14224a 0%, transparent 55%),
-    radial-gradient(900px 600px at 95% 0%, #0d2b3d 0%, transparent 50%),
-    linear-gradient(180deg,var(--bg-grad-1) 0%,var(--bg-grad-2) 42%);
-  background-attachment:fixed;color:var(--txt);-webkit-font-smoothing:antialiased;
-  font-size:14px;min-height:100%;
+    radial-gradient(1200px 700px at 12% -12%, color-mix(in srgb, var(--blue) 22%, transparent) 0%, transparent 55%),
+    radial-gradient(900px 600px at 95% 0%, color-mix(in srgb, var(--cyan) 16%, transparent) 0%, transparent 50%),
+    linear-gradient(180deg,var(--bg-1) 0%,var(--bg-2) 42%);
+  background-attachment:fixed;color:var(--txt);
+  -webkit-font-smoothing:antialiased;font-size:14px;min-height:100%;
+  transition:background .3s, color .3s;
 }
 ::-webkit-scrollbar{height:10px;width:10px}
-::-webkit-scrollbar-track{background:#0a1120}
-::-webkit-scrollbar-thumb{background:#243352;border-radius:8px;border:2px solid #0a1120}
-::-webkit-scrollbar-thumb:hover{background:#31456c}
-.wrap{max-width:1920px;margin:0 auto;padding:20px 24px 70px}
+::-webkit-scrollbar-track{background:var(--input-bg)}
+::-webkit-scrollbar-thumb{background:color-mix(in srgb, var(--line) 80%, #fff 5%);border-radius:8px;border:2px solid var(--input-bg)}
+::-webkit-scrollbar-thumb:hover{background:color-mix(in srgb, var(--line) 60%, #fff 15%)}
+.wrap{max-width:1920px;margin:0 auto;padding:20px 24px 20px}
 
 /* TOPBAR */
 .topbar{
   display:flex;align-items:center;gap:20px;flex-wrap:wrap;
   padding:16px 20px;margin-bottom:18px;
-  background:linear-gradient(135deg,rgba(20,31,54,.92),rgba(12,19,35,.92));
+  background:linear-gradient(135deg,var(--card-1),var(--card-2));
   border:1px solid var(--line);border-radius:var(--radius);
   box-shadow:var(--shadow);backdrop-filter:blur(14px);
   position:relative;overflow:hidden;
@@ -67,66 +91,67 @@ body{
 .field{display:flex;flex-direction:column;gap:5px}
 .field label{font-size:10px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:var(--muted);padding-left:2px}
 .field select,.field input{
-  background:#0b1323;color:var(--txt);border:1px solid var(--line);
+  background:var(--input-bg);color:var(--txt);border:1px solid var(--line);
   border-radius:var(--radius-sm);padding:9px 12px;font-size:13px;
   font-family:var(--sans);font-weight:600;outline:none;min-width:132px;
   transition:border-color .16s, box-shadow .16s, background .16s;cursor:pointer;
 }
 .field input[type=month]{min-width:150px}
-.field select:hover,.field input:hover{border-color:#2c3d61;background:#0e1729}
-.field select:focus,.field input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.18)}
-.field select option{background:#0b1323}
+.field select:hover,.field input:hover{border-color:color-mix(in srgb,var(--blue) 40%,var(--line));background:var(--input-bg-h)}
+.field select:focus,.field input:focus{border-color:var(--blue);box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 22%,transparent)}
+.field select option{background:var(--input-bg);color:var(--txt)}
 
-.seg{display:flex;background:#0b1323;border:1px solid var(--line);border-radius:var(--radius-sm);padding:3px;gap:3px}
+.seg{display:flex;background:var(--input-bg);border:1px solid var(--line);border-radius:var(--radius-sm);padding:3px;gap:3px}
 .seg button{
   background:transparent;border:0;color:var(--muted);
   font-family:var(--sans);font-size:12px;font-weight:700;
   padding:7px 13px;border-radius:6px;cursor:pointer;
   transition:all .16s;white-space:nowrap;letter-spacing:.2px;
 }
-.seg button:hover{color:var(--txt-2);background:rgba(255,255,255,.04)}
+.seg button:hover{color:var(--txt-2);background:color-mix(in srgb,var(--txt) 8%,transparent)}
 .seg button.active{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;box-shadow:0 4px 12px -4px rgba(37,99,235,.8)}
 
 .btn{
   display:inline-flex;align-items:center;gap:8px;
-  background:#16223c;color:var(--txt-2);border:1px solid var(--line);
+  background:var(--card-head-1);color:var(--txt-2);border:1px solid var(--line);
   padding:10px 15px;border-radius:var(--radius-sm);
   font-family:var(--sans);font-size:12.5px;font-weight:700;
   cursor:pointer;transition:all .16s;white-space:nowrap;letter-spacing:.2px;
 }
-.btn:hover{background:#1d2c4b;color:#fff;border-color:#2f4269;transform:translateY(-1px)}
+.btn:hover{background:var(--card-head-2);color:var(--txt);transform:translateY(-1px)}
 .btn:active{transform:translateY(0)}
 .btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .btn-primary{background:linear-gradient(135deg,#2563eb,#0891b2);color:#fff;border-color:transparent;box-shadow:0 8px 20px -8px rgba(37,99,235,.9)}
-.btn-primary:hover{background:linear-gradient(135deg,#3b82f6,#06b6d4);border-color:transparent}
+.btn-primary:hover{background:linear-gradient(135deg,#3b82f6,#06b6d4)}
 .btn-ghost{background:transparent}
+.btn-theme{background:var(--card-head-1);width:42px;justify-content:center;padding:10px 0}
 
 /* KPI */
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(196px,1fr));gap:14px;margin-bottom:18px}
 .kpi{
   position:relative;overflow:hidden;
-  background:linear-gradient(150deg,rgba(20,31,54,.95),rgba(11,18,33,.95));
+  background:linear-gradient(150deg,var(--card-1),var(--card-2));
   border:1px solid var(--line);border-radius:var(--radius);
   padding:16px 17px 15px;box-shadow:var(--shadow);
   transition:transform .18s, border-color .18s;
 }
-.kpi:hover{transform:translateY(-2px);border-color:#2b3d62}
+.kpi:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--blue) 40%,var(--line))}
 .kpi::after{
   content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
   background:var(--c,var(--blue));box-shadow:0 0 18px -2px var(--c,var(--blue));
 }
 .kpi-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
 .kpi-label{font-size:10.5px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted)}
-.kpi-badge{font-size:10px;font-weight:800;padding:3px 7px;border-radius:20px;background:rgba(255,255,255,.06);color:var(--muted);letter-spacing:.4px;border:1px solid rgba(255,255,255,.07)}
+.kpi-badge{font-size:10px;font-weight:800;padding:3px 7px;border-radius:20px;background:color-mix(in srgb,var(--txt) 8%,transparent);color:var(--muted);letter-spacing:.4px;border:1px solid color-mix(in srgb,var(--txt) 8%,transparent)}
 .kpi-value{font-family:var(--mono);font-size:30px;font-weight:700;letter-spacing:-1.2px;line-height:1;color:var(--c,var(--txt));text-shadow:0 0 26px color-mix(in srgb, var(--c,#3b82f6) 40%, transparent)}
 .kpi-sub{margin-top:9px;font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:6px;font-weight:600}
 .kpi-sub b{color:var(--txt-2);font-family:var(--mono);font-weight:700}
 
-/* CHARTS */
+/* CARDS */
 .charts{display:grid;grid-template-columns:1fr 340px;gap:14px;margin-bottom:18px}
 @media(max-width:1100px){.charts{grid-template-columns:1fr}}
 .card{
-  background:linear-gradient(150deg,rgba(17,26,45,.95),rgba(10,17,31,.95));
+  background:linear-gradient(150deg,var(--card-1),var(--card-2));
   border:1px solid var(--line);border-radius:var(--radius);
   box-shadow:var(--shadow);overflow:hidden;
 }
@@ -143,138 +168,121 @@ body{
 table.grid{border-collapse:separate;border-spacing:0;font-size:12.5px;width:100%}
 table.grid thead th{
   position:sticky;top:0;z-index:4;
-  background:linear-gradient(180deg,#16223c,#111a2e);
+  background:linear-gradient(180deg,var(--card-head-1),var(--card-head-2));
   border-bottom:1px solid var(--line);
   padding:9px 6px;
   font-family:var(--mono);font-size:11px;font-weight:700;
   color:var(--txt-2);text-align:center;min-width:60px;letter-spacing:.3px;
-  box-shadow:inset -1px 0 0 rgba(255,255,255,.03);
 }
-table.grid thead th b{display:block;font-size:12.5px;color:#fff;font-weight:800}
+table.grid thead th b{display:block;font-size:12.5px;color:var(--txt);font-weight:800}
 table.grid thead th i{display:block;font-style:normal;font-size:8.5px;color:var(--muted-2);font-weight:700;letter-spacing:.6px;margin-top:2px}
-table.grid thead th.we{background:linear-gradient(180deg,#1a1c30,#141727)}
-table.grid thead th.we b{color:#8ea3c9}
+table.grid thead th.we{background:linear-gradient(180deg,color-mix(in srgb,var(--card-head-1) 80%,#000 20%),var(--card-head-2))}
+table.grid thead th.we b{color:var(--muted)}
 table.grid thead th.today{background:linear-gradient(180deg,#1d3a6b,#152a52);box-shadow:inset 0 -2px 0 var(--cyan)}
 table.grid thead th.today b{color:#7dd3fc}
-
 table.grid th.corner{
   position:sticky;left:0;z-index:6;
-  background:linear-gradient(135deg,#16223c,#111a2e);
+  background:linear-gradient(135deg,var(--card-head-1),var(--card-head-2));
   text-align:left;padding-left:18px;min-width:206px;width:206px;
   font-family:var(--sans);font-size:10.5px;letter-spacing:1.2px;
   text-transform:uppercase;color:var(--muted);
-  box-shadow:1px 0 0 var(--line), 8px 0 14px -10px rgba(0,0,0,.9);
+  box-shadow:1px 0 0 var(--line), 8px 0 14px -10px rgba(0,0,0,.5);
 }
 table.grid th.total-col{
   position:sticky;right:0;z-index:6;
-  background:linear-gradient(135deg,#1a2742,#131e35);
-  box-shadow:-1px 0 0 var(--line), -8px 0 14px -10px rgba(0,0,0,.9);
-  min-width:96px;width:96px;font-size:11.5px;color:#fff;
+  background:linear-gradient(135deg,var(--total-cell),var(--card-head-2));
+  box-shadow:-1px 0 0 var(--line), -8px 0 14px -10px rgba(0,0,0,.5);
+  min-width:96px;width:96px;font-size:11.5px;color:var(--txt);
 }
-
 table.grid td{
   padding:8px 6px;text-align:right;
   font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--txt);
-  border-bottom:1px solid rgba(30,43,71,.45);white-space:nowrap;
-  transition:background .12s;
+  border-bottom:1px solid color-mix(in srgb,var(--line) 55%,transparent);
+  white-space:nowrap;transition:background .12s;
 }
-table.grid tbody tr:hover td{filter:brightness(1.18)}
+table.grid tbody tr:hover td{filter:brightness(1.08)}
 table.grid td.zero{color:var(--muted-2) !important;background:transparent !important}
-table.grid td.empty{color:#2b364d !important;background:transparent !important}
-
+table.grid td.empty{color:var(--muted-2) !important;background:transparent !important}
 table.grid td.rowlabel{
-  position:sticky;left:0;z-index:3;background:#0e1729;
+  position:sticky;left:0;z-index:3;background:var(--row-label);
   text-align:left;padding-left:18px;
   font-family:var(--sans);font-size:12px;font-weight:700;
   letter-spacing:.35px;color:var(--txt-2);
   display:flex;align-items:center;gap:10px;
   height:100%;min-height:38px;
-  box-shadow:1px 0 0 var(--line), 8px 0 14px -10px rgba(0,0,0,.9);
-  border-bottom:1px solid rgba(30,43,71,.6);
+  box-shadow:1px 0 0 var(--line), 8px 0 14px -10px rgba(0,0,0,.5);
+  border-bottom:1px solid color-mix(in srgb,var(--line) 60%,transparent);
 }
 table.grid td.rowlabel .dot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--c,var(--blue));box-shadow:0 0 10px 0 var(--c,var(--blue))}
-table.grid tbody tr:hover td.rowlabel{background:#131f36}
-
+table.grid tbody tr:hover td.rowlabel{background:var(--row-label-h)}
 table.grid td.total-cell{
-  position:sticky;right:0;z-index:3;background:#141f36;color:#fff;
+  position:sticky;right:0;z-index:3;background:var(--total-cell);color:var(--txt);
   font-weight:800;font-size:13px;
-  box-shadow:-1px 0 0 var(--line), -8px 0 14px -10px rgba(0,0,0,.9);
+  box-shadow:-1px 0 0 var(--line), -8px 0 14px -10px rgba(0,0,0,.5);
 }
-table.grid tbody tr:hover td.total-cell{background:#1b2843}
-table.grid tr.derived td.rowlabel{background:#120f22;color:#c4b5fd}
-table.grid tr.derived td.total-cell{background:#1a1430;color:#ddd6fe}
-
-.legend{display:flex;flex-wrap:wrap;gap:16px;padding:12px 18px;border-top:1px solid var(--line-soft);background:rgba(9,15,28,.6)}
+table.grid tbody tr:hover td.total-cell{background:var(--total-cell-h)}
+table.grid tr.derived td.rowlabel{background:var(--derived-label);color:#8b5cf6}
+table.grid tr.derived td.total-cell{background:var(--derived-total);color:#7c3aed}
+.legend{display:flex;flex-wrap:wrap;gap:16px;padding:12px 18px;border-top:1px solid var(--line-soft);background:color-mix(in srgb,var(--card-2) 80%,transparent)}
 .legend span{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.3px}
 .legend span i{width:9px;height:9px;border-radius:2px;display:block;box-shadow:0 0 8px -1px currentColor}
 
-/* MODAL */
-.overlay{position:fixed;inset:0;background:rgba(3,6,13,.82);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:100;padding:24px}
-.overlay.show{display:flex}
-.modal{background:linear-gradient(150deg,#131e35,#0c1425);border:1px solid var(--line);border-radius:18px;width:min(880px,100%);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 40px 90px -30px #000;animation:pop .22s cubic-bezier(.2,.9,.3,1.2);overflow:hidden}
-@keyframes pop{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
-.modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line-soft)}
-.modal-head h2{font-size:15px;font-weight:800;letter-spacing:.4px}
-.modal-head p{font-size:11.5px;color:var(--muted);margin-top:3px;font-weight:500}
-.modal-body{padding:20px 22px;overflow:auto;flex:1}
-.modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:16px 22px;border-top:1px solid var(--line-soft);background:rgba(9,15,28,.5)}
-.x-btn{background:transparent;border:0;color:var(--muted);cursor:pointer;font-size:22px;line-height:1;padding:4px 8px;border-radius:8px;transition:.15s}
-.x-btn:hover{background:rgba(255,255,255,.07);color:#fff}
-.drop{border:2px dashed #26375a;border-radius:14px;padding:38px 24px;text-align:center;cursor:pointer;transition:.2s;background:rgba(13,21,38,.6)}
-.drop:hover,.drop.over{border-color:var(--blue);background:rgba(37,99,235,.09)}
-.drop svg{width:40px;height:40px;stroke:var(--blue);fill:none;stroke-width:1.6;margin-bottom:12px;opacity:.85}
-.drop h3{font-size:14px;font-weight:700;margin-bottom:5px}
-.drop p{font-size:12px;color:var(--muted)}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:18px 0}
-.stat{background:rgba(13,21,38,.75);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
-.stat span{display:block;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:6px}
-.stat b{font-family:var(--mono);font-size:20px;font-weight:700}
-.stat.ok b{color:var(--green)}
-.stat.warn b{color:var(--amber)}
-.stat.err b{color:var(--red)}
-.preview{overflow:auto;max-height:250px;border:1px solid var(--line);border-radius:10px}
-.preview table{border-collapse:collapse;width:100%;font-size:11.5px;font-family:var(--mono)}
-.preview th{position:sticky;top:0;background:#16223c;padding:8px 10px;text-align:left;font-family:var(--sans);font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);font-weight:700;border-bottom:1px solid var(--line)}
-.preview td{padding:7px 10px;border-bottom:1px solid rgba(30,43,71,.5);color:var(--txt-2);white-space:nowrap}
-.preview tr:last-child td{border-bottom:0}
-
-.toasts{position:fixed;right:22px;bottom:22px;display:flex;flex-direction:column;gap:10px;z-index:200}
-.toast{display:flex;align-items:center;gap:11px;background:linear-gradient(135deg,#16223c,#101a2e);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:11px;padding:13px 17px;min-width:270px;max-width:400px;box-shadow:0 20px 44px -16px #000;font-size:12.5px;font-weight:600;animation:slideIn .26s cubic-bezier(.2,.9,.3,1.2)}
-@keyframes slideIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
-.toast.ok{border-left-color:var(--green)}
-.toast.err{border-left-color:var(--red)}
-.toast.warn{border-left-color:var(--amber)}
-.toast small{display:block;color:var(--muted);font-weight:500;margin-top:2px;font-size:11px}
-
-.loader{position:fixed;inset:0;background:rgba(4,7,14,.72);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:300;flex-direction:column;gap:16px}
-.loader.show{display:flex}
-.spinner{width:44px;height:44px;border-radius:50%;border:3px solid rgba(59,130,246,.18);border-top-color:var(--blue);animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loader p{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase}
-
-.demo-banner{display:none;align-items:center;gap:11px;background:linear-gradient(90deg,rgba(245,158,11,.14),rgba(245,158,11,.04));border:1px solid rgba(245,158,11,.35);border-radius:11px;padding:11px 16px;margin-bottom:16px;font-size:12.5px;color:#fcd34d;font-weight:600}
-.demo-banner.show{display:flex}
-.demo-banner svg{width:16px;height:16px;stroke:#fbbf24;fill:none;stroke-width:2;flex:none}
-.demo-banner code{background:rgba(0,0,0,.35);padding:2px 7px;border-radius:5px;font-family:var(--mono);font-size:11.5px;color:#fde68a}
-
-.empty-state{padding:60px 24px;text-align:center;color:var(--muted)}
-.empty-state svg{width:46px;height:46px;stroke:var(--muted-2);fill:none;stroke-width:1.4;margin-bottom:14px}
-.empty-state h3{font-size:15px;color:var(--txt-2);margin-bottom:6px;font-weight:700}
-.empty-state p{font-size:12.5px}
-
-/* Seletor de granularidade (chips) */
-.gran-chips{display:flex;gap:6px;background:#0b1323;border:1px solid var(--line);border-radius:var(--radius-sm);padding:4px}
+/* CHIPS granularidade */
+.gran-chips{display:flex;gap:6px;background:var(--input-bg);border:1px solid var(--line);border-radius:var(--radius-sm);padding:4px}
 .gran-chips button{
   background:transparent;border:0;color:var(--muted);
   font-family:var(--sans);font-size:11.5px;font-weight:800;letter-spacing:.5px;
   padding:8px 12px;border-radius:7px;cursor:pointer;transition:all .16s;
   text-transform:uppercase;white-space:nowrap;
 }
-.gran-chips button:hover{color:var(--txt);background:rgba(255,255,255,.05)}
-.gran-chips button.active{
-  background:linear-gradient(135deg,#0891b2,#2563eb);
-  color:#fff;box-shadow:0 4px 14px -4px rgba(34,211,238,.6);
+.gran-chips button:hover{color:var(--txt);background:color-mix(in srgb,var(--txt) 8%,transparent)}
+.gran-chips button.active{background:linear-gradient(135deg,#0891b2,#2563eb);color:#fff;box-shadow:0 4px 14px -4px rgba(34,211,238,.6)}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:var(--overlay);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:100;padding:24px}
+.overlay.show{display:flex}
+.modal{background:linear-gradient(150deg,var(--card-1),var(--card-2));border:1px solid var(--line);border-radius:18px;width:min(880px,100%);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 40px 90px -30px rgba(0,0,0,.7);animation:pop .22s cubic-bezier(.2,.9,.3,1.2);overflow:hidden}
+@keyframes pop{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line-soft)}
+.modal-head h2{font-size:15px;font-weight:800;letter-spacing:.4px}
+.modal-head p{font-size:11.5px;color:var(--muted);margin-top:3px;font-weight:500}
+.modal-body{padding:20px 22px;overflow:auto;flex:1}
+.modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:16px 22px;border-top:1px solid var(--line-soft);background:color-mix(in srgb,var(--card-2) 80%,transparent)}
+.x-btn{background:transparent;border:0;color:var(--muted);cursor:pointer;font-size:22px;line-height:1;padding:4px 8px;border-radius:8px;transition:.15s}
+.x-btn:hover{background:color-mix(in srgb,var(--txt) 8%,transparent);color:var(--txt)}
+.drop{border:2px dashed color-mix(in srgb,var(--blue) 30%,var(--line));border-radius:14px;padding:38px 24px;text-align:center;cursor:pointer;transition:.2s;background:color-mix(in srgb,var(--card-2) 70%,transparent)}
+.drop:hover,.drop.over{border-color:var(--blue);background:color-mix(in srgb,var(--blue) 12%,transparent)}
+.drop svg{width:40px;height:40px;stroke:var(--blue);fill:none;stroke-width:1.6;margin-bottom:12px;opacity:.85}
+.drop h3{font-size:14px;font-weight:700;margin-bottom:5px}
+.drop p{font-size:12px;color:var(--muted)}
+
+.loader{position:fixed;inset:0;background:var(--overlay);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:300;flex-direction:column;gap:16px}
+.loader.show{display:flex}
+.spinner{width:44px;height:44px;border-radius:50%;border:3px solid color-mix(in srgb,var(--blue) 20%,transparent);border-top-color:var(--blue);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader p{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase}
+
+.toasts{position:fixed;right:22px;bottom:22px;display:flex;flex-direction:column;gap:10px;z-index:200}
+.toast{display:flex;align-items:center;gap:11px;background:linear-gradient(135deg,var(--card-head-1),var(--card-head-2));border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:11px;padding:13px 17px;min-width:270px;max-width:400px;box-shadow:0 20px 44px -16px rgba(0,0,0,.5);font-size:12.5px;font-weight:600;animation:slideIn .26s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes slideIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+.toast.ok{border-left-color:var(--green)}
+.toast.err{border-left-color:var(--red)}
+.toast.warn{border-left-color:var(--amber)}
+.toast small{display:block;color:var(--muted);font-weight:500;margin-top:2px;font-size:11px}
+
+.empty-state{padding:60px 24px;text-align:center;color:var(--muted)}
+.empty-state svg{width:46px;height:46px;stroke:var(--muted-2);fill:none;stroke-width:1.4;margin-bottom:14px}
+.empty-state h3{font-size:15px;color:var(--txt-2);margin-bottom:6px;font-weight:700}
+.empty-state p{font-size:12.5px}
+
+/* Footer */
+footer.app-footer{
+  padding:26px 0 8px;text-align:center;
+  font-size:11.5px;letter-spacing:.6px;color:var(--muted);
+  border-top:1px solid var(--line-soft);margin-top:10px;
 }
+footer.app-footer b{color:var(--txt-2);font-weight:700}
+footer.app-footer span.dot{color:var(--muted-2);margin:0 6px}
 </style>
 </head>
 <body>
@@ -335,8 +343,12 @@ table.grid tr.derived td.total-cell{background:#1a1430;color:#ddd6fe}
           <button class="btn" id="btnRefresh" title="Atualizar dados">
             <svg viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>
           </button>
-          <button class="btn" id="btnExport" title="Exportar">
+          <button class="btn" id="btnExport" title="Exportar CSV">
             <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+          </button>
+          <button class="btn btn-theme" id="btnTheme" title="Alternar modo claro/escuro">
+            <svg id="icoMoon" viewBox="0 0 24 24" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            <svg id="icoSun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
           </button>
         </div>
       </div>
@@ -353,11 +365,6 @@ table.grid tr.derived td.total-cell{background:#1a1430;color:#ddd6fe}
       <button data-gran="decada">10 Anos</button>
     </div>
     <div id="granHint" style="font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:.3px"></div>
-  </div>
-
-  <div class="demo-banner" id="demoBanner">
-    <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-    <span>Modo Demonstração ativo. Configure <code>SUPABASE_URL</code> e <code>SUPABASE_ANON_KEY</code> para persistir em produção.</span>
   </div>
 
   <section class="kpis" id="kpis"></section>
@@ -397,6 +404,14 @@ table.grid tr.derived td.total-cell{background:#1a1430;color:#ddd6fe}
     <div class="legend" id="legend"></div>
   </section>
 
+  <footer class="app-footer">
+    <b>Desenvolvido Por Pablo M. Lopes</b>
+    <span class="dot">·</span>
+    Painel Executivo de Recebimento
+    <span class="dot">·</span>
+    <span id="footerConexao">Supabase BD_AGENDA</span>
+  </footer>
+
 </div>
 
 <!-- MODAL IMPORTAÇÃO -->
@@ -405,7 +420,7 @@ table.grid tr.derived td.total-cell{background:#1a1430;color:#ddd6fe}
     <div class="modal-head">
       <div>
         <h2>Importar Base de Recebimento</h2>
-        <p>Formatos aceitos: .xlsx, .xls, .csv — a base será validada e enviada ao Supabase</p>
+        <p>Colunas esperadas: SENHA, CARGA, FORNECEDOR, STATUS, DATA/HORA AGENDA, DATA/HORA CHEG, ACIONADO, INI_CONF, FIM_CONF, HORA LIBERAÇÃO, TERMO, TEMPO CRIT, TEMPO DIV COM, TEMPO DIV TRIB, TEMPO S/ DIV, RANGE TEMPO, TURNO CONF, TURNO AGENDA</p>
       </div>
       <button class="x-btn" id="closeImport">×</button>
     </div>
@@ -413,12 +428,12 @@ table.grid tr.derived td.total-cell{background:#1a1430;color:#ddd6fe}
       <div class="drop" id="dropZone">
         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
         <h3>Arraste o arquivo aqui ou clique para selecionar</h3>
-        <p>Colunas esperadas: DATA, CD, TURNO, AGENDA, AGENDA - NOSHOW, NOSHOW, RECEBIDO, NO PRAZO, &lt; 4 HRS, RECUSADO</p>
+        <p>.xlsx, .xls ou .csv</p>
         <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" hidden>
       </div>
       <div id="importResult" style="display:none">
-        <div class="stats" id="importStats"></div>
-        <div class="preview" id="importPreview"></div>
+        <div class="stats" id="importStats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:18px 0"></div>
+        <div class="preview" id="importPreview" style="overflow:auto;max-height:250px;border:1px solid var(--line);border-radius:10px"></div>
       </div>
     </div>
     <div class="modal-foot">
@@ -439,17 +454,16 @@ table.grid tr.derived td.total-cell{background:#1a1430;color:#ddd6fe}
 /* ============================================================================
    CONFIG SUPABASE
    ============================================================================ */
-const SUPABASE_URL      = "https://SEU-PROJETO.supabase.co";
-const SUPABASE_ANON_KEY = "SUA_CHAVE_ANON_AQUI";
-const TABLE             = "recebimento";
+const SUPABASE_URL      = "https://iykukdzmdxbluehylkse.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_AOnZKBKy9NpHheU_VN-bcQ_y5Ldcgce";
+const TABLE             = "BD_AGENDA";
 
-const DEMO = !SUPABASE_URL.startsWith("http") || SUPABASE_URL.includes("SEU-PROJETO");
-let sb = null;
-if (!DEMO) sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 
 /* ============================================================================
-   CONSTANTES
+   CONSTANTES / INDICADORES
+   Cada linha = uma carga. Os indicadores são derivados do STATUS + TEMPO CRIT.
    ============================================================================ */
 const ROWS = [
   { key:'agenda',        label:'AGENDA',         color:'#60a5fa' },
@@ -465,13 +479,38 @@ const WD = ['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
 const MES_ABREV = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
 const MES_EXT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
+/* Nomes exatos das colunas conforme solicitado */
+const COL = {
+  senha:      'SENHA',
+  carga:      'CARGA',
+  fornecedor: 'FORNECEDOR',
+  status:     'STATUS',
+  agenda:     'DATA/HORA AGENDA',
+  chegada:    'DATA/HORA CHEG',
+  acionado:   'ACIONADO',
+  iniConf:    'INI_CONF',
+  fimConf:    'FIM_CONF',
+  hora:       'HORA LIBERAÇÃO',
+  termo:      'TERMO',
+  tempoCrit:  'TEMPO CRIT',
+  divCom:     'TEMPO DIV COM',
+  divTrib:    'TEMPO DIV TRIB',
+  semDiv:     'TEMPO S/ DIV',
+  rangeTempo: 'RANGE TEMPO',
+  turnoConf:  'TURNO CONF',
+  turnoAgenda:'TURNO AGENDA'
+};
+
+/* Só o CD que aparece por padrão */
+const CD_PADRAO = '910';
+
 const state = {
   mes: todayISO().slice(0,7),
-  cd: '910',
+  cd: CD_PADRAO,
   turno: 'TODOS',
   view: 'abs',
-  gran: 'dia',       // dia | semana | mes | ano | decada
-  rows: [],
+  gran: 'dia',
+  raw: [],       // linhas cruas do BD_AGENDA
   cds: []
 };
 
@@ -481,8 +520,8 @@ const state = {
    ============================================================================ */
 const nfInt = new Intl.NumberFormat('pt-BR', { maximumFractionDigits:0 });
 const nfDec = new Intl.NumberFormat('pt-BR', { minimumFractionDigits:1, maximumFractionDigits:1 });
-function intFmt(v){ return nfInt.format(Math.round(v||0)); }
-function pctFmt(v){ return nfDec.format(v||0) + '%'; }
+const intFmt = v => nfInt.format(Math.round(v||0));
+const pctFmt = v => nfDec.format(v||0) + '%';
 
 function todayISO(){
   const d = new Date();
@@ -504,7 +543,41 @@ function hexA(hex,a){
 function emptyBucket(){
   return { agenda:0, agenda_noshow:0, noshow:0, recebido:0, no_prazo:0, abaixo_4hrs:0, recusado:0 };
 }
-function addTo(b,r){ for(const k of KEYS) b[k] += Number(r[k])||0; }
+
+/* Extrai a data (YYYY-MM-DD) de um valor que pode ser ISO, timestamp ou Date */
+function extractDate(v){
+  if (v == null || v === '') return null;
+  if (v instanceof Date){
+    return `${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,'0')}-${String(v.getDate()).padStart(2,'0')}`;
+  }
+  const s = String(v).trim();
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+  m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);
+  if (m){
+    let [, a, b, y] = m;
+    if (y.length === 2) y = '20' + y;
+    return `${y}-${b.padStart(2,'0')}-${a.padStart(2,'0')}`;
+  }
+  // tenta parse Date genérico
+  const d = new Date(s);
+  if (!isNaN(d.getTime())){
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  return null;
+}
+
+/* Normaliza STATUS (RECEBIDO, RECUSADO, NOSHOW, etc.) */
+function normStatus(s){
+  const v = norm(s);
+  if (!v) return '';
+  if (v.includes('recus')) return 'RECUSADO';
+  if (v.includes('noshow') || v.includes('no show') || v.includes('nao comparec')) return 'NOSHOW';
+  if (v.includes('receb')) return 'RECEBIDO';
+  return String(s).toUpperCase();
+}
+
+/* Normaliza TURNO */
 function normTurno(t){
   const v = norm(t);
   if (!v) return 'GERAL';
@@ -518,16 +591,73 @@ function normTurno(t){
   return map[v] || String(t).trim().toUpperCase();
 }
 
+/* Converte TEMPO CRIT em horas (aceita "HH:MM", número, "4h30") */
+function parseTempoHoras(v){
+  if (v == null || v === '') return null;
+  if (typeof v === 'number') return v;   // assume horas
+  const s = String(v).trim();
+  let m = s.match(/^(\d+):(\d+)(?::(\d+))?$/);
+  if (m) return Number(m[1]) + Number(m[2])/60 + (m[3]?Number(m[3])/3600:0);
+  m = s.match(/^(\d+)\s*h(?:oras?)?\s*(?:(\d+)\s*min)?/i);
+  if (m) return Number(m[1]) + (m[2]?Number(m[2])/60:0);
+  const n = parseFloat(s.replace(',','.'));
+  return isNaN(n) ? null : n;
+}
+
+/* Deriva o CD a partir da CARGA (primeiros 3 dígitos). Se a própria CARGA
+   for exatamente um CD de 3 dígitos, retorna ele. */
+function getCD(row){
+  const cargaRaw = row[COL.carga] ?? row['carga'] ?? '';
+  const s = String(cargaRaw).trim();
+  if (!s) return 'SEM-CD';
+  const m = s.match(/(\d{3})/);
+  return m ? m[1] : s;
+}
+
+/* Verifica se uma linha pertence ao CD selecionado */
+function matchesCD(row){
+  if (state.cd === 'TODOS') return true;
+  return getCD(row) === state.cd;
+}
+
+/* Verifica se a linha pertence ao turno selecionado */
+function matchesTurno(row){
+  if (state.turno === 'TODOS') return true;
+  const t = row[COL.turnoAgenda] ?? row[COL.turnoConf] ?? '';
+  return normTurno(t) === state.turno;
+}
+
+/* Converte uma linha do BD_AGENDA em um "registro" com os indicadores */
+function toRegistro(row){
+  const status = normStatus(row[COL.status]);
+  const tempoH = parseTempoHoras(row[COL.tempoCrit]);
+  const data   = extractDate(row[COL.agenda]);
+
+  const r = {
+    data,
+    carga:    row[COL.carga] ?? '',
+    fornecedor: row[COL.fornecedor] ?? '',
+    status,
+    tempoH,
+    agenda:        1,
+    agenda_noshow: status === 'NOSHOW' ? 1 : 0,     // mesma coisa aqui
+    noshow:        status === 'NOSHOW' ? 1 : 0,
+    recebido:      status === 'RECEBIDO' ? 1 : 0,
+    no_prazo:      (status === 'RECEBIDO' && tempoH != null && tempoH <= 4) ? 1 : 0,
+    abaixo_4hrs:   (tempoH != null && tempoH < 4) ? 1 : 0,
+    recusado:      status === 'RECUSADO' ? 1 : 0
+  };
+  return r;
+}
+
 
 /* ============================================================================
-   PERÍODO E GRANULARIDADE
+   PERÍODO / GRANULARIDADE
    ============================================================================ */
 function getBaseYM(){
   const [y,m] = state.mes.split('-').map(Number);
   return { y, m };
 }
-
-/* Define o range de datas que será buscado do banco, conforme granularidade */
 function getFetchRange(){
   const { y, m } = getBaseYM();
   if (state.gran === 'dia' || state.gran === 'semana'){
@@ -538,17 +668,11 @@ function getFetchRange(){
       y, m, last
     };
   }
-  if (state.gran === 'mes'){
-    return { start: `${y}-01-01`, end: `${y}-12-31`, y };
-  }
-  if (state.gran === 'ano'){
-    return { start: `${y-4}-01-01`, end: `${y}-12-31`, y, startY: y-4 };
-  }
-  // decada
-  return { start: `${y-9}-01-01`, end: `${y}-12-31`, y, startY: y-9 };
+  if (state.gran === 'mes')   return { start:`${y}-01-01`, end:`${y}-12-31`, y };
+  if (state.gran === 'ano')   return { start:`${y-4}-01-01`, end:`${y}-12-31`, y, startY:y-4 };
+  return { start:`${y-9}-01-01`, end:`${y}-12-31`, y, startY:y-9 };
 }
 
-/* Constrói a lista de colunas (buckets) para a tabela */
 function buildColumns(){
   const { y, m, last } = getFetchRange();
   const cols = [];
@@ -558,10 +682,10 @@ function buildColumns(){
     for (let d=1; d<=last; d++){
       const wd = new Date(y, m-1, d).getDay();
       cols.push({
-        key: `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`,
-        label: String(d).padStart(2,'0'),
-        sub:   WD[wd],
-        isWE:  wd === 0 || wd === 6,
+        key:`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`,
+        label:String(d).padStart(2,'0'),
+        sub:WD[wd],
+        isWE: wd === 0 || wd === 6,
         isToday: isToday(y,m,d),
         bucket: emptyBucket()
       });
@@ -574,10 +698,10 @@ function buildColumns(){
       const d2 = Math.min((w+1)*7, last);
       const curWeek = Math.floor((now.getDate()-1)/7) + 1;
       cols.push({
-        key: `w${w+1}`,
-        label: `SEM ${w+1}`,
-        sub:   `${String(d1).padStart(2,'0')}–${String(d2).padStart(2,'0')}`,
-        isToday: (now.getFullYear() === y && (now.getMonth()+1) === m && curWeek === w+1),
+        key:`w${w+1}`,
+        label:`SEM ${w+1}`,
+        sub:`${String(d1).padStart(2,'0')}–${String(d2).padStart(2,'0')}`,
+        isToday: (now.getFullYear()===y && (now.getMonth()+1)===m && curWeek===w+1),
         d1, d2, bucket: emptyBucket()
       });
     }
@@ -585,10 +709,10 @@ function buildColumns(){
   else if (state.gran === 'mes'){
     for (let mi=1; mi<=12; mi++){
       cols.push({
-        key: `${y}-${String(mi).padStart(2,'0')}`,
-        label: MES_ABREV[mi-1],
-        sub:   String(y),
-        isToday: (now.getFullYear() === y && (now.getMonth()+1) === mi),
+        key:`${y}-${String(mi).padStart(2,'0')}`,
+        label:MES_ABREV[mi-1],
+        sub:String(y),
+        isToday: (now.getFullYear()===y && (now.getMonth()+1)===mi),
         month: mi, bucket: emptyBucket()
       });
     }
@@ -596,10 +720,8 @@ function buildColumns(){
   else if (state.gran === 'ano'){
     for (let yi = y-4; yi <= y; yi++){
       cols.push({
-        key: String(yi),
-        label: String(yi),
-        sub:   'ano',
-        isToday: (now.getFullYear() === yi),
+        key:String(yi), label:String(yi), sub:'ano',
+        isToday: now.getFullYear()===yi,
         year: yi, bucket: emptyBucket()
       });
     }
@@ -607,10 +729,8 @@ function buildColumns(){
   else {
     for (let yi = y-9; yi <= y; yi++){
       cols.push({
-        key: String(yi),
-        label: String(yi),
-        sub:   `Y${(yi-(y-9))+1}`,
-        isToday: (now.getFullYear() === yi),
+        key:String(yi), label:String(yi), sub:`Y${(yi-(y-9))+1}`,
+        isToday: now.getFullYear()===yi,
         year: yi, bucket: emptyBucket()
       });
     }
@@ -618,48 +738,61 @@ function buildColumns(){
   return cols;
 }
 
+/* Encontra a coluna para uma data, dado o range/granularidade */
+function colForDate(cols, ds){
+  const ry = Number(ds.slice(0,4));
+  const rm = Number(ds.slice(5,7));
+  const rd = Number(ds.slice(8,10));
+  const { y, m } = getBaseYM();
 
-/* ============================================================================
-   AGREGAÇÃO
-   ============================================================================ */
+  if (state.gran === 'dia'){
+    if (ry === y && rm === m) return cols[rd-1];
+  }
+  else if (state.gran === 'semana'){
+    if (ry === y && rm === m) return cols[Math.floor((rd-1)/7)];
+  }
+  else if (state.gran === 'mes'){
+    if (ry === y) return cols[rm-1];
+  }
+  else if (state.gran === 'ano'){
+    const idx = ry - (y-4);
+    if (idx >= 0 && idx < cols.length) return cols[idx];
+  }
+  else {
+    const idx = ry - (y-9);
+    if (idx >= 0 && idx < cols.length) return cols[idx];
+  }
+  return null;
+}
+
+/* Filtra as linhas cruas e devolve os "registros" do período */
+function registrosDoPeriodo(){
+  const { start, end } = getFetchRange();
+  const out = [];
+  for (const row of state.raw){
+    const reg = toRegistro(row);
+    if (!reg.data) continue;
+    if (reg.data < start || reg.data > end) continue;
+    if (!matchesCD(row)) continue;
+    if (!matchesTurno(row)) continue;
+    out.push(reg);
+  }
+  return out;
+}
+
 function aggregate(){
   const cols = buildColumns();
   const total = emptyBucket();
-  const range = getFetchRange();
+  const regs = registrosDoPeriodo();
 
-  for (const r of state.rows){
-    if (state.turno !== 'TODOS' && normTurno(r.turno) !== state.turno) continue;
-    const ds = String(r.data);
-    const ry = Number(ds.slice(0,4));
-    const rm = Number(ds.slice(5,7));
-    const rd = Number(ds.slice(8,10));
-
-    let col = null;
-
-    if (state.gran === 'dia'){
-      if (ry === range.y && rm === range.m) col = cols[rd-1];
+  for (const r of regs){
+    const col = colForDate(cols, r.data);
+    if (col){
+      for (const k of KEYS) col.bucket[k] += r[k] || 0;
     }
-    else if (state.gran === 'semana'){
-      if (ry === range.y && rm === range.m){
-        const w = Math.floor((rd-1)/7);
-        col = cols[w];
-      }
-    }
-    else if (state.gran === 'mes'){
-      if (ry === range.y) col = cols[rm-1];
-    }
-    else if (state.gran === 'ano'){
-      const idx = ry - (range.y-4);
-      if (idx >= 0 && idx < cols.length) col = cols[idx];
-    }
-    else { // decada
-      const idx = ry - (range.y-9);
-      if (idx >= 0 && idx < cols.length) col = cols[idx];
-    }
-
-    if (col){ addTo(col.bucket, r); addTo(total, r); }
+    for (const k of KEYS) total[k] += r[k] || 0;
   }
-  return { cols, total, range };
+  return { cols, total, registros: regs };
 }
 
 function rowValue(bucket, key, mode){
@@ -677,23 +810,23 @@ function renderKPIs(agg){
   const t = agg.total;
   const aderencia   = t.agenda   > 0 ? (t.recebido  / t.agenda)   * 100 : 0;
   const pctNoPrazo  = t.recebido > 0 ? (t.no_prazo  / t.recebido) * 100 : 0;
-  const pctAbaixo   = t.recebido > 0 ? (t.abaixo_4hrs / t.recebido) * 100 : 0;
-  const pctRecusado = t.recebido > 0 ? (t.recusado / t.recebido) * 100 : 0;
+  const pctAbaixo   = t.agenda   > 0 ? (t.abaixo_4hrs / t.agenda) * 100 : 0;
+  const pctRecusado = t.agenda   > 0 ? (t.recusado / t.agenda)    * 100 : 0;
   const pctNoshow   = t.agenda   > 0 ? (t.noshow    / t.agenda)   * 100 : 0;
 
   const cards = [
-    { label:'Agenda Total', value:intFmt(t.agenda), color:'var(--blue)', badge:'Base',
+    { label:'Agenda Total', value:intFmt(t.agenda), color:'var(--blue)', badge:'Cargas',
       sub:`Recebido: <b>${intFmt(t.recebido)}</b>` },
     { label:'Recebido', value:intFmt(t.recebido), color:'var(--cyan)', badge:'Volume',
       sub:`Aderência: <b>${pctFmt(aderencia)}</b>` },
     { label:'No Prazo', value:pctFmt(pctNoPrazo), color:'var(--green)', badge:'SLA',
-      sub:`${intFmt(t.no_prazo)} entregas no prazo` },
+      sub:`${intFmt(t.no_prazo)} cargas no prazo` },
     { label:'< 4 HRS', value:pctFmt(pctAbaixo), color:'var(--amber)', badge:'Antecip.',
-      sub:`${intFmt(t.abaixo_4hrs)} fora do SLA` },
+      sub:`${intFmt(t.abaixo_4hrs)} cargas abaixo de 4h` },
     { label:'Recusado', value:pctFmt(pctRecusado), color:'var(--rose)', badge:'Perda',
       sub:`${intFmt(t.recusado)} recusas no período` },
     { label:'Noshow', value:intFmt(t.noshow), color:'var(--red)', badge:`${pctFmt(pctNoshow)}`,
-      sub:`Agenda-Noshow: <b>${intFmt(t.agenda_noshow)}</b>` }
+      sub:`Agenda - Noshow: <b>${intFmt(t.agenda_noshow)}</b>` }
   ];
 
   document.getElementById('kpis').innerHTML = cards.map(c => `
@@ -720,25 +853,26 @@ function tdHTML(val, opts){
   const txt = opts.pct ? pctFmt(val) : intFmt(val);
   const cls = opts.total ? 'total-cell' : 'cell';
   const weight = opts.total ? 'font-weight:800;' : '';
-  return `<td class="${cls}" style="${bg?`background:${bg};`:''}${weight}">${txt}</td>`;
+  return `<td class="${cls}" style="background:${bg};${weight}">${txt}</td>`;
 }
 
 function renderTable(agg){
-  const { cols, total } = agg;
+  const { cols, total, registros } = agg;
   const pct = state.view === 'pct';
   const host = document.getElementById('tableHost');
 
-  if (!state.rows.length){
+  if (!registros.length){
     host.innerHTML = `
       <div class="empty-state">
         <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
         <h3>Nenhum dado para o período selecionado</h3>
-        <p>Importe uma base ou ajuste os filtros de CD, turno e período.</p>
+        <p>Verifique se há registros no Supabase (BD_AGENDA) para os filtros atuais.</p>
       </div>`;
+    document.getElementById('tableTitle').textContent = buildTitle();
+    document.getElementById('legend').innerHTML = '';
     return;
   }
 
-  /* HEADER */
   let head = '<thead><tr><th class="corner">Indicador</th>';
   cols.forEach(c => {
     const cls = [c.isWE ? 'we' : '', c.isToday ? 'today' : ''].join(' ').trim();
@@ -746,7 +880,6 @@ function renderTable(agg){
   });
   head += '<th class="total-col">TOTAL</th></tr></thead>';
 
-  /* BODY */
   let body = '<tbody>';
 
   ROWS.forEach(r => {
@@ -794,14 +927,10 @@ function renderTable(agg){
 function buildTitle(){
   const { y, m } = getBaseYM();
   const sufix = ` · CD ${state.cd} · ${state.turno === 'TODOS' ? 'Todos os turnos' : state.turno}`;
-  if (state.gran === 'dia')
-    return `Recebimento Diário · ${MES_EXT[m-1]} ${y}${sufix}`;
-  if (state.gran === 'semana')
-    return `Recebimento Semanal · ${MES_EXT[m-1]} ${y}${sufix}`;
-  if (state.gran === 'mes')
-    return `Recebimento Mensal · ${y}${sufix}`;
-  if (state.gran === 'ano')
-    return `Recebimento Anual · ${y-4}–${y}${sufix}`;
+  if (state.gran === 'dia')     return `Recebimento Diário · ${MES_EXT[m-1]} ${y}${sufix}`;
+  if (state.gran === 'semana')  return `Recebimento Semanal · ${MES_EXT[m-1]} ${y}${sufix}`;
+  if (state.gran === 'mes')     return `Recebimento Mensal · ${y}${sufix}`;
+  if (state.gran === 'ano')     return `Recebimento Anual · ${y-4}–${y}${sufix}`;
   return `Recebimento Decadal · ${y-9}–${y}${sufix}`;
 }
 
@@ -810,6 +939,8 @@ function buildTitle(){
    GRÁFICOS
    ============================================================================ */
 let chartDia = null, chartComp = null;
+
+function isLight(){ return document.body.classList.contains('light'); }
 
 function renderCharts(agg){
   if (typeof Chart === 'undefined') return;
@@ -821,7 +952,15 @@ function renderCharts(agg){
   const noPrazo  = cols.map(c => c.bucket.no_prazo);
   const pctNP    = cols.map(c => c.bucket.recebido>0 ? +((c.bucket.no_prazo/c.bucket.recebido)*100).toFixed(1) : null);
 
-  Chart.defaults.color = '#7d8dae';
+  const gridColor = isLight() ? 'rgba(120,140,175,.35)' : 'rgba(30,43,71,.55)';
+  const tickColor = isLight() ? '#5c6b88' : '#5d6d8c';
+  const tooltipBg = isLight() ? '#ffffff' : '#0f1729';
+  const tooltipBd = isLight() ? '#cfd9ea' : '#1e2b47';
+  const tooltipTt = isLight() ? '#101a2e' : '#e9eefb';
+  const tooltipBc = isLight() ? '#33415c' : '#b8c5e0';
+  const borderC   = isLight() ? '#e2e9f5' : '#0d1425';
+
+  Chart.defaults.color = tickColor;
   Chart.defaults.font.family = "'Inter',sans-serif";
   Chart.defaults.font.size = 11;
 
@@ -848,10 +987,10 @@ function renderCharts(agg){
       interaction:{ mode:'index', intersect:false },
       plugins:{
         legend:{ position:'top', align:'end',
-          labels:{ boxWidth:9, boxHeight:9, usePointStyle:true, pointStyle:'rectRounded', padding:14 } },
+          labels:{ color:tickColor, boxWidth:9, boxHeight:9, usePointStyle:true, pointStyle:'rectRounded', padding:14 } },
         tooltip:{
-          backgroundColor:'#0f1729', borderColor:'#1e2b47', borderWidth:1,
-          titleColor:'#e9eefb', bodyColor:'#b8c5e0', padding:11, cornerRadius:8,
+          backgroundColor:tooltipBg, borderColor:tooltipBd, borderWidth:1,
+          titleColor:tooltipTt, bodyColor:tooltipBc, padding:11, cornerRadius:8,
           callbacks:{
             label: ctx => {
               const v = ctx.parsed.y;
@@ -865,11 +1004,11 @@ function renderCharts(agg){
       },
       scales:{
         x:{ grid:{ display:false },
-            ticks:{ color:'#5d6d8c', maxRotation: cols.length>16 ? 45 : 0,
+            ticks:{ color:tickColor, maxRotation: cols.length>16 ? 45 : 0,
                     autoSkip:true, maxTicksLimit:31 } },
         y:{ beginAtZero:true,
-            grid:{ color:'rgba(30,43,71,.55)', drawBorder:false },
-            ticks:{ color:'#5d6d8c', callback: v => nfInt.format(v) } },
+            grid:{ color:gridColor, drawBorder:false },
+            ticks:{ color:tickColor, callback: v => nfInt.format(v) } },
         y1:{ position:'right', beginAtZero:true, max:100, grid:{ display:false },
              ticks:{ color:'#a855f7', callback: v => v + '%' } }
       }
@@ -884,24 +1023,23 @@ function renderCharts(agg){
       datasets:[{
         data: ROWS.map(r => total[r.key] || 0),
         backgroundColor: ROWS.map(r => hexA(r.color, .82)),
-        borderColor:'#0d1425', borderWidth:3, hoverOffset:7
+        borderColor: borderC, borderWidth:3, hoverOffset:7
       }]
     },
     options:{
       responsive:true, maintainAspectRatio:false, cutout:'64%',
       plugins:{
         legend:{ position:'bottom',
-          labels:{ boxWidth:9, boxHeight:9, usePointStyle:true, pointStyle:'circle',
+          labels:{ color:tickColor, boxWidth:9, boxHeight:9, usePointStyle:true, pointStyle:'circle',
                    padding:11, font:{ size:10.5 } } },
-        tooltip:{ backgroundColor:'#0f1729', borderColor:'#1e2b47', borderWidth:1,
-          padding:11, cornerRadius:8,
+        tooltip:{ backgroundColor:tooltipBg, borderColor:tooltipBd, borderWidth:1,
+          titleColor:tooltipTt, bodyColor:tooltipBc, padding:11, cornerRadius:8,
           callbacks:{ label: ctx => ` ${ctx.label}: ${nfInt.format(ctx.parsed)}` } }
       }
     }
   });
 
-  document.getElementById('chartTitle').textContent =
-    `Evolução · ${buildTitle().replace(/^Recebimento /,'')}`;
+  document.getElementById('chartTitle').textContent = `Evolução · ${buildTitle().replace(/^Recebimento /,'')}`;
 }
 
 function render(){
@@ -913,166 +1051,57 @@ function render(){
 
 
 /* ============================================================================
-   CAMADA DE DADOS
+   CAMADA DE DADOS — Supabase BD_AGENDA
    ============================================================================ */
-const DEMO_KEY = 'painel_recebimento_demo_v1';
+const PAGE_SIZE = 1000;
+const MAX_ROWS  = 200000;   // trava de segurança
 
-function demoSeed(){
-  const out = [];
-  const cds = ['910','911','912'];
-  const turnos = ['MANHÃ','TARDE','NOITE'];
-  const now = new Date();
-  // gera 24 meses para viabilizar views de ano/década
-  for (let mo = 0; mo < 24; mo++){
-    const ref = new Date(now.getFullYear(), now.getMonth() - mo, 1);
-    const y = ref.getFullYear(), m = ref.getMonth() + 1;
-    const days = new Date(y, m, 0).getDate();
-    for (let d = 1; d <= days; d++){
-      const wd = new Date(y, m-1, d).getDay();
-      const we = wd === 0 || wd === 6;
-      for (const cd of cds){
-        for (const t of turnos){
-          const base = we ? 45 : 130;
-          const agenda = Math.round(base * (0.72 + Math.random()*0.55));
-          const recebido = Math.round(agenda * (0.82 + Math.random()*0.15));
-          const noPrazo = Math.round(recebido * (0.70 + Math.random()*0.24));
-          const recusado = Math.round(recebido * Math.random() * 0.05);
-          const abaixo = Math.max(0, recebido - noPrazo - recusado);
-          const noshow = Math.max(0, agenda - recebido);
-          out.push({
-            data: `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`,
-            cd, turno: t, agenda,
-            agenda_noshow: Math.round(noshow * (0.28 + Math.random()*0.45)),
-            noshow, recebido, no_prazo: noPrazo,
-            abaixo_4hrs: abaixo, recusado
-          });
-        }
-      }
-    }
+async function fetchAllPaged(){
+  const all = [];
+  let from = 0;
+  while (true){
+    const { data, error } = await sb.from(TABLE).select('*').range(from, from + PAGE_SIZE - 1);
+    if (error) throw error;
+    if (!data || !data.length) break;
+    all.push(...data);
+    if (data.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+    if (all.length >= MAX_ROWS) break;
   }
-  return out;
-}
-
-function demoAll(){
-  try { return JSON.parse(localStorage.getItem(DEMO_KEY)) || []; } catch(e){ return []; }
-}
-function demoSave(rows){ localStorage.setItem(DEMO_KEY, JSON.stringify(rows)); }
-function demoSync(){
-  let rows = demoAll();
-  if (!rows.length){ rows = demoSeed(); demoSave(rows); }
-  return rows;
+  return all;
 }
 
 const api = {
   async listCDs(){
-    if (DEMO){
-      const all = demoSync();
-      return [...new Set(all.map(r => r.cd))].sort();
-    }
-    const { data, error } = await sb.from(TABLE).select('cd').limit(20000);
+    // busca apenas a coluna CARGA para extrair os CDs únicos
+    const { data, error } = await sb.from(TABLE).select(`"${COL.carga}"`).limit(50000);
     if (error) throw error;
-    return [...new Set((data||[]).map(r => r.cd))].sort();
+    const set = new Set();
+    (data||[]).forEach(r => {
+      const cd = getCD(r);
+      if (cd) set.add(cd);
+    });
+    return [...set].sort();
   },
 
-  async fetchRange(start, end, cd){
-    if (DEMO){
-      return demoSync().filter(r =>
-        r.data >= start && r.data <= end && (cd === 'TODOS' || r.cd === cd)
-      );
-    }
-    let q = sb.from(TABLE).select('*').gte('data', start).lte('data', end);
-    if (cd !== 'TODOS') q = q.eq('cd', cd);
-    const { data, error } = await q;
-    if (error) throw error;
-    return data || [];
-  },
+  async fetchAll(){ return fetchAllPaged(); },
 
   async upsert(rows){
-    if (DEMO){
-      const all = demoSync();
-      const map = new Map(all.map(r => [`${r.data}|${r.cd}|${r.turno}`, r]));
-      rows.forEach(r => map.set(`${r.data}|${r.cd}|${r.turno}`, r));
-      demoSave([...map.values()]);
-      return rows.length;
-    }
     const CHUNK = 500;
     let total = 0;
     for (let i=0; i<rows.length; i+=CHUNK){
       const slice = rows.slice(i, i+CHUNK);
-      const { error } = await sb.from(TABLE).upsert(slice, { onConflict:'data,cd,turno' });
+      const { error } = await sb.from(TABLE).upsert(slice);
       if (error) throw error;
       total += slice.length;
     }
     return total;
-  },
-
-  async remove(start, end, cd){
-    if (DEMO){
-      const all = demoSync().filter(r =>
-        !(r.data >= start && r.data <= end && (cd === 'TODOS' || r.cd === cd))
-      );
-      demoSave(all);
-      return;
-    }
-    let q = sb.from(TABLE).delete().gte('data', start).lte('data', end);
-    if (cd !== 'TODOS') q = q.eq('cd', cd);
-    const { error } = await q;
-    if (error) throw error;
   }
 };
 
 
 /* ============================================================================
-   PARSER DE DATA / HEADERS
-   ============================================================================ */
-function parseDate(v){
-  if (v === null || v === undefined || v === '') return null;
-  if (v instanceof Date){
-    return `${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,'0')}-${String(v.getDate()).padStart(2,'0')}`;
-  }
-  if (typeof v === 'number'){
-    const ms = Date.UTC(1899,11,30) + v*86400000;
-    const d = new Date(ms);
-    return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
-  }
-  const s = String(v).trim();
-  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (m) return `${m[1]}-${m[2]}-${m[3]}`;
-  m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);
-  if (m){
-    let [, a, b, y] = m;
-    if (y.length === 2) y = '20' + y;
-    return `${y}-${b.padStart(2,'0')}-${a.padStart(2,'0')}`;
-  }
-  const d = new Date(s);
-  if (!isNaN(d.getTime())){
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  }
-  return null;
-}
-
-const HEADER_ALIASES = {
-  data:          ['data','dia','dt','date','data recebimento','data do recebimento','data base'],
-  cd:            ['cd','c d','centro','filial','unidade','loja','cd destino','centro de distribuicao'],
-  turno:         ['turno','periodo','faixa','shift','shif','turno operacional'],
-  agenda:        ['agenda','agendado','agendados','agenda total','total agenda'],
-  agenda_noshow: ['agenda noshow','agenda - noshow','agenda c noshow','ag noshow','agenda com noshow'],
-  noshow:        ['noshow','no show','nao compareceu','ausente'],
-  recebido:      ['recebido','recebidos','recebimento','total recebido','recebido total'],
-  no_prazo:      ['no prazo','noprazo','prazo','dentro do prazo','recebido no prazo'],
-  abaixo_4hrs:   ['4 hrs','menor 4 hrs','abaixo 4 hrs','ate 4 hrs','4hrs','menor que 4 hrs','menor 4 horas','abaixo de 4 hrs'],
-  recusado:      ['recusado','recusados','recusa','devolvido','devolvidos']
-};
-const ALIAS_LOOKUP = (() => {
-  const m = {};
-  for (const [f, list] of Object.entries(HEADER_ALIASES))
-    for (const a of list) m[norm(a)] = f;
-  return m;
-})();
-
-
-/* ============================================================================
-   IMPORT
+   IMPORTAÇÃO — colunas BD_AGENDA
    ============================================================================ */
 let pendingRows = [];
 
@@ -1085,6 +1114,33 @@ function openImport(){
 }
 function closeImport(){ document.getElementById('modalImport').classList.remove('show'); }
 
+/* Alias flexível: usuário pode mandar "Data/Hora Agenda", "DATA HORA AGENDA", etc. */
+const IMPORT_ALIASES = (() => {
+  const map = {};
+  const add = (field, list) => list.forEach(a => map[norm(a)] = field);
+
+  add('SENHA',        ['senha','id','codigo','cod','senha carga']);
+  add('CARGA',        ['carga','cd','placa','doc','documento','carga id','cd carga']);
+  add('FORNECEDOR',   ['fornecedor','fornec','supplier','cliente','razao social']);
+  add('STATUS',       ['status','situacao','situaçao','st']);
+  add('DATA/HORA AGENDA', ['data hora agenda','data/hora agenda','data agenda','agenda','dt agenda','datahora agenda','data agendamento']);
+  add('DATA/HORA CHEG',   ['data hora cheg','data/hora cheg','data chegada','chegada','dt cheg','datahora cheg','data cheg']);
+  add('ACIONADO',     ['acionado','acionamento','hora acionamento']);
+  add('INI_CONF',     ['ini conf','inicio conf','inicio conferencia','ini conferencia']);
+  add('FIM_CONF',     ['fim conf','fim conferencia','fim conferência']);
+  add('HORA LIBERAÇÃO',['hora liberacao','hora liberação','liberacao','liberação','hr liberacao']);
+  add('TERMO',        ['termo','termo conferencia','termo conferência']);
+  add('TEMPO CRIT',   ['tempo crit','tempo critico','tempo crítico','tempo critico total']);
+  add('TEMPO DIV COM',['tempo div com','tempo divergencia comercial','div com']);
+  add('TEMPO DIV TRIB',['tempo div trib','tempo divergencia tributaria','div trib']);
+  add('TEMPO S/ DIV', ['tempo s div','tempo sem divergencia','sem div']);
+  add('RANGE TEMPO',  ['range tempo','faixa tempo','range']);
+  add('TURNO CONF',   ['turno conf','turno conferencia','turno conferência']);
+  add('TURNO AGENDA', ['turno agenda','turno agendamento','turno']);
+
+  return map;
+})();
+
 async function handleFile(file){
   if (!file) return;
   showLoader(true);
@@ -1096,29 +1152,47 @@ async function handleFile(file){
     const json = XLSX.utils.sheet_to_json(ws, { defval:null, raw:true });
     if (!json.length) throw new Error('Nenhuma linha encontrada na planilha.');
 
+    /* Mapeia cabeçalhos */
     const headerMap = {};
     Object.keys(json[0]).forEach(h => {
-      const field = ALIAS_LOOKUP[norm(h)];
+      const field = IMPORT_ALIASES[norm(h)];
       if (field && !Object.values(headerMap).includes(field)) headerMap[h] = field;
     });
 
-    const missing = ['data','agenda','recebido'].filter(f => !Object.values(headerMap).includes(f));
+    const required = ['CARGA','STATUS','DATA/HORA AGENDA'];
+    const missing = required.filter(f => !Object.values(headerMap).includes(f));
     if (missing.length)
       throw new Error(`Colunas obrigatórias não encontradas: ${missing.join(', ')}.`);
 
-    const parsed = [], errors = [];
+    /* Normaliza cada linha para o formato do BD_AGENDA */
+    const parsed = [];
+    const errors = [];
     json.forEach((raw, idx) => {
-      const rec = { data:null, cd: state.cd === 'TODOS' ? '910' : state.cd, turno:'GERAL',
-                    agenda:0, agenda_noshow:0, noshow:0, recebido:0, no_prazo:0, abaixo_4hrs:0, recusado:0 };
+      const rec = {
+        SENHA:null, CARGA:null, FORNECEDOR:null, STATUS:null,
+        'DATA/HORA AGENDA':null, 'DATA/HORA CHEG':null,
+        ACIONADO:null, INI_CONF:null, FIM_CONF:null, 'HORA LIBERAÇÃO':null,
+        TERMO:null, 'TEMPO CRIT':null, 'TEMPO DIV COM':null,
+        'TEMPO DIV TRIB':null, 'TEMPO S/ DIV':null, 'RANGE TEMPO':null,
+        'TURNO CONF':null, 'TURNO AGENDA':null
+      };
       for (const [h, field] of Object.entries(headerMap)){
         const v = raw[h];
-        if (field === 'data')       rec.data  = parseDate(v);
-        else if (field === 'cd')    rec.cd    = v ? String(v).trim() : rec.cd;
-        else if (field === 'turno') rec.turno = normTurno(v);
-        else                        rec[field] = Math.max(0, Math.round(Number(v) || 0));
+        if (v === null || v === undefined || v === '') continue;
+        if (field === 'DATA/HORA AGENDA' || field === 'DATA/HORA CHEG'){
+          const d = (v instanceof Date) ? v : parseAnyDate(v);
+          rec[field] = d ? d.toISOString() : String(v);
+        } else if (field === 'TEMPO CRIT' || field === 'TEMPO DIV COM' ||
+                   field === 'TEMPO DIV TRIB' || field === 'TEMPO S/ DIV'){
+          rec[field] = v;
+        } else {
+          rec[field] = String(v).trim();
+        }
       }
-      if (!rec.data){ errors.push(`Linha ${idx+2}: data inválida`); return; }
-      if (!rec.turno) rec.turno = 'GERAL';
+      if (!rec.CARGA || !rec['DATA/HORA AGENDA']){
+        errors.push(`Linha ${idx+2}: CARGA ou DATA/HORA AGENDA ausente.`);
+        return;
+      }
       parsed.push(rec);
     });
 
@@ -1132,35 +1206,74 @@ async function handleFile(file){
   }
 }
 
+function parseAnyDate(v){
+  if (v instanceof Date) return v;
+  if (typeof v === 'number'){
+    const ms = Date.UTC(1899,11,30) + v*86400000;
+    return new Date(ms);
+  }
+  const s = String(v).trim();
+  let m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})(?:\s+(\d{1,2}):(\d{2}))?/);
+  if (m){
+    let [, a, b, y, hh, mm] = m;
+    if (y.length === 2) y = '20' + y;
+    const dt = new Date(Number(y), Number(b)-1, Number(a), Number(hh||0), Number(mm||0));
+    return isNaN(dt) ? null : dt;
+  }
+  const dt = new Date(s);
+  return isNaN(dt) ? null : dt;
+}
+
 function renderImportPreview(rows, errors, totalLidas){
   document.getElementById('importResult').style.display = 'block';
-  const soma = k => rows.reduce((s,r) => s + (r[k]||0), 0);
-  const periodos = [...new Set(rows.map(r => r.data))].sort();
-  const cds = [...new Set(rows.map(r => r.cd))];
+
+  const statusCount = {};
+  rows.forEach(r => { const s = normStatus(r.STATUS); statusCount[s] = (statusCount[s]||0) + 1; });
+
+  const periodos = [...new Set(rows.map(r => extractDate(r['DATA/HORA AGENDA'])).filter(Boolean))].sort();
+  const cargas = [...new Set(rows.map(r => getCD(r)))].sort();
 
   document.getElementById('importStats').innerHTML = `
-    <div class="stat ok"><span>Linhas Válidas</span><b>${nfInt.format(rows.length)}</b></div>
-    <div class="stat ${errors.length ? 'warn' : ''}"><span>Linhas c/ Erro</span><b>${nfInt.format(errors.length)}</b></div>
-    <div class="stat"><span>Total Lidas</span><b>${nfInt.format(totalLidas)}</b></div>
-    <div class="stat"><span>Período</span><b style="font-size:13px">${periodos[0]||'–'} → ${periodos[periodos.length-1]||'–'}</b></div>
-    <div class="stat"><span>CDs</span><b style="font-size:13px">${cds.join(', ')||'–'}</b></div>
-    <div class="stat"><span>Agenda</span><b>${nfInt.format(soma('agenda'))}</b></div>
-    <div class="stat ok"><span>Recebido</span><b>${nfInt.format(soma('recebido'))}</b></div>
-    <div class="stat"><span>No Prazo</span><b>${nfInt.format(soma('no_prazo'))}</b></div>
+    <div style="background:color-mix(in srgb,var(--card-2) 70%,transparent);border:1px solid var(--line);border-radius:10px;padding:12px 14px">
+      <span style="display:block;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:6px">Linhas válidas</span>
+      <b style="font-family:var(--mono);font-size:20px;color:var(--green)">${nfInt.format(rows.length)}</b>
+    </div>
+    <div style="background:color-mix(in srgb,var(--card-2) 70%,transparent);border:1px solid var(--line);border-radius:10px;padding:12px 14px">
+      <span style="display:block;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:6px">Linhas c/ erro</span>
+      <b style="font-family:var(--mono);font-size:20px;color:${errors.length?'var(--amber)':'var(--green)'}">${nfInt.format(errors.length)}</b>
+    </div>
+    <div style="background:color-mix(in srgb,var(--card-2) 70%,transparent);border:1px solid var(--line);border-radius:10px;padding:12px 14px">
+      <span style="display:block;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:6px">Total lidas</span>
+      <b style="font-family:var(--mono);font-size:20px">${nfInt.format(totalLidas)}</b>
+    </div>
+    <div style="background:color-mix(in srgb,var(--card-2) 70%,transparent);border:1px solid var(--line);border-radius:10px;padding:12px 14px">
+      <span style="display:block;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:6px">Período</span>
+      <b style="font-family:var(--mono);font-size:12px">${periodos[0]||'–'} → ${periodos[periodos.length-1]||'–'}</b>
+    </div>
+    <div style="background:color-mix(in srgb,var(--card-2) 70%,transparent);border:1px solid var(--line);border-radius:10px;padding:12px 14px">
+      <span style="display:block;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:6px">CDs detectados</span>
+      <b style="font-family:var(--mono);font-size:12px">${cargas.join(', ')||'–'}</b>
+    </div>
+    <div style="background:color-mix(in srgb,var(--card-2) 70%,transparent);border:1px solid var(--line);border-radius:10px;padding:12px 14px">
+      <span style="display:block;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:6px">Status</span>
+      <b style="font-family:var(--mono);font-size:12px">${Object.entries(statusCount).map(([k,v])=>`${k||'–'}: ${v}`).join(' · ')||'–'}</b>
+    </div>
   `;
 
-  const head = ['Data','CD','Turno','Agenda','Ag-Noshow','Noshow','Recebido','No Prazo','< 4hrs','Recusado'];
+  const head = ['SENHA','CARGA','FORNECEDOR','STATUS','DATA/HORA AGENDA','TURNO AGENDA','TEMPO CRIT'];
   const preview = rows.slice(0, 40);
   document.getElementById('importPreview').innerHTML = `
-    <table>
-      <thead><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+    <table style="border-collapse:collapse;width:100%;font-size:11.5px;font-family:var(--mono)">
+      <thead><tr>${head.map(h => `<th style="position:sticky;top:0;background:var(--card-head-1);padding:8px 10px;text-align:left;font-family:var(--sans);font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);font-weight:700;border-bottom:1px solid var(--line)">${h}</th>`).join('')}</tr></thead>
       <tbody>
         ${preview.map(r => `<tr>
-          <td>${r.data}</td><td>${r.cd}</td><td>${r.turno}</td>
-          <td>${nfInt.format(r.agenda)}</td><td>${nfInt.format(r.agenda_noshow)}</td>
-          <td>${nfInt.format(r.noshow)}</td><td>${nfInt.format(r.recebido)}</td>
-          <td>${nfInt.format(r.no_prazo)}</td><td>${nfInt.format(r.abaixo_4hrs)}</td>
-          <td>${nfInt.format(r.recusado)}</td>
+          <td style="padding:7px 10px;border-bottom:1px solid var(--line-soft);color:var(--txt-2);white-space:nowrap">${r.SENHA||''}</td>
+          <td style="padding:7px 10px;border-bottom:1px solid var(--line-soft);color:var(--txt-2);white-space:nowrap">${r.CARGA||''}</td>
+          <td style="padding:7px 10px;border-bottom:1px solid var(--line-soft);color:var(--txt-2);white-space:nowrap">${r.FORNECEDOR||''}</td>
+          <td style="padding:7px 10px;border-bottom:1px solid var(--line-soft);color:var(--txt-2);white-space:nowrap">${r.STATUS||''}</td>
+          <td style="padding:7px 10px;border-bottom:1px solid var(--line-soft);color:var(--txt-2);white-space:nowrap">${(r['DATA/HORA AGENDA']||'').toString().slice(0,16).replace('T',' ')}</td>
+          <td style="padding:7px 10px;border-bottom:1px solid var(--line-soft);color:var(--txt-2);white-space:nowrap">${r['TURNO AGENDA']||''}</td>
+          <td style="padding:7px 10px;border-bottom:1px solid var(--line-soft);color:var(--txt-2);white-space:nowrap">${r['TEMPO CRIT']||''}</td>
         </tr>`).join('')}
       </tbody>
     </table>
@@ -1174,7 +1287,7 @@ async function confirmImport(){
   showLoader(true);
   try {
     const n = await api.upsert(pendingRows);
-    toast('Base importada com sucesso', `${nfInt.format(n)} registros gravados.`, 'ok');
+    toast('Base importada com sucesso', `${nfInt.format(n)} registros gravados em BD_AGENDA.`, 'ok');
     closeImport();
     await loadCDs();
     await loadData();
@@ -1185,13 +1298,15 @@ async function confirmImport(){
 }
 
 function downloadTemplate(){
-  const headers = ['DATA','CD','TURNO','AGENDA','AGENDA - NOSHOW','NOSHOW','RECEBIDO','NO PRAZO','< 4 HRS','RECUSADO'];
-  const exemplo = [todayISO(), '910', 'MANHÃ', 120, 8, 15, 105, 88, 12, 5];
+  const headers = ['SENHA','CARGA','FORNECEDOR','STATUS','DATA/HORA AGENDA','DATA/HORA CHEG','ACIONADO','INI_CONF','FIM_CONF','HORA LIBERAÇÃO','TERMO','TEMPO CRIT','TEMPO DIV COM','TEMPO DIV TRIB','TEMPO S/ DIV','RANGE TEMPO','TURNO CONF','TURNO AGENDA'];
+  const now = new Date();
+  const dt = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} 08:30`;
+  const exemplo = ['0001','910-12345','FORNECEDOR EXEMPLO','RECEBIDO', dt, dt, '', '', '', '', '', '03:45','00:15','00:20','00:30','0-4H','MANHÃ','MANHÃ'];
   const csv = [headers.join(';'), exemplo.join(';')].join('\n');
   const blob = new Blob(['\uFEFF' + csv], { type:'text/csv;charset=utf-8;' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'modelo_recebimento.csv';
+  a.download = 'modelo_BD_AGENDA.csv';
   a.click();
   URL.revokeObjectURL(a.href);
   toast('Modelo gerado', 'Preencha e importe novamente.', 'ok');
@@ -1202,10 +1317,10 @@ function downloadTemplate(){
    EXPORTAÇÃO
    ============================================================================ */
 function exportData(){
-  if (!state.rows.length){ toast('Nada para exportar', 'Sem dados no período.', 'warn'); return; }
   const agg = aggregate();
-  const { cols, total } = agg;
+  if (!agg.registros.length){ toast('Nada para exportar', 'Sem dados no período.', 'warn'); return; }
 
+  const { cols, total } = agg;
   const head = ['INDICADOR', ...cols.map(c => `${c.label}${c.sub?' ('+c.sub+')':''}`), 'TOTAL'];
   const linhas = [];
   ROWS.forEach(r => {
@@ -1243,7 +1358,6 @@ function toast(title, msg, type='ok'){
   }, 4200);
 }
 
-/* Atualiza o rótulo do campo de período e o hint da granularidade */
 function updatePeriodHints(){
   const lbl = document.getElementById('lblPeriodo');
   const hint = document.getElementById('granHint');
@@ -1274,23 +1388,25 @@ async function loadCDs(){
   const sel = document.getElementById('fCd');
   try {
     let cds = await api.listCDs();
-    if (!cds.length) cds = ['910'];
-    if (!cds.includes('910')) cds.unshift('910');
+    if (!cds.length) cds = [CD_PADRAO];
+    if (!cds.includes(CD_PADRAO)) cds.unshift(CD_PADRAO);
     state.cds = cds;
     sel.innerHTML = cds.map(c => `<option value="${c}">CD ${c}</option>`).join('')
       + `<option value="TODOS">Todos os CDs</option>`;
     sel.value = cds.includes(state.cd) ? state.cd : cds[0];
     state.cd = sel.value;
   } catch(e){
-    sel.innerHTML = `<option value="910">CD 910</option><option value="TODOS">Todos os CDs</option>`;
+    console.error(e);
+    sel.innerHTML = `<option value="${CD_PADRAO}">CD ${CD_PADRAO}</option><option value="TODOS">Todos os CDs</option>`;
   }
 }
 
 async function loadData(){
   showLoader(true);
   try {
-    const range = getFetchRange();
-    state.rows = await api.fetchRange(range.start, range.end, state.cd);
+    state.raw = await api.fetchAll();
+    document.getElementById('footerConexao').textContent =
+      `BD_AGENDA · ${nfInt.format(state.raw.length)} registros`;
     updatePeriodHints();
     render();
   } catch(e){
@@ -1301,17 +1417,30 @@ async function loadData(){
 
 
 /* ============================================================================
+   TEMA
+   ============================================================================ */
+function applyTheme(theme){
+  const isLightTheme = theme === 'light';
+  document.body.classList.toggle('light', isLightTheme);
+  document.getElementById('icoMoon').style.display = isLightTheme ? '' : 'none';
+  document.getElementById('icoSun').style.display  = isLightTheme ? 'none' : '';
+  try { localStorage.setItem('painel_tema', theme); } catch(e){}
+  render();  // re-render charts com a paleta certa
+}
+
+
+/* ============================================================================
    EVENTOS
    ============================================================================ */
 function bindEvents(){
   document.getElementById('fMes').addEventListener('change', e => {
     state.mes = e.target.value || todayISO().slice(0,7);
-    loadData();
+    render(); // re-render com filtro
   });
 
   document.getElementById('fCd').addEventListener('change', e => {
     state.cd = e.target.value;
-    loadData();
+    render();
   });
 
   document.getElementById('fTurno').addEventListener('change', e => {
@@ -1328,23 +1457,28 @@ function bindEvents(){
     render();
   });
 
-  /* Granularidade */
   document.getElementById('granChips').addEventListener('click', e => {
     const btn = e.target.closest('button[data-gran]');
     if (!btn) return;
     document.querySelectorAll('#granChips button').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     state.gran = btn.dataset.gran;
-    loadData(); // precisa refetch pois o range muda
+    updatePeriodHints();
+    render();
   });
 
   document.getElementById('btnRefresh').addEventListener('click', async () => {
     await loadCDs();
     await loadData();
-    toast('Dados atualizados', 'Painel sincronizado.', 'ok');
+    toast('Dados atualizados', 'Painel sincronizado com BD_AGENDA.', 'ok');
   });
 
   document.getElementById('btnExport').addEventListener('click', exportData);
+
+  document.getElementById('btnTheme').addEventListener('click', () => {
+    const isLight = document.body.classList.contains('light');
+    applyTheme(isLight ? 'dark' : 'light');
+  });
 
   /* Import */
   document.getElementById('btnImport').addEventListener('click', openImport);
@@ -1373,20 +1507,24 @@ function bindEvents(){
   });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeImport(); });
 
-  /* Limpar período (respeita o range atual) */
+  /* Limpar período (apenas registros filtrados do range atual) */
   document.getElementById('btnClear').addEventListener('click', async () => {
     const range = getFetchRange();
-    const granularidadeTxt = {
-      dia:'do mês', semana:'do mês', mes:'do ano',
-      ano:'dos últimos 5 anos', decada:'dos últimos 10 anos'
-    }[state.gran];
+    const granTxt = { dia:'do mês', semana:'do mês', mes:'do ano',
+                      ano:'dos últimos 5 anos', decada:'dos últimos 10 anos' }[state.gran];
 
-    if (!confirm(`Confirma EXCLUIR todos os registros ${granularidadeTxt} (${range.start} → ${range.end}) para o CD ${state.cd}?\n\nEsta ação não pode ser desfeita.`)) return;
+    if (!confirm(`Confirma EXCLUIR os registros ${granTxt} (${range.start} → ${range.end}) para o CD ${state.cd}?\n\nEsta ação não pode ser desfeita.`)) return;
 
     showLoader(true);
     try {
-      await api.remove(range.start, range.end, state.cd);
-      toast('Período limpo', 'Registros removidos com sucesso.', 'ok');
+      let q = sb.from(TABLE).delete()
+        .gte(COL.agenda, range.start)
+        .lte(COL.agenda, range.end + 'T23:59:59');
+      // se não for TODOS, não conseguimos filtrar por CARGA facilmente pois o CD é derivado.
+      // então apenas apagamos o range e o usuário filtra visualmente depois.
+      const { error } = await q;
+      if (error) throw error;
+      toast('Período limpo', 'Registros removidos.', 'ok');
       await loadData();
     } catch(e){
       toast('Erro ao limpar', e.message || String(e), 'err');
@@ -1405,8 +1543,15 @@ function bindEvents(){
    BOOTSTRAP
    ============================================================================ */
 (async function init(){
+  /* Tema salvo */
+  let temaSalvo = 'dark';
+  try { temaSalvo = localStorage.getItem('painel_tema') || 'dark'; } catch(e){}
+  document.body.classList.toggle('light', temaSalvo === 'light');
+  document.getElementById('icoMoon').style.display = temaSalvo === 'light' ? '' : 'none';
+  document.getElementById('icoSun').style.display  = temaSalvo === 'light' ? 'none' : '';
+
   document.getElementById('fMes').value = state.mes;
-  if (DEMO) document.getElementById('demoBanner').classList.add('show');
+
   bindEvents();
   updatePeriodHints();
   await loadCDs();
