@@ -27,6 +27,14 @@
   --shadow:0 10px 30px -12px rgba(0,0,0,.75);
   --mono:'SF Mono',ui-monospace,'JetBrains Mono',Menlo,Consolas,monospace;
   --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+
+  /* Cores de texto por tipo de linha (dark) */
+  --derived-txt:#7dd3fc;
+  --pct-txt:#c4b5fd;
+  --avg-txt:#c4b5fd;
+  --derived-bg-tint: 10%;
+  --derived-bg-tint-2: 12%;
+  --pct-bg-tint: 20%;
 }
 body.light{
   --bg-1:#eef3fb;--bg-2:#e2e9f5;
@@ -40,6 +48,11 @@ body.light{
   --derived-label:#f3ecff;--derived-total:#e8dcff;
   --overlay:rgba(15,25,45,.55);
   --shadow:0 10px 26px -14px rgba(28,50,90,.35);
+
+  /* Cores de texto por tipo de linha (light) — escuras para dar contraste */
+  --derived-txt:#075985;
+  --pct-txt:#6d28d9;
+  --avg-txt:#6d28d9;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
@@ -196,22 +209,20 @@ table.grid td.rowlabel{position:sticky;left:0;z-index:3;background:var(--row-lab
 table.grid td.rowlabel .dot{width:7px;height:7px;border-radius:50%;flex:none;background:var(--c,var(--blue));box-shadow:0 0 10px 0 var(--c,var(--blue));transition:transform .15s,box-shadow .15s}
 table.grid tbody tr:hover td.rowlabel{background:var(--row-label-h)}
 table.grid td.total-cell{position:sticky;right:112px;z-index:3;background:var(--total-cell);color:var(--txt);font-weight:800;font-size:12.5px;box-shadow:-1px 0 0 var(--line),-8px 0 14px -10px rgba(0,0,0,.5)}
-table.grid td.avg-cell{position:sticky;right:0;z-index:3;background:color-mix(in srgb,var(--purple) 8%,var(--total-cell));color:#c4b5fd;font-weight:800;font-size:12.5px;box-shadow:-1px 0 0 var(--line)}
+table.grid td.avg-cell{position:sticky;right:0;z-index:3;background:color-mix(in srgb,var(--purple) 8%,var(--total-cell));color:var(--avg-txt);font-weight:800;font-size:12.5px;box-shadow:-1px 0 0 var(--line)}
 table.grid tbody tr:hover td.total-cell{background:var(--total-cell-h)}
 table.grid tbody tr:hover td.avg-cell{background:color-mix(in srgb,var(--purple) 14%,var(--total-cell))}
-table.grid tr.derived td.rowlabel{background:var(--derived-label);color:#7dd3fc}
-table.grid tr.derived td.total-cell{background:color-mix(in srgb,var(--cyan) 10%,var(--total-cell));color:#7dd3fc}
-table.grid tr.derived td.avg-cell{background:color-mix(in srgb,var(--cyan) 12%,var(--total-cell));color:#7dd3fc}
-table.grid tr.pct td.rowlabel{background:var(--derived-label);color:#c4b5fd}
-table.grid tr.pct td.total-cell{background:var(--derived-total);color:#ddd6fe}
-table.grid tr.pct td.avg-cell{background:color-mix(in srgb,var(--purple) 20%,var(--total-cell));color:#ddd6fe}
+table.grid tr.derived td.rowlabel{background:var(--derived-label);color:var(--derived-txt)}
+table.grid tr.derived td.total-cell{background:color-mix(in srgb,var(--cyan) 14%,var(--total-cell));color:var(--derived-txt)}
+table.grid tr.derived td.avg-cell{background:color-mix(in srgb,var(--cyan) 16%,var(--total-cell));color:var(--derived-txt)}
+table.grid tr.pct td.rowlabel{background:var(--derived-label);color:var(--pct-txt)}
+table.grid tr.pct td.total-cell{background:var(--derived-total);color:var(--pct-txt)}
+table.grid tr.pct td.avg-cell{background:color-mix(in srgb,var(--purple) 20%,var(--total-cell));color:var(--pct-txt)}
 table.grid td.col-selected,table.grid th.col-selected{background-color:color-mix(in srgb,var(--purple) 22%,transparent) !important;box-shadow:inset 1px 0 0 rgba(168,85,247,.35),inset -1px 0 0 rgba(168,85,247,.35)}
 table.grid td.numcell{cursor:pointer}
 table.grid td.numcell:hover{background-color:color-mix(in srgb,var(--cyan) 22%,transparent) !important}
 
-/* ============================================================
-   HOVER DE LINHA — destaca a linha inteira com saturação elevada
-   ============================================================ */
+/* HOVER DE LINHA — destaca a linha inteira com saturação elevada */
 table.grid tbody tr{transition:filter .15s ease}
 table.grid tbody tr:hover td{filter:brightness(1.15) saturate(1.55)}
 table.grid tbody tr:hover td.rowlabel{
@@ -240,6 +251,9 @@ table.grid tr.derived:hover td.rowlabel{
 table.grid tr.pct:hover td.rowlabel{
   background:color-mix(in srgb,var(--c,var(--blue)) 30%,var(--derived-label)) !important;
 }
+/* Ajuste no light: hover da linha derivada/pct mantém o texto escuro legível */
+body.light table.grid tr.derived:hover td.rowlabel,
+body.light table.grid tr.pct:hover td.rowlabel{color:#fff !important}
 
 .legend{display:flex;flex-wrap:wrap;gap:14px;padding:11px 16px;border-top:1px solid var(--line-soft);background:color-mix(in srgb,var(--card-2) 80%,transparent)}
 .legend span{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--muted);font-weight:600;letter-spacing:.3px}
@@ -632,7 +646,6 @@ const ROWS = [
 ];
 const KEYS = ROWS.map(r => r.key);
 
-/* Linhas que usam a data do TERMO (recebimento efetivo) em vez da data da agenda */
 const KEYS_TERMO = new Set(['recebido','no_prazo','abaixo_4hrs']);
 
 const WD = ['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
@@ -732,7 +745,6 @@ function hexA(hex,a){
 function emptyBucket(){
   return { agenda:0, agenda_noshow:0, recebido:0, no_prazo:0, abaixo_4hrs:0, no_show:0, recusado:0, falta_comparecer:0, em_conferencia:0 };
 }
-
 function extractDate(v){
   if (v == null || v === '') return null;
   if (v instanceof Date){
@@ -837,7 +849,6 @@ function matchesTurno(row){
   }
   return true;
 }
-
 function toRegistro(row){
   const status   = normStatus(row[COL.status]);
   const tempoH   = parseTempoHoras(row[COL.tempoCrit]);
@@ -866,7 +877,6 @@ function toRegistro(row){
     em_conferencia:   status === S.EM_CONFERENCIA   ? 1 : 0
   };
 }
-
 function dateForRow(r, key){
   if (KEYS_TERMO.has(key)) return r.dataTermo;
   return r.dataAgenda;
@@ -930,7 +940,6 @@ function colForDate(cols, ds){
   else { const idx = ry - (y-9); if (idx>=0 && idx<cols.length) return cols[idx]; }
   return null;
 }
-
 function registrosDoPeriodo(){
   const { start, end } = getFetchRange();
   const out = [];
@@ -946,7 +955,6 @@ function registrosDoPeriodo(){
   }
   return out;
 }
-
 function aggregate(){
   const cols = buildColumns();
   const total = emptyBucket();
@@ -969,7 +977,6 @@ function aggregate(){
   total.agenda_noshow = total.agenda - total.no_show;
   return { cols, total, registros: regs };
 }
-
 function aggregateFocus(agg){
   if (!state.selectedDates.size || state.gran !== 'dia') return { total: agg.total, focused:false };
   const t = emptyBucket();
@@ -986,7 +993,6 @@ function aggregateFocus(agg){
   t.agenda_noshow = t.agenda - t.no_show;
   return { total: t, focused: true };
 }
-
 function rowValue(bucket, key, mode){
   let v;
   if (key === 'agenda_noshow') v = (bucket.agenda||0) - (bucket.no_show||0);
