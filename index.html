@@ -190,11 +190,10 @@ table.grid th.corner{position:sticky;left:0;z-index:6;background:linear-gradient
 table.grid th.total-col{position:sticky;right:112px;z-index:6;background:linear-gradient(135deg,var(--total-cell),var(--card-head-2));box-shadow:-1px 0 0 var(--line),-8px 0 14px -10px rgba(0,0,0,.5);min-width:88px;width:88px;font-size:11px;color:var(--txt)}
 table.grid th.avg-col{position:sticky;right:0;z-index:6;background:linear-gradient(135deg,color-mix(in srgb,var(--purple) 15%,var(--total-cell)),var(--card-head-2));box-shadow:-1px 0 0 var(--line);min-width:96px;width:96px;font-size:11px;color:var(--txt)}
 table.grid td{padding:7px 5px;text-align:right;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--txt);border-bottom:1px solid color-mix(in srgb,var(--line) 55%,transparent);white-space:nowrap;transition:background .12s}
-table.grid tbody tr:hover td{filter:brightness(1.08)}
 table.grid td.zero{color:var(--muted-2) !important;background:transparent !important}
 table.grid td.empty{color:var(--muted-2) !important;background:transparent !important}
 table.grid td.rowlabel{position:sticky;left:0;z-index:3;background:var(--row-label);text-align:left;padding-left:16px;font-family:var(--sans);font-size:11.5px;font-weight:700;letter-spacing:.3px;color:var(--txt-2);display:flex;align-items:center;gap:9px;height:100%;min-height:34px;box-shadow:1px 0 0 var(--line),8px 0 14px -10px rgba(0,0,0,.5);border-bottom:1px solid color-mix(in srgb,var(--line) 60%,transparent)}
-table.grid td.rowlabel .dot{width:7px;height:7px;border-radius:50%;flex:none;background:var(--c,var(--blue));box-shadow:0 0 10px 0 var(--c,var(--blue))}
+table.grid td.rowlabel .dot{width:7px;height:7px;border-radius:50%;flex:none;background:var(--c,var(--blue));box-shadow:0 0 10px 0 var(--c,var(--blue));transition:transform .15s,box-shadow .15s}
 table.grid tbody tr:hover td.rowlabel{background:var(--row-label-h)}
 table.grid td.total-cell{position:sticky;right:112px;z-index:3;background:var(--total-cell);color:var(--txt);font-weight:800;font-size:12.5px;box-shadow:-1px 0 0 var(--line),-8px 0 14px -10px rgba(0,0,0,.5)}
 table.grid td.avg-cell{position:sticky;right:0;z-index:3;background:color-mix(in srgb,var(--purple) 8%,var(--total-cell));color:#c4b5fd;font-weight:800;font-size:12.5px;box-shadow:-1px 0 0 var(--line)}
@@ -209,6 +208,39 @@ table.grid tr.pct td.avg-cell{background:color-mix(in srgb,var(--purple) 20%,var
 table.grid td.col-selected,table.grid th.col-selected{background-color:color-mix(in srgb,var(--purple) 22%,transparent) !important;box-shadow:inset 1px 0 0 rgba(168,85,247,.35),inset -1px 0 0 rgba(168,85,247,.35)}
 table.grid td.numcell{cursor:pointer}
 table.grid td.numcell:hover{background-color:color-mix(in srgb,var(--cyan) 22%,transparent) !important}
+
+/* ============================================================
+   HOVER DE LINHA — destaca a linha inteira com saturação elevada
+   ============================================================ */
+table.grid tbody tr{transition:filter .15s ease}
+table.grid tbody tr:hover td{filter:brightness(1.15) saturate(1.55)}
+table.grid tbody tr:hover td.rowlabel{
+  background:color-mix(in srgb,var(--c,var(--blue)) 22%,var(--row-label)) !important;
+  color:#fff !important;
+  box-shadow:inset 4px 0 0 var(--c,var(--blue)),1px 0 0 var(--line),8px 0 20px -8px var(--c,var(--blue)) !important;
+  filter:none;
+}
+table.grid tbody tr:hover td.rowlabel .dot{
+  box-shadow:0 0 14px 2px var(--c,var(--blue)) !important;
+  transform:scale(1.3);
+}
+table.grid tbody tr:hover td.total-cell{
+  background:color-mix(in srgb,var(--c,var(--blue)) 18%,var(--total-cell)) !important;
+  color:#fff !important;
+  filter:none;
+}
+table.grid tbody tr:hover td.avg-cell{
+  background:color-mix(in srgb,var(--c,var(--blue)) 20%,var(--total-cell)) !important;
+  color:#fff !important;
+  filter:none;
+}
+table.grid tr.derived:hover td.rowlabel{
+  background:color-mix(in srgb,var(--c,var(--blue)) 30%,var(--derived-label)) !important;
+}
+table.grid tr.pct:hover td.rowlabel{
+  background:color-mix(in srgb,var(--c,var(--blue)) 30%,var(--derived-label)) !important;
+}
+
 .legend{display:flex;flex-wrap:wrap;gap:14px;padding:11px 16px;border-top:1px solid var(--line-soft);background:color-mix(in srgb,var(--card-2) 80%,transparent)}
 .legend span{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--muted);font-weight:600;letter-spacing:.3px}
 .legend span i{width:8px;height:8px;border-radius:2px;display:block;box-shadow:0 0 8px -1px currentColor}
@@ -701,11 +733,6 @@ function emptyBucket(){
   return { agenda:0, agenda_noshow:0, recebido:0, no_prazo:0, abaixo_4hrs:0, no_show:0, recusado:0, falta_comparecer:0, em_conferencia:0 };
 }
 
-/* Extrai YYYY-MM-DD ignorando a parte de hora. Aceita:
-   - ISO: 2026-09-22T14:30:00
-   - BR : 22/09/2026 14:30 / 22/09/2026
-   - Excel serial number
-   - Date object                                                             */
 function extractDate(v){
   if (v == null || v === '') return null;
   if (v instanceof Date){
@@ -725,7 +752,6 @@ function extractDate(v){
   if (!isNaN(d.getTime())) return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   return null;
 }
-/* Data formatada como DD/MM/AAAA (sem hora) */
 function formatBR(iso){
   if (!iso) return '';
   const [y,m,d] = iso.split('-');
@@ -812,9 +838,6 @@ function matchesTurno(row){
   return true;
 }
 
-/* Retorna o registro com as duas datas separadas:
-   - dataAgenda → DATA/HORA AGENDA
-   - dataTermo  → TERMO (data de recebimento efetivo, ignorando hora)     */
 function toRegistro(row){
   const status   = normStatus(row[COL.status]);
   const tempoH   = parseTempoHoras(row[COL.tempoCrit]);
@@ -829,7 +852,7 @@ function toRegistro(row){
 
   return {
     dataAgenda, dataTermo,
-    data: dataAgenda || dataTermo,  /* fallback p/ ordenações gerais */
+    data: dataAgenda || dataTermo,
     status, tempoH, rangeTempo,
     fornecedor: String(row[COL.fornecedor] ?? '').trim() || 'SEM FORNECEDOR',
     carga: String(row[COL.carga] ?? '').trim() || '–',
@@ -844,7 +867,6 @@ function toRegistro(row){
   };
 }
 
-/* Data usada por cada linha do relatório */
 function dateForRow(r, key){
   if (KEYS_TERMO.has(key)) return r.dataTermo;
   return r.dataAgenda;
@@ -909,8 +931,6 @@ function colForDate(cols, ds){
   return null;
 }
 
-/* Coleta os registros válidos para o período atual.
-   Um registro entra se a data da agenda OU a data do termo estiverem dentro do range. */
 function registrosDoPeriodo(){
   const { start, end } = getFetchRange();
   const out = [];
@@ -927,9 +947,6 @@ function registrosDoPeriodo(){
   return out;
 }
 
-/* ============================================================================
-   AGREGADOR — cada linha usa a data correta (agenda ou termo)
-   ============================================================================ */
 function aggregate(){
   const cols = buildColumns();
   const total = emptyBucket();
@@ -1090,8 +1107,8 @@ function renderTable(agg){
     const isDerived = r.key === 'agenda_noshow';
     const trCls = isDerived ? 'derived' : '';
 
-    body += `<tr class="${trCls}">
-      <td class="rowlabel" style="--c:${r.color}"><span class="dot"></span><span>${r.label}</span></td>`;
+    body += `<tr class="${trCls}" style="--c:${r.color}">
+      <td class="rowlabel"><span class="dot"></span><span>${r.label}</span></td>`;
 
     vals.forEach((v,i) => {
       const colSelected = state.selectedDates.has(cols[i].key);
@@ -1120,7 +1137,6 @@ function renderTable(agg){
     body += '</tr>';
   });
 
-  /* Linha % NO PRAZO = no_prazo / recebido */
   {
     const color = '#a855f7';
     const vals = cols.map(c => c.bucket.recebido>0 ? (c.bucket.no_prazo/c.bucket.recebido)*100 : null);
@@ -1129,7 +1145,7 @@ function renderTable(agg){
     const valid = vals.filter(v => !isEmpty(v));
     const avgVal = valid.length ? valid.reduce((s,v)=>s+v,0)/valid.length : null;
 
-    body += `<tr class="pct"><td class="rowlabel" style="--c:${color}"><span class="dot"></span><span>% NO PRAZO</span></td>`;
+    body += `<tr class="pct" style="--c:${color}"><td class="rowlabel"><span class="dot"></span><span>% NO PRAZO</span></td>`;
     vals.forEach((v,i) => {
       const colSelected = state.selectedDates.has(cols[i].key);
       const extra = colSelected ? ' col-selected' : '';
@@ -1646,8 +1662,6 @@ function openImport(){
 }
 function closeImport(){ document.getElementById('modalImport').classList.remove('show'); }
 
-/* Converte qualquer entrada de data para string "YYYY-MM-DDTHH:MM:00" em horário local.
-   Isso evita shift de timezone que muda o dia. */
 function toLocalISO(d){
   if (!d || isNaN(d)) return null;
   const Y = d.getFullYear();
