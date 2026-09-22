@@ -388,14 +388,22 @@ footer.app-footer span.dot{color:var(--muted-2);margin:0 6px}
     <div class="filters">
       <div class="field"><label id="lblPeriodo">Mês de Referência</label><input type="month" id="fMes"></div>
       <div class="field"><label>Centro de Distribuição</label><select id="fCd"></select></div>
-      <div class="field"><label>Turno</label>
-        <select id="fTurno">
-          <option value="TODOS">Todos os turnos</option>
-          <option value="MANHÃ">Manhã</option>
-          <option value="TARDE">Tarde</option>
-          <option value="NOITE">Noite</option>
-          <option value="MADRUGADA">Madrugada</option>
-          <option value="GERAL">Geral</option>
+      <div class="field">
+        <label>Turno Agenda</label>
+        <select id="fTurnoAgenda">
+          <option value="TODOS">Todos</option>
+          <option value="1º TURNO">1º Turno</option>
+          <option value="2º TURNO">2º Turno</option>
+          <option value="3º TURNO">3º Turno</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Turno Conf</label>
+        <select id="fTurnoConf">
+          <option value="TODOS">Todos</option>
+          <option value="1º TURNO">1º Turno</option>
+          <option value="2º TURNO">2º Turno</option>
+          <option value="3º TURNO">3º Turno</option>
         </select>
       </div>
       <div class="field"><label>Visualização</label>
@@ -533,7 +541,7 @@ footer.app-footer span.dot{color:var(--muted-2);margin:0 6px}
 <div class="overlay" id="modalImport">
   <div class="modal wide">
     <div class="modal-head">
-      <div><h2>Importar Base BD_AGENDA</h2><p>Colunas: CD, STATUS, DATA/HORA AGENDA, TURNO AGENDA, TEMPO CRIT, FORNECEDOR, CARGA</p></div>
+      <div><h2>Importar Base BD_AGENDA</h2><p>Colunas: CD, STATUS, DATA/HORA AGENDA, TURNO AGENDA, TURNO CONF, TERMO, RANGE TEMPO, TEMPO CRIT, FORNECEDOR, CARGA</p></div>
       <button class="x-btn" id="closeImport">×</button>
     </div>
     <div class="modal-body">
@@ -592,6 +600,9 @@ const ROWS = [
 ];
 const KEYS = ROWS.map(r => r.key);
 
+/* Linhas que usam a data do TERMO (recebimento efetivo) em vez da data da agenda */
+const KEYS_TERMO = new Set(['recebido','no_prazo','abaixo_4hrs']);
+
 const WD = ['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
 const MES_ABREV = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
 const MES_EXT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -600,21 +611,24 @@ const COL = {
   status:'STATUS',
   agenda:'DATA/HORA AGENDA',
   tempoCrit:'TEMPO CRIT',
+  termo:'TERMO',
+  rangeTempo:'RANGE TEMPO',
   turnoAgenda:'TURNO AGENDA',
   turnoConf:'TURNO CONF',
   fornecedor:'FORNECEDOR',
   carga:'CARGA'
 };
 const COL_OBS = { dta:'DTA', usuario:'USUARIO', observacao:'OBSERVAÇÃO' };
-const CD_PADRAO = '910';
+const CD_PADRAO = 'TODOS';
 
 /* ============================================================================
    STATE
    ============================================================================ */
 const state = {
   mes: todayISO().slice(0,7),
-  cd: CD_PADRAO,
-  turno: 'TODOS',
+  cd: 'TODOS',
+  turnoAgenda: 'TODOS',
+  turnoConf: 'TODOS',
   view: 'abs',
   gran: 'dia',
   selectedDates: new Set(),
@@ -646,21 +660,37 @@ function isToday(y,m,d){
   return t.getFullYear()===y && (t.getMonth()+1)===m && t.getDate()===d;
 }
 function norm(s){
-  return String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+  return String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9<>]+/g,' ').trim();
+}
+function normUpper(s){
+  return String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/\s+/g,' ').trim();
 }
 function normStatus(s){
-  const v = String(s ?? '').toUpperCase().replace(/\s+/g,' ').trim();
+  const v = normUpper(s);
   if (!v) return '';
   if (v === 'NOSHOW' || v === 'NO-SHOW' || v === 'NO_SHOW') return S.NO_SHOW;
   return v;
 }
+function isRangeNoPrazo(v){
+  const s = normUpper(v);
+  if (!s) return false;
+  return s === 'NO PRAZO' || s === 'NOPRAZO' || s === 'DENTRO DO PRAZO';
+}
+function isRangeAbaixo4(v){
+  const s = normUpper(v).replace(/\s+/g,'');
+  if (!s) return false;
+  return s === '<4' || s === '<4HRS' || s === 'MENOR4' || s === 'MENORQUE4'
+      || s === 'ABAIXO4' || s === 'ABAIXODE4' || s === 'ATE4' || s === 'MENOSDE4';
+}
 function normTurno(t){
-  const v = norm(t);
-  if (!v) return 'GERAL';
-  const map = { 'manha':'MANHÃ','matutino':'MANHÃ','m':'MANHÃ','tarde':'TARDE','vespertino':'TARDE','t':'TARDE',
-    'noite':'NOITE','noturno':'NOITE','n':'NOITE','madrugada':'MADRUGADA','madrug':'MADRUGADA',
-    'geral':'GERAL','integral':'GERAL','todos':'GERAL' };
-  return map[v] || String(t).trim().toUpperCase();
+  const v = normUpper(t);
+  if (!v) return '';
+  const map = {
+    '1 TURNO':'1º TURNO', '1° TURNO':'1º TURNO', '1º TURNO':'1º TURNO', '1O TURNO':'1º TURNO',
+    '2 TURNO':'2º TURNO', '2° TURNO':'2º TURNO', '2º TURNO':'2º TURNO', '2O TURNO':'2º TURNO',
+    '3 TURNO':'3º TURNO', '3° TURNO':'3º TURNO', '3º TURNO':'3º TURNO', '3O TURNO':'3º TURNO'
+  };
+  return map[v] || v;
 }
 function hexA(hex,a){
   const h = hex.replace('#','');
@@ -670,9 +700,22 @@ function hexA(hex,a){
 function emptyBucket(){
   return { agenda:0, agenda_noshow:0, recebido:0, no_prazo:0, abaixo_4hrs:0, no_show:0, recusado:0, falta_comparecer:0, em_conferencia:0 };
 }
+
+/* Extrai YYYY-MM-DD ignorando a parte de hora. Aceita:
+   - ISO: 2026-09-22T14:30:00
+   - BR : 22/09/2026 14:30 / 22/09/2026
+   - Excel serial number
+   - Date object                                                             */
 function extractDate(v){
   if (v == null || v === '') return null;
-  if (v instanceof Date) return `${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,'0')}-${String(v.getDate()).padStart(2,'0')}`;
+  if (v instanceof Date){
+    return `${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,'0')}-${String(v.getDate()).padStart(2,'0')}`;
+  }
+  if (typeof v === 'number'){
+    const ms = Date.UTC(1899,11,30) + v*86400000;
+    const d = new Date(ms);
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
+  }
   const s = String(v).trim();
   let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (m) return `${m[1]}-${m[2]}-${m[3]}`;
@@ -681,6 +724,12 @@ function extractDate(v){
   const d = new Date(s);
   if (!isNaN(d.getTime())) return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   return null;
+}
+/* Data formatada como DD/MM/AAAA (sem hora) */
+function formatBR(iso){
+  if (!iso) return '';
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y}`;
 }
 function parseTempoHoras(v){
   if (v == null || v === '') return null;
@@ -752,41 +801,53 @@ function matchesCD(row){
   return String(row[COL.cd] ?? '').trim() === state.cd;
 }
 function matchesTurno(row){
-  if (state.turno === 'TODOS') return true;
-  const t = row[COL.turnoAgenda] ?? row[COL.turnoConf] ?? '';
-  return normTurno(t) === state.turno;
+  if (state.turnoAgenda !== 'TODOS'){
+    const t = normTurno(row[COL.turnoAgenda]);
+    if (t !== normTurno(state.turnoAgenda)) return false;
+  }
+  if (state.turnoConf !== 'TODOS'){
+    const t = normTurno(row[COL.turnoConf]);
+    if (t !== normTurno(state.turnoConf)) return false;
+  }
+  return true;
 }
+
+/* Retorna o registro com as duas datas separadas:
+   - dataAgenda → DATA/HORA AGENDA
+   - dataTermo  → TERMO (data de recebimento efetivo, ignorando hora)     */
 function toRegistro(row){
-  const status = normStatus(row[COL.status]);
-  const tempoH = parseTempoHoras(row[COL.tempoCrit]);
-  const data = extractDate(row[COL.agenda]);
-  if (!data) return null;
+  const status   = normStatus(row[COL.status]);
+  const tempoH   = parseTempoHoras(row[COL.tempoCrit]);
+  const dataAgenda = extractDate(row[COL.agenda]);
+  const dataTermo  = extractDate(row[COL.termo]);
+  if (!dataAgenda && !dataTermo) return null;
+
+  const rangeTempo = row[COL.rangeTempo];
+  const ehRecebido = status === S.RECEBIDO && !!dataTermo;
+  const ehNoPrazo  = ehRecebido && isRangeNoPrazo(rangeTempo);
+  const ehAbaixo4  = ehRecebido && isRangeAbaixo4(rangeTempo);
+
   return {
-    data, status, tempoH,
+    dataAgenda, dataTermo,
+    data: dataAgenda || dataTermo,  /* fallback p/ ordenações gerais */
+    status, tempoH, rangeTempo,
     fornecedor: String(row[COL.fornecedor] ?? '').trim() || 'SEM FORNECEDOR',
     carga: String(row[COL.carga] ?? '').trim() || '–',
     agenda: 1,
-    recebido:         status === S.RECEBIDO         ? 1 : 0,
-    no_prazo:         (status === S.RECEBIDO && tempoH != null && tempoH <= 4) ? 1 : 0,
-    abaixo_4hrs:      (tempoH != null && tempoH < 4) ? 1 : 0,
+    recebido:         ehRecebido ? 1 : 0,
+    no_prazo:         ehNoPrazo  ? 1 : 0,
+    abaixo_4hrs:      ehAbaixo4  ? 1 : 0,
     no_show:          status === S.NO_SHOW          ? 1 : 0,
     recusado:         status === S.RECUSADO         ? 1 : 0,
     falta_comparecer: status === S.FALTA_COMPARECER ? 1 : 0,
     em_conferencia:   status === S.EM_CONFERENCIA   ? 1 : 0
   };
 }
-function registrosDoPeriodo(){
-  const { start, end } = getFetchRange();
-  const out = [];
-  for (const row of state.raw){
-    const r = toRegistro(row);
-    if (!r) continue;
-    if (r.data < start || r.data > end) continue;
-    if (!matchesCD(row)) continue;
-    if (!matchesTurno(row)) continue;
-    out.push(r);
-  }
-  return out;
+
+/* Data usada por cada linha do relatório */
+function dateForRow(r, key){
+  if (KEYS_TERMO.has(key)) return r.dataTermo;
+  return r.dataAgenda;
 }
 
 /* ============================================================================
@@ -837,6 +898,7 @@ function buildColumns(){
   return cols;
 }
 function colForDate(cols, ds){
+  if (!ds) return null;
   const ry = Number(ds.slice(0,4)), rm = Number(ds.slice(5,7)), rd = Number(ds.slice(8,10));
   const { y, m } = getBaseYM();
   if (state.gran === 'dia'){ if (ry===y && rm===m) return cols[rd-1]; }
@@ -846,29 +908,68 @@ function colForDate(cols, ds){
   else { const idx = ry - (y-9); if (idx>=0 && idx<cols.length) return cols[idx]; }
   return null;
 }
+
+/* Coleta os registros válidos para o período atual.
+   Um registro entra se a data da agenda OU a data do termo estiverem dentro do range. */
+function registrosDoPeriodo(){
+  const { start, end } = getFetchRange();
+  const out = [];
+  for (const row of state.raw){
+    if (!matchesCD(row)) continue;
+    if (!matchesTurno(row)) continue;
+    const r = toRegistro(row);
+    if (!r) continue;
+    const aIn = r.dataAgenda && r.dataAgenda >= start && r.dataAgenda <= end;
+    const tIn = r.dataTermo  && r.dataTermo  >= start && r.dataTermo  <= end;
+    if (!aIn && !tIn) continue;
+    out.push(r);
+  }
+  return out;
+}
+
+/* ============================================================================
+   AGREGADOR — cada linha usa a data correta (agenda ou termo)
+   ============================================================================ */
 function aggregate(){
   const cols = buildColumns();
   const total = emptyBucket();
   const regs = registrosDoPeriodo();
+  const { start, end } = getFetchRange();
+
   for (const r of regs){
-    const col = colForDate(cols, r.data);
-    if (col){ for (const k of KEYS) if (k !== 'agenda_noshow') col.bucket[k] += r[k] || 0; }
-    for (const k of KEYS) if (k !== 'agenda_noshow') total[k] += r[k] || 0;
+    for (const k of KEYS){
+      if (k === 'agenda_noshow') continue;
+      if (!r[k]) continue;
+      const dt = dateForRow(r, k);
+      if (!dt) continue;
+      if (dt < start || dt > end) continue;
+      const col = colForDate(cols, dt);
+      if (col) col.bucket[k] += 1;
+      total[k] += 1;
+    }
   }
   cols.forEach(c => c.bucket.agenda_noshow = c.bucket.agenda - c.bucket.no_show);
   total.agenda_noshow = total.agenda - total.no_show;
   return { cols, total, registros: regs };
 }
+
 function aggregateFocus(agg){
   if (!state.selectedDates.size || state.gran !== 'dia') return { total: agg.total, focused:false };
   const t = emptyBucket();
   for (const r of agg.registros){
-    if (!state.selectedDates.has(r.data)) continue;
-    for (const k of KEYS) if (k !== 'agenda_noshow') t[k] += r[k] || 0;
+    for (const k of KEYS){
+      if (k === 'agenda_noshow') continue;
+      if (!r[k]) continue;
+      const dt = dateForRow(r, k);
+      if (!dt) continue;
+      if (!state.selectedDates.has(dt)) continue;
+      t[k] += 1;
+    }
   }
   t.agenda_noshow = t.agenda - t.no_show;
   return { total: t, focused: true };
 }
+
 function rowValue(bucket, key, mode){
   let v;
   if (key === 'agenda_noshow') v = (bucket.agenda||0) - (bucket.no_show||0);
@@ -918,7 +1019,7 @@ function renderKPIs(agg){
     { label:'No Prazo', value:pctFmt(pctNoPrazo), color:'var(--green)', badge:'Prazo/Receb.',
       sub:`<b>${intFmt(t.no_prazo)}</b> de <b>${intFmt(recebido)}</b> recebidos` },
     { label:'< 4 HRS', value:pctFmt(pctAbaixo), color:'var(--amber)', badge:'<4h/Receb.',
-      sub:`<b>${intFmt(t.abaixo_4hrs)}</b> abaixo de 4h` },
+      sub:`<b>${intFmt(t.abaixo_4hrs)}</b> de <b>${intFmt(recebido)}</b> recebidos` },
     { label:'No Show', value:pctFmt(pctNoShow), color:'var(--red)', badge:'NS/Agenda',
       sub:`<b>${intFmt(noShow)}</b> de <b>${intFmt(agenda)}</b> agendados` },
     { label:'Recusado', value:pctFmt(pctRecusado), color:'var(--rose)', badge:'Rec./Ag-NS',
@@ -954,6 +1055,8 @@ function renderTable(agg){
     return;
   }
 
+  const isEmpty = v => v === null || v === undefined || Math.abs(v) < 0.0001;
+
   let head = '<thead><tr><th class="corner">Indicador</th>';
   cols.forEach(c => {
     const cls = [
@@ -972,14 +1075,15 @@ function renderTable(agg){
   let body = '<tbody>';
   ROWS.forEach(r => {
     const vals = cols.map(c => rowValue(c.bucket, r.key, state.view));
-    const max = vals.reduce((mx,v) => v===null?mx:Math.max(mx,Math.abs(v)),0);
+    const max = vals.reduce((mx,v) => isEmpty(v) ? mx : Math.max(mx,Math.abs(v)), 0);
     const totalVal = rowValue(total, r.key, state.view);
 
     let avgVal;
     if (state.view === 'abs'){
-      avgVal = cols.length ? (vals.reduce((s,v)=>s+(v||0),0) / cols.length) : 0;
+      const valid = vals.filter(v => !isEmpty(v));
+      avgVal = valid.length ? valid.reduce((s,v)=>s+v,0) / valid.length : null;
     } else {
-      const valid = vals.filter(v => v !== null);
+      const valid = vals.filter(v => !isEmpty(v));
       avgVal = valid.length ? valid.reduce((s,v)=>s+v,0) / valid.length : null;
     }
 
@@ -991,39 +1095,56 @@ function renderTable(agg){
 
     vals.forEach((v,i) => {
       const colSelected = state.selectedDates.has(cols[i].key);
-      const cls = (v===null||Math.abs(v)<0.0001) ? 'zero' : 'numcell';
       const extra = colSelected ? ' col-selected' : '';
-      const bg = (v!==null && Math.abs(v)>=0.0001) ? `background:${hexA(r.color, 0.05 + 0.26*Math.min(1,Math.abs(v)/(max||1)))};` : '';
-      const txt = v===null ? '–' : (pct ? pctFmt(v) : intFmt(v));
-      const rowAttr = `data-row="${r.key}" data-col="${cols[i].key}" data-colidx="${i}"`;
-      body += `<td class="${cls}${extra}" style="${bg}" ${rowAttr}>${txt}</td>`;
+      if (isEmpty(v)){
+        body += `<td class="zero${extra}">–</td>`;
+      } else {
+        const bg = `background:${hexA(r.color, 0.05 + 0.26*Math.min(1,Math.abs(v)/(max||1)))};`;
+        const txt = pct ? pctFmt(v) : intFmt(v);
+        const rowAttr = `data-row="${r.key}" data-col="${cols[i].key}" data-colidx="${i}"`;
+        body += `<td class="numcell${extra}" style="${bg}" ${rowAttr}>${txt}</td>`;
+      }
     });
 
-    const tTxt = totalVal===null ? '–' : (pct ? pctFmt(totalVal) : intFmt(totalVal));
-    body += `<td class="total-cell">${tTxt}</td>`;
+    if (isEmpty(totalVal)){
+      body += `<td class="total-cell zero">–</td>`;
+    } else {
+      body += `<td class="total-cell">${pct ? pctFmt(totalVal) : intFmt(totalVal)}</td>`;
+    }
 
-    const aTxt = avgVal===null ? '–' : (pct ? pctFmt(avgVal) : intFmt(avgVal));
-    body += `<td class="avg-cell">${aTxt}</td></tr>`;
+    if (isEmpty(avgVal)){
+      body += `<td class="avg-cell zero">–</td>`;
+    } else {
+      body += `<td class="avg-cell">${pct ? pctFmt(avgVal) : intFmt(avgVal)}</td>`;
+    }
+    body += '</tr>';
   });
 
-  /* Linha % NO PRAZO */
+  /* Linha % NO PRAZO = no_prazo / recebido */
   {
     const color = '#a855f7';
     const vals = cols.map(c => c.bucket.recebido>0 ? (c.bucket.no_prazo/c.bucket.recebido)*100 : null);
-    const max = vals.reduce((mx,v)=>v===null?mx:Math.max(mx,v),0);
+    const max = vals.reduce((mx,v)=>isEmpty(v)?mx:Math.max(mx,v),0);
     const totVal = total.recebido>0 ? (total.no_prazo/total.recebido)*100 : null;
-    const valid = vals.filter(v=>v!==null);
+    const valid = vals.filter(v => !isEmpty(v));
     const avgVal = valid.length ? valid.reduce((s,v)=>s+v,0)/valid.length : null;
 
     body += `<tr class="pct"><td class="rowlabel" style="--c:${color}"><span class="dot"></span><span>% NO PRAZO</span></td>`;
     vals.forEach((v,i) => {
       const colSelected = state.selectedDates.has(cols[i].key);
       const extra = colSelected ? ' col-selected' : '';
-      if (v===null) body += `<td class="empty${extra}">–</td>`;
-      else body += `<td class="cell${extra}" style="background:${hexA(color,0.06+0.28*(v/(max||1)))}">${pctFmt(v)}</td>`;
+      if (isEmpty(v)){
+        body += `<td class="empty${extra}">–</td>`;
+      } else {
+        body += `<td class="cell${extra}" style="background:${hexA(color,0.06+0.28*(v/(max||1)))}">${pctFmt(v)}</td>`;
+      }
     });
-    body += totVal===null ? `<td class="total-cell">–</td>` : `<td class="total-cell">${pctFmt(totVal)}</td>`;
-    body += avgVal===null ? `<td class="avg-cell">–</td>` : `<td class="avg-cell">${pctFmt(avgVal)}</td>`;
+    body += isEmpty(totVal)
+      ? `<td class="total-cell zero">–</td>`
+      : `<td class="total-cell">${pctFmt(totVal)}</td>`;
+    body += isEmpty(avgVal)
+      ? `<td class="avg-cell zero">–</td>`
+      : `<td class="avg-cell">${pctFmt(avgVal)}</td>`;
     body += '</tr>';
   }
   body += '</tbody>';
@@ -1040,14 +1161,16 @@ function renderTable(agg){
 
 function buildTitle(){
   const { y, m } = getBaseYM();
-  const sufix = ` · CD ${state.cd} · ${state.turno === 'TODOS' ? 'Todos os turnos' : state.turno}`;
+  const tA = state.turnoAgenda === 'TODOS' ? 'Todos' : state.turnoAgenda;
+  const tC = state.turnoConf   === 'TODOS' ? 'Todos' : state.turnoConf;
+  const sufix = ` · CD ${state.cd} · Agenda: ${tA} · Conf: ${tC}`;
   let base;
   if (state.gran === 'dia')        base = `Recebimento Diário · ${MES_EXT[m-1]} ${y}`;
   else if (state.gran === 'semana')base = `Recebimento Semanal · ${MES_EXT[m-1]} ${y}`;
   else if (state.gran === 'mes')   base = `Recebimento Mensal · ${y}`;
   else if (state.gran === 'ano')   base = `Recebimento Anual · ${y-4}–${y}`;
   else                             base = `Recebimento Decadal · ${y-9}–${y}`;
-  if (state.selectedDates.size === 1) base += ` · Foco ${[...state.selectedDates][0]}`;
+  if (state.selectedDates.size === 1) base += ` · Foco ${formatBR([...state.selectedDates][0])}`;
   else if (state.selectedDates.size > 1) base += ` · ${state.selectedDates.size} dias selecionados`;
   return base + sufix;
 }
@@ -1232,9 +1355,9 @@ function rowFilterFor(key, r){
   switch(key){
     case 'agenda':           return true;
     case 'agenda_noshow':    return r.status !== S.NO_SHOW;
-    case 'recebido':         return r.status === S.RECEBIDO;
-    case 'no_prazo':         return r.status === S.RECEBIDO && r.tempoH != null && r.tempoH <= 4;
-    case 'abaixo_4hrs':      return r.tempoH != null && r.tempoH < 4;
+    case 'recebido':         return r.recebido === 1;
+    case 'no_prazo':         return r.no_prazo === 1;
+    case 'abaixo_4hrs':      return r.abaixo_4hrs === 1;
     case 'no_show':          return r.status === S.NO_SHOW;
     case 'recusado':         return r.status === S.RECUSADO;
     case 'falta_comparecer': return r.status === S.FALTA_COMPARECER;
@@ -1250,9 +1373,11 @@ function openDrill(rowKey, colKey, colIdx){
   if (!col) return;
 
   const regs = agg.registros.filter(r => {
-    const c = colForDate(agg.cols, r.data);
-    if (!c || c.key !== col.key) return false;
-    return rowFilterFor(rowKey, r);
+    if (!rowFilterFor(rowKey, r)) return false;
+    const dt = dateForRow(r, rowKey);
+    if (!dt) return false;
+    const c = colForDate(agg.cols, dt);
+    return c && c.key === col.key;
   });
 
   const byForn = {}, byCarga = {};
@@ -1336,7 +1461,7 @@ function renderCommentList(){
     const initials = nome.trim().split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase();
     return `<div class="comment-item">
       <header><div class="who"><span class="av">${initials||'?'}</span>${escapeHTML(nome)}</div>
-      <div class="when">${fmtDateFull(c[COL_OBS.dta])}</div></header>
+      <div class="when">${formatBR(c[COL_OBS.dta]) || ''}</div></header>
       <p>${escapeHTML(c[COL_OBS.observacao] || '')}</p></div>`;
   }).join('')}</div>`;
 }
@@ -1443,7 +1568,7 @@ function hideHoverTip(){
 }
 
 /* ============================================================================
-   COPIAR TABELA (Ctrl+C / botão)
+   COPIAR TABELA
    ============================================================================ */
 function buildTSV(){
   const table = document.getElementById('mainTable');
@@ -1503,10 +1628,10 @@ const IMPORT_ALIASES = (() => {
   add('HORA LIBERAÇÃO',['hora liberacao','hora liberação','liberacao']);
   add('TERMO',['termo']);
   add('TEMPO CRIT',['tempo crit','tempo critico','tempo crítico']);
+  add('RANGE TEMPO',['range tempo','faixa tempo','range']);
   add('TEMPO DIV COM',['tempo div com','div com']);
   add('TEMPO DIV TRIB',['tempo div trib','div trib']);
   add('TEMPO S/ DIV',['tempo s div','sem div']);
-  add('RANGE TEMPO',['range tempo','faixa tempo','range']);
   add('TURNO CONF',['turno conf','turno conferencia']);
   add('TURNO AGENDA',['turno agenda','turno agendamento','turno']);
   return map;
@@ -1520,6 +1645,18 @@ function openImport(){
   document.getElementById('modalImport').classList.add('show');
 }
 function closeImport(){ document.getElementById('modalImport').classList.remove('show'); }
+
+/* Converte qualquer entrada de data para string "YYYY-MM-DDTHH:MM:00" em horário local.
+   Isso evita shift de timezone que muda o dia. */
+function toLocalISO(d){
+  if (!d || isNaN(d)) return null;
+  const Y = d.getFullYear();
+  const M = String(d.getMonth()+1).padStart(2,'0');
+  const D = String(d.getDate()).padStart(2,'0');
+  const h = String(d.getHours()).padStart(2,'0');
+  const m = String(d.getMinutes()).padStart(2,'0');
+  return `${Y}-${M}-${D}T${h}:${m}:00`;
+}
 
 async function handleFile(file){
   if (!file) return;
@@ -1544,14 +1681,14 @@ async function handleFile(file){
     const parsed = [], errors = [];
     json.forEach((raw, idx) => {
       const rec = { SENHA:null,CARGA:null,CD:null,FORNECEDOR:null,STATUS:null,'DATA/HORA AGENDA':null,'DATA/HORA CHEG':null,
-        ACIONADO:null,INI_CONF:null,FIM_CONF:null,'HORA LIBERAÇÃO':null,TERMO:null,'TEMPO CRIT':null,'TEMPO DIV COM':null,
-        'TEMPO DIV TRIB':null,'TEMPO S/ DIV':null,'RANGE TEMPO':null,'TURNO CONF':null,'TURNO AGENDA':null };
+        ACIONADO:null,INI_CONF:null,FIM_CONF:null,'HORA LIBERAÇÃO':null,TERMO:null,'TEMPO CRIT':null,'RANGE TEMPO':null,
+        'TEMPO DIV COM':null,'TEMPO DIV TRIB':null,'TEMPO S/ DIV':null,'TURNO CONF':null,'TURNO AGENDA':null };
       for (const [h, field] of Object.entries(headerMap)){
         const v = raw[h];
         if (v === null || v === undefined || v === '') continue;
-        if (field === 'DATA/HORA AGENDA' || field === 'DATA/HORA CHEG'){
+        if (field === 'DATA/HORA AGENDA' || field === 'DATA/HORA CHEG' || field === 'TERMO'){
           const d = (v instanceof Date) ? v : parseAnyDate(v);
-          rec[field] = d ? d.toISOString() : String(v);
+          rec[field] = toLocalISO(d) || String(v);
         } else rec[field] = String(v).trim();
       }
       if (!rec.CD || !rec['DATA/HORA AGENDA']){ errors.push(`Linha ${idx+2}: CD ou DATA/HORA AGENDA ausente.`); return; }
@@ -1589,14 +1726,16 @@ function renderImportPreview(rows, errors, totalLidas){
     stat('Período', `${periodos[0]||'–'} → ${periodos[periodos.length-1]||'–'}`) +
     stat('CDs', cds.join(', ') || '–') +
     stat('Status', Object.entries(statusCount).map(([k,v])=>`${k||'–'}:${v}`).join(' · ') || '–');
-  const head = ['CD','STATUS','DATA/HORA AGENDA','TURNO AGENDA','TEMPO CRIT','FORNECEDOR'];
+  const head = ['CD','STATUS','DATA/HORA AGENDA','TERMO','TURNO AGENDA','TURNO CONF','RANGE TEMPO','FORNECEDOR'];
   const preview = rows.slice(0, 40);
   document.getElementById('importPreview').innerHTML = `
     <table><thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
     <tbody>${preview.map(r=>`<tr>
       <td>${r.CD||''}</td><td>${r.STATUS||''}</td>
-      <td>${String(r['DATA/HORA AGENDA']||'').slice(0,16).replace('T',' ')}</td>
-      <td>${r['TURNO AGENDA']||''}</td><td>${r['TEMPO CRIT']||''}</td>
+      <td>${formatBR(extractDate(r['DATA/HORA AGENDA'])) || ''}</td>
+      <td>${formatBR(extractDate(r.TERMO)) || ''}</td>
+      <td>${r['TURNO AGENDA']||''}</td><td>${r['TURNO CONF']||''}</td>
+      <td>${r['RANGE TEMPO']||''}</td>
       <td>${r.FORNECEDOR||''}</td></tr>`).join('')}</tbody></table>
     ${rows.length>40 ? `<div style="padding:10px;text-align:center;color:var(--muted);font-size:11.5px">… e mais ${nfInt.format(rows.length-40)} linhas</div>` : ''}`;
   document.getElementById('confirmImport').disabled = rows.length === 0;
@@ -1625,10 +1764,10 @@ async function confirmImport(){
 }
 
 function downloadTemplate(){
-  const headers = ['SENHA','CARGA','CD','FORNECEDOR','STATUS','DATA/HORA AGENDA','DATA/HORA CHEG','ACIONADO','INI_CONF','FIM_CONF','HORA LIBERAÇÃO','TERMO','TEMPO CRIT','TEMPO DIV COM','TEMPO DIV TRIBO','TEMPO S/ DIV','RANGE TEMPO','TURNO CONF','TURNO AGENDA'];
+  const headers = ['SENHA','CARGA','CD','FORNECEDOR','STATUS','DATA/HORA AGENDA','DATA/HORA CHEG','ACIONADO','INI_CONF','FIM_CONF','HORA LIBERAÇÃO','TERMO','TEMPO CRIT','RANGE TEMPO','TEMPO DIV COM','TEMPO DIV TRIB','TEMPO S/ DIV','TURNO CONF','TURNO AGENDA'];
   const now = new Date();
   const dt = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} 08:30`;
-  const ex = ['0001','CARGA123','910','FORNECEDOR EXEMPLO','RECEBIDO', dt, dt, '','','','','','03:45','00:15','00:20','00:30','0-4H','MANHÃ','MANHÃ'];
+  const ex = ['0001','CARGA123','910','FORNECEDOR EXEMPLO','RECEBIDO', dt, dt, '','','','',dt,'03:45','No prazo','00:15','00:20','00:30','1º TURNO','1º TURNO'];
   const csv = [headers.join(';'), ex.join(';')].join('\n');
   const blob = new Blob(['\uFEFF' + csv], { type:'text/csv;charset=utf-8;' });
   const a = document.createElement('a');
@@ -1702,31 +1841,27 @@ function updatePeriodHints(){
 }
 
 /* ============================================================================
-   CARREGAMENTO — busca por CD, filtro de data no cliente
+   CARREGAMENTO
    ============================================================================ */
 async function loadCDs(){
   const sel = document.getElementById('fCd');
   try {
-    /* Busca só a coluna CD — leve e rápida */
     const { data, error } = await sb.from(TABLE_AGENDA).select(COL.cd).limit(50000);
     if (error) throw error;
     const set = new Set();
     (data||[]).forEach(r => { const cd = String(r[COL.cd] ?? '').trim(); if (cd) set.add(cd); });
-    let cds = [...set].sort();
-    if (!cds.length) cds = [CD_PADRAO];
-    if (!cds.includes(CD_PADRAO)) cds.unshift(CD_PADRAO);
+    const cds = [...set].sort();
     state.cds = cds;
-    sel.innerHTML = cds.map(c => `<option value="${c}">CD ${c}</option>`).join('') + `<option value="TODOS">Todos os CDs</option>`;
-    sel.value = cds.includes(state.cd) ? state.cd : cds[0];
-    state.cd = sel.value;
+    sel.innerHTML = `<option value="TODOS">Todos os CDs</option>` +
+      cds.map(c => `<option value="${c}">CD ${c}</option>`).join('');
+    sel.value = 'TODOS';
+    state.cd = 'TODOS';
   } catch(e){
     console.error(e);
-    sel.innerHTML = `<option value="${CD_PADRAO}">CD ${CD_PADRAO}</option><option value="TODOS">Todos os CDs</option>`;
+    sel.innerHTML = `<option value="TODOS">Todos os CDs</option><option value="${CD_PADRAO}">CD ${CD_PADRAO}</option>`;
   }
 }
 
-/* Busca paginada filtrando apenas pelo CD (coluna simples, funciona).
-   O filtro de data é aplicado depois, no cliente. */
 async function fetchAllFromDB(){
   const PAGE = 1000;
   const all = [];
@@ -1869,7 +2004,7 @@ function bindEvents(){
   document.getElementById('fMes').addEventListener('change', e => {
     state.mes = e.target.value || todayISO().slice(0,7);
     state.selectedDates.clear(); state.lastClickedDate = null;
-    state.raw = [];                     /* invalida cache local */
+    state.raw = [];
     loadData(true);
   });
   document.getElementById('fCd').addEventListener('change', e => {
@@ -1878,8 +2013,13 @@ function bindEvents(){
     state.raw = [];
     loadData(true);
   });
-  document.getElementById('fTurno').addEventListener('change', e => {
-    state.turno = e.target.value;
+  document.getElementById('fTurnoAgenda').addEventListener('change', e => {
+    state.turnoAgenda = e.target.value;
+    state.selectedDates.clear(); state.lastClickedDate = null;
+    render();
+  });
+  document.getElementById('fTurnoConf').addEventListener('change', e => {
+    state.turnoConf = e.target.value;
     state.selectedDates.clear(); state.lastClickedDate = null;
     render();
   });
@@ -1980,7 +2120,6 @@ function bindEvents(){
     if (e.key === 'Escape'){ closeImport(); closeCommentModal(); }
   });
 
-  /* Limpar período — busca registros, filtra por data no cliente, deleta por ID */
   document.getElementById('btnClear').addEventListener('click', async () => {
     const range = getFetchRange();
     const granTxt = {
@@ -1988,29 +2127,24 @@ function bindEvents(){
       ano:'dos últimos 5 anos', decada:'dos últimos 10 anos'
     }[state.gran];
 
-    if (!confirm(`Confirma EXCLUIR os registros ${granTxt} (${range.start} → ${range.end})?\n\nEsta ação não pode ser desfeita.`)) return;
+    if (!confirm(`Confirma EXCLUIR os registros ${granTxt} (${formatBR(range.start)} → ${formatBR(range.end)})?\n\nEsta ação não pode ser desfeita.`)) return;
 
     showLoader(true, 'Excluindo…');
     try {
-      /* 1. Puxa todos os registros do CD atual */
       const all = await fetchAllFromDB();
-
-      /* 2. Identifica os IDs dos que estão no período */
       const ids = [];
       for (const r of all){
-        const dt = extractDate(r[COL.agenda]);
-        if (!dt) continue;
-        if (dt < range.start || dt > range.end) continue;
+        const dtA = extractDate(r[COL.agenda]);
+        const dtT = extractDate(r[COL.termo]);
+        const inRange = (d) => d && d >= range.start && d <= range.end;
+        if (!inRange(dtA) && !inRange(dtT)) continue;
         const pk = r.id ?? r.ID ?? r.Id ?? r._id;
         if (pk != null) ids.push(pk);
       }
-
       if (!ids.length){
         toast('Nada para limpar', 'Nenhum registro no período selecionado.', 'warn');
         return;
       }
-
-      /* 3. Deleta em blocos de 500 por ID (coluna simples, funciona) */
       const CHUNK = 500;
       let removidos = 0;
       for (let i=0; i<ids.length; i+=CHUNK){
@@ -2019,7 +2153,6 @@ function bindEvents(){
         if (error) throw error;
         removidos += slice.length;
       }
-
       toast('Período limpo', `${nfInt.format(removidos)} registros removidos.`, 'ok');
       state.raw = [];
       await loadData(true);
