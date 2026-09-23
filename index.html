@@ -27,7 +27,6 @@
   --shadow:0 10px 30px -12px rgba(0,0,0,.75);
   --mono:'SF Mono',ui-monospace,'JetBrains Mono',Menlo,Consolas,monospace;
   --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-
   --derived-txt:#7dd3fc;
   --pct-txt:#c4b5fd;
   --avg-txt:#c4b5fd;
@@ -151,16 +150,16 @@ body.locked{overflow:hidden}
 .btn-ghost{background:transparent}
 .btn-theme{background:var(--card-head-1);width:38px;justify-content:center;padding:9px 0}
 
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:16px}
-.kpi{position:relative;overflow:hidden;background:linear-gradient(150deg,var(--card-1),var(--card-2));border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px 13px;box-shadow:var(--shadow);transition:transform .18s,border-color .18s}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:10px;margin-bottom:16px}
+.kpi{position:relative;overflow:hidden;background:linear-gradient(150deg,var(--card-1),var(--card-2));border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px 11px;box-shadow:var(--shadow);transition:transform .18s,border-color .18s}
 .kpi:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--blue) 40%,var(--line))}
 .kpi.focused{border-color:var(--c,var(--blue));box-shadow:0 0 0 2px color-mix(in srgb,var(--c,var(--blue)) 35%,transparent),var(--shadow)}
 .kpi::after{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--c,var(--blue));box-shadow:0 0 18px -2px var(--c,var(--blue))}
-.kpi-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
-.kpi-label{font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted)}
-.kpi-badge{font-size:9.5px;font-weight:800;padding:3px 7px;border-radius:20px;background:color-mix(in srgb,var(--txt) 8%,transparent);color:var(--muted);letter-spacing:.4px;border:1px solid color-mix(in srgb,var(--txt) 8%,transparent)}
-.kpi-value{font-family:var(--mono);font-size:26px;font-weight:700;letter-spacing:-1px;line-height:1;color:var(--c,var(--txt));text-shadow:0 0 26px color-mix(in srgb,var(--c,#3b82f6) 40%,transparent)}
-.kpi-sub{margin-top:8px;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;font-weight:600}
+.kpi-top{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px}
+.kpi-label{font-size:9.5px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi-badge{font-size:8.5px;font-weight:800;padding:2px 6px;border-radius:20px;background:color-mix(in srgb,var(--txt) 8%,transparent);color:var(--muted);letter-spacing:.3px;border:1px solid color-mix(in srgb,var(--txt) 8%,transparent);flex:none}
+.kpi-value{font-family:var(--mono);font-size:23px;font-weight:700;letter-spacing:-.8px;line-height:1;color:var(--c,var(--txt));text-shadow:0 0 26px color-mix(in srgb,var(--c,#3b82f6) 40%,transparent)}
+.kpi-sub{margin-top:6px;font-size:10.5px;color:var(--muted);display:flex;align-items:center;gap:5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kpi-sub b{color:var(--txt-2);font-family:var(--mono);font-weight:700}
 
 .charts{display:grid;grid-template-columns:1fr 340px;gap:12px;margin-bottom:16px}
@@ -630,15 +629,15 @@ const KEYS = ROWS.map(r => r.key);
 
 /* Para cada linha, qual campo TURNO é usado ao aplicar o filtro único de turno */
 const ROW_TURNO_COL = {
-  agenda:           'agenda',   // TURNO AGENDA
-  no_show:          'agenda',   // TURNO AGENDA
-  agenda_noshow:    null,       // derivado (agenda - no_show)
-  recebido:         'conf',     // TURNO CONF
-  backlog_recebido: 'conf',     // TURNO CONF
-  backlog_pendente: 'agenda',   // TURNO AGENDA
-  no_prazo:         'conf',     // TURNO CONF
-  abaixo_4hrs:      'conf',     // TURNO CONF
-  recusado:         'agenda',   // TURNO AGENDA
+  agenda:           'agenda',
+  no_show:          'agenda',
+  agenda_noshow:    null,
+  recebido:         'conf',
+  backlog_recebido: 'conf',
+  backlog_pendente: 'agenda',
+  no_prazo:         'conf',
+  abaixo_4hrs:      'conf',
+  recusado:         'agenda',
 };
 
 /* Para cada linha, qual data serve de referência (agenda ou termo) */
@@ -678,7 +677,7 @@ const CD_PADRAO = 'TODOS';
 const state = {
   mes: todayISO().slice(0,7),
   cd: 'TODOS',
-  turno: 'TODOS',        // filtro único de turno
+  turno: 'TODOS',
   view: 'abs',
   gran: 'dia',
   selectedDates: new Set(),
@@ -732,6 +731,11 @@ function isRangeAbaixo4(v){
   return s === '<4' || s === '<4HRS' || s === 'MENOR4' || s === 'MENORQUE4'
       || s === 'ABAIXO4' || s === 'ABAIXODE4' || s === 'ATE4' || s === 'MENOSDE4';
 }
+function isRangeForaPrazo(v){
+  const s = normUpper(v).replace(/\s+/g,'');
+  if (!s) return false;
+  return s === 'FORADOPRAZO' || s === 'FORADOPRAZOS';
+}
 function normTurno(t){
   const v = normUpper(t);
   if (!v) return '';
@@ -753,11 +757,25 @@ function emptyBucket(){
     no_prazo:0, abaixo_4hrs:0, no_show:0, recusado:0
   };
 }
+function toISODate(dt){
+  return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+}
+/* Extrai apenas a data, aplicando a regra do CD:
+   hora >= 22:00 → considera o dia seguinte */
+function extractDateShifted(v){
+  const dt = parseFullDT(v);
+  if (!dt) return null;
+  if (dt.getHours() >= 22){
+    const nd = new Date(dt);
+    nd.setDate(nd.getDate() + 1);
+    return toISODate(nd);
+  }
+  return toISODate(dt);
+}
+/* Extração de data "pura" usada apenas para mostrar no import preview etc. */
 function extractDate(v){
   if (v == null || v === '') return null;
-  if (v instanceof Date){
-    return `${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,'0')}-${String(v.getDate()).padStart(2,'0')}`;
-  }
+  if (v instanceof Date) return toISODate(v);
   if (typeof v === 'number'){
     const ms = Date.UTC(1899,11,30) + v*86400000;
     const d = new Date(ms);
@@ -769,7 +787,7 @@ function extractDate(v){
   m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);
   if (m){ let [,a,b,y] = m; if (y.length===2) y = '20'+y; return `${y}-${b.padStart(2,'0')}-${a.padStart(2,'0')}`; }
   const d = new Date(s);
-  if (!isNaN(d.getTime())) return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  if (!isNaN(d.getTime())) return toISODate(d);
   return null;
 }
 function parseFullDT(v){
@@ -862,49 +880,58 @@ function matchesCD(row){
   return String(row[COL.cd] ?? '').trim() === state.cd;
 }
 
-/* Verifica se o registro passa no filtro único de turno para a linha informada */
 function turnoMatchesRow(r, rowKey){
   if (state.turno === 'TODOS') return true;
   const col = ROW_TURNO_COL[rowKey];
-  if (!col) return true; // derivado
+  if (!col) return true;
   const tf = normTurno(state.turno);
   if (col === 'agenda') return r.turnoAgenda === tf;
   if (col === 'conf')   return r.turnoConf   === tf;
   return true;
 }
 
-/* Backlog Recebido: recebido onde TERMO - AGENDA > 24h. Referência: TERMO */
+/* BACKLOG RECEBIDO:
+   - Regra 1: TERMO - AGENDA > 24h
+   - Regra 2: RANGE TEMPO = "Fora do Prazo"
+   Ambas exigem STATUS = RECEBIDO. Referência: TERMO (shifted). */
 function computeBacklogRecebido(row, status){
   if (status !== S.RECEBIDO) return false;
   const agDt = parseFullDT(row[COL.agenda]);
   const teDt = parseFullDT(row[COL.termo]);
-  if (!agDt || !teDt) return false;
-  const diffH = (teDt.getTime() - agDt.getTime()) / 3600000;
-  return diffH > 24;
+  if (agDt && teDt){
+    const diffH = (teDt.getTime() - agDt.getTime()) / 3600000;
+    if (diffH > 24) return true;
+  }
+  if (isRangeForaPrazo(row[COL.rangeTempo])) return true;
+  return false;
 }
 
-/* Backlog Pendente: passou do ciclo (D 21:59) e ainda não foi recebido.
-   Referência: data da AGENDA */
+/* BACKLOG PENDENTE: passou do ciclo (D 21:59, com regra 22:00 → dia seguinte)
+   e ainda não foi recebido. Referência: AGENDA (shifted). */
 function computeBacklogPendente(row, status){
   if (status === S.RECEBIDO) return false;
   const agDt = parseFullDT(row[COL.agenda]);
   if (!agDt) return false;
-  const cycleEnd = new Date(agDt);
-  cycleEnd.setHours(21, 59, 59, 999);
-  return new Date().getTime() > cycleEnd.getTime();
+  const cycleRef = new Date(agDt);
+  if (cycleRef.getHours() >= 22){
+    cycleRef.setDate(cycleRef.getDate() + 1);
+  }
+  cycleRef.setHours(21, 59, 59, 999);
+  return new Date().getTime() > cycleRef.getTime();
 }
 
 function toRegistro(row){
   const status     = normStatus(row[COL.status]);
   const tempoH     = parseTempoHoras(row[COL.tempoCrit]);
-  const dataAgenda = extractDate(row[COL.agenda]);
-  const dataTermo  = extractDate(row[COL.termo]);
+  const dataAgenda = extractDateShifted(row[COL.agenda]);
+  const dataTermo  = extractDateShifted(row[COL.termo]);
   if (!dataAgenda && !dataTermo) return null;
 
   const rangeTempo = row[COL.rangeTempo];
   const ehRecebido = status === S.RECEBIDO && !!dataTermo;
-  const ehNoPrazo  = ehRecebido && isRangeNoPrazo(rangeTempo);
   const ehAbaixo4  = ehRecebido && isRangeAbaixo4(rangeTempo);
+  /* NO PRAZO soma também os < 4 HRS */
+  const ehNoPrazo  = ehRecebido && (isRangeNoPrazo(rangeTempo) || ehAbaixo4);
 
   const ehBacklogRecebido = computeBacklogRecebido(row, status);
   const ehBacklogPendente = computeBacklogPendente(row, status);
@@ -1069,43 +1096,51 @@ function rowValue(bucket, key, mode){
 }
 
 /* ============================================================================
-   KPIs
+   KPIs — mesma sequência e nomes das linhas da tabela
    ============================================================================ */
 function renderKPIs(agg){
   const { total: t, focused } = aggregateFocus(agg);
-
-  const agenda = t.agenda || 0;
-  const recebido = t.recebido || 0;
-  const noShow = t.no_show || 0;
-  const agendaSemNoShow = agenda - noShow;
-
-  const pctRecebido  = agendaSemNoShow > 0 ? (recebido/agendaSemNoShow)*100 : 0;
-  const pctNoPrazo   = recebido > 0 ? (t.no_prazo/recebido)*100 : 0;
-  const pctAbaixo    = recebido > 0 ? (t.abaixo_4hrs/recebido)*100 : 0;
-  const pctNoShow    = agenda > 0 ? (noShow/agenda)*100 : 0;
-
   const badge = focused ? (state.selectedDates.size === 1 ? 'Foco' : `${state.selectedDates.size} dias`) : 'Total';
 
+  const agenda   = t.agenda || 0;
+  const recebido = t.recebido || 0;
+  const noShow   = t.no_show || 0;
+  const agendaNS = agenda - noShow;
+  const agendaNSR = agendaNS - (t.recusado||0);
+  const noPrazo  = t.no_prazo || 0;
+
+  const pctNoPrazo   = agendaNS  > 0 ? (noPrazo/agendaNS)*100 : 0;
+  const pctNoPrazoR  = agendaNSR > 0 ? (noPrazo/agendaNSR)*100 : 0;
+
+  /* mesma ordem e nomes das linhas */
   const cards = [
-    { label:'Agenda', value:intFmt(agenda), color:'var(--blue)', badge,
-      sub:`Recebido: <b>${intFmt(recebido)}</b> · No Show: <b>${intFmt(noShow)}</b>` },
-    { label:'Recebido', value:pctFmt(pctRecebido), color:'var(--cyan)', badge:'Receb./Ag-NS',
-      sub:`<b>${intFmt(recebido)}</b> de <b>${intFmt(agendaSemNoShow)}</b>` },
-    { label:'Backlog Recebido', value:intFmt(t.backlog_recebido||0), color:'#0ea5e9', badge:'>24h',
-      sub:`Termo > 24h após agenda` },
-    { label:'Backlog Pendente', value:intFmt(t.backlog_pendente||0), color:'var(--amber)', badge:'Pendente',
-      sub:`Passou do ciclo sem recebimento` },
-    { label:'No Prazo', value:pctFmt(pctNoPrazo), color:'var(--green)', badge:'Prazo/Receb.',
-      sub:`<b>${intFmt(t.no_prazo)}</b> de <b>${intFmt(recebido)}</b> recebidos` },
-    { label:'< 4 HRS', value:pctFmt(pctAbaixo), color:'var(--amber)', badge:'<4h/Receb.',
-      sub:`<b>${intFmt(t.abaixo_4hrs)}</b> de <b>${intFmt(recebido)}</b> recebidos` },
-    { label:'No Show', value:pctFmt(pctNoShow), color:'var(--red)', badge:'NS/Agenda',
-      sub:`<b>${intFmt(noShow)}</b> de <b>${intFmt(agenda)}</b> agendados` }
+    { label:'AGENDA',            value:intFmt(agenda),                 color:'#60a5fa',
+      sub:`Agendados no período` },
+    { label:'NO SHOW',           value:intFmt(noShow),                 color:'#ef4444',
+      sub:`${agenda>0?pctFmt((noShow/agenda)*100):'–'} da agenda` },
+    { label:'AGENDA - NOSHOW',   value:intFmt(agendaNS),               color:'#38bdf8',
+      sub:`Agenda líquida de no-show` },
+    { label:'RECEBIDO',          value:intFmt(recebido),               color:'#22d3ee',
+      sub:`${agendaNS>0?pctFmt((recebido/agendaNS)*100):'–'} de ag-NS` },
+    { label:'BACKLOG RECEBIDO',  value:intFmt(t.backlog_recebido||0),  color:'#0ea5e9',
+      sub:`Termo >24h ou fora do prazo` },
+    { label:'BACKLOG PENDENTE',  value:intFmt(t.backlog_pendente||0),  color:'#eab308',
+      sub:`Passou do ciclo sem receber` },
+    { label:'NO PRAZO',          value:intFmt(noPrazo),                color:'#22c55e',
+      sub:`No prazo + <4h (${recebido>0?pctFmt((noPrazo/recebido)*100):'–'})` },
+    { label:'< 4 HRS',           value:intFmt(t.abaixo_4hrs||0),       color:'#facc15',
+      sub:`Subconjunto de no prazo` },
+    { label:'RECUSADO',          value:intFmt(t.recusado||0),          color:'#f43f5e',
+      sub:`${agendaNS>0?pctFmt(((t.recusado||0)/agendaNS)*100):'–'} de ag-NS` },
+    { label:'% NO PRAZO',        value:pctFmt(pctNoPrazo),             color:'#a855f7',
+      sub:`NO PRAZO / (AGENDA-NOSHOW)` },
+    { label:'% NO PRAZO-RECUSA', value:pctFmt(pctNoPrazoR),            color:'#ec4899',
+      sub:`NO PRAZO / (AG-NS-RECUSADO)` },
   ];
 
   document.getElementById('kpis').innerHTML = cards.map(c => `
     <div class="kpi ${focused?'focused':''}" style="--c:${c.color}">
-      <div class="kpi-top"><div class="kpi-label">${c.label}</div><div class="kpi-badge">${c.badge}</div></div>
+      <div class="kpi-top"><div class="kpi-label">${c.label}</div><div class="kpi-badge">${badge}</div></div>
       <div class="kpi-value">${c.value}</div>
       <div class="kpi-sub">${c.sub}</div>
     </div>
@@ -1195,9 +1230,9 @@ function renderTable(agg){
   /* Linhas de % (sempre em %) */
   const pctRows = [
     { label:'% NO PRAZO',         color:'#a855f7', numKey:'no_prazo',
-      denomKeys:['agenda','no_show'] },                                  // NO PRAZO / (AGENDA - NOSHOW)
+      denomKeys:['agenda','no_show'] },
     { label:'% NO PRAZO-RECUSA',  color:'#ec4899', numKey:'no_prazo',
-      denomKeys:['agenda','no_show','recusado'] }                        // NO PRAZO / (AGENDA - NOSHOW - RECUSADO)
+      denomKeys:['agenda','no_show','recusado'] }
   ];
 
   pctRows.forEach(pr => {
@@ -1447,7 +1482,7 @@ function rowFilterFor(key, r){
     case 'recebido':         return r.recebido === 1;
     case 'backlog_recebido': return r.backlog_recebido === 1;
     case 'backlog_pendente': return r.backlog_pendente === 1;
-    case 'no_prazo':         return r.no_prazo === 1;
+    case 'no_prazo':         return r.no_prazo === 1;  // já inclui abaixo_4hrs
     case 'abaixo_4hrs':      return r.abaixo_4hrs === 1;
     case 'no_show':          return r.status === S.NO_SHOW;
     case 'recusado':         return r.status === S.RECUSADO;
