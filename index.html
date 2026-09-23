@@ -613,7 +613,6 @@ const S = {
   FALTA_COMPARECER:'FALTA COMPARECER', EM_CONFERENCIA:'EM CONFERÊNCIA'
 };
 
-/* Ordem de exibição das linhas (linhas de % são renderizadas à parte) */
 const ROWS = [
   { key:'agenda',           label:'AGENDA',            color:'#60a5fa' },
   { key:'no_show',          label:'NO SHOW',           color:'#ef4444' },
@@ -627,7 +626,6 @@ const ROWS = [
 ];
 const KEYS = ROWS.map(r => r.key);
 
-/* Para cada linha, qual campo TURNO é usado ao aplicar o filtro único de turno */
 const ROW_TURNO_COL = {
   agenda:           'agenda',
   no_show:          'agenda',
@@ -640,7 +638,6 @@ const ROW_TURNO_COL = {
   recusado:         'agenda',
 };
 
-/* Para cada linha, qual data serve de referência (agenda ou termo) */
 const ROW_DATE_COL = {
   agenda:           'agenda',
   no_show:          'agenda',
@@ -760,8 +757,7 @@ function emptyBucket(){
 function toISODate(dt){
   return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
 }
-/* Extrai apenas a data, aplicando a regra do CD:
-   hora >= 22:00 → considera o dia seguinte */
+/* Regra de ciclo do CD: hora >= 22:00 → conta para o dia seguinte */
 function extractDateShifted(v){
   const dt = parseFullDT(v);
   if (!dt) return null;
@@ -772,7 +768,6 @@ function extractDateShifted(v){
   }
   return toISODate(dt);
 }
-/* Extração de data "pura" usada apenas para mostrar no import preview etc. */
 function extractDate(v){
   if (v == null || v === '') return null;
   if (v instanceof Date) return toISODate(v);
@@ -890,19 +885,22 @@ function turnoMatchesRow(r, rowKey){
   return true;
 }
 
-/* BACKLOG RECEBIDO:
-   - Regra 1: TERMO - AGENDA > 24h
-   - Regra 2: RANGE TEMPO = "Fora do Prazo"
-   Ambas exigem STATUS = RECEBIDO. Referência: TERMO (shifted). */
+/* BACKLOG RECEBIDO — exclusivo com NO PRAZO:
+   - RANGE = "No prazo" ou "< 4 HRS"     → NÃO é backlog (vai pra NO PRAZO)
+   - RANGE = "Fora do Prazo"             → é backlog
+   - Senão: diff TERMO - AGENDA > 24h    → é backlog
+   Sempre exige STATUS = RECEBIDO. */
 function computeBacklogRecebido(row, status){
   if (status !== S.RECEBIDO) return false;
+  const range = row[COL.rangeTempo];
+  if (isRangeNoPrazo(range) || isRangeAbaixo4(range)) return false;
+  if (isRangeForaPrazo(range)) return true;
   const agDt = parseFullDT(row[COL.agenda]);
   const teDt = parseFullDT(row[COL.termo]);
   if (agDt && teDt){
     const diffH = (teDt.getTime() - agDt.getTime()) / 3600000;
     if (diffH > 24) return true;
   }
-  if (isRangeForaPrazo(row[COL.rangeTempo])) return true;
   return false;
 }
 
@@ -930,7 +928,7 @@ function toRegistro(row){
   const rangeTempo = row[COL.rangeTempo];
   const ehRecebido = status === S.RECEBIDO && !!dataTermo;
   const ehAbaixo4  = ehRecebido && isRangeAbaixo4(rangeTempo);
-  /* NO PRAZO soma também os < 4 HRS */
+  /* NO PRAZO = No prazo + < 4 HRS */
   const ehNoPrazo  = ehRecebido && (isRangeNoPrazo(rangeTempo) || ehAbaixo4);
 
   const ehBacklogRecebido = computeBacklogRecebido(row, status);
@@ -1096,7 +1094,7 @@ function rowValue(bucket, key, mode){
 }
 
 /* ============================================================================
-   KPIs — mesma sequência e nomes das linhas da tabela
+   KPIs
    ============================================================================ */
 function renderKPIs(agg){
   const { total: t, focused } = aggregateFocus(agg);
@@ -1112,7 +1110,6 @@ function renderKPIs(agg){
   const pctNoPrazo   = agendaNS  > 0 ? (noPrazo/agendaNS)*100 : 0;
   const pctNoPrazoR  = agendaNSR > 0 ? (noPrazo/agendaNSR)*100 : 0;
 
-  /* mesma ordem e nomes das linhas */
   const cards = [
     { label:'AGENDA',            value:intFmt(agenda),                 color:'#60a5fa',
       sub:`Agendados no período` },
@@ -1227,7 +1224,6 @@ function renderTable(agg){
     body += '</tr>';
   });
 
-  /* Linhas de % (sempre em %) */
   const pctRows = [
     { label:'% NO PRAZO',         color:'#a855f7', numKey:'no_prazo',
       denomKeys:['agenda','no_show'] },
@@ -1482,7 +1478,7 @@ function rowFilterFor(key, r){
     case 'recebido':         return r.recebido === 1;
     case 'backlog_recebido': return r.backlog_recebido === 1;
     case 'backlog_pendente': return r.backlog_pendente === 1;
-    case 'no_prazo':         return r.no_prazo === 1;  // já inclui abaixo_4hrs
+    case 'no_prazo':         return r.no_prazo === 1;
     case 'abaixo_4hrs':      return r.abaixo_4hrs === 1;
     case 'no_show':          return r.status === S.NO_SHOW;
     case 'recusado':         return r.status === S.RECUSADO;
