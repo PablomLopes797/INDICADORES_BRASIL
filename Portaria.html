@@ -39,6 +39,59 @@
   .btn-danger{ background:#7f1d1d; color:#fecaca; border:1px solid #991b1b; }
   .btn-danger:hover{ background:#991b1b; color:#fff; }
 
+  /* ---------- NAVEGAÇÃO / VISUAL MODERNO ---------- */
+  .topbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+  .nav-btn{position:relative;min-width:48px;height:44px;padding:0 14px;border-radius:12px;
+    border:1px solid var(--border);background:linear-gradient(145deg,#263850,#182438);color:#dbeafe;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 7px 18px rgba(0,0,0,.25);
+    cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:800;
+    transition:.2s;overflow:hidden;}
+  .nav-btn:hover{transform:translateY(-2px);border-color:#4b6b91;box-shadow:0 10px 24px rgba(0,0,0,.35),0 0 18px rgba(59,130,246,.16);}
+  .nav-btn:active{transform:translateY(1px) scale(.98);}
+  .nav-icon{width:23px;height:23px;filter:drop-shadow(0 3px 2px rgba(0,0,0,.45));}
+  .nav-label{font-size:12px;letter-spacing:.2px;}
+  .nav-btn.active{border-color:#3b82f6;background:linear-gradient(145deg,#24466f,#142944);}
+
+  .hero{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;
+    background:radial-gradient(circle at 8% 0%,rgba(59,130,246,.18),transparent 34%),
+               linear-gradient(135deg,#18273b,#111d30 65%,#162238);
+    border:1px solid #2f4663;border-radius:18px;padding:18px 20px;margin-bottom:16px;
+    box-shadow:0 18px 45px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.05);}
+  .hero-title{display:flex;align-items:center;gap:14px;}
+  .hero-cube{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;font-size:28px;
+    background:linear-gradient(145deg,#3b82f6,#1d4ed8);box-shadow:inset 4px 4px 8px rgba(255,255,255,.18),
+    inset -5px -6px 10px rgba(0,0,0,.3),0 12px 24px rgba(0,0,0,.35);
+    transform:perspective(180px) rotateX(8deg) rotateY(-8deg);animation:floatCube 3.2s ease-in-out infinite;}
+  @keyframes floatCube{50%{transform:perspective(180px) rotateX(2deg) rotateY(6deg) translateY(-3px);}}
+  .hero h2{font-size:19px;margin-bottom:4px;}
+  .hero p{font-size:12px;color:var(--muted);}
+  .live-pill{display:inline-flex;align-items:center;gap:7px;padding:8px 11px;border-radius:999px;
+    background:#0b1526;border:1px solid #29405d;color:#a7f3d0;font-size:11px;font-weight:800;}
+  .live-pill .dot{width:7px;height:7px;}
+
+  /* ---------- FILTROS ---------- */
+  .filters{display:grid;grid-template-columns:minmax(230px,2fr) repeat(4,minmax(145px,1fr)) auto;gap:10px;
+    padding:13px;margin-bottom:14px;background:rgba(30,41,59,.88);border:1px solid var(--border);
+    border-radius:14px;box-shadow:0 10px 26px rgba(0,0,0,.2);}
+  .filter{min-width:0;position:relative;}
+  .filter input,.filter select{width:100%;height:40px;background:#0b1526;border:1px solid #334155;
+    color:var(--text);border-radius:9px;padding:0 12px;font:inherit;font-size:12px;outline:none;transition:.18s;}
+  .filter input:focus,.filter select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.14);}
+  .filter-label{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:#71839b;font-weight:800;margin:0 0 5px 2px;}
+  .filter-reset{height:40px;align-self:end;padding:0 13px;}
+  .filter-count{align-self:end;height:40px;display:inline-flex;align-items:center;justify-content:center;
+    padding:0 12px;border-radius:9px;background:#0b1526;border:1px solid #334155;color:#93c5fd;font-size:11px;font-weight:800;white-space:nowrap;}
+
+  /* ---------- PAGAMENTO ---------- */
+  .pagamento-cell{display:flex;flex-direction:column;gap:5px;align-items:flex-start;}
+  .btn-pagamento{background:linear-gradient(145deg,#22c55e,#15803d);color:#fff;font-weight:800;font-size:11px;
+    padding:8px 12px;border-radius:9px;border:1px solid rgba(134,239,172,.22);cursor:pointer;transition:.18s;
+    font-family:inherit;display:inline-flex;align-items:center;gap:6px;box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 5px 13px rgba(0,0,0,.22);}
+  .btn-pagamento:hover{transform:translateY(-2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 8px 18px rgba(34,197,94,.22);}
+  .btn-pagamento:disabled{background:#162235;color:#86efac;cursor:default;transform:none;box-shadow:none;border-color:#244b35;}
+  .pagamento-data{font-size:10px;color:var(--muted);}
+  .pay-icon{font-size:14px;filter:drop-shadow(0 2px 1px rgba(0,0,0,.4));}
+
   .table-wrap{
     background: var(--panel); border:1px solid var(--border); border-radius:14px;
     overflow:auto; max-height: calc(100vh - 160px);
@@ -234,7 +287,13 @@
   }
   .form-state{ margin-right:auto; color: var(--muted); font-size:12px; }
 
+  @media (max-width:980px){ .filters{grid-template-columns:repeat(2,minmax(150px,1fr));} .filter-count{grid-column:span 1;} }
   @media (max-width:640px){
+    body{padding:12px;}
+    .nav-label{display:none;}
+    .hero{padding:14px;}
+    .filters{grid-template-columns:1fr;}
+    .filter-count,.filter-reset{width:100%;}
     .modal-content{ padding:18px; }
     .doca-map{ grid-template-columns: repeat(auto-fill, minmax(58px, 1fr)); gap:7px; }
     .doca-square .num{ font-size:14px; }
@@ -244,35 +303,58 @@
 <body>
 
 <header>
-  <h1>🚧 Painel <span>Portaria</span></h1>
-  <div class="info-bar">
-    <span><span class="dot"></span> Monitorando visualização</span>
-    <span id="ultimaAtualizacao">—</span>
-    <button class="btn btn-ghost" id="btnRefresh">↻ Atualizar</button>
+  <div>
+    <h1>🚧 Painel <span>Portaria</span></h1>
+    <div class="info-bar">
+      <span><span class="dot"></span> Monitorando visualização</span>
+      <span id="ultimaAtualizacao">—</span>
+    </div>
+  </div>
+  <div class="topbar">
+    <button class="nav-btn active" type="button" onclick="window.location.href='index.html'" title="Página principal">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none"><path d="M3 10.8 12 3l9 7.8v8.2a2 2 0 0 1-2 2h-5v-6H10v6H5a2 2 0 0 1-2-2v-8.2Z" fill="#60a5fa" stroke="#dbeafe" stroke-width="1.2"/><path d="m12 3 9 7.8-1.6 1.7L12 6.5 4.6 12.5 3 10.8 12 3Z" fill="#93c5fd"/></svg><span class="nav-label">Home</span>
+    </button>
+    <button class="nav-btn" type="button" onclick="window.location.href='Recepção.html'" title="Recepção">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none"><path d="M4 20V7.5L12 4l8 3.5V20" stroke="#dbeafe" stroke-width="1.5"/><path d="M8 20v-6h8v6M6 9h12" stroke="#60a5fa" stroke-width="2"/><circle cx="12" cy="9" r="1.5" fill="#93c5fd"/></svg><span class="nav-label">Recepção</span>
+    </button>
+    <button class="nav-btn" type="button" onclick="window.location.href='Docas.html'" title="Controle de doca">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="15" rx="2.5" fill="#1d4ed8" stroke="#bfdbfe"/><path d="M7 8h10v9H7z" fill="#0f172a" stroke="#60a5fa"/><path d="M9 19v2m6-2v2" stroke="#93c5fd" stroke-width="2" stroke-linecap="round"/></svg><span class="nav-label">Controle de Doca</span>
+    </button>
+    <button class="btn btn-ghost" id="btnRefresh" type="button">↻ Atualizar</button>
   </div>
 </header>
+
+<div class="hero">
+  <div class="hero-title">
+    <div class="hero-cube">🚧</div>
+    <div><h2>Controle de Portaria</h2><p>Acompanhe acionamentos, docas e pagamentos em tempo real.</p></div>
+  </div>
+  <div class="live-pill"><span class="dot"></span> OPERAÇÃO ONLINE</div>
+</div>
+
+<div class="filters">
+  <div class="filter"><label class="filter-label">Busca geral</label><input id="fBusca" type="search" placeholder="Senha, carga, fornecedor ou motorista…"></div>
+  <div class="filter"><label class="filter-label">Doca</label><select id="fDoca"><option value="">Todas as docas</option></select></div>
+  <div class="filter"><label class="filter-label">Pagamento</label><select id="fPagamento"><option value="">Todos</option><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div>
+  <div class="filter"><label class="filter-label">Portaria</label><select id="fPortaria"><option value="">Todos</option><option value="pendente">Não acionado</option><option value="acionado">Acionado</option><option value="visualizado">Visualizado</option></select></div>
+  <div class="filter"><label class="filter-label">Categoria</label><select id="fCategoria"><option value="">Todas</option></select></div>
+  <button class="btn btn-ghost filter-reset" id="btnLimparFiltros" type="button">✕ Limpar</button>
+  <div class="filter-count" id="filterCount">0 registros</div>
+</div>
 
 <div class="table-wrap">
   <table>
     <thead>
       <tr>
-        <th>SENHA</th>
-        <th>CARGA</th>
-        <th>FORNECEDOR</th>
-        <th>CATEGORIA</th>
-        <th>MOTORISTA</th>
-        <th>TELEFONE</th>
-        <th>AGENDA</th>
-        <th>INTEGRAÇÃO CONSINCO</th>
-        <th>ACIONAMENTO PORTARIA</th>
-        <th>DOCA</th>
+        <th>SENHA</th><th>CARGA</th><th>FORNECEDOR</th><th>CATEGORIA</th><th>MOTORISTA</th><th>TELEFONE</th><th>AGENDA</th><th>CHEGADA</th><th>INTEGRAÇÃO CONSINCO</th><th>ACIONAMENTO PORTARIA</th><th>DOCA</th><th>PAGAMENTO</th>
       </tr>
     </thead>
     <tbody id="tbody">
-      <tr><td colspan="10" class="empty">Carregando registros…</td></tr>
+      <tr><td colspan="12" class="empty">Carregando registros…</td></tr>
     </tbody>
   </table>
 </div>
+
 
 <!-- ================== MODAL MAPA DE DOCAS ================== -->
 <div class="modal-overlay hidden" id="docaModal">
@@ -341,6 +423,7 @@ let docasArr  = [];
 let docasMap  = new Map();
 let docaAtualSenha = null;
 const statusEls = {};
+let filtros = { busca:'', doca:'', pagamento:'', portaria:'', categoria:'' };
 
 const esc = (v) => (v ?? '').toString()
   .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -392,7 +475,7 @@ const TICK_2 = `<svg class="tick" width="17" height="11" viewBox="0 0 16 11"><pa
    ============================================================ */
 async function carregar(){
   const tbody = document.getElementById('tbody');
-  tbody.innerHTML = `<tr><td colspan="10" class="empty"><span class="spin"></span> Carregando…</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="12" class="empty"><span class="spin"></span> Carregando…</td></tr>`;
 
   try {
     const [resRegistros] = await Promise.all([
@@ -402,12 +485,13 @@ async function carregar(){
 
     if(resRegistros.error) throw resRegistros.error;
     registros = resRegistros.data || [];
+    atualizarFiltros();
 
     render();
     marcarAtualizacao();
   } catch(err){
     console.error(err);
-    tbody.innerHTML = `<tr><td colspan="10" class="empty">Erro ao carregar: ${esc(err.message||err)}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="12" class="empty">Erro ao carregar: ${esc(err.message||err)}</td></tr>`;
     toast('Erro ao carregar dados', 'err');
   }
 }
@@ -443,78 +527,85 @@ function docaDaSenha(senha){
 /* ============================================================
    RENDER DA TABELA
    ============================================================ */
+function getRegistrosFiltrados(){
+  const b = filtros.busca.toLowerCase();
+  return registros.filter(r => {
+    const doca = docaDaSenha(r['SENHA']);
+    const docaNome = clean(doca?.DOCA).toUpperCase();
+    const categoria = clean(r['CATEGORIA']);
+    const pago = !!clean(r['Pagamento']);
+    const acionado = !!r['ACIONAMENTO PORTARIA'];
+    const visualizado = !!r['VISUALIZAÇÃO'];
+    const texto = [r['SENHA'],r['CARGA'],r['FORNECEDOR'],r['CATEGORIA'],r['NOME COMPLETO'],r['TELEFONE'],docaNome].map(clean).join(' ').toLowerCase();
+    if(b && !texto.includes(b)) return false;
+    if(filtros.doca && docaNome !== filtros.doca) return false;
+    if(filtros.pagamento === 'pago' && !pago) return false;
+    if(filtros.pagamento === 'pendente' && pago) return false;
+    if(filtros.portaria === 'acionado' && !acionado) return false;
+    if(filtros.portaria === 'pendente' && acionado) return false;
+    if(filtros.portaria === 'visualizado' && !visualizado) return false;
+    if(filtros.categoria && categoria !== filtros.categoria) return false;
+    return true;
+  });
+}
+
 function render(){
   const tbody = document.getElementById('tbody');
   for(const k in statusEls) delete statusEls[k];
+  const lista = getRegistrosFiltrados();
+  document.getElementById('filterCount').textContent = `${lista.length} registro${lista.length === 1 ? '' : 's'}`;
 
-  if(!registros.length){
-    tbody.innerHTML = `<tr><td colspan="10" class="empty">Nenhum registro encontrado.</td></tr>`;
+  if(!lista.length){
+    tbody.innerHTML = `<tr><td colspan="12" class="empty">Nenhum registro encontrado com os filtros atuais.</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = registros.map(r => {
+  tbody.innerHTML = lista.map(r => {
     const id = r[CAMPO_ID];
-    const acionado    = !!r['ACIONAMENTO PORTARIA'];
+    const acionado = !!r['ACIONAMENTO PORTARIA'];
     const visualizado = !!r['VISUALIZAÇÃO'];
-
-    // ----- Doca vinculada -----
     const docaRow = docaDaSenha(r['SENHA']);
-    let docaLabel = '— vincular';
-    let docaClass = '';
+    let docaLabel = '— vincular', docaClass = '';
     if(docaRow){
-      const st  = clean(docaRow.STATUS).toUpperCase();
-      const mot = clean(docaRow['MOTIVO BLOQ']);
+      const st = clean(docaRow.STATUS).toUpperCase(), mot = clean(docaRow['MOTIVO BLOQ']);
       docaLabel = clean(docaRow.DOCA).toUpperCase() || '?';
-      if(mot || st === 'BLOQUEADO')  docaClass = 'bloqueada';
-      else if(st === 'OCUPADO')      docaClass = 'assigned';
+      if(mot || st === 'BLOQUEADO') docaClass = 'bloqueada';
+      else if(st === 'OCUPADO') docaClass = 'assigned';
     }
-
+    const pago = clean(r['Pagamento']);
     return `
       <tr data-id="${esc(id)}">
         <td><span class="senha">${esc(r['SENHA'])}</span></td>
-
-        <td>
-          <div class="carga-cell">
-            <input class="carga-input" type="text" inputmode="numeric"
-                   value="${esc(r['CARGA'])}" data-id="${esc(id)}" placeholder="Nº" />
-            <button class="carga-save" data-id="${esc(id)}" title="Salvar carga">✔</button>
-          </div>
-        </td>
-
-        <td>${esc(r['FORNECEDOR'])}</td>
-        <td>${esc(r['CATEGORIA'])}</td>
-        <td>${esc(r['NOME COMPLETO'])}</td>
-        <td>${esc(r['TELEFONE'])}</td>
-        <td>${esc(r['AGENDA'])}</td>
-
+        <td><div class="carga-cell"><input class="carga-input" type="text" inputmode="numeric" value="${esc(r['CARGA'])}" data-id="${esc(id)}" placeholder="Nº" /><button class="carga-save" data-id="${esc(id)}" title="Salvar carga">✔</button></div></td>
+        <td>${esc(r['FORNECEDOR'])}</td><td>${esc(r['CATEGORIA'])}</td><td>${esc(r['NOME COMPLETO'])}</td><td>${esc(r['TELEFONE'])}</td><td>${esc(r['AGENDA'])}</td>
+        <td><span class="ts">${fmtDataHora(r['CHEGADA'])}</span></td>
         <td><span class="ts">${fmtDataHora(r['INTEGRAÇÃO CONSINCO'])}</span></td>
-
-        <td>
-          <div class="acionamento-cell">
-            <button class="btn-acionar" data-id="${esc(id)}" ${acionado ? 'disabled' : ''}>
-              ${acionado ? '🔒 Acionado' : '🔔 Acionar'}
-            </button>
-            <div class="status ${visualizado ? 'visualizado' : (acionado ? 'enviado' : '')}"
-                 data-status-id="${esc(id)}">
-              ${renderStatus(acionado, visualizado, r['ACIONAMENTO PORTARIA'], r['VISUALIZAÇÃO'])}
-            </div>
-          </div>
-        </td>
-
-        <td>
-          <button class="doca-btn ${docaClass}"
-                  data-senha="${esc(r['SENHA'])}"
-                  title="Clique para escolher a doca">
-            ${esc(docaLabel)}
-          </button>
-        </td>
-      </tr>
-    `;
+        <td><div class="acionamento-cell"><button class="btn-acionar" data-id="${esc(id)}" ${acionado ? 'disabled' : ''}>${acionado ? '🔒 Acionado' : '🔔 Acionar'}</button><div class="status ${visualizado ? 'visualizado' : (acionado ? 'enviado' : '')}" data-status-id="${esc(id)}">${renderStatus(acionado, visualizado, r['ACIONAMENTO PORTARIA'], r['VISUALIZAÇÃO'])}</div></div></td>
+        <td><button class="doca-btn ${docaClass}" data-senha="${esc(r['SENHA'])}" title="Clique para escolher a doca">${esc(docaLabel)}</button></td>
+        <td><div class="pagamento-cell"><button class="btn-pagamento" data-id="${esc(id)}" ${pago ? 'disabled' : ''}><span class="pay-icon">${pago ? '✓' : '💳'}</span>${pago ? 'Pago' : 'Pagamento'}</button>${pago ? `<span class="pagamento-data">${esc(fmtDataHora(pago))}</span>` : ''}</div></td>
+      </tr>`;
   }).join('');
 
-  document.querySelectorAll('[data-status-id]').forEach(el => {
-    statusEls[el.dataset.statusId] = el;
-  });
+  document.querySelectorAll('[data-status-id]').forEach(el => { statusEls[el.dataset.statusId] = el; });
+}
+
+function atualizarFiltros(){
+  const docaSel = document.getElementById('fDoca'), catSel = document.getElementById('fCategoria');
+  const docs = [...new Set(docasArr.map(d=>clean(d.DOCA).toUpperCase()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+  const cats = [...new Set(registros.map(r=>clean(r['CATEGORIA'])).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  const keepD = filtros.doca, keepC = filtros.categoria;
+  docaSel.innerHTML = '<option value="">Todas as docas</option>' + docs.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
+  catSel.innerHTML = '<option value="">Todas</option>' + cats.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
+  docaSel.value = keepD; catSel.value = keepC;
+}
+
+function aplicarFiltros(){
+  filtros.busca = clean(document.getElementById('fBusca').value);
+  filtros.doca = document.getElementById('fDoca').value;
+  filtros.pagamento = document.getElementById('fPagamento').value;
+  filtros.portaria = document.getElementById('fPortaria').value;
+  filtros.categoria = document.getElementById('fCategoria').value;
+  render();
 }
 
 function renderStatus(acionado, visualizado, dtAcionamento, dtVisualizacao){
@@ -539,6 +630,9 @@ document.getElementById('tbody').addEventListener('click', async (e) => {
 
   const btnAcionar = e.target.closest('.btn-acionar');
   if(btnAcionar){ return acionarPortaria(btnAcionar.dataset.id, btnAcionar); }
+
+  const btnPagamento = e.target.closest('.btn-pagamento');
+  if(btnPagamento){ return registrarPagamento(btnPagamento.dataset.id, btnPagamento); }
 });
 
 document.getElementById('tbody').addEventListener('keydown', (e) => {
@@ -620,6 +714,35 @@ async function acionarPortaria(id, btn){
 
   toast('Portaria acionada ✔', 'ok');
   marcarAtualizacao();
+}
+
+/* ============================================================
+   PAGAMENTO + LIBERAÇÃO AUTOMÁTICA DA DOCA
+   ============================================================ */
+async function registrarPagamento(id, btn){
+  const reg = registros.find(r => String(r[CAMPO_ID]) === String(id));
+  if(!reg) return toast('Registro não encontrado.', 'err');
+  if(clean(reg['Pagamento'])) return toast('Pagamento já registrado.', 'err');
+  const senha = clean(reg['SENHA']);
+  if(!senha) return toast('Registro sem SENHA.', 'err');
+  const doca = docaDaSenha(senha);
+  if(!doca) return toast('Não há uma doca vinculada a esta carga.', 'err');
+  const nomeDoca = clean(doca.DOCA).toUpperCase();
+  if(!confirm(`Registrar o pagamento da senha ${senha} e liberar a doca ${nomeDoca}?`)) return;
+  const original = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Registrando…';
+  const agora = agoraFormatado();
+  try{
+    const {error} = await db.from(TABELA).update({'Pagamento':agora}).eq(CAMPO_ID,id);
+    if(error) throw error;
+    const url = `${SUPABASE_URL}/rest/v1/${encodeURIComponent(TABELA_DOCAS)}?DOCA=eq.${encodeURIComponent(nomeDoca)}`;
+    const resp = await fetch(url,{method:'PATCH',headers:{...HEADERS,Prefer:'return=minimal'},body:JSON.stringify({STATUS:'DISPONIVEL',SENHA:null,CARGA:null,INICIO:null,'MOTIVO BLOQ':null})});
+    if(!resp.ok) throw new Error('Pagamento salvo, mas não foi possível liberar a doca: '+await resp.text());
+    reg['Pagamento']=agora;
+    await recarregarDocas(); atualizarFiltros(); render(); marcarAtualizacao();
+    toast(`Pagamento registrado · Doca ${nomeDoca} liberada ✔`,'ok');
+  }catch(err){
+    console.error(err); btn.disabled=false; btn.innerHTML=original; toast('Erro ao registrar pagamento: '+(err.message||err),'err');
+  }
 }
 
 /* ============================================================
@@ -855,6 +978,10 @@ async function verificarAtualizacoes(){
 
     const antes  = reg['VISUALIZAÇÃO'];
     const depois = d['VISUALIZAÇÃO'];
+    const antesPag = reg['Pagamento'];
+    const depoisPag = d['Pagamento'];
+
+    if(antesPag !== depoisPag){ reg['Pagamento'] = depoisPag; mudou = true; }
 
     if(antes !== depois){
       reg['VISUALIZAÇÃO'] = depois;
@@ -873,11 +1000,28 @@ async function verificarAtualizacoes(){
   try {
     const antes = JSON.stringify(docasArr);
     await recarregarDocas();
-    if(JSON.stringify(docasArr) !== antes) render();
+    if(JSON.stringify(docasArr) !== antes){ atualizarFiltros(); render(); }
   } catch(_) { /* silencioso */ }
 
   marcarAtualizacao();
 }
+
+/* ============================================================
+   FILTROS
+   ============================================================ */
+['fBusca','fDoca','fPagamento','fPortaria','fCategoria'].forEach(id => {
+  const el=document.getElementById(id);
+  el.addEventListener(id==='fBusca'?'input':'change', aplicarFiltros);
+});
+document.getElementById('btnLimparFiltros').addEventListener('click',()=>{
+  document.getElementById('fBusca').value='';
+  document.getElementById('fDoca').value='';
+  document.getElementById('fPagamento').value='';
+  document.getElementById('fPortaria').value='';
+  document.getElementById('fCategoria').value='';
+  filtros={busca:'',doca:'',pagamento:'',portaria:'',categoria:''};
+  render();
+});
 
 /* ============================================================
    INIT
