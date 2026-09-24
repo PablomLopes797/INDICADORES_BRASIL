@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portaria</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root{
+    --bg:#0f172a; --panel:#1e293b; --panel2:#243449; --border:#334155;
+    --text:#e2e8f0; --muted:#94a3b8; --accent:#3b82f6;
+    --green:#22c55e; --blue-check:#53bdeb; --danger:#ef4444;
+  }
+  body{
+    font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+    background: var(--bg); color: var(--text); min-height: 100vh; padding: 24px;
+  }
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom: 20px; gap: 16px; flex-wrap: wrap;
+  }
+  h1{ font-size: 22px; font-weight: 700; letter-spacing:.3px; }
+  h1 span{ color: var(--accent); }
+  .info-bar{ display:flex; align-items:center; gap:14px; font-size:13px; color: var(--muted); }
+  .dot{ width:8px; height:8px; border-radius:50%; background:var(--green); display:inline-block;
+        box-shadow:0 0 8px var(--green); animation:pulse 2s infinite; }
+  @keyframes pulse{ 50%{ opacity:.35; } }
+
+  .btn{
+    border:none; cursor:pointer; border-radius:8px; font-weight:600;
+    font-size:13px; padding:9px 14px; transition:.18s; font-family:inherit;
+    display:inline-flex; align-items:center; gap:6px;
+  }
+  .btn-ghost{ background: var(--panel2); color: var(--text); border:1px solid var(--border); }
+  .btn-ghost:hover{ background:#2e4057; }
+
+  .table-wrap{
+    background: var(--panel); border:1px solid var(--border); border-radius:14px;
+    overflow:auto; max-height: calc(100vh - 160px);
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  }
+  table{ width:100%; border-collapse: collapse; font-size:13.5px; min-width:1400px; }
+  thead th{
+    position:sticky; top:0; z-index:5; background: var(--panel2);
+    text-align:left; padding:14px 12px; font-size:11.5px; letter-spacing:.6px;
+    text-transform:uppercase; color: var(--muted); font-weight:700;
+    border-bottom:1px solid var(--border); white-space:nowrap;
+  }
+  tbody td{
+    padding:11px 12px; border-bottom:1px solid #2b3a4f; vertical-align:middle;
+    white-space:nowrap;
+  }
+  tbody tr{ transition: background .15s; }
+  tbody tr:hover{ background:#22314a; }
+  tbody tr:last-child td{ border-bottom:none; }
+
+  .senha{
+    display:inline-block; background:#0b2a4a; color:#7dd3fc; font-weight:700;
+    padding:4px 10px; border-radius:6px; font-size:12.5px; letter-spacing:.5px;
+  }
+
+  .carga-cell{ display:flex; align-items:center; gap:6px; }
+  .carga-input{
+    width:90px; background:#0b1526; border:1px solid var(--border); color:var(--text);
+    padding:6px 9px; border-radius:7px; font-size:13px; font-family:inherit; outline:none;
+    transition:.15s;
+  }
+  .carga-input:focus{ border-color: var(--accent); box-shadow:0 0 0 3px rgba(59,130,246,.18); }
+  .carga-save{
+    width:28px; height:28px; border-radius:7px; border:1px solid var(--border);
+    background: var(--panel2); color: var(--muted); cursor:pointer; font-size:14px;
+    display:flex; align-items:center; justify-content:center; transition:.15s;
+  }
+  .carga-save:hover{ background: var(--green); color:#fff; border-color: var(--green); }
+  .carga-save.saving{ opacity:.5; pointer-events:none; }
+
+  .ts{ font-size:11.5px; color: var(--muted); }
+
+  .acionamento-cell{ display:flex; flex-direction:column; gap:6px; align-items:flex-start; }
+  .btn-acionar{
+    background: linear-gradient(135deg,#f59e0b,#d97706); color:#1a1200;
+    font-weight:700; font-size:12px; padding:7px 13px; border-radius:8px;
+    border:none; cursor:pointer; transition:.18s; font-family:inherit;
+    display:inline-flex; align-items:center; gap:6px;
+  }
+  .btn-acionar:hover{ transform: translateY(-1px); box-shadow:0 4px 14px rgba(245,158,11,.35); }
+  .btn-acionar:disabled{ background: var(--panel2); color: var(--muted); cursor:default;
+                         transform:none; box-shadow:none; border:1px solid var(--border); }
+
+  .status{ display:flex; align-items:center; gap:5px; font-size:11.5px; min-height:14px; }
+  .status .tick{ display:inline-flex; }
+  .status.enviado{ color: var(--muted); }
+  .status.visualizado{ color: var(--blue-check); font-weight:700; }
+  .status .hora{ color: var(--muted); font-weight:400; margin-left:2px; }
+
+  .toast{
+    position:fixed; bottom:24px; right:24px; background: var(--panel2);
+    border:1px solid var(--border); border-left:4px solid var(--accent);
+    padding:13px 18px; border-radius:10px; font-size:13px; color:var(--text);
+    box-shadow:0 12px 32px rgba(0,0,0,.5); opacity:0; transform: translateY(16px);
+    transition:.3s; pointer-events:none; z-index:99;
+  }
+  .toast.show{ opacity:1; transform: translateY(0); }
+  .toast.ok{ border-left-color: var(--green); }
+  .toast.err{ border-left-color: var(--danger); }
+
+  .empty{ padding: 40px; text-align:center; color: var(--muted); }
+  .spin{ display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,.25);
+         border-top-color:#fff; border-radius:50%; animation:sp .7s linear infinite; }
+  @keyframes sp{ to{ transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🚧 Painel <span>Portaria</span></h1>
+  <div class="info-bar">
+    <span><span class="dot"></span> Monitorando visualização</span>
+    <span id="ultimaAtualizacao">—</span>
+    <button class="btn btn-ghost" id="btnRefresh">↻ Atualizar</button>
+  </div>
+</header>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>SENHA</th>
+        <th>CARGA</th>
+        <th>FORNECEDOR</th>
+        <th>CATEGORIA</th>
+        <th>MOTORISTA</th>
+        <th>TELEFONE</th>
+        <th>AGENDA</th>
+        <th>INTEGRAÇÃO CONSINCO</th>
+        <th>ACIONAMENTO PORTARIA</th>
+      </tr>
+    </thead>
+    <tbody id="tbody">
+      <tr><td colspan="9" class="empty">Carregando registros…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   CONFIGURAÇÃO
+   ============================================================ */
+const SUPABASE_URL      = 'https://jgtisruauiajjfoesvol.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpndGlzcnVhdWlhampmb2Vzdm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1OTY3NjYsImV4cCI6MjEwMzE3Mjc2Nn0.yiAsD6c06UEauyAUCFYs0KQnuWBVfLAeP_oYE8yGOwQ';
+
+const TABELA   = 'CADASTRO_ENTREGADOR';
+const CAMPO_ID = 'id';
+
+const COLUNAS_SELECT = '*';
+
+/* ============================================================ */
+const { createClient } = window.supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let registros = [];
+const statusEls = {};
+
+const esc = (v) => (v ?? '').toString()
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+/* ---------- Data/Hora no formato DD/MM/AAAA HH:MM ---------- */
+const pad2 = n => String(n).padStart(2, '0');
+
+function agoraFormatado(){
+  const d = new Date();
+  return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
+/* Aceita string "DD/MM/AAAA HH:MM" OU ISO antigo — devolve sempre no padrão BR */
+function normalizarData(v){
+  if(!v) return '';
+  const s = String(v).trim();
+  if(!s) return '';
+
+  // Já está no formato BR? "DD/MM/AAAA HH:MM" ou "DD/MM/AAAA"
+  if(/^\d{2}\/\d{2}\/\d{4}(\s+\d{2}:\d{2})?$/.test(s)) return s;
+
+  // É ISO? Converte
+  const d = new Date(s);
+  if(!isNaN(d)) return agoraFormatado.call(null, d) || 
+    `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+
+  return s; // devolve cru se não reconhecer
+}
+
+function fmtDataHora(v){
+  const s = normalizarData(v);
+  return s || '—';
+}
+
+/* Retorna só "HH:MM" a partir de qualquer formato */
+function fmtHora(v){
+  const s = normalizarData(v);
+  const m = s.match(/(\d{2}:\d{2})/);
+  return m ? m[1] : '';
+}
+
+function toast(msg, tipo=''){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + tipo;
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.className = 'toast ' + tipo, 2600);
+}
+
+const TICK_1 = `<svg class="tick" width="15" height="11" viewBox="0 0 16 11"><path fill="currentColor" d="M11.07.65a.46.46 0 0 0-.3-.1.5.5 0 0 0-.39.18L4.19 8.37 1.79 6.1a.46.46 0 0 0-.34-.15.47.47 0 0 0-.34.15l-.31.31a.45.45 0 0 0-.14.34c0 .13.05.25.14.34l3 3a.72.72 0 0 0 .5.2.7.7 0 0 0 .55-.27l6.64-8.42a.5.5 0 0 0 .11-.3.44.44 0 0 0-.17-.32l-.36-.32Z"/></svg>`;
+const TICK_2 = `<svg class="tick" width="17" height="11" viewBox="0 0 16 11"><path fill="currentColor" d="m15.01 3.32-.48-.37a.37.37 0 0 0-.51.06L8.67 9.88a.32.32 0 0 1-.49.03l-.35-.32a.32.32 0 0 0-.49.03l-.38.48a.42.42 0 0 0 .04.54l1.32 1.27c.14.14.36.12.48-.04l6.27-8.04a.37.37 0 0 0-.06-.51Zm-4.1 0-.48-.37a.37.37 0 0 0-.51.06L4.57 9.88a.32.32 0 0 1-.49.03L1.89 7.77a.37.37 0 0 0-.51 0l-.43.44a.36.36 0 0 0 0 .51l3.26 3.19c.14.14.36.12.48-.04l6.27-8.04a.37.37 0 0 0-.05-.51Z"/></svg>`;
+
+/* ============================================================
+   CARREGAR
+   ============================================================ */
+async function carregar(){
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = `<tr><td colspan="9" class="empty"><span class="spin"></span> Carregando…</td></tr>`;
+
+  const { data, error } = await db.from(TABELA).select(COLUNAS_SELECT);
+
+  if(error){
+    console.error(error);
+    tbody.innerHTML = `<tr><td colspan="9" class="empty">Erro ao carregar: ${esc(error.message)}</td></tr>`;
+    toast('Erro ao carregar dados', 'err');
+    return;
+  }
+
+  registros = data || [];
+  render();
+  marcarAtualizacao();
+}
+
+function marcarAtualizacao(){
+  document.getElementById('ultimaAtualizacao').textContent =
+    'Atualizado às ' + new Date().toLocaleTimeString('pt-BR');
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function render(){
+  const tbody = document.getElementById('tbody');
+  for(const k in statusEls) delete statusEls[k];
+
+  if(!registros.length){
+    tbody.innerHTML = `<tr><td colspan="9" class="empty">Nenhum registro encontrado.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = registros.map(r => {
+    const id = r[CAMPO_ID];
+    const acionado    = !!r['ACIONAMENTO PORTARIA'];
+    const visualizado = !!r['VISUALIZAÇÃO'];
+
+    return `
+      <tr data-id="${esc(id)}">
+        <td><span class="senha">${esc(r['SENHA'])}</span></td>
+
+        <td>
+          <div class="carga-cell">
+            <input class="carga-input" type="text" inputmode="numeric"
+                   value="${esc(r['CARGA'])}" data-id="${esc(id)}" placeholder="Nº" />
+            <button class="carga-save" data-id="${esc(id)}" title="Salvar carga">✔</button>
+          </div>
+        </td>
+
+        <td>${esc(r['FORNECEDOR'])}</td>
+        <td>${esc(r['CATEGORIA'])}</td>
+        <td>${esc(r['MOTORISTA'])}</td>
+        <td>${esc(r['TELEFONE'])}</td>
+        <td>${esc(r['AGENDA'])}</td>
+
+        <td><span class="ts">${fmtDataHora(r['INTEGRAÇÃO CONSINCO'])}</span></td>
+
+        <td>
+          <div class="acionamento-cell">
+            <button class="btn-acionar" data-id="${esc(id)}" ${acionado ? 'disabled' : ''}>
+              ${acionado ? '🔒 Acionado' : '🔔 Acionar'}
+            </button>
+            <div class="status ${visualizado ? 'visualizado' : (acionado ? 'enviado' : '')}"
+                 data-status-id="${esc(id)}">
+              ${renderStatus(acionado, visualizado, r['ACIONAMENTO PORTARIA'], r['VISUALIZAÇÃO'])}
+            </div>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  document.querySelectorAll('[data-status-id]').forEach(el => {
+    statusEls[el.dataset.statusId] = el;
+  });
+}
+
+function renderStatus(acionado, visualizado, dtAcionamento, dtVisualizacao){
+  if(!acionado) return '';
+  if(visualizado){
+    return `${TICK_2}<span>VISUALIZADO</span>
+            <span class="hora">${fmtHora(dtVisualizacao)}</span>`;
+  }
+  return `${TICK_1}<span>Enviado</span>
+          <span class="hora">${fmtHora(dtAcionamento)}</span>`;
+}
+
+/* ============================================================
+   EVENTOS
+   ============================================================ */
+document.getElementById('tbody').addEventListener('click', async (e) => {
+  const btnSalvar = e.target.closest('.carga-save');
+  if(btnSalvar){ return salvarCarga(btnSalvar.dataset.id, btnSalvar); }
+
+  const btnAcionar = e.target.closest('.btn-acionar');
+  if(btnAcionar){ return acionarPortaria(btnAcionar.dataset.id, btnAcionar); }
+});
+
+document.getElementById('tbody').addEventListener('keydown', (e) => {
+  if(e.key === 'Enter' && e.target.classList.contains('carga-input')){
+    e.preventDefault();
+    const id = e.target.dataset.id;
+    const btn = document.querySelector(`.carga-save[data-id="${CSS.escape(id)}"]`);
+    salvarCarga(id, btn);
+  }
+});
+
+/* ============================================================
+   SALVAR CARGA  →  grava "DD/MM/AAAA HH:MM"
+   ============================================================ */
+async function salvarCarga(id, btn){
+  const input = document.querySelector(`.carga-input[data-id="${CSS.escape(id)}"]`);
+  if(!input) return;
+  const valor = input.value.trim();
+
+  btn?.classList.add('saving');
+  const agora = agoraFormatado();
+
+  const { error } = await db.from(TABELA)
+    .update({ 'CARGA': valor, 'INTEGRAÇÃO CONSINCO': agora })
+    .eq(CAMPO_ID, id);
+
+  btn?.classList.remove('saving');
+
+  if(error){
+    console.error(error);
+    toast('Erro ao salvar carga: ' + error.message, 'err');
+    return;
+  }
+
+  const reg = registros.find(r => String(r[CAMPO_ID]) === String(id));
+  if(reg){ reg['CARGA'] = valor; reg['INTEGRAÇÃO CONSINCO'] = agora; }
+
+  const linha = document.querySelector(`tr[data-id="${CSS.escape(id)}"]`);
+  const celulaData = linha?.children[7]?.querySelector('.ts');
+  if(celulaData) celulaData.textContent = agora;
+
+  toast('Carga salva e integração registrada ✔', 'ok');
+  marcarAtualizacao();
+}
+
+/* ============================================================
+   ACIONAMENTO PORTARIA  →  grava "DD/MM/AAAA HH:MM"
+   ============================================================ */
+async function acionarPortaria(id, btn){
+  btn.disabled = true;
+  const original = btn.innerHTML;
+  btn.innerHTML = '<span class="spin"></span> Acionando…';
+
+  const agora = agoraFormatado();
+
+  const { error } = await db.from(TABELA)
+    .update({ 'ACIONAMENTO PORTARIA': agora })
+    .eq(CAMPO_ID, id);
+
+  if(error){
+    console.error(error);
+    btn.disabled = false;
+    btn.innerHTML = original;
+    toast('Erro ao acionar: ' + error.message, 'err');
+    return;
+  }
+
+  const reg = registros.find(r => String(r[CAMPO_ID]) === String(id));
+  if(reg) reg['ACIONAMENTO PORTARIA'] = agora;
+
+  btn.innerHTML = '🔒 Acionado';
+
+  const st = statusEls[id];
+  if(st){
+    st.className = 'status enviado';
+    st.innerHTML = renderStatus(true, !!reg?.['VISUALIZAÇÃO'], agora, reg?.['VISUALIZAÇÃO']);
+  }
+
+  toast('Portaria acionada ✔', 'ok');
+  marcarAtualizacao();
+}
+
+/* ============================================================
+   POLLING 60s — verifica VISUALIZAÇÃO
+   ============================================================ */
+async function verificarVisualizacao(){
+  const ids = registros.map(r => r[CAMPO_ID]).filter(v => v !== undefined && v !== null);
+  if(!ids.length) return;
+
+  const { data, error } = await db.from(TABELA)
+    .select('*')
+    .in(CAMPO_ID, ids);
+
+  if(error){ console.warn('Polling erro:', error.message); return; }
+
+  let mudou = false;
+
+  (data || []).forEach(d => {
+    const reg = registros.find(r => String(r[CAMPO_ID]) === String(d[CAMPO_ID]));
+    if(!reg) return;
+
+    const antes  = reg['VISUALIZAÇÃO'];
+    const depois = d['VISUALIZAÇÃO'];
+
+    if(antes !== depois){
+      reg['VISUALIZAÇÃO'] = depois;
+      mudou = true;
+
+      const st = statusEls[reg[CAMPO_ID]];
+      if(st){
+        st.className = depois ? 'status visualizado' : 'status enviado';
+        st.innerHTML = renderStatus(true, !!depois, reg['ACIONAMENTO PORTARIA'], depois);
+      }
+    }
+  });
+
+  if(mudou) toast('✅ Motorista visualizou o acionamento', 'ok');
+  marcarAtualizacao();
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+document.getElementById('btnRefresh').addEventListener('click', carregar);
+
+(async function init(){
+  await carregar();
+  setInterval(verificarVisualizacao, 60_000);
+})();
+</script>
+</body>
+</html>
