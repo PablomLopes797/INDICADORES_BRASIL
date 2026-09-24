@@ -10,7 +10,7 @@
   :root{
     --bg:#0f172a; --panel:#1e293b; --panel2:#243449; --border:#334155;
     --text:#e2e8f0; --muted:#94a3b8; --accent:#3b82f6;
-    --green:#22c55e; --blue-check:#53bdeb; --danger:#ef4444;
+    --green:#22c55e; --blue-check:#53bdeb; --danger:#ef4444; --amber:#f59e0b;
   }
   body{
     font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
@@ -34,13 +34,17 @@
   }
   .btn-ghost{ background: var(--panel2); color: var(--text); border:1px solid var(--border); }
   .btn-ghost:hover{ background:#2e4057; }
+  .btn-primary{ background: var(--accent); color:#fff; }
+  .btn-primary:hover{ background:#2563eb; }
+  .btn-danger{ background:#7f1d1d; color:#fecaca; border:1px solid #991b1b; }
+  .btn-danger:hover{ background:#991b1b; color:#fff; }
 
   .table-wrap{
     background: var(--panel); border:1px solid var(--border); border-radius:14px;
     overflow:auto; max-height: calc(100vh - 160px);
     box-shadow: 0 10px 30px rgba(0,0,0,.35);
   }
-  table{ width:100%; border-collapse: collapse; font-size:13.5px; min-width:1400px; }
+  table{ width:100%; border-collapse: collapse; font-size:13.5px; min-width:1500px; }
   thead th{
     position:sticky; top:0; z-index:5; background: var(--panel2);
     text-align:left; padding:14px 12px; font-size:11.5px; letter-spacing:.6px;
@@ -77,6 +81,21 @@
 
   .ts{ font-size:11.5px; color: var(--muted); }
 
+  /* ---------- DOCA (botão na tabela) ---------- */
+  .doca-btn{
+    border:1px dashed var(--border); background: var(--panel2); color: var(--muted);
+    border-radius:7px; padding:6px 12px; font-size:12px; font-weight:700;
+    font-family:inherit; cursor:pointer; transition:.15s; min-width:70px;
+  }
+  .doca-btn:hover{ border-color: var(--accent); color:#93c5fd; background:#1e3a5f; }
+  .doca-btn.assigned{
+    border:1px solid #14532d; background:#052e16; color:#4ade80; font-weight:800;
+    letter-spacing:.5px;
+  }
+  .doca-btn.assigned:hover{ background:#064e2b; color:#86efac; border-color:#16a34a; }
+  .doca-btn.bloqueada{ border:1px solid #78350f; background:#3b2106; color:#fbbf24; }
+
+  /* ---------- ACIONAMENTO ---------- */
   .acionamento-cell{ display:flex; flex-direction:column; gap:6px; align-items:flex-start; }
   .btn-acionar{
     background: linear-gradient(135deg,#f59e0b,#d97706); color:#1a1200;
@@ -99,7 +118,7 @@
     border:1px solid var(--border); border-left:4px solid var(--accent);
     padding:13px 18px; border-radius:10px; font-size:13px; color:var(--text);
     box-shadow:0 12px 32px rgba(0,0,0,.5); opacity:0; transform: translateY(16px);
-    transition:.3s; pointer-events:none; z-index:99;
+    transition:.3s; pointer-events:none; z-index:9999;
   }
   .toast.show{ opacity:1; transform: translateY(0); }
   .toast.ok{ border-left-color: var(--green); }
@@ -109,6 +128,117 @@
   .spin{ display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,.25);
          border-top-color:#fff; border-radius:50%; animation:sp .7s linear infinite; }
   @keyframes sp{ to{ transform:rotate(360deg); } }
+
+  /* ---------- MODAL ---------- */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.65); backdrop-filter:blur(4px);
+    display:flex; align-items:center; justify-content:center; z-index:1000; padding:20px;
+  }
+  .modal-overlay.hidden{ display:none; }
+  .modal-content{
+    background: var(--panel); border:1px solid var(--border); border-radius:16px;
+    box-shadow:0 30px 80px rgba(0,0,0,.6); width:100%;
+    padding:26px; max-height:92vh; overflow-y:auto;
+  }
+  .modal-content.modal-doca{ max-width:760px; }
+
+  .modal-head{
+    display:flex; align-items:flex-start; justify-content:space-between;
+    margin-bottom:18px; gap:12px;
+  }
+  .modal-title{ font-size:17px; font-weight:800; color:var(--text); }
+  .modal-sub{ font-size:12.5px; color:var(--muted); margin-top:5px; }
+  .modal-sub strong{ color:#7dd3fc; }
+  .modal-close{
+    border:1px solid var(--border); background: var(--panel2); color: var(--muted);
+    width:32px; height:32px; border-radius:8px; cursor:pointer; font-size:14px;
+    display:flex; align-items:center; justify-content:center; transition:.15s;
+    font-family:inherit;
+  }
+  .modal-close:hover{ background:#334155; color:#fff; }
+
+  /* ---------- MAPA DE DOCAS ---------- */
+  .doca-info{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    background:#0b1526; border:1px solid var(--border); border-radius:10px;
+    padding:11px 14px; margin-bottom:14px; font-size:13px; color:var(--muted);
+    flex-wrap:wrap;
+  }
+  .doca-info strong{ color:#4ade80; }
+  .doca-info .vazio{ color: var(--muted); font-style: italic; }
+
+  .doca-legend{
+    display:flex; gap:16px; flex-wrap:wrap; margin-bottom:14px;
+    font-size:11px; color:var(--muted);
+  }
+  .doca-legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .doca-legend i{ width:12px; height:12px; border-radius:4px; display:inline-block; }
+  .doca-legend .lg-green{ background:#1db889; }
+  .doca-legend .lg-red{ background:#e34b60; }
+  .doca-legend .lg-gray{ background:#6b7280; border:1px solid #f5c542; }
+
+  .doca-map{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap:9px;
+    max-height: 380px;
+    overflow-y:auto;
+    padding: 4px;
+    border-radius:10px;
+  }
+
+  .doca-square{
+    aspect-ratio: 1;
+    background:#1db889;
+    border-radius: 10px;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    font-weight:800; color:#fff; font-size:16px;
+    border:2px solid transparent;
+    cursor:pointer; user-select:none;
+    transition: transform .15s, box-shadow .15s;
+    position:relative; padding:4px;
+    text-shadow: 0 1px 3px rgba(0,0,0,.25);
+  }
+  .doca-square .num{ line-height:1; font-size:16px; }
+  .doca-square small{
+    font-size:9px; font-weight:600; opacity:.9; margin-top:3px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;
+  }
+
+  .doca-square.disponivel:hover{
+    transform: scale(1.07);
+    box-shadow: 0 8px 22px rgba(29,184,137,.5);
+    z-index:2;
+  }
+  .doca-square.ocupado{ background:#e34b60; cursor:not-allowed; opacity:.8; }
+  .doca-square.bloqueado{
+    background:#6b7280; cursor:not-allowed; opacity:.8;
+    border-color:#f5c542;
+  }
+  .doca-square.current{
+    box-shadow: 0 0 0 3px #facc15, 0 0 22px rgba(250,204,21,.45);
+    z-index:3;
+  }
+  .doca-square.current::after{
+    content: 'atual';
+    position:absolute; top:-8px; right:-6px;
+    background:#facc15; color:#1a1200;
+    font-size:8px; font-weight:900; letter-spacing:.5px;
+    padding:2px 5px; border-radius:4px; text-transform:uppercase;
+  }
+
+  .modal-actions{
+    display:flex; justify-content:flex-end; align-items:center; gap:12px;
+    margin-top:20px; padding-top:16px; border-top:1px solid var(--border);
+  }
+  .form-state{ margin-right:auto; color: var(--muted); font-size:12px; }
+
+  @media (max-width:640px){
+    .modal-content{ padding:18px; }
+    .doca-map{ grid-template-columns: repeat(auto-fill, minmax(58px, 1fr)); gap:7px; }
+    .doca-square .num{ font-size:14px; }
+  }
 </style>
 </head>
 <body>
@@ -128,6 +258,7 @@
       <tr>
         <th>SENHA</th>
         <th>CARGA</th>
+        <th>DOCA</th>
         <th>FORNECEDOR</th>
         <th>CATEGORIA</th>
         <th>MOTORISTA</th>
@@ -138,9 +269,47 @@
       </tr>
     </thead>
     <tbody id="tbody">
-      <tr><td colspan="9" class="empty">Carregando registros…</td></tr>
+      <tr><td colspan="10" class="empty">Carregando registros…</td></tr>
     </tbody>
   </table>
+</div>
+
+<!-- ================== MODAL MAPA DE DOCAS ================== -->
+<div class="modal-overlay hidden" id="docaModal">
+  <div class="modal-content modal-doca">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title">🚧 Mapa de disponibilidade</div>
+        <div class="modal-sub">
+          Senha <strong id="docaModalSenha">—</strong>
+          · Carga <strong id="docaModalCarga">—</strong>
+        </div>
+      </div>
+      <button class="modal-close" id="docaModalClose" type="button">✕</button>
+    </div>
+
+    <div class="doca-info">
+      <span id="docaAtualInfo" class="vazio">Nenhuma doca vinculada a esta senha</span>
+      <button class="btn btn-danger hidden" id="docaLiberar" type="button" style="padding:7px 12px;font-size:12px">
+        🔓 Liberar doca atual
+      </button>
+    </div>
+
+    <div class="doca-legend">
+      <span><i class="lg-green"></i>Disponível (clique para ocupar)</span>
+      <span><i class="lg-red"></i>Ocupada</span>
+      <span><i class="lg-gray"></i>Bloqueada</span>
+    </div>
+
+    <div class="doca-map" id="docaMapModal">
+      <div class="empty" style="grid-column:1/-1"><span class="spin"></span> Carregando docas…</div>
+    </div>
+
+    <div class="modal-actions">
+      <span class="form-state" id="docaState"></span>
+      <button class="btn btn-ghost" id="docaCancel" type="button">Fechar</button>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -152,51 +321,59 @@
 const SUPABASE_URL      = 'https://jgtisruauiajjfoesvol.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpndGlzcnVhdWlhampmb2Vzdm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1OTY3NjYsImV4cCI6MjEwMzE3Mjc2Nn0.yiAsD6c06UEauyAUCFYs0KQnuWBVfLAeP_oYE8yGOwQ';
 
-const TABELA   = 'CADASTRO_ENTREGADOR';
-const CAMPO_ID = 'id';
-
+const TABELA        = 'CADASTRO_ENTREGADOR';
+const TABELA_DOCAS  = 'DISPON. DOCAS';
+const CAMPO_ID      = 'id';
 const COLUNAS_SELECT = '*';
+
+const HEADERS = {
+  apikey: SUPABASE_ANON_KEY,
+  Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
+  'Content-Type': 'application/json'
+};
 
 /* ============================================================ */
 const { createClient } = window.supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let registros = [];
+let docasArr  = [];                 // todas as docas cruas
+let docasMap  = new Map();          // normSenha -> doca
+let docaAtualSenha = null;          // senha da linha em edição
 const statusEls = {};
 
 const esc = (v) => (v ?? '').toString()
   .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
-/* ---------- Data/Hora no formato DD/MM/AAAA HH:MM ---------- */
-const pad2 = n => String(n).padStart(2, '0');
+const clean = (v) => String(v ?? '').trim();
 
+/* Normaliza SENHA removendo zeros à esquerda para comparação */
+function normSenha(s){
+  const t = clean(s);
+  if(!t) return '';
+  return t.replace(/^0+/, '') || '0';
+}
+
+/* ---------- Data/Hora DD/MM/AAAA HH:MM ---------- */
+const pad2 = n => String(n).padStart(2, '0');
 function agoraFormatado(){
   const d = new Date();
   return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 }
-
 function normalizarData(v){
   if(!v) return '';
   const s = String(v).trim();
   if(!s) return '';
-
   if(/^\d{2}\/\d{2}\/\d{4}(\s+\d{2}:\d{2})?$/.test(s)) return s;
-
   const d = new Date(s);
   if(!isNaN(d)){
     return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
   }
   return s;
 }
-
-function fmtDataHora(v){
-  const s = normalizarData(v);
-  return s || '—';
-}
-
+const fmtDataHora = v => normalizarData(v) || '—';
 function fmtHora(v){
-  const s = normalizarData(v);
-  const m = s.match(/(\d{2}:\d{2})/);
+  const m = normalizarData(v).match(/(\d{2}:\d{2})/);
   return m ? m[1] : '';
 }
 
@@ -212,24 +389,45 @@ const TICK_1 = `<svg class="tick" width="15" height="11" viewBox="0 0 16 11"><pa
 const TICK_2 = `<svg class="tick" width="17" height="11" viewBox="0 0 16 11"><path fill="currentColor" d="m15.01 3.32-.48-.37a.37.37 0 0 0-.51.06L8.67 9.88a.32.32 0 0 1-.49.03l-.35-.32a.32.32 0 0 0-.49.03l-.38.48a.42.42 0 0 0 .04.54l1.32 1.27c.14.14.36.12.48-.04l6.27-8.04a.37.37 0 0 0-.06-.51Zm-4.1 0-.48-.37a.37.37 0 0 0-.51.06L4.57 9.88a.32.32 0 0 1-.49.03L1.89 7.77a.37.37 0 0 0-.51 0l-.43.44a.36.36 0 0 0 0 .51l3.26 3.19c.14.14.36.12.48-.04l6.27-8.04a.37.37 0 0 0-.05-.51Z"/></svg>`;
 
 /* ============================================================
-   CARREGAR
+   CARREGAR DADOS
    ============================================================ */
 async function carregar(){
   const tbody = document.getElementById('tbody');
-  tbody.innerHTML = `<tr><td colspan="9" class="empty"><span class="spin"></span> Carregando…</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="10" class="empty"><span class="spin"></span> Carregando…</td></tr>`;
 
-  const { data, error } = await db.from(TABELA).select(COLUNAS_SELECT);
+  try {
+    const [resRegistros] = await Promise.all([
+      db.from(TABELA).select(COLUNAS_SELECT),
+      recarregarDocas()
+    ]);
 
-  if(error){
-    console.error(error);
-    tbody.innerHTML = `<tr><td colspan="9" class="empty">Erro ao carregar: ${esc(error.message)}</td></tr>`;
+    if(resRegistros.error) throw resRegistros.error;
+    registros = resRegistros.data || [];
+
+    render();
+    marcarAtualizacao();
+  } catch(err){
+    console.error(err);
+    tbody.innerHTML = `<tr><td colspan="10" class="empty">Erro ao carregar: ${esc(err.message||err)}</td></tr>`;
     toast('Erro ao carregar dados', 'err');
-    return;
   }
+}
 
-  registros = data || [];
-  render();
-  marcarAtualizacao();
+async function fetchDocas(){
+  const url = `${SUPABASE_URL}/rest/v1/${encodeURIComponent(TABELA_DOCAS)}?select=*&limit=3000`;
+  const r = await fetch(url, { headers: HEADERS });
+  if(!r.ok) throw new Error('DISPON. DOCAS: ' + await r.text());
+  return r.json();
+}
+
+async function recarregarDocas(){
+  const data = await fetchDocas();
+  docasArr = data || [];
+  docasMap.clear();
+  docasArr.forEach(d => {
+    const ns = normSenha(d.SENHA);
+    if(ns && !docasMap.has(ns)) docasMap.set(ns, d);
+  });
 }
 
 function marcarAtualizacao(){
@@ -237,15 +435,22 @@ function marcarAtualizacao(){
     'Atualizado às ' + new Date().toLocaleTimeString('pt-BR');
 }
 
+/* Descobre a doca vinculada a uma senha (por normSenha) */
+function docaDaSenha(senha){
+  const ns = normSenha(senha);
+  if(!ns) return null;
+  return docasMap.get(ns) || null;
+}
+
 /* ============================================================
-   RENDER
+   RENDER DA TABELA
    ============================================================ */
 function render(){
   const tbody = document.getElementById('tbody');
   for(const k in statusEls) delete statusEls[k];
 
   if(!registros.length){
-    tbody.innerHTML = `<tr><td colspan="9" class="empty">Nenhum registro encontrado.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" class="empty">Nenhum registro encontrado.</td></tr>`;
     return;
   }
 
@@ -253,6 +458,18 @@ function render(){
     const id = r[CAMPO_ID];
     const acionado    = !!r['ACIONAMENTO PORTARIA'];
     const visualizado = !!r['VISUALIZAÇÃO'];
+
+    // ----- Doca vinculada -----
+    const docaRow = docaDaSenha(r['SENHA']);
+    let docaLabel = '— vincular';
+    let docaClass = '';
+    if(docaRow){
+      const st  = clean(docaRow.STATUS).toUpperCase();
+      const mot = clean(docaRow['MOTIVO BLOQ']);
+      docaLabel = clean(docaRow.DOCA).toUpperCase() || '?';
+      if(mot || st === 'BLOQUEADO')  docaClass = 'bloqueada';
+      else if(st === 'OCUPADO')      docaClass = 'assigned';
+    }
 
     return `
       <tr data-id="${esc(id)}">
@@ -264,6 +481,14 @@ function render(){
                    value="${esc(r['CARGA'])}" data-id="${esc(id)}" placeholder="Nº" />
             <button class="carga-save" data-id="${esc(id)}" title="Salvar carga">✔</button>
           </div>
+        </td>
+
+        <td>
+          <button class="doca-btn ${docaClass}"
+                  data-senha="${esc(r['SENHA'])}"
+                  title="Clique para escolher a doca">
+            ${esc(docaLabel)}
+          </button>
         </td>
 
         <td>${esc(r['FORNECEDOR'])}</td>
@@ -305,9 +530,12 @@ function renderStatus(acionado, visualizado, dtAcionamento, dtVisualizacao){
 }
 
 /* ============================================================
-   EVENTOS
+   EVENTOS DA TABELA
    ============================================================ */
 document.getElementById('tbody').addEventListener('click', async (e) => {
+  const btnDoca = e.target.closest('.doca-btn');
+  if(btnDoca){ return abrirModalDoca(btnDoca.dataset.senha); }
+
   const btnSalvar = e.target.closest('.carga-save');
   if(btnSalvar){ return salvarCarga(btnSalvar.dataset.id, btnSalvar); }
 
@@ -351,7 +579,7 @@ async function salvarCarga(id, btn){
   if(reg){ reg['CARGA'] = valor; reg['INTEGRAÇÃO CONSINCO'] = agora; }
 
   const linha = document.querySelector(`tr[data-id="${CSS.escape(id)}"]`);
-  const celulaData = linha?.children[7]?.querySelector('.ts');
+  const celulaData = linha?.children[8]?.querySelector('.ts');
   if(celulaData) celulaData.textContent = agora;
 
   toast('Carga salva e integração registrada ✔', 'ok');
@@ -396,9 +624,231 @@ async function acionarPortaria(id, btn){
 }
 
 /* ============================================================
+   MODAL — MAPA DE DOCAS
+   ============================================================ */
+const docaModal = document.getElementById('docaModal');
+
+async function abrirModalDoca(senha){
+  if(!senha){ toast('Linha sem SENHA.', 'err'); return; }
+  docaAtualSenha = senha;
+
+  const row = registros.find(r => normSenha(r['SENHA']) === normSenha(senha));
+  document.getElementById('docaModalSenha').textContent = clean(row?.['SENHA']) || senha;
+  document.getElementById('docaModalCarga').textContent = clean(row?.['CARGA']) || '—';
+
+  docaModal.classList.remove('hidden');
+  await renderDocaMap();
+}
+
+function fecharModalDoca(){
+  docaModal.classList.add('hidden');
+  docaAtualSenha = null;
+}
+
+async function renderDocaMap(){
+  const mapEl = document.getElementById('docaMapModal');
+  const infoEl = document.getElementById('docaAtualInfo');
+  const libBtn = document.getElementById('docaLiberar');
+  document.getElementById('docaState').textContent = '';
+
+  mapEl.innerHTML = `<div class="empty" style="grid-column:1/-1"><span class="spin"></span> Carregando docas…</div>`;
+
+  try {
+    await recarregarDocas();
+
+    // Descobre a doca vinculada à senha atual
+    const atual = docaDaSenha(docaAtualSenha);
+
+    if(atual){
+      const st = clean(atual.STATUS).toUpperCase();
+      infoEl.classList.remove('vazio');
+      infoEl.innerHTML = `Doca vinculada a esta senha: <strong>${esc(clean(atual.DOCA).toUpperCase())}</strong> · ${esc(st)}`;
+      libBtn.classList.remove('hidden');
+    } else {
+      infoEl.classList.add('vazio');
+      infoEl.textContent = 'Nenhuma doca vinculada a esta senha. Escolha uma verde abaixo.';
+      libBtn.classList.add('hidden');
+    }
+
+    if(!docasArr.length){
+      mapEl.innerHTML = `<div class="empty" style="grid-column:1/-1">Nenhuma doca cadastrada.</div>`;
+      return;
+    }
+
+    // Ordena por nome (números embutidos)
+    const ordenadas = docasArr.slice().sort((a,b) =>
+      clean(a.DOCA).toUpperCase().localeCompare(clean(b.DOCA).toUpperCase(), undefined, {numeric:true})
+    );
+
+    const atualNome = atual ? clean(atual.DOCA).toUpperCase() : null;
+
+    mapEl.innerHTML = ordenadas.map(d => {
+      const doca = clean(d.DOCA).toUpperCase();
+      const st   = clean(d.STATUS).toUpperCase();
+      const mot  = clean(d['MOTIVO BLOQ']);
+      const ocupante = clean(d.SENHA);
+
+      let cls = 'disponivel';
+      if(mot || st === 'BLOQUEADO') cls = 'bloqueado';
+      else if(st === 'OCUPADO')     cls = 'ocupado';
+
+      const isCurrent = atualNome && doca === atualNome;
+      const classes = ['doca-square', cls, isCurrent ? 'current' : ''].filter(Boolean).join(' ');
+
+      // Número visualizado (só dígitos, com 2 casas)
+      const num = doca.replace(/\D/g,'').padStart(2,'0') || doca;
+
+      // Sub-legenda: senha quando ocupada (só se não for a atual)
+      let sub = '';
+      if(cls === 'ocupado' && ocupante && !isCurrent) sub = `S${ocupante}`;
+
+      return `<div class="${classes}" data-doca="${esc(doca)}" data-status="${esc(cls)}">
+        <div class="num">${esc(num)}</div>
+        ${sub ? `<small>${esc(sub)}</small>` : ''}
+      </div>`;
+    }).join('');
+
+  } catch(err){
+    console.error(err);
+    mapEl.innerHTML = `<div class="empty" style="grid-column:1/-1">Erro: ${esc(err.message||err)}</div>`;
+  }
+}
+
+/* Clique em uma doca do mapa */
+document.getElementById('docaMapModal').addEventListener('click', async (e) => {
+  const sq = e.target.closest('.doca-square');
+  if(!sq) return;
+
+  if(sq.classList.contains('ocupado')){
+    toast('Essa doca já está ocupada.', 'err');
+    return;
+  }
+  if(sq.classList.contains('bloqueado')){
+    toast('Essa doca está bloqueada.', 'err');
+    return;
+  }
+  if(sq.classList.contains('current')){
+    toast('Essa já é a doca atual desta senha.', 'ok');
+    return;
+  }
+
+  const doca = sq.dataset.doca;
+  await vincularDoca(doca);
+});
+
+async function vincularDoca(doca){
+  const row = registros.find(r => normSenha(r['SENHA']) === normSenha(docaAtualSenha));
+  if(!row){ toast('Linha não encontrada.', 'err'); return; }
+
+  const senhaRaw = clean(row['SENHA']);
+  const cargaRaw = clean(row['CARGA']);
+
+  if(!senhaRaw){ toast('Senha vazia.', 'err'); return; }
+  if(!cargaRaw){ toast('Preencha a CARGA antes de vincular a doca.', 'err'); return; }
+
+  document.getElementById('docaState').textContent = 'Vinculando…';
+
+  const baseUrl = `${SUPABASE_URL}/rest/v1/${encodeURIComponent(TABELA_DOCAS)}`;
+
+  try {
+    // Se já existia uma doca vinculada a esta senha, libera primeiro
+    const atual = docaDaSenha(senhaRaw);
+    if(atual && clean(atual.DOCA).toUpperCase() !== doca){
+      const urlLib = `${baseUrl}?DOCA=eq.${encodeURIComponent(clean(atual.DOCA))}`;
+      const rl = await fetch(urlLib, {
+        method: 'PATCH',
+        headers: { ...HEADERS, Prefer: 'return=minimal' },
+        body: JSON.stringify({
+          STATUS: 'DISPONIVEL', SENHA: null, CARGA: null,
+          INICIO: null, 'MOTIVO BLOQ': null
+        })
+      });
+      if(!rl.ok) throw new Error(await rl.text());
+    }
+
+    // Payload de ocupação (igual à lógica do app de docas)
+    const payload = {
+      STATUS: 'OCUPADO',
+      SENHA: Number(senhaRaw) || senhaRaw,
+      CARGA: Number(cargaRaw) || cargaRaw,
+      INICIO: new Date().toISOString(),
+      'MOTIVO BLOQ': null
+    };
+
+    // Verifica se a doca já existe
+    const existe = docasArr.some(d => clean(d.DOCA).toUpperCase() === doca);
+
+    let r;
+    if(existe){
+      r = await fetch(`${baseUrl}?DOCA=eq.${encodeURIComponent(doca)}`, {
+        method: 'PATCH',
+        headers: { ...HEADERS, Prefer: 'return=minimal' },
+        body: JSON.stringify(payload)
+      });
+    } else {
+      r = await fetch(baseUrl, {
+        method: 'POST',
+        headers: { ...HEADERS, Prefer: 'return=minimal' },
+        body: JSON.stringify({ DOCA: doca, ...payload })
+      });
+    }
+    if(!r.ok) throw new Error(await r.text());
+
+    toast(`Doca ${doca} vinculada com sucesso ✔`, 'ok');
+
+    // Recarrega docas + tabela
+    await recarregarDocas();
+    render();
+    marcarAtualizacao();
+    fecharModalDoca();
+
+  } catch(err){
+    console.error(err);
+    document.getElementById('docaState').textContent = 'Erro: ' + (err.message || err);
+    toast('Erro ao vincular doca', 'err');
+  }
+}
+
+/* Liberar doca atual */
+document.getElementById('docaLiberar').addEventListener('click', async () => {
+  const atual = docaDaSenha(docaAtualSenha);
+  if(!atual) return;
+  const nome = clean(atual.DOCA).toUpperCase();
+  if(!confirm(`Liberar a doca ${nome}? Isso vai apagar SENHA, CARGA, INICIO e MOTIVO.`)) return;
+
+  document.getElementById('docaState').textContent = 'Liberando…';
+  try {
+    const url = `${SUPABASE_URL}/rest/v1/${encodeURIComponent(TABELA_DOCAS)}?DOCA=eq.${encodeURIComponent(nome)}`;
+    const r = await fetch(url, {
+      method: 'PATCH',
+      headers: { ...HEADERS, Prefer: 'return=minimal' },
+      body: JSON.stringify({
+        STATUS: 'DISPONIVEL', SENHA: null, CARGA: null,
+        INICIO: null, 'MOTIVO BLOQ': null
+      })
+    });
+    if(!r.ok) throw new Error(await r.text());
+
+    toast(`Doca ${nome} liberada ✔`, 'ok');
+    await recarregarDocas();
+    render();
+    marcarAtualizacao();
+    await renderDocaMap();
+  } catch(err){
+    console.error(err);
+    document.getElementById('docaState').textContent = 'Erro: ' + (err.message || err);
+    toast('Erro ao liberar doca', 'err');
+  }
+});
+
+document.getElementById('docaModalClose').addEventListener('click', fecharModalDoca);
+document.getElementById('docaCancel').addEventListener('click', fecharModalDoca);
+docaModal.addEventListener('click', (e) => { if(e.target === docaModal) fecharModalDoca(); });
+
+/* ============================================================
    POLLING 60s
    ============================================================ */
-async function verificarVisualizacao(){
+async function verificarAtualizacoes(){
   const ids = registros.map(r => r[CAMPO_ID]).filter(v => v !== undefined && v !== null);
   if(!ids.length) return;
 
@@ -430,6 +880,14 @@ async function verificarVisualizacao(){
   });
 
   if(mudou) toast('✅ Motorista visualizou o acionamento', 'ok');
+
+  // Recarrega docas para refletir mudanças feitas em outro painel
+  try {
+    const antes = JSON.stringify(docasArr);
+    await recarregarDocas();
+    if(JSON.stringify(docasArr) !== antes) render();
+  } catch(_) { /* silencioso */ }
+
   marcarAtualizacao();
 }
 
@@ -440,7 +898,7 @@ document.getElementById('btnRefresh').addEventListener('click', carregar);
 
 (async function init(){
   await carregar();
-  setInterval(verificarVisualizacao, 60_000);
+  setInterval(verificarAtualizacoes, 60_000);
 })();
 </script>
 </body>
