@@ -258,7 +258,6 @@
       <tr>
         <th>SENHA</th>
         <th>CARGA</th>
-        <th>DOCA</th>
         <th>FORNECEDOR</th>
         <th>CATEGORIA</th>
         <th>MOTORISTA</th>
@@ -266,6 +265,7 @@
         <th>AGENDA</th>
         <th>INTEGRAÇÃO CONSINCO</th>
         <th>ACIONAMENTO PORTARIA</th>
+        <th>DOCA</th>
       </tr>
     </thead>
     <tbody id="tbody">
@@ -337,9 +337,9 @@ const { createClient } = window.supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let registros = [];
-let docasArr  = [];                 // todas as docas cruas
-let docasMap  = new Map();          // normSenha -> doca
-let docaAtualSenha = null;          // senha da linha em edição
+let docasArr  = [];
+let docasMap  = new Map();
+let docaAtualSenha = null;
 const statusEls = {};
 
 const esc = (v) => (v ?? '').toString()
@@ -347,7 +347,6 @@ const esc = (v) => (v ?? '').toString()
 
 const clean = (v) => String(v ?? '').trim();
 
-/* Normaliza SENHA removendo zeros à esquerda para comparação */
 function normSenha(s){
   const t = clean(s);
   if(!t) return '';
@@ -389,7 +388,7 @@ const TICK_1 = `<svg class="tick" width="15" height="11" viewBox="0 0 16 11"><pa
 const TICK_2 = `<svg class="tick" width="17" height="11" viewBox="0 0 16 11"><path fill="currentColor" d="m15.01 3.32-.48-.37a.37.37 0 0 0-.51.06L8.67 9.88a.32.32 0 0 1-.49.03l-.35-.32a.32.32 0 0 0-.49.03l-.38.48a.42.42 0 0 0 .04.54l1.32 1.27c.14.14.36.12.48-.04l6.27-8.04a.37.37 0 0 0-.06-.51Zm-4.1 0-.48-.37a.37.37 0 0 0-.51.06L4.57 9.88a.32.32 0 0 1-.49.03L1.89 7.77a.37.37 0 0 0-.51 0l-.43.44a.36.36 0 0 0 0 .51l3.26 3.19c.14.14.36.12.48-.04l6.27-8.04a.37.37 0 0 0-.05-.51Z"/></svg>`;
 
 /* ============================================================
-   CARREGAR DADOS
+   CARREGAR
    ============================================================ */
 async function carregar(){
   const tbody = document.getElementById('tbody');
@@ -435,7 +434,6 @@ function marcarAtualizacao(){
     'Atualizado às ' + new Date().toLocaleTimeString('pt-BR');
 }
 
-/* Descobre a doca vinculada a uma senha (por normSenha) */
 function docaDaSenha(senha){
   const ns = normSenha(senha);
   if(!ns) return null;
@@ -483,14 +481,6 @@ function render(){
           </div>
         </td>
 
-        <td>
-          <button class="doca-btn ${docaClass}"
-                  data-senha="${esc(r['SENHA'])}"
-                  title="Clique para escolher a doca">
-            ${esc(docaLabel)}
-          </button>
-        </td>
-
         <td>${esc(r['FORNECEDOR'])}</td>
         <td>${esc(r['CATEGORIA'])}</td>
         <td>${esc(r['NOME COMPLETO'])}</td>
@@ -509,6 +499,14 @@ function render(){
               ${renderStatus(acionado, visualizado, r['ACIONAMENTO PORTARIA'], r['VISUALIZAÇÃO'])}
             </div>
           </div>
+        </td>
+
+        <td>
+          <button class="doca-btn ${docaClass}"
+                  data-senha="${esc(r['SENHA'])}"
+                  title="Clique para escolher a doca">
+            ${esc(docaLabel)}
+          </button>
         </td>
       </tr>
     `;
@@ -579,7 +577,8 @@ async function salvarCarga(id, btn){
   if(reg){ reg['CARGA'] = valor; reg['INTEGRAÇÃO CONSINCO'] = agora; }
 
   const linha = document.querySelector(`tr[data-id="${CSS.escape(id)}"]`);
-  const celulaData = linha?.children[8]?.querySelector('.ts');
+  // coluna INTEGRAÇÃO CONSINCO agora é a 8ª (index 7)
+  const celulaData = linha?.children[7]?.querySelector('.ts');
   if(celulaData) celulaData.textContent = agora;
 
   toast('Carga salva e integração registrada ✔', 'ok');
@@ -656,7 +655,6 @@ async function renderDocaMap(){
   try {
     await recarregarDocas();
 
-    // Descobre a doca vinculada à senha atual
     const atual = docaDaSenha(docaAtualSenha);
 
     if(atual){
@@ -675,7 +673,6 @@ async function renderDocaMap(){
       return;
     }
 
-    // Ordena por nome (números embutidos)
     const ordenadas = docasArr.slice().sort((a,b) =>
       clean(a.DOCA).toUpperCase().localeCompare(clean(b.DOCA).toUpperCase(), undefined, {numeric:true})
     );
@@ -695,10 +692,8 @@ async function renderDocaMap(){
       const isCurrent = atualNome && doca === atualNome;
       const classes = ['doca-square', cls, isCurrent ? 'current' : ''].filter(Boolean).join(' ');
 
-      // Número visualizado (só dígitos, com 2 casas)
       const num = doca.replace(/\D/g,'').padStart(2,'0') || doca;
 
-      // Sub-legenda: senha quando ocupada (só se não for a atual)
       let sub = '';
       if(cls === 'ocupado' && ocupante && !isCurrent) sub = `S${ocupante}`;
 
@@ -714,7 +709,6 @@ async function renderDocaMap(){
   }
 }
 
-/* Clique em uma doca do mapa */
 document.getElementById('docaMapModal').addEventListener('click', async (e) => {
   const sq = e.target.closest('.doca-square');
   if(!sq) return;
@@ -751,7 +745,6 @@ async function vincularDoca(doca){
   const baseUrl = `${SUPABASE_URL}/rest/v1/${encodeURIComponent(TABELA_DOCAS)}`;
 
   try {
-    // Se já existia uma doca vinculada a esta senha, libera primeiro
     const atual = docaDaSenha(senhaRaw);
     if(atual && clean(atual.DOCA).toUpperCase() !== doca){
       const urlLib = `${baseUrl}?DOCA=eq.${encodeURIComponent(clean(atual.DOCA))}`;
@@ -766,7 +759,6 @@ async function vincularDoca(doca){
       if(!rl.ok) throw new Error(await rl.text());
     }
 
-    // Payload de ocupação (igual à lógica do app de docas)
     const payload = {
       STATUS: 'OCUPADO',
       SENHA: Number(senhaRaw) || senhaRaw,
@@ -775,7 +767,6 @@ async function vincularDoca(doca){
       'MOTIVO BLOQ': null
     };
 
-    // Verifica se a doca já existe
     const existe = docasArr.some(d => clean(d.DOCA).toUpperCase() === doca);
 
     let r;
@@ -796,7 +787,6 @@ async function vincularDoca(doca){
 
     toast(`Doca ${doca} vinculada com sucesso ✔`, 'ok');
 
-    // Recarrega docas + tabela
     await recarregarDocas();
     render();
     marcarAtualizacao();
@@ -809,7 +799,6 @@ async function vincularDoca(doca){
   }
 }
 
-/* Liberar doca atual */
 document.getElementById('docaLiberar').addEventListener('click', async () => {
   const atual = docaDaSenha(docaAtualSenha);
   if(!atual) return;
@@ -881,7 +870,6 @@ async function verificarAtualizacoes(){
 
   if(mudou) toast('✅ Motorista visualizou o acionamento', 'ok');
 
-  // Recarrega docas para refletir mudanças feitas em outro painel
   try {
     const antes = JSON.stringify(docasArr);
     await recarregarDocas();
