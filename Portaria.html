@@ -175,21 +175,18 @@ function agoraFormatado(){
   return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 }
 
-/* Aceita string "DD/MM/AAAA HH:MM" OU ISO antigo — devolve sempre no padrão BR */
 function normalizarData(v){
   if(!v) return '';
   const s = String(v).trim();
   if(!s) return '';
 
-  // Já está no formato BR? "DD/MM/AAAA HH:MM" ou "DD/MM/AAAA"
   if(/^\d{2}\/\d{2}\/\d{4}(\s+\d{2}:\d{2})?$/.test(s)) return s;
 
-  // É ISO? Converte
   const d = new Date(s);
-  if(!isNaN(d)) return agoraFormatado.call(null, d) || 
-    `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-
-  return s; // devolve cru se não reconhecer
+  if(!isNaN(d)){
+    return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  }
+  return s;
 }
 
 function fmtDataHora(v){
@@ -197,7 +194,6 @@ function fmtDataHora(v){
   return s || '—';
 }
 
-/* Retorna só "HH:MM" a partir de qualquer formato */
 function fmtHora(v){
   const s = normalizarData(v);
   const m = s.match(/(\d{2}:\d{2})/);
@@ -272,7 +268,7 @@ function render(){
 
         <td>${esc(r['FORNECEDOR'])}</td>
         <td>${esc(r['CATEGORIA'])}</td>
-        <td>${esc(r['MOTORISTA'])}</td>
+        <td>${esc(r['NOME COMPLETO'])}</td>
         <td>${esc(r['TELEFONE'])}</td>
         <td>${esc(r['AGENDA'])}</td>
 
@@ -329,7 +325,7 @@ document.getElementById('tbody').addEventListener('keydown', (e) => {
 });
 
 /* ============================================================
-   SALVAR CARGA  →  grava "DD/MM/AAAA HH:MM"
+   SALVAR CARGA
    ============================================================ */
 async function salvarCarga(id, btn){
   const input = document.querySelector(`.carga-input[data-id="${CSS.escape(id)}"]`);
@@ -363,7 +359,7 @@ async function salvarCarga(id, btn){
 }
 
 /* ============================================================
-   ACIONAMENTO PORTARIA  →  grava "DD/MM/AAAA HH:MM"
+   ACIONAMENTO PORTARIA
    ============================================================ */
 async function acionarPortaria(id, btn){
   btn.disabled = true;
@@ -400,7 +396,7 @@ async function acionarPortaria(id, btn){
 }
 
 /* ============================================================
-   POLLING 60s — verifica VISUALIZAÇÃO
+   POLLING 60s
    ============================================================ */
 async function verificarVisualizacao(){
   const ids = registros.map(r => r[CAMPO_ID]).filter(v => v !== undefined && v !== null);
