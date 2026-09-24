@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=yes" />
+  <title>Painel do Motorista · Warehouse Vision</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f3f7fb;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      padding: 16px;
+    }
+
+    .card {
+      background: #ffffff;
+      border: 1px solid #e4ebf3;
+      border-radius: 28px;
+      box-shadow: 0 18px 55px #10254112;
+      max-width: 480px;
+      width: 100%;
+      padding: 28px 20px 32px;
+      text-align: center;
+    }
+
+    .logo {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #2877ff;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #071426;
+      letter-spacing: -0.03em;
+      margin-bottom: 2px;
+    }
+
+    .sub { font-size: 14px; color: #71849b; margin-bottom: 24px; }
+
+    .campo-senha { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+
+    .campo-senha input {
+      height: 56px;
+      border: 1px solid #dfe7ef;
+      border-radius: 16px;
+      padding: 0 18px;
+      font-size: 18px;
+      background: #fbfdff;
+      color: #15283f;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%;
+      -webkit-appearance: none;
+    }
+
+    .campo-senha input:focus { border-color: #75a6ff; box-shadow: 0 0 0 4px #347eff12; }
+
+    .campo-senha button {
+      height: 56px;
+      padding: 0 24px;
+      background: linear-gradient(135deg, #2d7bff, #16bda9);
+      border: none;
+      border-radius: 16px;
+      color: #fff;
+      font-weight: 700;
+      font-size: 18px;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 8px 22px #347eff35;
+      transition: transform 0.15s, opacity 0.15s;
+      width: 100%;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .campo-senha button:active { transform: scale(0.97); }
+    .campo-senha button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .status-area {
+      min-height: 160px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 20px;
+      background: #f8fafc;
+      border: 1px solid #e4ebf3;
+      padding: 24px 16px;
+      transition: background 0.3s, border-color 0.3s;
+    }
+
+    .status-area .mensagem { font-size: 16px; color: #526982; line-height: 1.6; width: 100%; }
+    .status-area .horario { font-size: 14px; color: #71849b; margin-top: 8px; }
+
+    .status-area .destaque { font-size: 34px; font-weight: 900; letter-spacing: 0.02em; margin: 4px 0 8px; }
+    .status-area .destaque.acionado { color: #1db889; animation: pulse 1.2s ease-in-out infinite; }
+    .status-area .destaque.aguardando { color: #efa83a; }
+    .status-area .destaque.erro { color: #e34b60; }
+
+    .status-area .frase-acionamento {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1db889;
+      background: #effcf5;
+      padding: 10px 18px;
+      border-radius: 40px;
+      margin-top: 8px;
+      line-height: 1.4;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.05); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    .badge-refresh {
+      margin-top: 18px;
+      font-size: 11px;
+      color: #8c9aab;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .badge-refresh .led { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #8c9aab; }
+    .badge-refresh .led.ativo { background: #1fc4b1; animation: pisca 1.2s steps(2) infinite; }
+
+    @keyframes pisca { 0% { opacity: 1; } 50% { opacity: 0.2; } 100% { opacity: 1; } }
+
+    @media (max-width: 420px) {
+      .card { padding: 20px 14px 24px; }
+      h1 { font-size: 24px; }
+      .sub { font-size: 13px; }
+      .campo-senha input, .campo-senha button { height: 50px; font-size: 16px; }
+      .status-area .destaque { font-size: 28px; }
+      .status-area .frase-acionamento { font-size: 16px; padding: 8px 14px; }
+    }
+
+    @media (max-width: 360px) {
+      .status-area { min-height: 140px; padding: 16px 10px; }
+      .status-area .destaque { font-size: 24px; }
+      .status-area .frase-acionamento { font-size: 14px; }
+    }
+
+    @media (max-height: 600px) and (orientation: landscape) {
+      .card { padding: 16px 20px; }
+      .status-area { min-height: 120px; padding: 16px; }
+      .campo-senha { flex-direction: row; gap: 10px; }
+      .campo-senha input { flex: 2; }
+      .campo-senha button { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">Warehouse Vision</div>
+    <h1>Painel do Motorista</h1>
+    <p class="sub">Informe sua senha para verificar o acionamento</p>
+
+    <div class="campo-senha">
+      <input type="text" id="inputSenha" placeholder="Digite sua senha" autocomplete="off" inputmode="text" />
+      <button id="btnConsultar">Consultar</button>
+    </div>
+
+    <div class="status-area" id="statusArea">
+      <div class="mensagem" id="mensagemStatus">Aguardando consulta...</div>
+      <div class="horario" id="horarioStatus"></div>
+    </div>
+
+    <div class="badge-refresh">
+      <span class="led" id="ledRefresh"></span>
+      <span id="textoRefresh">Atualização automática a cada 60s</span>
+    </div>
+  </div>
+
+  <audio id="somAlerta" preload="auto" crossorigin="anonymous">
+    <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" type="audio/mpeg">
+    <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.ogg" type="audio/ogg">
+  </audio>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // ===== SUPABASE =====
+      const SUPABASE_URL = 'https://jgtisruauiajjfoesvol.supabase.co';
+      const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpndGlzcnVhdWlhampmb2Vzdm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1OTY3NjYsImV4cCI6MjEwMzE3Mjc2Nn0.yiAsD6c06UEauyAUCFYs0KQnuWBVfLAeP_oYE8yGOwQ';
+
+      const TABELA = 'CADASTRO_ENTREGADOR';
+      const COL_SENHA = 'SENHA';
+      const COL_ACIONAMENTO = 'ACIONAMENTO PORTARIA';
+      const COL_VISUALIZACAO = 'VISUALIZAÇÃO';
+
+      const BASE_URL = `${SUPABASE_URL}/rest/v1/${encodeURIComponent(TABELA)}`;
+      const HEADERS = {
+        'apikey': SUPABASE_ANON,
+        'Authorization': `Bearer ${SUPABASE_ANON}`
+      };
+
+      // ===== ELEMENTOS =====
+      const inputSenha = document.getElementById('inputSenha');
+      const btnConsultar = document.getElementById('btnConsultar');
+      const mensagemStatus = document.getElementById('mensagemStatus');
+      const horarioStatus = document.getElementById('horarioStatus');
+      const statusArea = document.getElementById('statusArea');
+      const ledRefresh = document.getElementById('ledRefresh');
+      const textoRefresh = document.getElementById('textoRefresh');
+      const somAlerta = document.getElementById('somAlerta');
+
+      // ===== ESTADO =====
+      let senhaAtual = '';
+      let ultimoStatus = 'vazio';
+      let intervaloId = null;
+      let audioPronto = false;
+
+      // ===== UTIL =====
+      function escapeHtml(texto) {
+        return String(texto).replace(/[&<>"']/g, c => ({
+          '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[c]));
+      }
+
+      function temValor(v) {
+        return v !== null && v !== undefined && String(v).trim() !== '';
+      }
+
+      function dataHoraAgora() {
+        const d = new Date();
+        const p = n => String(n).padStart(2, '0');
+        return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+      }
+
+      // ===== ÁUDIO =====
+      function prepararAudio() {
+        if (audioPronto) return;
+        somAlerta.load();
+        somAlerta.play().then(() => {
+          somAlerta.pause();
+          somAlerta.currentTime = 0;
+          audioPronto = true;
+        }).catch(() => {});
+      }
+
+      function tocarAlerta() {
+        if (!audioPronto) prepararAudio();
+        somAlerta.currentTime = 0;
+        somAlerta.play().catch(() => {
+          try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const tocarBeep = (vezes) => {
+              if (vezes === 0) { audioCtx.close().catch(() => {}); return; }
+              const osc = audioCtx.createOscillator();
+              const gain = audioCtx.createGain();
+              osc.type = 'sine';
+              osc.frequency.value = 880;
+              gain.gain.value = 0.2;
+              gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+              osc.connect(gain);
+              gain.connect(audioCtx.destination);
+              osc.start();
+              osc.stop(audioCtx.currentTime + 0.15);
+              setTimeout(() => tocarBeep(vezes - 1), 250);
+            };
+            tocarBeep(3);
+          } catch (e) {}
+        });
+      }
+
+      // ===== REGISTRAR VISUALIZAÇÃO (DD/MM/AAAA HH:MM) =====
+      async function registrarVisualizacao(senha) {
+        const dataHora = dataHoraAgora();
+        const url = `${BASE_URL}?${COL_SENHA}=eq.${encodeURIComponent(senha)}`;
+        const resp = await fetch(url, {
+          method: 'PATCH',
+          headers: { ...HEADERS, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ [COL_VISUALIZACAO]: dataHora })
+        });
+        if (!resp.ok) throw new Error('Erro ao registrar visualização: ' + resp.status);
+        console.log('Visualização registrada em:', dataHora);
+      }
+
+      // ===== CONSULTA =====
+      async function consultarSenha(senha) {
+        const senhaLimpa = (senha || '').trim();
+        if (!senhaLimpa) {
+          atualizarStatus('vazio', 'Digite uma senha para consultar.');
+          return;
+        }
+
+        btnConsultar.disabled = true;
+        ledRefresh.className = 'led ativo';
+        textoRefresh.textContent = 'Consultando...';
+
+        try {
+          const colunas = `${COL_SENHA},"${COL_ACIONAMENTO}","${COL_VISUALIZACAO}"`;
+          const url = `${BASE_URL}?${COL_SENHA}=eq.${encodeURIComponent(senhaLimpa)}&select=${encodeURIComponent(colunas)}`;
+          const resp = await fetch(url, { headers: HEADERS });
+          if (!resp.ok) throw new Error('Erro na consulta: ' + resp.status);
+          const data = await resp.json();
+
+          if (!data || data.length === 0) {
+            atualizarStatus('erro', 'Senha não encontrada.');
+            return;
+          }
+
+          const registro = data[0];
+          const acionamento = registro[COL_ACIONAMENTO];
+          const visualizacao = registro[COL_VISUALIZACAO];
+
+          if (temValor(acionamento)) {
+            // Acionado: registra a visualização apenas na primeira vez
+            if (!temValor(visualizacao)) {
+              try {
+                await registrarVisualizacao(senhaLimpa);
+              } catch (err) {
+                console.warn(err); // tentará de novo na próxima atualização
+              }
+            }
+            atualizarStatus('acionado', String(acionamento).trim());
+          } else {
+            atualizarStatus('aguardando');
+          }
+        } catch (err) {
+          console.error(err);
+          atualizarStatus('erro', 'Erro ao consultar: ' + err.message);
+        } finally {
+          btnConsultar.disabled = false;
+          ledRefresh.className = 'led';
+          textoRefresh.textContent = 'Atualização automática a cada 60s';
+        }
+      }
+
+      // ===== ATUALIZAR INTERFACE =====
+      function atualizarStatus(novoStatus, texto) {
+        const statusAnterior = ultimoStatus;
+        ultimoStatus = novoStatus;
+        statusArea.className = 'status-area';
+
+        if (novoStatus === 'vazio') {
+          mensagemStatus.textContent = texto || 'Aguardando consulta...';
+          horarioStatus.textContent = '';
+          statusArea.style.background = '#f8fafc';
+          statusArea.style.borderColor = '#e4ebf3';
+        } else if (novoStatus === 'aguardando') {
+          mensagemStatus.innerHTML = `
+            <div class="destaque aguardando">⏳ AGUARDANDO</div>
+            <div style="font-size:15px; color:#71849b;">Aguarde o acionamento.</div>
+          `;
+          horarioStatus.textContent = 'Última verificação: ' + new Date().toLocaleTimeString();
+          statusArea.style.background = '#fff9eb';
+          statusArea.style.borderColor = '#efa83a';
+        } else if (novoStatus === 'acionado') {
+          mensagemStatus.innerHTML = `
+            <div class="destaque acionado">✅ ACIONADO</div>
+            <div class="frase-acionamento">Acionado, Dirija-se a portaria</div>
+          `;
+          horarioStatus.textContent = 'Acionamento registrado em: ' + (texto || 'horário não informado');
+          statusArea.style.background = '#effcf5';
+          statusArea.style.borderColor = '#1db889';
+
+          if (statusAnterior !== 'acionado' && statusAnterior !== 'vazio') {
+            tocarAlerta();
+          }
+        } else if (novoStatus === 'erro') {
+          mensagemStatus.innerHTML = `
+            <div class="destaque erro">⚠️ ERRO</div>
+            <div style="font-size:15px; color:#71849b;">${escapeHtml(texto || 'Falha na consulta')}</div>
+          `;
+          horarioStatus.textContent = '';
+          statusArea.style.background = '#fff1f2';
+          statusArea.style.borderColor = '#e34b60';
+        }
+      }
+
+      // ===== AÇÃO CONSULTAR =====
+      function realizarConsulta() {
+        const senha = inputSenha.value.trim();
+        if (senha) {
+          senhaAtual = senha;
+          consultarSenha(senha);
+          if (!intervaloId) iniciarAutoRefresh();
+        } else {
+          atualizarStatus('vazio', 'Digite uma senha para consultar.');
+        }
+      }
+
+      function iniciarAutoRefresh() {
+        if (intervaloId) clearInterval(intervaloId);
+        intervaloId = setInterval(() => {
+          if (senhaAtual) consultarSenha(senhaAtual);
+        }, 60000);
+      }
+
+      // ===== EVENTOS =====
+      btnConsultar.addEventListener('click', function () {
+        prepararAudio();
+        realizarConsulta();
+      });
+
+      inputSenha.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          btnConsultar.click();
+        }
+      });
+
+      inputSenha.addEventListener('input', function () {
+        if (this.value.trim() === '') {
+          if (intervaloId) { clearInterval(intervaloId); intervaloId = null; }
+          senhaAtual = '';
+          atualizarStatus('vazio', 'Aguardando consulta...');
+        }
+      });
+
+      // ===== INICIALIZAÇÃO =====
+      atualizarStatus('vazio', 'Digite sua senha e clique em Consultar');
+      somAlerta.load();
+    })();
+  </script>
+</body>
+</html>
