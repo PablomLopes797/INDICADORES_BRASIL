@@ -885,22 +885,34 @@ function turnoMatchesRow(r, rowKey){
   return true;
 }
 
-/* BACKLOG RECEBIDO — exclusivo com NO PRAZO:
-   - RANGE = "No prazo" ou "< 4 HRS"     → NÃO é backlog (vai pra NO PRAZO)
-   - RANGE = "Fora do Prazo"             → é backlog
-   - Senão: diff TERMO - AGENDA > 24h    → é backlog
-   Sempre exige STATUS = RECEBIDO. */
+/* BACKLOG RECEBIDO:
+   - TERMO preenchido = recebido, independentemente de STATUS.
+   - RANGE = "No prazo" ou "< 4 HRS" → NÃO é backlog (vai para NO PRAZO).
+   - RANGE = "Fora do Prazo" → é backlog.
+   - Sem RANGE reconhecido: diff TERMO - AGENDA > 24h → é backlog.
+   IMPORTANTE: STATUS NÃO é requisito para classificar como recebido/backlog recebido. */
 function computeBacklogRecebido(row, status){
-  if (status !== S.RECEBIDO) return false;
-  const range = row[COL.rangeTempo];
-  if (isRangeNoPrazo(range) || isRangeAbaixo4(range)) return false;
-  if (isRangeForaPrazo(range)) return true;
-  const agDt = parseFullDT(row[COL.agenda]);
   const teDt = parseFullDT(row[COL.termo]);
-  if (agDt && teDt){
+
+  // Se não existe TERMO, não há recebimento.
+  if (!teDt) return false;
+
+  const range = row[COL.rangeTempo];
+
+  // No prazo e < 4 horas pertencem ao grupo de prazo,
+  // portanto não entram em BACKLOG RECEBIDO.
+  if (isRangeNoPrazo(range) || isRangeAbaixo4(range)) return false;
+
+  // Fora do prazo com TERMO preenchido = BACKLOG RECEBIDO.
+  if (isRangeForaPrazo(range)) return true;
+
+  // Regra complementar para bases sem RANGE preenchido/reconhecido.
+  const agDt = parseFullDT(row[COL.agenda]);
+  if (agDt){
     const diffH = (teDt.getTime() - agDt.getTime()) / 3600000;
     if (diffH > 24) return true;
   }
+
   return false;
 }
 
@@ -926,9 +938,18 @@ function toRegistro(row){
   if (!dataAgenda && !dataTermo) return null;
 
   const rangeTempo = row[COL.rangeTempo];
-  const ehRecebido = status === S.RECEBIDO && !!dataTermo;
+
+  /* REGRA DE RECEBIMENTO:
+     Se TERMO possui data/hora (ou qualquer valor reconhecível como data/hora),
+     o registro é considerado RECEBIDO independentemente do conteúdo de STATUS.
+     STATUS deixa de ser obrigatório para RECEBIDO, NO PRAZO, < 4 HRS e
+     BACKLOG RECEBIDO. */
+  const ehRecebido = !!dataTermo;
+
   const ehAbaixo4  = ehRecebido && isRangeAbaixo4(rangeTempo);
-  /* NO PRAZO = No prazo + < 4 HRS */
+
+  /* NO PRAZO = No prazo + < 4 HRS
+     Também não depende de STATUS; TERMO preenchido é o critério de recebido. */
   const ehNoPrazo  = ehRecebido && (isRangeNoPrazo(rangeTempo) || ehAbaixo4);
 
   const ehBacklogRecebido = computeBacklogRecebido(row, status);
@@ -1120,7 +1141,7 @@ function renderKPIs(agg){
     { label:'RECEBIDO',          value:intFmt(recebido),               color:'#22d3ee',
       sub:`${agendaNS>0?pctFmt((recebido/agendaNS)*100):'–'} de ag-NS` },
     { label:'BACKLOG RECEBIDO',  value:intFmt(t.backlog_recebido||0),  color:'#0ea5e9',
-      sub:`Termo >24h ou fora do prazo` },
+      sub:`TERMO preenchido + >24h ou fora do prazo` },
     { label:'BACKLOG PENDENTE',  value:intFmt(t.backlog_pendente||0),  color:'#eab308',
       sub:`Passou do ciclo sem receber` },
     { label:'NO PRAZO',          value:intFmt(noPrazo),                color:'#22c55e',
