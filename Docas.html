@@ -6,7 +6,68 @@
 <title>Warehouse Vision | Docas</title>
 <style>
 :root{--navy:#071426;--ink:#15283f;--muted:#71849b;--line:#e4ebf3;--bg:#f3f7fb;--blue:#2877ff;--cyan:#1fc4b1;--green:#1db889;--red:#e34b60;--amber:#efa83a;--shadow:0 18px 55px #10254112}
-*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}button,input,select{font:inherit}button{cursor:pointer}.app{min-height:100vh}.sidebar{position:fixed;inset:0 auto 0 0;width:236px;background:linear-gradient(180deg,#071426,#0b223c 56%,#071728);color:#dbe8f6;padding:18px 13px;display:flex;flex-direction:column;z-index:10;box-shadow:8px 0 30px #05142625;overflow:hidden}.brand{display:flex;align-items:center;justify-content:center;min-height:76px;padding:2px 6px 15px;border-bottom:1px solid #ffffff12}.brand-logo{display:block;width:210px;height:86px;object-fit:contain;filter:drop-shadow(0 8px 18px #1680ff38)}.side-heading{font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:#607b99;padding:23px 9px 8px}.nav{display:flex;flex-direction:column;gap:3px}.nav>a,.nav>details>summary{display:flex;align-items:center;gap:9px;min-height:42px;padding:7px 9px;border-radius:10px;color:#91a6c0;text-decoration:none;font-size:10px;cursor:pointer;list-style:none}.nav>a:hover,.nav>details[open]>summary,.nav>details>summary:hover{background:#ffffff0c;color:#eaf4ff}.nav>a.active,.subnav a.active{background:#ffffff12;color:#fff}.nav-icon{width:19px;height:19px;display:grid;place-items:center;flex:0 0 19px;color:#7998b8;font-size:16px}.nav-copy{display:flex;flex-direction:column;gap:2px;flex:1;font-weight:800}.nav-copy small{font-size:7px;color:#627b99;font-weight:500}.nav-chevron{font-size:14px;color:#6e88a4}.nav>details>summary::-webkit-details-marker{display:none}.subnav{display:flex;flex-direction:column;gap:2px;margin:1px 0 5px 28px;padding:3px 0 3px 9px;border-left:1px solid #ffffff1a}.subnav a{display:flex;flex-direction:column;gap:2px;padding:6px 8px;border-radius:7px;color:#8fa5be;text-decoration:none;font-size:8px}.subnav a:hover,.subnav a.active{background:#ffffff10;color:#fff}.subnav a span{font-weight:800}.subnav a small{font-size:7px;color:#607994}.sidebar-bottom{margin-top:auto;border-top:1px solid #ffffff10;padding:15px 5px 0}.back-link{color:#7892af;text-decoration:none;font-size:8px}.side-sign{font-size:7px;color:#5e7692;margin-top:16px;line-height:1.5}.side-sign b{display:block;color:#9ab0c6}.main{margin-left:236px;min-height:100vh}.topbar{height:66px;padding:0 34px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:#ffffffdc;backdrop-filter:blur(15px);position:sticky;top:0;z-index:5}.crumb{font-size:9px;color:#91a0b0}.crumb strong{display:block;color:var(--ink);font-size:12px;margin-top:4px}.top-status{font-size:8px;color:#70839a}.top-status i{display:inline-block;width:6px;height:6px;background:var(--cyan);border-radius:50%;margin-right:4px}.content{padding:28px 34px 50px;max-width:1500px;margin:auto}.hero{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:21px}.eyebrow{font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);font-weight:900}h1{font-size:30px;letter-spacing:-.055em;margin:7px 0 6px;color:var(--navy)}.hero p{margin:0;color:var(--muted);font-size:12px}.actions{display:flex;gap:8px;flex-wrap:wrap}.btn{border:1px solid var(--line);background:#fff;color:#526982;border-radius:9px;padding:10px 14px;font-size:9px;font-weight:900;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px}.btn.primary{border:0;color:#fff;background:linear-gradient(135deg,#2d7bff,#16bda9);box-shadow:0 8px 22px #347eff35}.btn.danger{color:#b63d52;border-color:#f2ccd2;background:#fff7f8}.btn:active{transform:scale(.98)}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:17px}.metric,.panel{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}.metric{padding:16px 18px}.metric small{font-size:8px;color:#8494a7}.metric b{display:block;font-size:23px;margin:7px 0 2px;letter-spacing:-.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.metric span{font-size:8px;color:#19a890;font-weight:850}.panel{padding:18px;width:100%}.panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:14px}.panel-title{font-size:13px;font-weight:900}.panel-sub{font-size:8px;color:#8c9aab;margin-top:4px;line-height:1.5}.pill{display:inline-flex;background:#edf5ff;color:#3470dd;border-radius:20px;padding:6px 9px;font-size:8px;font-weight:900;white-space:nowrap}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}button,input,select{font:inherit}button{cursor:pointer}
+.app{min-height:100vh}
+
+/* ===== LAYOUT SEM SIDEBAR — 100% TELA ===== */
+.main{min-height:100vh;width:100%}
+.topbar{
+  height:66px;padding:0 34px;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--line);background:#ffffffdc;backdrop-filter:blur(15px);
+  position:sticky;top:0;z-index:5;gap:16px;flex-wrap:wrap;
+}
+.topbar-left{display:flex;align-items:center;gap:16px;min-width:0}
+.crumb{font-size:9px;color:#91a0b0}
+.crumb strong{display:block;color:var(--ink);font-size:12px;margin-top:4px}
+
+/* ===== NAV ===== */
+.top-nav{display:flex;align-items:center;gap:8px;flex:1 1 auto;justify-content:center;flex-wrap:wrap}
+.nav-btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:9px 15px;border-radius:9px;
+  font-size:10px;font-weight:800;letter-spacing:.02em;
+  text-decoration:none;color:#526982;cursor:pointer;
+  background:#fff;border:1px solid var(--line);
+  transition:all .2s ease;white-space:nowrap;line-height:1;
+  font-family:inherit;
+}
+.nav-btn .ico{font-size:14px;line-height:1;display:inline-block;transition:transform .25s ease}
+.nav-btn:hover{
+  background:linear-gradient(135deg,#2d7bff,#16bda9);
+  color:#fff;border-color:transparent;transform:translateY(-2px);
+  box-shadow:0 8px 20px #347eff30;
+}
+.nav-btn:hover .ico{transform:scale(1.15)}
+.nav-btn:active{transform:translateY(0)}
+.nav-btn.nav-refresh{background:linear-gradient(135deg,#2d7bff,#16bda9);color:#fff;border-color:transparent}
+.nav-btn.nav-refresh:hover{filter:brightness(1.08)}
+.nav-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;box-shadow:none}
+
+.top-status{font-size:8px;color:#70839a;white-space:nowrap}
+.top-status i{display:inline-block;width:6px;height:6px;background:var(--cyan);border-radius:50%;margin-right:4px}
+
+/* ===== CONTEÚDO ===== */
+.content{padding:28px 34px 50px;max-width:1500px;margin:auto}
+.hero{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:21px}
+.eyebrow{font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);font-weight:900}
+h1{font-size:30px;letter-spacing:-.055em;margin:7px 0 6px;color:var(--navy)}
+.hero p{margin:0;color:var(--muted);font-size:12px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:#fff;color:#526982;border-radius:9px;padding:10px 14px;font-size:9px;font-weight:900;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn.primary{border:0;color:#fff;background:linear-gradient(135deg,#2d7bff,#16bda9);box-shadow:0 8px 22px #347eff35}
+.btn.danger{color:#b63d52;border-color:#f2ccd2;background:#fff7f8}
+.btn:active{transform:scale(.98)}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:17px}
+.metric,.panel{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.metric{padding:16px 18px}
+.metric small{font-size:8px;color:#8494a7}
+.metric b{display:block;font-size:23px;margin:7px 0 2px;letter-spacing:-.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.metric span{font-size:8px;color:#19a890;font-weight:850}
+.panel{padding:18px;width:100%}
+.panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:14px}
+.panel-title{font-size:13px;font-weight:900}
+.panel-sub{font-size:8px;color:#8c9aab;margin-top:4px;line-height:1.5}
+.pill{display:inline-flex;background:#edf5ff;color:#3470dd;border-radius:20px;padding:6px 9px;font-size:8px;font-weight:900;white-space:nowrap}
 .dock-map{display:grid;grid-template-columns:repeat(auto-fill, minmax(68px, 1fr));gap:8px;width:100%}
 .dock-square{aspect-ratio:1;background:var(--green);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:12px;transition:transform .15s,box-shadow .15s;border:2px solid transparent;cursor:pointer;position:relative;padding:3px;min-height:68px;user-select:none}
 .dock-square:hover{transform:scale(1.04);box-shadow:0 6px 18px #10254125;z-index:2}
@@ -60,16 +121,56 @@
 .detalhes-grid .item{background:#f5f9ff;padding:10px 14px;border-radius:8px}
 .detalhes-grid .item .rotulo{font-size:8px;color:#71849b;text-transform:uppercase;letter-spacing:.05em}
 .detalhes-grid .item .valor{font-size:14px;font-weight:700;color:#071426;margin-top:2px}
-@media(max-width:1050px){.sidebar{width:200px}.main{margin-left:200px}.content{padding:24px}.metrics{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:700px){.sidebar{width:67px;padding:15px 8px}.brand{min-height:58px;padding:0 0 10px}.brand-logo{width:58px;height:54px}.side-heading,.nav-copy,.sidebar-bottom{display:none}.nav>a,.nav>details>summary{justify-content:center;padding:10px 0}.subnav{margin-left:0;padding-left:0;border:0}.subnav a span,.subnav a small{display:none}.main{margin-left:67px}.topbar{padding:0 16px}.content{padding:20px 12px}.hero{display:block}.actions{margin-top:14px}.metrics{grid-template-columns:1fr 1fr;gap:9px}.form-grid{grid-template-columns:1fr}.modal-content{padding:20px;margin:10px}.dock-map{grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:6px}.dock-square{min-height:56px;font-size:10px}.dock-square .dock-number{font-size:15px}}
+
+@media(max-width:1050px){
+  .content{padding:24px}
+  .metrics{grid-template-columns:repeat(2,1fr)}
+  .top-nav{order:3;flex:1 1 100%;justify-content:flex-start;padding-top:4px}
+}
+@media(max-width:700px){
+  .topbar{padding:12px 16px;height:auto;gap:10px}
+  .content{padding:20px 12px}
+  .hero{display:block}
+  .actions{margin-top:14px}
+  .metrics{grid-template-columns:1fr 1fr;gap:9px}
+  .form-grid{grid-template-columns:1fr}
+  .modal-content{padding:20px;margin:10px}
+  .dock-map{grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:6px}
+  .dock-square{min-height:56px;font-size:10px}
+  .dock-square .dock-number{font-size:15px}
+  .nav-btn{padding:8px 11px;font-size:9px}
+  .nav-btn .lbl{display:none}
+  .nav-btn .ico{font-size:15px}
+}
 </style>
-  <link rel="stylesheet" href="sidebar.css">
 </head>
 <body>
 <div class="app">
-<div id="sidebar-container"></div>
 <main class="main">
-<header class="topbar"><div class="crumb">WAREHOUSE VISION / <strong>Gestão de docas</strong></div><div class="top-status"><i></i>Supabase conectado</div></header>
+<header class="topbar">
+  <div class="topbar-left">
+    <div class="crumb">WAREHOUSE VISION / <strong>Gestão de docas</strong></div>
+  </div>
+
+  <!-- ==================== NAVEGAÇÃO ==================== -->
+  <nav class="top-nav">
+    <a class="nav-btn" href="Index.html" title="Página inicial">
+      <span class="ico">🏠</span><span class="lbl">Home</span>
+    </a>
+    <a class="nav-btn" href="https://pablomlopes797.github.io/INDICADORES_BRASIL/Recepção.html" title="Recepção">
+      <span class="ico">🚚</span><span class="lbl">Recepção</span>
+    </a>
+    <a class="nav-btn" href="https://pablomlopes797.github.io/INDICADORES_BRASIL/Portaria.html" title="Portaria">
+      <span class="ico">🛡️</span><span class="lbl">Portaria</span>
+    </a>
+    <button class="nav-btn nav-refresh" id="btnRefreshTop" title="Recarregar dados">
+      <span class="ico">🔄</span><span class="lbl">Atualizar</span>
+    </button>
+  </nav>
+
+  <div class="top-status"><i></i>Supabase conectado</div>
+</header>
+
 <section class="content">
 <div class="hero"><div><div class="eyebrow">Warehouse intelligence / inbound capacity</div><h1>Gestão de docas</h1><p>Clique em qualquer doca para editar status, senha, carga ou motivo de bloqueio.</p></div><div class="actions"><button class="btn" id="registerOpen">＋ Cadastrar doca</button></div></div>
 <div class="metrics"><div class="metric"><small>Total de docas</small><b id="mTotal">—</b><span>Cadastro operacional</span></div><div class="metric"><small>Docas disponíveis</small><b id="mAvailable">—</b><span id="mAvailableCount">—</span></div><div class="metric"><small>Docas ocupadas</small><b id="mOccupied">—</b><span id="mOccupiedCount">—</span></div><div class="metric"><small>Índice de ocupação</small><b id="mIndex">—</b><span>Ocupação geral</span></div></div>
@@ -196,13 +297,10 @@ function calcularDuracao(inicioISO) {
 async function getRows(){const u=`${SUPABASE_URL}/rest/v1/${TABLE}?select=*&order=DOCA.asc&limit=1000`;const r=await fetch(u,{headers});if(!r.ok)throw new Error(await r.text());return r.json()}
 function uniqueRows(){const map=new Map();for(const row of rows){const doca=normDoca(val(row,'DOCA'));if(doca&&!map.has(doca))map.set(doca,row)}return [...map.values()].sort((a,b)=>normDoca(val(a,'DOCA')).localeCompare(normDoca(val(b,'DOCA')),undefined,{numeric:true}))}
 
-// Busca os dados da AGENDA para todas as senhas de uma vez
 async function buscarDadosAgenda(senhas) {
   if (!senhas || senhas.length === 0) return new Map();
-  // Filtra senhas não vazias
   const senhasValidas = senhas.filter(s => s && s.trim() !== '');
   if (senhasValidas.length === 0) return new Map();
-  // Monta query com IN
   const lista = senhasValidas.map(s => `"${encodeURIComponent(s)}"`).join(',');
   const url = `${SUPABASE_URL}/rest/v1/${AGENDA_TABLE}?SENHA=in.(${lista})&select=SENHA,FORNECEDOR,CATEGORIA`;
   try {
@@ -221,7 +319,6 @@ async function buscarDadosAgenda(senhas) {
   }
 }
 
-// Função assíncrona de render que carrega os dados da agenda
 async function renderAsync() {
   const list = uniqueRows();
   const total = list.length;
@@ -242,7 +339,6 @@ async function renderAsync() {
     return;
   }
 
-  // Coleta todas as senhas ocupadas
   const senhas = [];
   list.forEach(row => {
     if (isOccupied(row)) {
@@ -250,7 +346,6 @@ async function renderAsync() {
       if (senha) senhas.push(senha);
     }
   });
-  // Busca dados da agenda
   const agendaMap = await buscarDadosAgenda(senhas);
 
   let html = '';
@@ -270,7 +365,6 @@ async function renderAsync() {
     }
     const motivo = clean(val(row, 'MOTIVO BLOQ'));
     const senha = clean(val(row, 'SENHA'));
-    // Dados da agenda
     let fornecedor = '—', categoria = '—';
     if (senha && agendaMap.has(senha)) {
       const info = agendaMap.get(senha);
@@ -309,7 +403,6 @@ ${isOcc ? `<span class="label">Categoria:</span> <span class="categoria">${esc(c
   map.innerHTML = html;
 }
 
-// Wrapper para manter compatibilidade com reload()
 async function reload() {
   rows = await getRows();
   await renderAsync();
@@ -322,12 +415,9 @@ function updateTimers() {
     const duracao = calcularDuracao(inicio);
     const tempoEl = square.querySelector('.dock-tempo');
     if (tempoEl) tempoEl.textContent = duracao.texto;
-    // Atualiza tooltip também (opcional, mas não necessário porque o tooltip é recriado no hover)
-    // Vamos atualizar o tooltip inline se existir
     const tooltip = square.querySelector('.tooltip');
     if (tooltip) {
       const lines = tooltip.innerHTML.split('<br>');
-      // Encontra a linha que contém "Tempo:"
       for (let i = 0; i < lines.length; i++) {
         if (lines[i].includes('Tempo:')) {
           lines[i] = `<span class="label">Tempo:</span> ${duracao.texto}`;
@@ -480,6 +570,24 @@ $('editForm').onsubmit = async e => {
   } catch (err) { console.error(err); $('editState').textContent = 'Erro ao salvar'; setNotice('Erro: '+err.message, 'error'); }
 };
 
+/* Botão Atualizar da barra superior */
+$('btnRefreshTop').onclick = async () => {
+  const btn = $('btnRefreshTop');
+  const ico = btn.querySelector('.ico');
+  btn.disabled = true;
+  if (ico) ico.textContent = '⏳';
+  try {
+    await reload();
+    setNotice('Dados atualizados com sucesso.', 'success');
+  } catch (err) {
+    console.error(err);
+    setNotice('Erro ao atualizar: '+err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    if (ico) ico.textContent = '🔄';
+  }
+};
+
 // Inicialização
 (async () => {
   try {
@@ -494,5 +602,4 @@ $('editForm').onsubmit = async e => {
   }
 })();
 </script>
-  <script src="sidebar.js" defer></script>
 </body></html>
