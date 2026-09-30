@@ -79,7 +79,7 @@ body{
 .topbar{
   position:sticky;top:0;z-index:100;
   display:flex;align-items:center;justify-content:space-between;
-  padding:16px 32px;gap:16px;
+  padding:16px 32px;gap:16px;flex-wrap:wrap;
   background:var(--glass);border-bottom:1px solid var(--stroke);
   backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
 }
@@ -95,6 +95,31 @@ body{
 .brand-txt{display:flex;flex-direction:column;line-height:1.15}
 .brand-txt strong{font-size:15.5px;font-weight:800;letter-spacing:-.01em}
 .brand-txt span{font-size:11.5px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+
+/* ============ NAV CENTRAL ============ */
+.top-nav{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  flex:1 1 auto;justify-content:center;
+}
+.nav-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 16px;border-radius:12px;
+  font-size:13px;font-weight:700;letter-spacing:.01em;
+  text-decoration:none;color:var(--txt);cursor:pointer;
+  background:var(--glass-strong);border:1px solid var(--stroke);
+  transition:all .25s var(--ease);white-space:nowrap;
+  font-family:inherit;line-height:1;
+}
+.nav-btn .ico{font-size:15px;line-height:1;display:inline-block;transition:transform .3s var(--ease)}
+.nav-btn:hover{
+  background:rgba(139,92,246,.14);
+  border-color:rgba(139,92,246,.45);
+  transform:translateY(-2px);
+  box-shadow:0 10px 22px -12px rgba(139,92,246,.7);
+}
+.nav-btn:hover .ico{transform:scale(1.15) rotate(-6deg)}
+.nav-btn:active{transform:translateY(0)}
+
 .top-actions{display:flex;align-items:center;gap:10px}
 .theme-toggle{
   width:44px;height:44px;border-radius:13px;cursor:pointer;
@@ -335,8 +360,15 @@ tbody tr:last-child td{border-bottom:none}
 ::-webkit-scrollbar-thumb{background:var(--scroll);border-radius:100px}
 ::-webkit-scrollbar-thumb:hover{background:var(--scroll-h)}
 
+@media(max-width:1100px){
+  .top-nav{order:3;flex:1 1 100%;justify-content:flex-start;padding-top:4px}
+}
 @media(max-width:820px){
-  .topbar{padding:14px 18px}
+  .topbar{padding:14px 18px;gap:12px}
+  .top-nav{gap:6px}
+  .nav-btn{padding:9px 12px;font-size:12px}
+  .nav-btn .lbl{display:none}
+  .nav-btn .ico{font-size:16px}
   .app{padding:28px 16px 80px}
   .card{padding:20px 16px}
   .field.half,.field.third{grid-column:span 6}
@@ -367,6 +399,23 @@ tbody tr:last-child td{border-bottom:none}
       <span>Central de Controle</span>
     </div>
   </div>
+
+  <!-- ==================== NAVEGAÇÃO ==================== -->
+  <nav class="top-nav">
+    <a class="nav-btn" href="Index.html" title="Página inicial">
+      <span class="ico">🏠</span><span class="lbl">HOME</span>
+    </a>
+    <a class="nav-btn" href="https://pablomlopes797.github.io/INDICADORES_BRASIL/Docas.html" title="Controle de Doca">
+      <span class="ico">🚛</span><span class="lbl">Controle de Doca</span>
+    </a>
+    <a class="nav-btn" href="https://pablomlopes797.github.io/INDICADORES_BRASIL/Portaria.html" title="Portaria">
+      <span class="ico">🛡️</span><span class="lbl">Portaria</span>
+    </a>
+    <button class="nav-btn" id="btnAtualizar" title="Recarregar dados do Supabase">
+      <span class="ico">🔄</span><span class="lbl">Atualizar</span>
+    </button>
+  </nav>
+
   <div class="top-actions">
     <button class="theme-toggle" id="btnTheme" title="Alternar tema">
       <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -562,6 +611,8 @@ const MAPA_RECEPCAO = {
   telefone:      ['TELEFONE','telefone','Telefone','CELULAR','celular','Celular','FONE','fone','Fone','TEL','tel','Tel'],
   placa_cavalo:  ['PLACA CAVALO','PLACA_CAVALO','placa_cavalo','PLACA DO CAVALO','PLACA','placa','Placa'],
   num_nfs:       ['Nº NF´S','Nº NFS','NUM_NFS','num_nfs','NFS','nfs','NF','nf','NUMERO NF','NUMERO_NF','NOTAS','notas','Notas','NUM NF','NUM_NF'],
+  /* ===== NOVO: coluna CHEGADA (data/hora da recepção) ===== */
+  chegada:       ['CHEGADA','chegada','Chegada','HORA CHEGADA','HORA_CHEGADA','hora_chegada','DATA CHEGADA','DATA_CHEGADA','data_chegada','HORARIO','horario','Horario','HORÁRIO','horário','Horário','HORARIO CHEGADA','HORARIO_CHEGADA'],
   created_at:    ['CREATED_AT','created_at','DATA HORA','DATA_HORA','DATA RECEPCAO','DATA_RECEPCAO','DATA CADASTRO','DATA_CADASTRO','DATA','data','REGISTRO','registro','TIMESTAMP','timestamp','TS','ts','DATA_ENTRADA','DATA ENTRADA','DATA_HORA_RECEPCAO','DATA_HORA_CADASTRO']
 };
 
@@ -599,6 +650,16 @@ function showLoad(title = 'Processando…', sub = 'Aguarde um instante') {
   $('overlay').classList.add('open');
 }
 function hideLoad() { $('overlay').classList.remove('open'); }
+
+/* ==================================================================
+   DATA/HORA DA CHEGADA — formato dd/mm/aaaa hh:mm
+   (se quiser SÓ a data, remova a parte após o "}") ================== */
+function dataChegadaBR() {
+  const d = new Date();
+  const p = n => String(n).padStart(2, '0');
+  return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  // Somente data: return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()}`;
+}
 
 function formatarDataHora(v) {
   if (!v) return '—';
@@ -641,8 +702,6 @@ function esc(s) {
 /* ==================================================================
    DETECÇÃO DE COLUNAS — 2 FASES
    ================================================================== */
-
-/** Fase 1: pega o primeiro registro e usa as chaves como lista de colunas */
 async function obterColunasViaRegistro() {
   const url = `${SUPABASE.url}/rest/v1/${TABELAS.recepcao}?select=*&limit=1`;
   const res = await fetch(url, { headers: HEADERS });
@@ -657,7 +716,6 @@ async function obterColunasViaRegistro() {
   return null;
 }
 
-/** Fase 2 (fallback): testa cada candidato com ?select=col&limit=0 */
 async function existeColuna(nome) {
   try {
     const url = `${SUPABASE.url}/rest/v1/${TABELAS.recepcao}?select=${q(nome)}&limit=0`;
@@ -974,6 +1032,11 @@ async function recepcionar() {
     setCampo('placa_cavalo',  valorOuNull($('fPlaca').value));
     setCampo('num_nfs',       valorOuNull($('fNfs').value));
 
+    /* ============ NOVO: grava data/hora atual na coluna CHEGADA ============ */
+    const chegada = dataChegadaBR();
+    setCampo('chegada', chegada);
+    console.log('[TRIZY] CHEGADA →', chegada, '| coluna:', map.chegada || '(não encontrada)');
+
     console.log('[TRIZY] Payload enviado:', payload);
 
     await salvarRecepcao(payload);
@@ -1066,6 +1129,23 @@ $('fTelefone').addEventListener('input', e => { e.target.value = maskTelefone(e.
 $('fPlaca').addEventListener('input', e => { e.target.value = maskPlaca(e.target.value); });
 
 $('btnRecepcionar').addEventListener('click', recepcionar);
+
+/* Botão Atualizar da barra superior */
+$('btnAtualizar').addEventListener('click', async () => {
+  const btn = $('btnAtualizar');
+  const ico = btn.querySelector('.ico');
+  btn.disabled = true;
+  if (ico) ico.textContent = '⏳';
+  try {
+    await carregarTudo();
+    toast('🔄 Dados atualizados!', 'ok');
+  } finally {
+    btn.disabled = false;
+    if (ico) ico.textContent = '🔄';
+  }
+});
+
+/* Botão Atualizar do card */
 $('btnRefresh').addEventListener('click', () => { carregarTudo(); toast('Atualizando…', 'ok'); });
 
 document.addEventListener('keydown', e => {
