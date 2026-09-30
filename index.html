@@ -537,7 +537,7 @@ table.missing input.filled{border-color:color-mix(in srgb,var(--green) 60%,var(-
   <footer class="app-footer">
     <b>Desenvolvido Por Pablo M. Lopes</b>
     <span class="dot">·</span>Painel Executivo de Recebimento
-    <span class="dot">·</span><span id="footerConexao">AGENDA / CARGAS_RECEBIDAS</span>
+    <span class="dot">·</span><span id="footerConexao">AGENDA / CARGAS_RECEBIDAS / BD_RESULTADOS</span>
   </footer>
 </div>
 
@@ -636,7 +636,7 @@ table.missing input.filled{border-color:color-mix(in srgb,var(--green) 60%,var(-
         <input type="number" id="editValue" class="edit-value-input" step="1" min="0" placeholder="Ex.: 42">
       </div>
       <div style="margin-top:14px;padding:10px 12px;border-radius:9px;background:color-mix(in srgb,var(--amber) 10%,transparent);border:1px solid color-mix(in srgb,var(--amber) 35%,transparent);font-size:11.5px;color:var(--txt-2);line-height:1.5">
-        <b style="color:#fbbf24">Atenção:</b> o valor manual substitui o valor calculado apenas na exibição do painel. Os dados brutos não são alterados.
+        <b style="color:#fbbf24">Atenção:</b> o valor manual é gravado no BD_RESULTADOS e passa a ser exibido para todos os usuários. Os dados brutos não são alterados.
       </div>
     </div>
     <div class="modal-foot">
@@ -664,6 +664,7 @@ const TABLE_USERS  = "USERS";
 const TABLE_AGENDA = "AGENDA";              // Base de agendamento
 const TABLE_CARGAS = "CARGAS_RECEBIDAS";    // Base de cargas recebidas
 const TABLE_OBS    = "OBS_REC";
+const TABLE_RESULTADOS = "BD_RESULTADOS";
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -735,7 +736,8 @@ const state = {
   comments: {},
   weather: {},
   obsAvailable: true,
-  manualEdits: {}
+  manualEdits: {},
+  resultadosPorData: {}
 };
 
 /* ============================================================================
@@ -834,36 +836,50 @@ function refDateObj(str){
 }
 
 /* ============================================================================
-   EDIÇÃO MANUAL — persistência e permissão
+   BD_RESULTADOS — fonte central compartilhada
    ============================================================================ */
-const MANUAL_EDITS_KEY = 'painel_manual_edits_v1';
-
-function canEdit(){
-  return String(state.user?.USER || '') === EDIT_USER;
-}
-function loadManualEdits(){
-  try {
-    const raw = localStorage.getItem(MANUAL_EDITS_KEY);
-    state.manualEdits = raw ? JSON.parse(raw) : {};
-    if (typeof state.manualEdits !== 'object' || state.manualEdits === null) state.manualEdits = {};
-  } catch(e){ state.manualEdits = {}; }
-}
-function saveManualEdits(){
-  try { localStorage.setItem(MANUAL_EDITS_KEY, JSON.stringify(state.manualEdits)); } catch(e){}
-}
+const COL_RES = {
+  data: 'DATA', agenda: 'AGENDA', no_show: 'NO SHOW', agenda_noshow: 'AGENDA - NOSHOW',
+  recebido: 'RECEBIDO', backlog_recebido: 'BACKLOG RECEBIDO', backlog_pendente: 'BACKLOG PENDENTE',
+  no_prazo: 'NO PRAZO', abaixo_4hrs: '< 4 HRS', recusado: 'RECUSADO',
+  pct_no_prazo: '% NO PRAZO', pct_recebido: '% RECEBIDO'
+};
+function canEdit(){ return String(state.user?.USER || '') === EDIT_USER; }
 function editKey(rowKey, colKey){ return `${rowKey}|${colKey}`; }
-function getManualValue(rowKey, colKey){
-  const v = state.manualEdits[editKey(rowKey, colKey)];
-  if (v === undefined || v === null) return null;
-  const n = Number(v);
-  return isNaN(n) ? null : n;
+function resultDataKey(colKey){
+  const { y, m } = getBaseYM();
+  if (state.gran === 'dia') return colKey;
+  if (state.gran === 'semana') return `${y}-${String(m).padStart(2,'0')}-${String(Math.min((Number(colKey.replace('w',''))-1)*7+1,new Date(y,m,0).getDate())).padStart(2,'0')}`;
+  if (state.gran === 'mes') return `${colKey}-01`;
+  return `${colKey}-01-01`;
 }
-function setManualValue(rowKey, colKey, val){
-  const k = editKey(rowKey, colKey);
-  if (val === null || val === undefined || val === '' || isNaN(val)) delete state.manualEdits[k];
-  else state.manualEdits[k] = Number(val);
-  saveManualEdits();
+function dbValue(row, key){
+  const v=row?.[COL_RES[key]]; if(v===undefined||v===null||v==='') return null;
+  const n=Number(v); return Number.isFinite(n)?n:null;
 }
+function getManualValue(rowKey, colKey){ return dbValue(state.resultadosPorData[resultDataKey(colKey)], rowKey); }
+function buildResultadoPayload(dataKey,valores){
+  const denom=Math.max(0,Number(valores.agenda||0)-Number(valores.no_show||0));
+  return {
+    [COL_RES.data]:dataKey,[COL_RES.agenda]:Number(valores.agenda||0),[COL_RES.no_show]:Number(valores.no_show||0),
+    [COL_RES.agenda_noshow]:denom,[COL_RES.recebido]:Number(valores.recebido||0),
+    [COL_RES.backlog_recebido]:Number(valores.backlog_recebido||0),[COL_RES.backlog_pendente]:Number(valores.backlog_pendente||0),
+    [COL_RES.no_prazo]:Number(valores.no_prazo||0),[COL_RES.abaixo_4hrs]:Number(valores.abaixo_4hrs||0),[COL_RES.recusado]:Number(valores.recusado||0),
+    [COL_RES.pct_no_prazo]:denom>0?(Number(valores.no_prazo||0)/denom)*100:0,
+    [COL_RES.pct_recebido]:denom>0?(Number(valores.recebido||0)/denom)*100:0
+  };
+}
+async function loadResultados(start,end){
+  const {data,error}=await sb.from(TABLE_RESULTADOS).select('*').gte(COL_RES.data,start).lte(COL_RES.data,end);
+  if(error) throw error; state.resultadosPorData={};
+  (data||[]).forEach(r=>{if(r[COL_RES.data])state.resultadosPorData[String(r[COL_RES.data]).slice(0,10)]=r;});
+}
+async function upsertResultado(dataKey,valores){
+  const payload=buildResultadoPayload(dataKey,valores);
+  const {data,error}=await sb.from(TABLE_RESULTADOS).upsert(payload,{onConflict:COL_RES.data}).select();
+  if(error) throw error; state.resultadosPorData[dataKey]=data?.[0]||payload; return state.resultadosPorData[dataKey];
+}
+function setManualValue(){}
 
 /* ============================================================================
    WEATHER
@@ -965,7 +981,7 @@ function buildRegistros(){
       dataAgenda,
       dataBase: diaBase,
       dataTermo: null,
-      agenda: dataAgenda && carga ? 1 : 0,
+      agenda: 0,
       recebido: 0,
       no_prazo: 0,
       backlog_recebido: 0,
@@ -1123,29 +1139,26 @@ function registrosDoPeriodo(){
 }
 
 function aggregate(){
-  const cols = buildColumns();
-  const total = emptyBucket();
-  const regs = registrosDoPeriodo();
-  const { start, end } = getFetchRange();
-
-  for (const r of regs){
-    for (const rowDef of ROWS){
-      const k = rowDef.key;
-      if (k === 'agenda_noshow') continue;
-      if (!r[k]) continue;
-      const dt = dateForRow(r, k);
-      if (!dt) continue;
-      if (dt < start || dt > end) continue;
-      const col = colForDate(cols, dt);
-      if (col) col.bucket[k] += 1;
-      total[k] += 1;
-    }
+  const cols=buildColumns(),total=emptyBucket(),regs=registrosDoPeriodo();
+  const {start,end}=getFetchRange(),agendaSenhasPorData=new Map();
+  // AGENDA = COUNT(DISTINCT SENHA), com filtro exclusivo por AGENDA.DTA_BASE.
+  for(const a of state.rawAgenda){
+    const d=parseDateTimeBR(a[COL_AG.dtaBase]); const dt=d?toISODate(d):null;
+    const senha=String(a[COL_AG.senha]??'').trim();
+    if(!dt||!senha||dt<start||dt>end)continue;
+    if(!agendaSenhasPorData.has(dt))agendaSenhasPorData.set(dt,new Set());
+    agendaSenhasPorData.get(dt).add(senha);
   }
-  cols.forEach(c => c.bucket.agenda_noshow = (c.bucket.agenda||0) - (c.bucket.no_show||0));
-  total.agenda_noshow = (total.agenda||0) - (total.no_show||0);
-  return { cols, total, registros: regs };
+  for(const [dt,senhas] of agendaSenhasPorData){const col=colForDate(cols,dt);if(col)col.bucket.agenda+=senhas.size;total.agenda+=senhas.size;}
+  for(const r of regs)for(const rowDef of ROWS){
+    const k=rowDef.key;if(k==='agenda'||k==='agenda_noshow'||!r[k])continue;
+    const dt=dateForRow(r,k);if(!dt||dt<start||dt>end)continue;
+    const col=colForDate(cols,dt);if(col)col.bucket[k]+=1;total[k]+=1;
+  }
+  cols.forEach(c=>c.bucket.agenda_noshow=Math.max(0,(c.bucket.agenda||0)-(c.bucket.no_show||0)));
+  total.agenda_noshow=Math.max(0,(total.agenda||0)-(total.no_show||0));
+  return {cols,total,registros:regs};
 }
-
 function aggregateFocus(agg){
   if (!state.selectedDates.size || state.gran !== 'dia') return { total: agg.total, focused:false };
   const t = emptyBucket();
@@ -1239,7 +1252,7 @@ function renderTable(agg){
     host.innerHTML = `<div class="empty-state">
       <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
       <h3>Nenhum dado para o período selecionado</h3>
-      <p>Verifique se há registros em AGENDA / CARGAS_RECEBIDAS para os filtros atuais.</p></div>`;
+      <p>Verifique se há registros em AGENDA / CARGAS_RECEBIDAS / BD_RESULTADOS para os filtros atuais.</p></div>`;
     document.getElementById('tableTitle').textContent = buildTitle();
     document.getElementById('legend').innerHTML = '';
     return;
@@ -1688,7 +1701,7 @@ async function saveComment(){
     toast('Comentário salvo', 'Visível para toda a diretoria.', 'ok');
     document.getElementById('commentText').value = '';
     const { start, end } = getFetchRange();
-    await loadComments(start, end);
+    await Promise.all([loadComments(start, end), loadResultados(start, end)]);
     renderCommentList();
     render();
   } catch(e){
@@ -1752,33 +1765,21 @@ function closeEditModal(){
   editCtx = null;
 }
 
-function saveEditModal(){
-  if (!editCtx) return;
-  const raw = document.getElementById('editValue').value.trim();
-  if (raw === ''){
-    setManualValue(editCtx.rowKey, editCtx.colKey, null);
-    toast('Sobrescrita removida', 'Valor calculado voltou a ser exibido.', 'warn');
-  } else {
-    const n = Number(raw);
-    if (isNaN(n) || n < 0){
-      toast('Valor inválido', 'Informe um número maior ou igual a zero.', 'err');
-      return;
-    }
-    setManualValue(editCtx.rowKey, editCtx.colKey, n);
-    toast('Valor salvo', `Sobrescrita aplicada em ${editCtx.rowKey} · ${editCtx.colLabel}.`, 'ok');
-  }
-  closeEditModal();
-  render();
+async function saveEditModal(){
+  if(!editCtx)return;
+  const raw=document.getElementById('editValue').value.trim();
+  if(raw===''){toast('Informe um valor','Use um valor numérico para atualizar o BD_RESULTADOS.','warn');return;}
+  const n=Number(raw);if(!Number.isFinite(n)||n<0){toast('Valor inválido','Informe um número maior ou igual a zero.','err');return;}
+  const agg=aggregate(),col=agg.cols.find(c=>c.key===editCtx.colKey);if(!col)return;
+  const valores={...col.bucket};valores[editCtx.rowKey]=n;
+  if(editCtx.rowKey==='agenda_noshow')valores.no_show=Math.max(0,valores.agenda-n);
+  try{await upsertResultado(resultDataKey(editCtx.colKey),valores);toast('Valor salvo','BD_RESULTADOS atualizado para todos os usuários.','ok');closeEditModal();render();}
+  catch(e){console.error(e);toast('Falha ao salvar',e.message||String(e),'err');}
 }
-
 function clearEditModal(){
-  if (!editCtx) return;
-  setManualValue(editCtx.rowKey, editCtx.colKey, null);
-  toast('Sobrescrita removida', 'Valor calculado voltou a ser exibido.', 'warn');
-  closeEditModal();
-  render();
+  if(!editCtx)return;
+  toast('Ação indisponível','BD_RESULTADOS mantém o último valor compartilhado. Para substituir, informe um novo valor.','warn');
 }
-
 /* ============================================================================
    CARGAS FALTANTES — modal
    ============================================================================ */
@@ -2090,7 +2091,7 @@ async function loadData(force){
       `AGENDA: ${nfInt.format(agendaRows.length)} · CARGAS_RECEBIDAS: ${nfInt.format(cargasRows.length)}`;
 
     const { start, end } = getFetchRange();
-    await loadComments(start, end);
+    await Promise.all([loadComments(start, end), loadResultados(start, end)]);
     updatePeriodHints();
     updateEditHint();
     render();
@@ -2376,7 +2377,6 @@ async function bootstrapApp(){
 }
 
 (async function init(){
-  loadManualEdits();
 
   let temaSalvo = 'dark';
   try { temaSalvo = localStorage.getItem('painel_tema') || 'dark'; } catch(e){}
