@@ -215,12 +215,6 @@ table.grid tr.pct td.avg-cell{background:color-mix(in srgb,var(--purple) 20%,var
 table.grid td.col-selected,table.grid th.col-selected{background-color:color-mix(in srgb,var(--purple) 22%,transparent) !important;box-shadow:inset 1px 0 0 rgba(168,85,247,.35),inset -1px 0 0 rgba(168,85,247,.35)}
 table.grid td.numcell{cursor:pointer;position:relative}
 table.grid td.numcell:hover{background-color:color-mix(in srgb,var(--cyan) 22%,transparent) !important}
-table.grid td.numcell.manual-override{
-  box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--amber) 75%,transparent),inset 0 0 12px -4px color-mix(in srgb,var(--amber) 60%,transparent);
-}
-table.grid td.numcell.manual-override::after{
-  content:'✎';position:absolute;top:1px;right:3px;font-size:9px;color:var(--amber);opacity:.9;pointer-events:none;font-family:var(--sans);
-}
 table.grid tbody tr{transition:filter .15s ease}
 table.grid tbody tr:hover td{filter:brightness(1.15) saturate(1.55)}
 table.grid tbody tr:hover td.rowlabel{
@@ -636,7 +630,7 @@ table.missing input.filled{border-color:color-mix(in srgb,var(--green) 60%,var(-
         <input type="number" id="editValue" class="edit-value-input" step="1" min="0" placeholder="Ex.: 42">
       </div>
       <div style="margin-top:14px;padding:10px 12px;border-radius:9px;background:color-mix(in srgb,var(--amber) 10%,transparent);border:1px solid color-mix(in srgb,var(--amber) 35%,transparent);font-size:11.5px;color:var(--txt-2);line-height:1.5">
-        <b style="color:#fbbf24">Atenção:</b> o valor manual é salvo no BD_RESULTADOS e compartilhado entre os usuários. Os dados brutos não são alterados.
+        <b style="color:#fbbf24">Atenção:</b> o valor manual é gravado no BD_RESULTADOS e compartilhado entre os usuários. Os dados brutos não são alterados.
       </div>
     </div>
     <div class="modal-foot">
@@ -837,53 +831,40 @@ function refDateObj(str){
 /* ============================================================================
    EDIÇÃO MANUAL — persistência e permissão
    ============================================================================ */
-const COL_RES = {
-  no_show:'NO SHOW',agenda_noshow:'AGENDA - NOSHOW',recebido:'RECEBIDO',
-  backlog_recebido:'BACKLOG RECEBIDO',backlog_pendente:'BACKLOG PENDENTE',
-  no_prazo:'NO PRAZO',abaixo_4hrs:'< 4 HRS',recusado:'RECUSADO',
-  pct_no_prazo:'% NO PRAZO',pct_recebido:'% RECEBIDO'
-};
-const RESULT_KEYS = ['no_show','recebido','backlog_recebido','backlog_pendente','no_prazo','abaixo_4hrs','recusado'];
+const RC={no_show:'NO SHOW',agenda_noshow:'AGENDA - NOSHOW',recebido:'RECEBIDO',backlog_recebido:'BACKLOG RECEBIDO',backlog_pendente:'BACKLOG PENDENTE',no_prazo:'NO PRAZO',abaixo_4hrs:'< 4 HRS',recusado:'RECUSADO',pct_no_prazo:'% NO PRAZO',pct_recebido:'% RECEBIDO'};
+const RK=['no_show','recebido','backlog_recebido','backlog_pendente','no_prazo','abaixo_4hrs','recusado'];
 function canEdit(){return String(state.user?.USER||'')===EDIT_USER;}
-function dbValue(row,key){
-  const v=row?.[COL_RES[key]];
-  if(v===null||v===undefined||v==='')return null;
-  const n=Number(v);return Number.isFinite(n)?n:null;
-}
-function getManualValue(rowKey,colKey){
-  if(state.gran!=='dia'||rowKey==='agenda')return null;
-  return dbValue(state.resultadosPorData[colKey],rowKey);
-}
+function storedNum(row,key){const v=row?.[RC[key]];if(v===null||v===undefined||v==='')return null;const n=Number(v);return Number.isFinite(n)?n:null;}
+function getManualValue(key,date){return state.gran==='dia'&&key!=='agenda'?storedNum(state.resultadosPorData[date],key):null;}
 async function loadResultados(start,end){
-  const all=[];let from=0;
-  while(true){
+  let rows=[];
+  for(let from=0;;from+=1000){
     const {data,error}=await sb.from(TABLE_RESULTADOS).select('*').gte('DATA',start).lte('DATA',end).range(from,from+999);
-    if(error)throw error;
-    all.push(...(data||[]));if((data||[]).length<1000)break;from+=1000;
+    if(error)throw error;rows.push(...(data||[]));if((data||[]).length<1000)break;
   }
-  state.resultadosPorData=Object.fromEntries(all.map(r=>[String(r.DATA).slice(0,10),r]));
+  state.resultadosPorData=Object.fromEntries(rows.map(r=>[String(r.DATA).slice(0,10),r]));
 }
-function payloadResultado(date,b){
-  const denom=Math.max(0,b.agenda-(b.no_show||0));
-  const payload={DATA:date};
-  for(const key of RESULT_KEYS)payload[COL_RES[key]]=Number(b[key]||0);
-  payload[COL_RES.agenda_noshow]=denom;
-  payload[COL_RES.pct_no_prazo]=denom>0?b.no_prazo/denom*100:0;
-  payload[COL_RES.pct_recebido]=denom>0?b.recebido/denom*100:0;
-  return payload;
-}
-async function upsertResultado(date,patch){
-  const {data,error}=await sb.from(TABLE_RESULTADOS).upsert({DATA:date,...patch},{onConflict:'DATA'}).select();
-  if(error)throw error;
-  state.resultadosPorData[date]=data?.[0]||{...state.resultadosPorData[date],DATA:date,...patch};
+function resultPayload(date,b){
+  const d=Math.max(0,b.agenda-b.no_show),row={DATA:date};
+  for(const k of RK)row[RC[k]]=Number(b[k]||0);
+  row[RC.agenda_noshow]=d;
+  row[RC.pct_no_prazo]=d?b.no_prazo/d*100:0;
+  row[RC.pct_recebido]=d?b.recebido/d*100:0;
+  return row;
 }
 async function seedResultados(){
-  // Apenas datas ausentes: resultados já salvos, inclusive ajustes, jamais são recalculados no refresh.
   const computed=aggregate(false).daily;
   for(const [date,b] of computed){
     if(state.resultadosPorData[date])continue;
-    await upsertResultado(date,payloadResultado(date,b));
+    const {error}=await sb.from(TABLE_RESULTADOS).upsert(resultPayload(date,b),{onConflict:'DATA',ignoreDuplicates:true});
+    if(error)throw error;
   }
+}
+async function updateResultado(date,patch){
+  const {data,error}=await sb.from(TABLE_RESULTADOS).update(patch).eq('DATA',date).select('*');
+  if(error)throw error;
+  if(!data||data.length!==1)throw new Error(`Nenhum registro atualizado para ${date}. Verifique permissões e UNIQUE(DATA).`);
+  state.resultadosPorData[date]=data[0];
 }
 
 /* ============================================================================
@@ -1143,36 +1124,29 @@ function registrosDoPeriodo(){
   return out;
 }
 
-function aggregate(useSaved=true){
+function aggregate(saved=true){
   const cols=buildColumns(),total=emptyBucket(),regs=registrosDoPeriodo(),daily=new Map();
-  const {start,end}=getFetchRange();
-  const getDay=dt=>{if(!daily.has(dt))daily.set(dt,emptyBucket());return daily.get(dt);};
-  const unique=new Map();
+  const {start,end}=getFetchRange(),senhas=new Map();
+  function day(date){if(!daily.has(date))daily.set(date,emptyBucket());return daily.get(date);}
   for(const a of state.rawAgenda){
-    const parsed=parseDateTimeBR(a[COL_AG.dtaBase]);
-    const date=parsed?toISODate(parsed):null,senha=String(a[COL_AG.senha]??'').trim();
+    const parsed=parseDateTimeBR(a[COL_AG.dtaBase]),date=parsed?toISODate(parsed):null,senha=String(a[COL_AG.senha]??'').trim();
     if(!date||date<start||date>end||!senha)continue;
-    if(!unique.has(date))unique.set(date,new Set());
-    unique.get(date).add(senha);
+    if(!senhas.has(date))senhas.set(date,new Set());senhas.get(date).add(senha);
   }
-  for(const [date,senhas] of unique)getDay(date).agenda=senhas.size;
-  for(const r of regs)for(const rowDef of ROWS){
-    const k=rowDef.key;if(k==='agenda'||k==='agenda_noshow'||!r[k])continue;
-    const dt=dateForRow(r,k);if(!dt||dt<start||dt>end)continue;
-    getDay(dt)[k]+=1;
+  for(const [date,unique] of senhas)day(date).agenda=unique.size;
+  for(const r of regs)for(const row of ROWS){
+    const k=row.key;if(k==='agenda'||k==='agenda_noshow'||!r[k])continue;
+    const date=dateForRow(r,k);if(date&&date>=start&&date<=end)day(date)[k]++;
   }
-  if(useSaved)for(const [date,saved] of Object.entries(state.resultadosPorData)){
+  if(saved)for(const [date,row] of Object.entries(state.resultadosPorData)){
     if(date<start||date>end)continue;
-    const b=getDay(date);
-    for(const key of RESULT_KEYS){const v=dbValue(saved,key);if(v!==null)b[key]=v;}
+    const b=day(date);
+    for(const k of RK){const v=storedNum(row,k);if(v!==null)b[k]=v;}
   }
   for(const [date,b] of daily){
     b.agenda_noshow=Math.max(0,b.agenda-b.no_show);
     const col=colForDate(cols,date);
-    for(const key of Object.keys(total)){
-      total[key]+=b[key]||0;
-      if(col)col.bucket[key]+=b[key]||0;
-    }
+    for(const k of Object.keys(total)){total[k]+=b[k]||0;if(col)col.bucket[k]+=b[k]||0;}
   }
   return {cols,total,registros:regs,daily};
 }
@@ -1180,9 +1154,8 @@ function aggregateFocus(agg){
   if(!state.selectedDates.size||state.gran!=='dia')return {total:agg.total,focused:false};
   const t=emptyBucket();
   for(const date of state.selectedDates){const b=agg.daily.get(date);if(!b)continue;
-    for(const key of Object.keys(t))t[key]+=b[key]||0;
-  }
-  return {total:t,focused:true};
+    for(const k of Object.keys(t))t[k]+=b[k]||0;
+  }return {total:t,focused:true};
 }
 function rowValue(bucket, key, mode){
   let v;
@@ -1218,9 +1191,9 @@ function renderKPIs(agg){
   const noPrazo  = t.no_prazo || 0;
   const backlogR = t.backlog_recebido || 0;
   const backlogP = t.backlog_pendente || 0;
-  const denom = Math.max(0,agenda-(t.no_show||0));
-  const pctNoPrazo = denom > 0 ? (noPrazo/denom)*100 : 0;
-  const pctRecebido = denom > 0 ? (recebido/denom)*100 : 0;
+  const denom=Math.max(0,agenda-(t.no_show||0));
+  const pctNoPrazo=denom?noPrazo/denom*100:0;
+  const pctRecebido=denom?recebido/denom*100:0;
 
   const cards = [
     { label:'AGENDA',            value:intFmt(agenda),      color:'#60a5fa',
@@ -1234,9 +1207,9 @@ function renderKPIs(agg){
     { label:'BACKLOG PENDENTE',  value:intFmt(backlogP),    color:'#eab308',
       sub:`Passou do ciclo sem receber` },
     { label:'% NO PRAZO',        value:pctFmt(pctNoPrazo),  color:'#a855f7',
-      sub:`NO PRAZO / RECEBIDO` },
+      sub:`NO PRAZO / (AGENDA - NO SHOW)` },
     { label:'% RECEBIDO',        value:pctFmt(pctRecebido), color:'#ec4899',
-      sub:`RECEBIDO / AGENDA` },
+      sub:`RECEBIDO / (AGENDA - NO SHOW)` },
   ];
 
   document.getElementById('kpis').innerHTML = cards.map(c => `
@@ -1256,7 +1229,7 @@ function renderTable(agg){
   const pct = state.view === 'pct';
   const host = document.getElementById('tableHost');
 
-  if (!registros.length){
+  if (!registros.length && !agg.daily.size){
     host.innerHTML = `<div class="empty-state">
       <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
       <h3>Nenhum dado para o período selecionado</h3>
@@ -1287,7 +1260,7 @@ function renderTable(agg){
   ROWS.forEach(r => {
     const vals = cols.map(c => {
       const manual = getManualValue(r.key, c.key);
-      return manual !== null ? manual : rowValue(c.bucket, r.key, state.view);
+      return rowValue(c.bucket, r.key, state.view);
     });
     const max = vals.reduce((mx,v) => isEmpty(v) ? mx : Math.max(mx,Math.abs(v)), 0);
 
@@ -1322,7 +1295,7 @@ function renderTable(agg){
       } else {
         const bg = `background:${hexA(r.color, 0.05 + 0.26*Math.min(1,Math.abs(v)/(max||1)))};`;
         const txt = pct ? pctFmt(v) : intFmt(v);
-        const manualCls = hasManual ? ' manual-override' : '';
+        const manualCls = '';
         const titleAttr = hasManual ? ` title="Valor editado manualmente"` : '';
         const rowAttr = `data-row="${r.key}" data-col="${cols[i].key}" data-colidx="${i}"`;
         body += `<td class="numcell${extra}${manualCls}" style="${bg}" ${rowAttr}${titleAttr}>${txt}</td>`;
@@ -1339,7 +1312,7 @@ function renderTable(agg){
 
   const pctRows = [
     { label:'% NO PRAZO',  color:'#a855f7', numKey:'no_prazo',  denomKey:'agenda_noshow' },
-    { label:'% RECEBIDO',  color:'#ec4899', numKey:'recebido',  denomKey:'agenda'   }
+    { label:'% RECEBIDO',  color:'#ec4899', numKey:'recebido',  denomKey:'agenda_noshow'   }
   ];
 
   pctRows.forEach(pr => {
@@ -1712,7 +1685,7 @@ async function saveComment(){
     await loadResultados(start,end);
     await seedResultados();
     await loadResultados(start,end);
-    await loadComments(start, end);
+    await loadComments(start,end);
     renderCommentList();
     render();
   } catch(e){
@@ -1778,30 +1751,27 @@ function closeEditModal(){
 
 async function saveEditModal(){
   if(!editCtx)return;
-  if(state.gran!=='dia'||editCtx.rowKey==='agenda'){
-    toast('Edição indisponível','AGENDA é calculada por SENHA única; edite indicadores por dia.','warn');return;
+  const {rowKey,colKey:date}=editCtx;
+  if(state.gran!=='dia'||rowKey==='agenda'||rowKey==='agenda_noshow'){
+    toast('Indicador derivado','AGENDA vem da origem; para AGENDA - NOSHOW, edite NO SHOW.','warn');return;
   }
   const raw=document.getElementById('editValue').value.trim(),value=Number(raw);
-  if(raw===''||!Number.isFinite(value)||value<0){toast('Valor inválido','Informe um número maior ou igual a zero.','err');return;}
-  const date=editCtx.colKey,b=aggregate().daily.get(date)||emptyBucket();
-  const patch={};
-  if(editCtx.rowKey==='agenda_noshow'){
-    toast('Valor derivado','Edite NO SHOW para alterar AGENDA - NOSHOW.','warn');return;
-  }
-  patch[COL_RES[editCtx.rowKey]]=value;
-  const denom=Math.max(0,b.agenda-(editCtx.rowKey==='no_show'?value:b.no_show));
-  patch[COL_RES.agenda_noshow]=denom;
-  patch[COL_RES.pct_no_prazo]=denom>0?(editCtx.rowKey==='no_prazo'?value:b.no_prazo)/denom*100:0;
-  patch[COL_RES.pct_recebido]=denom>0?(editCtx.rowKey==='recebido'?value:b.recebido)/denom*100:0;
-  try{await upsertResultado(date,patch);toast('Valor salvo','Resultado atualizado no Supabase.','ok');closeEditModal();render();}
-  catch(e){console.error(e);toast('Falha ao salvar',e.message||String(e),'err');}
+  if(!raw||!Number.isFinite(value)||value<0){toast('Valor inválido','Informe um número maior ou igual a zero.','err');return;}
+  const b={...(aggregate().daily.get(date)||emptyBucket()),[rowKey]:value};
+  const d=Math.max(0,b.agenda-b.no_show);
+  const patch={[RC[rowKey]]:value,[RC.agenda_noshow]:d,
+    [RC.pct_no_prazo]:d?b.no_prazo/d*100:0,[RC.pct_recebido]:d?b.recebido/d*100:0};
+  try{await updateResultado(date,patch);toast('Valor gravado','BD_RESULTADOS atualizado.','ok');closeEditModal();render();}
+  catch(e){console.error(e);toast('Falha ao gravar',e.message||String(e),'err');}
 }
 async function clearEditModal(){
-  if(!editCtx||state.gran!=='dia'||!COL_RES[editCtx.rowKey]||editCtx.rowKey==='agenda_noshow')return;
-  const date=editCtx.colKey,computed=aggregate(false).daily.get(date)||emptyBucket();
-  const patch={[COL_RES[editCtx.rowKey]]:computed[editCtx.rowKey]||0};
-  try{await upsertResultado(date,patch);toast('Valor restaurado','Resultado calculado salvo no Supabase.','ok');closeEditModal();render();}
-  catch(e){console.error(e);toast('Falha ao restaurar',e.message||String(e),'err');}
+  if(!editCtx||state.gran!=='dia'||!RK.includes(editCtx.rowKey))return;
+  const {rowKey,colKey:date}=editCtx;
+  const b={...(aggregate().daily.get(date)||emptyBucket()),[rowKey]:(aggregate(false).daily.get(date)||emptyBucket())[rowKey]||0};
+  const d=Math.max(0,b.agenda-b.no_show);
+  const patch={[RC[rowKey]]:b[rowKey],[RC.agenda_noshow]:d,[RC.pct_no_prazo]:d?b.no_prazo/d*100:0,[RC.pct_recebido]:d?b.recebido/d*100:0};
+  try{await updateResultado(date,patch);toast('Valor restaurado','BD_RESULTADOS atualizado.','ok');closeEditModal();render();}
+  catch(e){console.error(e);toast('Falha ao gravar',e.message||String(e),'err');}
 }
 
 /* ============================================================================
@@ -2007,7 +1977,7 @@ function exportData(){
   ROWS.forEach(r => {
     const vals = cols.map(c => {
       const manual = getManualValue(r.key, c.key);
-      return manual !== null ? manual : (c.bucket[r.key]||0);
+      return c.bucket[r.key]||0;
     });
     const tot = vals.reduce((s,v)=>s+v,0);
     const avg = cols.length ? tot/cols.length : 0;
@@ -2118,7 +2088,7 @@ async function loadData(force){
     await loadResultados(start,end);
     await seedResultados();
     await loadResultados(start,end);
-    await loadComments(start, end);
+    await loadComments(start,end);
     updatePeriodHints();
     updateEditHint();
     render();
