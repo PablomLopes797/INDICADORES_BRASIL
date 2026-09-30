@@ -533,7 +533,7 @@ function getRegistrosFiltrados(){
     const doca = docaDaSenha(r['SENHA']);
     const docaNome = clean(doca?.DOCA).toUpperCase();
     const categoria = clean(r['CATEGORIA']);
-    const pago = !!clean(r['Pagamento']);
+    const pago = !!clean(r['PAGAMENTO']);
     const acionado = !!r['ACIONAMENTO PORTARIA'];
     const visualizado = !!r['VISUALIZAÇÃO'];
     const texto = [r['SENHA'],r['CARGA'],r['FORNECEDOR'],r['CATEGORIA'],r['NOME COMPLETO'],r['TELEFONE'],docaNome].map(clean).join(' ').toLowerCase();
@@ -572,7 +572,7 @@ function render(){
       if(mot || st === 'BLOQUEADO') docaClass = 'bloqueada';
       else if(st === 'OCUPADO') docaClass = 'assigned';
     }
-    const pago = clean(r['Pagamento']);
+    const pago = clean(r['PAGAMENTO']);
     return `
       <tr data-id="${esc(id)}">
         <td><span class="senha">${esc(r['SENHA'])}</span></td>
@@ -722,7 +722,7 @@ async function acionarPortaria(id, btn){
 async function registrarPagamento(id, btn){
   const reg = registros.find(r => String(r[CAMPO_ID]) === String(id));
   if(!reg) return toast('Registro não encontrado.', 'err');
-  if(clean(reg['Pagamento'])) return toast('Pagamento já registrado.', 'err');
+  if(clean(reg['PAGAMENTO'])) return toast('Pagamento já registrado.', 'err');
   const senha = clean(reg['SENHA']);
   if(!senha) return toast('Registro sem SENHA.', 'err');
   const doca = docaDaSenha(senha);
@@ -732,12 +732,12 @@ async function registrarPagamento(id, btn){
   const original = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Registrando…';
   const agora = agoraFormatado();
   try{
-    const {error} = await db.from(TABELA).update({'Pagamento':agora}).eq(CAMPO_ID,id);
+    const {error} = await db.from(TABELA).update({'PAGAMENTO':agora}).eq(CAMPO_ID,id);
     if(error) throw error;
     const url = `${SUPABASE_URL}/rest/v1/${encodeURIComponent(TABELA_DOCAS)}?DOCA=eq.${encodeURIComponent(nomeDoca)}`;
     const resp = await fetch(url,{method:'PATCH',headers:{...HEADERS,Prefer:'return=minimal'},body:JSON.stringify({STATUS:'DISPONIVEL',SENHA:null,CARGA:null,INICIO:null,'MOTIVO BLOQ':null})});
     if(!resp.ok) throw new Error('Pagamento salvo, mas não foi possível liberar a doca: '+await resp.text());
-    reg['Pagamento']=agora;
+    reg['PAGAMENTO']=agora;
     await recarregarDocas(); atualizarFiltros(); render(); marcarAtualizacao();
     toast(`Pagamento registrado · Doca ${nomeDoca} liberada ✔`,'ok');
   }catch(err){
@@ -978,10 +978,10 @@ async function verificarAtualizacoes(){
 
     const antes  = reg['VISUALIZAÇÃO'];
     const depois = d['VISUALIZAÇÃO'];
-    const antesPag = reg['Pagamento'];
-    const depoisPag = d['Pagamento'];
+    const antesPag = reg['PAGAMENTO'];
+    const depoisPag = d['PAGAMENTO'];
 
-    if(antesPag !== depoisPag){ reg['Pagamento'] = depoisPag; mudou = true; }
+    if(antesPag !== depoisPag){ reg['PAGAMENTO'] = depoisPag; mudou = true; }
 
     if(antes !== depois){
       reg['VISUALIZAÇÃO'] = depois;
