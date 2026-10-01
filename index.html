@@ -540,14 +540,6 @@ table.grid td.rowlabel,table.grid td.total-cell,table.grid td.avg-cell{box-shado
       </div>
       <div class="field"><label>&nbsp;</label>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-primary" id="btnAtualizarCargas" style="display:none">
-            <svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
-            Atualizar Cargas
-          </button>
-          <button class="btn btn-primary" id="btnAtualizarAgenda" style="display:none">
-            <svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
-            Atualizar Agenda
-          </button>
           <button class="btn btn-warn" id="btnMissing" style="display:none">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
             Cargas faltantes <span class="badge" id="missingCount">0</span>
@@ -765,6 +757,18 @@ table.grid td.rowlabel,table.grid td.total-cell,table.grid td.avg-cell{box-shado
     <div class="modal-foot"><button class="btn" id="cancelAtualizarAgenda">Cancelar</button><button class="btn btn-primary" id="processarAtualizarAgenda">Atualizar Supabase</button></div>
   </div>
 </div>
+<div class="overlay" id="modalAtualizacao">
+  <div class="modal" style="width:min(440px,100%)">
+    <div class="modal-head"><div><h2>Atualizar dados</h2><p>Escolha o que deseja atualizar ou recalcular.</p></div><button class="x-btn" id="fecharModalAtualizacao" aria-label="Fechar">×</button></div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:10px">
+      <button class="btn btn-primary" id="opAtualizarAgenda" type="button" style="justify-content:flex-start;width:100%"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 2v4M16 2v4M4 9h16"/></svg>Atualizar Agenda</button>
+      <button class="btn btn-primary" id="opAtualizarTudo" type="button" style="justify-content:flex-start;width:100%"><svg viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>Atualizar Tudo</button>
+      <button class="btn btn-primary" id="opAtualizarCargas" type="button" style="justify-content:flex-start;width:100%"><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Atualizar Cargas</button>
+      <small id="avisoPermissaoAtualizacao" style="display:none;color:var(--muted);line-height:1.5">Atualizar Agenda e Atualizar Cargas são restritos ao usuário autorizado.</small>
+    </div>
+    <div class="modal-foot"><button class="btn" id="cancelarModalAtualizacao" type="button">Fechar</button></div>
+  </div>
+</div>
 <div class="loader" id="loader"><div class="spinner"></div><p id="loaderText">Processando…</p></div>
 <div class="toasts" id="toasts"></div>
 
@@ -789,6 +793,8 @@ const WEATHER_LON = -46.6333;
 const WEATHER_TZ  = 'America/Sao_Paulo';
 
 const EDIT_USER = '5520967';
+const TURNOS = ['TODOS', '1º TURNO', '2º TURNO', '3º TURNO'];
+const TURNOS_OPERACIONAIS = TURNOS.slice(1);
 
 /* Colunas das tabelas */
 const COL_AG = {  // AGENDA
@@ -817,12 +823,12 @@ const ROWS = [
   { key:'agenda',           label:'AGENDA',            color:'#60a5fa' },
   { key:'no_show',          label:'NO SHOW',           color:'#ef4444' },
   { key:'agenda_noshow',    label:'AGENDA - NOSHOW',   color:'#38bdf8', derived:true },
-  { key:'recebido',         label:'RECEBIDO',          color:'#22d3ee' },
+  { key:'recebido',         label:'RECEBIDAS',          color:'#22d3ee' },
   { key:'backlog_recebido', label:'BACKLOG RECEBIDO',  color:'#0ea5e9' },
   { key:'backlog_pendente', label:'BACKLOG PENDENTE',  color:'#eab308' },
   { key:'no_prazo',         label:'NO PRAZO',          color:'#22c55e' },
   { key:'abaixo_4hrs',      label:'< 4 HRS',           color:'#facc15' },
-  { key:'recusado',         label:'RECUSADO',          color:'#f43f5e' },
+  { key:'recusado',         label:'RECUSADAS',          color:'#f43f5e' },
   { key:'sobrepostas',      label:'SOBREPOSTAS',       color:'#a78bfa' },
 ];
 
@@ -854,7 +860,9 @@ const state = {
   comments: {},
   weather: {},
   obsAvailable: true,
-  resultadosPorData: {}
+  resultadosPorTurno: {},
+  computedResultadosPorTurno: {},
+  dataLoaded: false
 };
 
 /* ============================================================================
@@ -952,14 +960,42 @@ function refDateObj(str){
   return applyCycle(dt);
 }
 
+// O turno é sempre identificado pelo horário original da coluna indicada para a métrica.
+function turnoPorHorario(valor){
+  const dt=parseDateTimeBR(valor);
+  if(!dt)return null;
+  const minutos=dt.getHours()*60+dt.getMinutes();
+  if(minutos>=360&&minutos<860)return '1º TURNO';       // 06:00–14:19
+  if(minutos>=860&&minutos<1320)return '2º TURNO';     // 14:20–21:59
+  return '3º TURNO';                                   // 22:00–05:59
+}
+function chaveResultado(data,turno){return `${data}::${turno}`;}
+function turnoDaMetrica(registro,chave){
+  if(chave==='agenda'||chave==='no_show'||chave==='backlog_pendente'||chave==='agenda_noshow')return registro.turnoAgenda||null;
+  if(chave==='recusado')return registro.turnoRecusado||null;
+  return registro.turnoTermo||null;
+}
+
 /* ============================================================================
    EDIÇÃO MANUAL — persistência e permissão
    ============================================================================ */
-const RC={no_show:'NO SHOW',agenda_noshow:'AGENDA - NOSHOW',recebido:'RECEBIDO',backlog_recebido:'BACKLOG RECEBIDO',backlog_pendente:'BACKLOG PENDENTE',no_prazo:'NO PRAZO',abaixo_4hrs:'< 4 HRS',recusado:'RECUSADO',pct_no_prazo:'% NO PRAZO',pct_recebido:'% RECEBIDO'};
+const RC={agenda:'AGENDA',no_show:'NO SHOW',agenda_noshow:'AGENDA - NOSHOW',recebido:'RECEBIDO',backlog_recebido:'BACKLOG RECEBIDO',backlog_pendente:'BACKLOG PENDENTE',no_prazo:'NO PRAZO',abaixo_4hrs:'< 4 HRS',recusado:'RECUSADO',sobrepostas:'SOBREPOSTAS',pct_no_prazo:'% NO PRAZO',pct_recebido:'% RECEBIDO'};
 const RK=['no_show','recebido','backlog_recebido','backlog_pendente','no_prazo','abaixo_4hrs','recusado'];
 function canEdit(){return String(state.user?.USER||'')===EDIT_USER;}
 function podeAtualizarCargas(){return String(state.user?.USER||'')===EDIT_USER;}
-function mostrarBotoesAtualizacao(){const d=podeAtualizarCargas()?'inline-flex':'none';document.getElementById('btnAtualizarCargas')?.style.setProperty('display',d);document.getElementById('btnAtualizarAgenda')?.style.setProperty('display',d);}
+function mostrarBotoesAtualizacao(){
+  const permitido=podeAtualizarCargas();
+  ['opAtualizarAgenda','opAtualizarCargas'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=!permitido;});
+  const aviso=document.getElementById('avisoPermissaoAtualizacao');
+  if(aviso)aviso.style.display=permitido?'none':'block';
+}
+function abrirModalAtualizacao(){mostrarBotoesAtualizacao();document.getElementById('modalAtualizacao').classList.add('show');}
+function fecharModalAtualizacao(){document.getElementById('modalAtualizacao')?.classList.remove('show');}
+async function atualizarTudo(){
+  fecharModalAtualizacao();
+  const ok=await loadData(true,true);
+  if(ok)toast('Recalculo concluído','Todos os registros foram recalculados e gravados por data e turno.','ok');
+}
 function normalizarTextoImportado(v){return String(v??'').trim().replace(/^["']|["']$/g,'').trim();}
 function dividirLinhaImportada(linha){if(linha.includes('\t'))return linha.split('\t');if(linha.includes(';'))return linha.split(';');if(linha.includes('|'))return linha.split('|');return linha.split(/\s{2,}/);}
 function abrirModalAtualizarCargas(){if(!podeAtualizarCargas()){toast('Acesso negado','Somente o usuário autorizado pode atualizar as cargas.','warn');return;}const area=document.getElementById('cargasPasteArea'),preview=document.getElementById('cargasPastePreview');area.value='';preview.style.display='none';preview.innerHTML='';document.getElementById('modalAtualizarCargas').classList.add('show');setTimeout(()=>area.focus(),120);}
@@ -967,45 +1003,123 @@ function fecharModalAtualizarCargas(){document.getElementById('modalAtualizarCar
 function linhaPareceCabecalho(c,t){const cc=normUpper(c),tt=normUpper(t);return cc==='CARGA'||cc==='CARGAS'||tt==='TERMO'||cc.includes('CARGA')||tt.includes('TERMO');}
 function interpretarCargasColadas(texto){const linhas=String(texto||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean),registros=[],erros=[];linhas.forEach((linha,i)=>{const partes=dividirLinhaImportada(linha).map(normalizarTextoImportado);const carga=partes[0]||'',termo=partes.slice(1).join(' ').trim();if(i===0&&linhaPareceCabecalho(carga,termo))return;if(!carga||!termo){erros.push({linha:i+1,motivo:'A linha precisa conter CARGA e TERMO.'});return;}registros.push({carga,termo,linha:i+1});});return {registros,erros};}
 function exibirPreviewCargasImportadas(){const r=interpretarCargasColadas(document.getElementById('cargasPasteArea').value),p=document.getElementById('cargasPastePreview');p.style.display='block';p.innerHTML=`<div style="display:flex;gap:16px;flex-wrap:wrap"><span>Registros válidos: <b style="color:var(--green)">${r.registros.length}</b></span><span>Linhas com erro: <b style="color:${r.erros.length?'var(--red)':'var(--green)'}">${r.erros.length}</b></span></div>${r.erros.length?`<div style="margin-top:10px;color:#fca5a5;font-size:11px">${r.erros.slice(0,10).map(e=>`<div>Linha ${e.linha}: ${escapeHTML(e.motivo)}</div>`).join('')}</div>`:''}`;}
-async function processarAtualizacaoCargas(){if(!podeAtualizarCargas()){toast('Acesso negado','Somente o usuário 5520967 pode executar esta operação.','warn');return;}const resultado=interpretarCargasColadas(document.getElementById('cargasPasteArea').value);if(!resultado.registros.length){toast('Nenhum registro encontrado','Cole as colunas CARGA e TERMO.','warn');return;}if(resultado.erros.length){toast('Dados incompletos',`${resultado.erros.length} linha(s) com erro.`,'err');return;}if(!confirm(`Processar ${resultado.registros.length} carga(s)?\n\nCargas novas serão inseridas.\nCargas existentes terão o TERMO atualizado somente se for diferente.`))return;const botao=document.getElementById('processarAtualizarCargas');botao.disabled=true;showLoader(true,'Atualizando cargas...');const resumo={inseridas:0,atualizadas:0,ignoradas:0,erros:[]};try{const porCarga=new Map();resultado.registros.forEach(r=>porCarga.set(r.carga,r.termo));for(const [carga,termo] of porCarga.entries()){try{const {data,error}=await sb.from(TABLE_CARGAS).select('CARGA,TERMO').eq('CARGA',carga).limit(1);if(error)throw error;const existente=data?.[0]||null;if(!existente){const ins=await sb.from(TABLE_CARGAS).insert({CARGA:carga,TERMO:termo});if(ins.error)throw ins.error;resumo.inseridas++;continue;}const termoAtual=normalizarTextoImportado(existente.TERMO);if(termoAtual===termo){resumo.ignoradas++;continue;}const upd=await sb.from(TABLE_CARGAS).update({TERMO:termo}).eq('CARGA',carga);if(upd.error)throw upd.error;resumo.atualizadas++;}catch(e){console.error('Erro na carga:',carga,e);resumo.erros.push({carga,erro:e.message||String(e)});}}toast('Atualização concluída',`Inseridas: ${resumo.inseridas} · Atualizadas: ${resumo.atualizadas} · Sem alteração: ${resumo.ignoradas} · Erros: ${resumo.erros.length}`,resumo.erros.length?'warn':'ok');if(!resumo.erros.length)fecharModalAtualizarCargas();state.rawAgenda=[];state.rawCargas=[];state.rawSobrepostos=[];await loadData(true);}catch(e){console.error(e);toast('Erro na atualização',e.message||String(e),'err');}finally{botao.disabled=false;showLoader(false);}}
+async function processarAtualizacaoCargas(){if(!podeAtualizarCargas()){toast('Acesso negado','Somente o usuário 5520967 pode executar esta operação.','warn');return;}const resultado=interpretarCargasColadas(document.getElementById('cargasPasteArea').value);if(!resultado.registros.length){toast('Nenhum registro encontrado','Cole as colunas CARGA e TERMO.','warn');return;}if(resultado.erros.length){toast('Dados incompletos',`${resultado.erros.length} linha(s) com erro.`,'err');return;}if(!confirm(`Processar ${resultado.registros.length} carga(s)?\n\nCargas novas serão inseridas.\nCargas existentes terão o TERMO atualizado somente se for diferente.`))return;const botao=document.getElementById('processarAtualizarCargas');botao.disabled=true;showLoader(true,'Atualizando cargas...');const resumo={inseridas:0,atualizadas:0,ignoradas:0,erros:[]};try{const porCarga=new Map();resultado.registros.forEach(r=>porCarga.set(r.carga,r.termo));for(const [carga,termo] of porCarga.entries()){try{const {data,error}=await sb.from(TABLE_CARGAS).select('CARGA,TERMO').eq('CARGA',carga).limit(1);if(error)throw error;const existente=data?.[0]||null;if(!existente){const ins=await sb.from(TABLE_CARGAS).insert({CARGA:carga,TERMO:termo});if(ins.error)throw ins.error;resumo.inseridas++;continue;}const termoAtual=normalizarTextoImportado(existente.TERMO);if(termoAtual===termo){resumo.ignoradas++;continue;}const upd=await sb.from(TABLE_CARGAS).update({TERMO:termo}).eq('CARGA',carga);if(upd.error)throw upd.error;resumo.atualizadas++;}catch(e){console.error('Erro na carga:',carga,e);resumo.erros.push({carga,erro:e.message||String(e)});}}toast('Atualização concluída',`Inseridas: ${resumo.inseridas} · Atualizadas: ${resumo.atualizadas} · Sem alteração: ${resumo.ignoradas} · Erros: ${resumo.erros.length}`,resumo.erros.length?'warn':'ok');if(!resumo.erros.length)fecharModalAtualizarCargas();state.dataLoaded=false;toast('Atualização gravada','Clique em Atualizar para recarregar as bases e recalcular os resultados.','warn');}catch(e){console.error(e);toast('Erro na atualização',e.message||String(e),'err');}finally{botao.disabled=false;showLoader(false);}}
 function abrirModalAtualizarAgenda(){if(!podeAtualizarCargas()){toast('Acesso negado','Somente o usuário autorizado pode atualizar a agenda.','warn');return;}const area=document.getElementById('agendaPasteArea'),preview=document.getElementById('agendaPastePreview');area.value='';preview.style.display='none';preview.innerHTML='';document.getElementById('modalAtualizarAgenda').classList.add('show');setTimeout(()=>area.focus(),120);}
 function fecharModalAtualizarAgenda(){document.getElementById('modalAtualizarAgenda')?.classList.remove('show');}
 function eCabecalhoAgenda(partes){const cab=partes.map(normUpper);return cab.some(p=>['AGENDA','SENHA','CARGA','STATUS','FORNECEDOR','CHEGADA','DTA_BASE','DTA BASE'].includes(p));}
 function interpretarAgendaColada(texto){const linhas=String(texto||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean),registros=[],erros=[];linhas.forEach((linha,i)=>{const partes=dividirLinhaImportada(linha).map(normalizarTextoImportado);if(i===0&&eCabecalhoAgenda(partes))return;if(partes.length<7){erros.push({linha:i+1,motivo:'São necessárias as 7 colunas: AGENDA, SENHA, CARGA, STATUS, FORNECEDOR, CHEGADA e DTA_BASE.'});return;}const r={agenda:partes[0],senha:partes[1],carga:partes[2],status:partes[3],fornecedor:partes[4],chegada:partes[5],dtaBase:partes[6],linha:i+1};if(!r.carga||!r.agenda){erros.push({linha:i+1,motivo:'AGENDA e CARGA são obrigatórios.'});return;}registros.push(r);});return {registros,erros};}
 function exibirPreviewAgendaImportada(){const r=interpretarAgendaColada(document.getElementById('agendaPasteArea').value),p=document.getElementById('agendaPastePreview');p.style.display='block';p.innerHTML=`<div style="display:flex;gap:16px;flex-wrap:wrap"><span>Registros válidos: <b style="color:var(--green)">${r.registros.length}</b></span><span>Linhas com erro: <b style="color:${r.erros.length?'var(--red)':'var(--green)'}">${r.erros.length}</b></span></div>${r.erros.length?`<div style="margin-top:10px;color:#fca5a5;font-size:11px">${r.erros.slice(0,10).map(e=>`<div>Linha ${e.linha}: ${escapeHTML(e.motivo)}</div>`).join('')}</div>`:''}`;}
-async function processarAtualizacaoAgenda(){if(!podeAtualizarCargas()){toast('Acesso negado','Somente o usuário 5520967 pode executar esta operação.','warn');return;}const resultado=interpretarAgendaColada(document.getElementById('agendaPasteArea').value);if(!resultado.registros.length){toast('Nenhum registro encontrado','Cole as 7 colunas da AGENDA.','warn');return;}if(resultado.erros.length){toast('Dados incompletos',`${resultado.erros.length} linha(s) com erro.`,'err');return;}if(!confirm(`Processar ${resultado.registros.length} linha(s) da AGENDA?\n\nRegistros novos serão inseridos.\nRegistros existentes serão atualizados.`))return;const botao=document.getElementById('processarAtualizarAgenda');botao.disabled=true;showLoader(true,'Atualizando AGENDA...');const resumo={inseridas:0,atualizadas:0,erros:[]};try{const porCarga=new Map();resultado.registros.forEach(r=>porCarga.set(r.carga,r));for(const registro of porCarga.values()){const payload={[COL_AG.agenda]:registro.agenda,[COL_AG.senha]:registro.senha||null,[COL_AG.carga]:registro.carga,[COL_AG.status]:registro.status||null,[COL_AG.fornecedor]:registro.fornecedor||null,[COL_AG.chegada]:registro.chegada||null,[COL_AG.dtaBase]:registro.dtaBase||null};try{const existe=await sb.from(TABLE_AGENDA).select(COL_AG.carga).eq(COL_AG.carga,registro.carga).limit(1);if(existe.error)throw existe.error;if(existe.data?.length){const upd=await sb.from(TABLE_AGENDA).update(payload).eq(COL_AG.carga,registro.carga);if(upd.error)throw upd.error;resumo.atualizadas++;}else{const ins=await sb.from(TABLE_AGENDA).insert(payload);if(ins.error)throw ins.error;resumo.inseridas++;}}catch(e){console.error('Erro na agenda:',registro.carga,e);resumo.erros.push({carga:registro.carga,erro:e.message||String(e)});}}toast('Atualização da AGENDA concluída',`Inseridas: ${resumo.inseridas} · Atualizadas: ${resumo.atualizadas} · Erros: ${resumo.erros.length}`,resumo.erros.length?'warn':'ok');if(!resumo.erros.length)fecharModalAtualizarAgenda();state.rawAgenda=[];state.rawCargas=[];state.rawSobrepostos=[];await loadData(true);}catch(e){console.error(e);toast('Erro na atualização',e.message||String(e),'err');}finally{botao.disabled=false;showLoader(false);}}
+async function processarAtualizacaoAgenda(){if(!podeAtualizarCargas()){toast('Acesso negado','Somente o usuário 5520967 pode executar esta operação.','warn');return;}const resultado=interpretarAgendaColada(document.getElementById('agendaPasteArea').value);if(!resultado.registros.length){toast('Nenhum registro encontrado','Cole as 7 colunas da AGENDA.','warn');return;}if(resultado.erros.length){toast('Dados incompletos',`${resultado.erros.length} linha(s) com erro.`,'err');return;}if(!confirm(`Processar ${resultado.registros.length} linha(s) da AGENDA?\n\nRegistros novos serão inseridos.\nRegistros existentes serão atualizados.`))return;const botao=document.getElementById('processarAtualizarAgenda');botao.disabled=true;showLoader(true,'Atualizando AGENDA...');const resumo={inseridas:0,atualizadas:0,erros:[]};try{const porCarga=new Map();resultado.registros.forEach(r=>porCarga.set(r.carga,r));for(const registro of porCarga.values()){const payload={[COL_AG.agenda]:registro.agenda,[COL_AG.senha]:registro.senha||null,[COL_AG.carga]:registro.carga,[COL_AG.status]:registro.status||null,[COL_AG.fornecedor]:registro.fornecedor||null,[COL_AG.chegada]:registro.chegada||null,[COL_AG.dtaBase]:registro.dtaBase||null};try{const existe=await sb.from(TABLE_AGENDA).select(COL_AG.carga).eq(COL_AG.carga,registro.carga).limit(1);if(existe.error)throw existe.error;if(existe.data?.length){const upd=await sb.from(TABLE_AGENDA).update(payload).eq(COL_AG.carga,registro.carga);if(upd.error)throw upd.error;resumo.atualizadas++;}else{const ins=await sb.from(TABLE_AGENDA).insert(payload);if(ins.error)throw ins.error;resumo.inseridas++;}}catch(e){console.error('Erro na agenda:',registro.carga,e);resumo.erros.push({carga:registro.carga,erro:e.message||String(e)});}}toast('Atualização da AGENDA concluída',`Inseridas: ${resumo.inseridas} · Atualizadas: ${resumo.atualizadas} · Erros: ${resumo.erros.length}`,resumo.erros.length?'warn':'ok');if(!resumo.erros.length)fecharModalAtualizarAgenda();state.dataLoaded=false;toast('Atualização gravada','Clique em Atualizar para recarregar as bases e recalcular os resultados.','warn');}catch(e){console.error(e);toast('Erro na atualização',e.message||String(e),'err');}finally{botao.disabled=false;showLoader(false);}}
 
-function storedNum(row,key){const v=row?.[RC[key]];if(v===null||v===undefined||v==='')return null;const n=Number(v);return Number.isFinite(n)?n:null;}
-function getManualValue(key,date){return state.gran==='dia'&&key!=='agenda'?storedNum(state.resultadosPorData[date],key):null;}
-async function loadResultados(start,end){
-  let rows=[];
-  for(let from=0;;from+=1000){
-    const {data,error}=await sb.from(TABLE_RESULTADOS).select('*').gte('DATA',start).lte('DATA',end).range(from,from+999);
-    if(error)throw error;rows.push(...(data||[]));if((data||[]).length<1000)break;
-  }
-  state.resultadosPorData=Object.fromEntries(rows.map(r=>[String(r.DATA).slice(0,10),r]));
+function storedNum(row,key){const col=RC[key];const v=col?row?.[col]:null;if(v===null||v===undefined||v==='')return null;const n=Number(v);return Number.isFinite(n)?n:null;}
+function getManualValue(key,date){
+  if(state.gran!=='dia'||key==='agenda'||key==='agenda_noshow')return null;
+  return storedNum(state.resultadosPorTurno[chaveResultado(date,state.turno)],key);
 }
-function resultPayload(date,b){
-  const d=Math.max(0,b.agenda-b.no_show),row={DATA:date};
+function payloadResultado(data,b,turno){
+  if(!TURNOS.includes(turno))throw new Error(`Turno inválido para gravação: ${turno}`);
+  const d=Math.max(0,(b.agenda||0)-(b.no_show||0));
+  const row={DATA:data,TURNO:turno};
+  row[RC.agenda]=Number(b.agenda||0);
   for(const k of RK)row[RC[k]]=Number(b[k]||0);
   row[RC.agenda_noshow]=d;
-  row[RC.pct_no_prazo]=d?b.no_prazo/d*100:0;
-  row[RC.pct_recebido]=d?b.recebido/d*100:0;
+  row[RC.sobrepostas]=Number(b.sobrepostas||0);
+  row[RC.pct_no_prazo]=d?(Number(b.no_prazo||0)/d)*100:0;
+  row[RC.pct_recebido]=d?(Number(b.recebido||0)/d)*100:0;
   return row;
 }
-async function seedResultados(){
-  const computed=aggregate(false).daily;
-  for(const [date,b] of computed){
-    if(state.resultadosPorData[date])continue;
-    const {error}=await sb.from(TABLE_RESULTADOS).upsert(resultPayload(date,b),{onConflict:'DATA',ignoreDuplicates:true});
-    if(error)throw error;
+// Grava apenas colunas já usadas pelo esquema existente; AGENDA e SOBREPOSTAS permanecem no cache local.
+function payloadBancoResultado(row){
+  const colunasPersistidas=['DATA','TURNO','NO SHOW','AGENDA - NOSHOW','RECEBIDO','BACKLOG RECEBIDO','BACKLOG PENDENTE','NO PRAZO','< 4 HRS','RECUSADO','% NO PRAZO','% RECEBIDO'];
+  const payload={};
+  for(const coluna of colunasPersistidas){if(Object.prototype.hasOwnProperty.call(row,coluna))payload[coluna]=row[coluna];}
+  return payload;
+}
+function calcularResultados(){
+  const porDataTurno=new Map(),senhas=new Map();
+  const obter=(data,turno)=>{
+    const k=chaveResultado(data,turno);
+    if(!porDataTurno.has(k))porDataTurno.set(k,{DATA:data,TURNO:turno,...emptyBucket()});
+    return porDataTurno.get(k);
+  };
+  // AGENDA mantém o critério original: SENHA distinta por DTA_BASE; o turno usa AGENDA.
+  for(const a of state.rawAgenda){
+    const parsed=parseDateTimeBR(a[COL_AG.dtaBase]);
+    const data=parsed?toISODate(parsed):null;
+    const senha=String(a[COL_AG.senha]??'').trim();
+    if(!data||!senha)continue;
+    if(!senhas.has(chaveResultado(data,'TODOS')))senhas.set(chaveResultado(data,'TODOS'),new Set());
+    senhas.get(chaveResultado(data,'TODOS')).add(senha);
+    const turno=turnoPorHorario(a[COL_AG.agenda]);
+    if(turno){
+      const key=chaveResultado(data,turno);
+      if(!senhas.has(key))senhas.set(key,new Set());
+      senhas.get(key).add(senha);
+    }
+  }
+  for(const [key,distinct] of senhas){
+    const [data,turno]=key.split('::');
+    obter(data,turno).agenda=distinct.size;
+  }
+  for(const r of state.registros){
+    for(const def of ROWS){
+      const k=def.key;
+      if(k==='agenda'||k==='agenda_noshow'||!r[k])continue;
+      const data=dateForRow(r,k);
+      if(!data)continue;
+      obter(data,'TODOS')[k]++;
+      const turno=turnoDaMetrica(r,k);
+      if(turno&&TURNOS_OPERACIONAIS.includes(turno))obter(data,turno)[k]++;
+    }
+  }
+  const datas=[...new Set([...porDataTurno.values()].map(r=>r.DATA))];
+  const rows=[];
+  for(const data of datas){
+    for(const turno of TURNOS){
+      const b=obter(data,turno);
+      b.agenda_noshow=Math.max(0,(b.agenda||0)-(b.no_show||0));
+      rows.push(payloadResultado(data,b,turno));
+    }
+  }
+  rows.sort((a,b)=>a.DATA.localeCompare(b.DATA)||TURNOS.indexOf(a.TURNO)-TURNOS.indexOf(b.TURNO));
+  return rows;
+}
+async function gravarResultados(rows){
+  const porData=new Map();
+  for(const row of rows){
+    if(!TURNOS.includes(row.TURNO))throw new Error(`TURNO ausente ou inválido em ${row.DATA}`);
+    if(!porData.has(row.DATA))porData.set(row.DATA,[]);
+    porData.get(row.DATA).push(row);
+  }
+  for(const [data,grupo] of porData){
+    const turnos=new Set(grupo.map(r=>r.TURNO));
+    if(grupo.length!==TURNOS.length||TURNOS.some(t=>!turnos.has(t)))throw new Error(`A data ${data} precisa ter exatamente uma linha para TODOS e uma para cada turno.`);
+  }
+  // Linhas antigas sem TURNO passam a TODOS; datas recalculadas abaixo são substituídas pelas quatro linhas novas.
+  const legado=await sb.from(TABLE_RESULTADOS).update({TURNO:'TODOS'}).is('TURNO',null);
+  if(legado.error)throw new Error(`Falha ao normalizar TURNO antigo: ${legado.error.message||legado.error}`);
+  const datas=[...porData.keys()];
+  // Sem ON CONFLICT/índice UNIQUE: remove apenas as datas recalculadas e reinsere seus quatro resultados.
+  for(let i=0;i<datas.length;i+=50){
+    const loteDatas=datas.slice(i,i+50);
+    const removidos=await sb.from(TABLE_RESULTADOS).delete().in('DATA',loteDatas);
+    if(removidos.error)throw new Error(`Falha ao substituir resultados antigos: ${removidos.error.message||removidos.error}`);
+    const lote=loteDatas.flatMap(data=>porData.get(data).map(payloadBancoResultado));
+    const gravados=await sb.from(TABLE_RESULTADOS).insert(lote);
+    if(gravados.error)throw new Error(`Falha ao inserir os quatro resultados por data: ${gravados.error.message||gravados.error}`);
   }
 }
 async function updateResultado(date,patch){
-  const {data,error}=await sb.from(TABLE_RESULTADOS).update(patch).eq('DATA',date).select('*');
+  const turno=state.turno;
+  if(!TURNOS.includes(turno))throw new Error('Turno inválido.');
+  const key=chaveResultado(date,turno);
+  const base=state.resultadosPorTurno[key]||state.computedResultadosPorTurno[key];
+  if(!base)throw new Error(`Não há resultado carregado para ${date} / ${turno}.`);
+  const payload={...base,...patch,DATA:date,TURNO:turno};
+  const {data,error}=await sb.from(TABLE_RESULTADOS).update(payloadBancoResultado(payload)).eq('DATA',date).eq('TURNO',turno).select('*');
   if(error)throw error;
-  if(!data||data.length!==1)throw new Error(`Nenhum registro atualizado para ${date}. Verifique permissões e UNIQUE(DATA).`);
-  state.resultadosPorData[date]=data[0];
+  if(!data?.length)throw new Error(`Não encontrei a linha ${date} / ${turno} no BD_RESULTADOS. Clique em Atualizar e tente novamente.`);
+  state.resultadosPorTurno[key]={...payload,...(data?.[0]||{}),AGENDA:base.AGENDA,SOBREPOSTAS:base.SOBREPOSTAS};
 }
 
 /* ============================================================================
@@ -1070,11 +1184,12 @@ function buildRegistros(){
     if (carga) agendaByCarga.set(carga, a);
   });
 
-  // Conjunto de CARGAS_RECEBIDAS por CARGA
+  // Conjunto e referência de CARGAS_RECEBIDAS por CARGA (a primeira linha preserva a regra original).
   const cargasSet = new Set();
+  const cargaByCarga = new Map();
   state.rawCargas.forEach(c => {
     const carga = String(c[COL_CR.carga] ?? '').trim();
-    if (carga) cargasSet.add(carga);
+    if (carga){ cargasSet.add(carga); if(!cargaByCarga.has(carga))cargaByCarga.set(carga,c); }
   });
 
   const sobrepostasVistas = new Set();
@@ -1119,8 +1234,9 @@ function buildRegistros(){
       no_show: noShow ? 1 : 0,
       recusado: normUpper(a[COL_AG.status]) === 'RECUSADO' ? 1 : 0,
       agenda_noshow: 0,
-      turnoAgenda: '',
-      turnoConf: '',
+      turnoAgenda: turnoPorHorario(a[COL_AG.agenda]),
+      turnoTermo: null,
+      turnoRecusado: turnoPorHorario(cargaByCarga.get(carga)?.[COL_CR.agenda]),
     });
   });
 
@@ -1155,8 +1271,9 @@ function buildRegistros(){
       no_show: 0,
       recusado: 0,
       agenda_noshow: 0,
-      turnoAgenda: '',
-      turnoConf: '',
+      turnoAgenda: turnoPorHorario(c[COL_CR.agenda]),
+      turnoTermo: turnoPorHorario(c[COL_CR.termo]),
+      turnoRecusado: turnoPorHorario(c[COL_CR.agenda]),
     });
   });
 
@@ -1191,7 +1308,8 @@ function buildRegistros(){
       recusado:0,
       agenda_noshow:0,
       turnoAgenda:'',
-      turnoConf:''
+      turnoTermo:turnoPorHorario(cargaByCarga.get(carga)?.[COL_CR.termo]),
+      turnoRecusado:null
     });
   });
 
@@ -1302,27 +1420,25 @@ function registrosDoPeriodo(){
   return out;
 }
 
+function bucketDoResultado(row){
+  const b=emptyBucket();
+  for(const k of Object.keys(b)){
+    const n=storedNum(row,k);
+    b[k]=n===null?0:n;
+  }
+  b.agenda_noshow=Math.max(0,(b.agenda||0)-(b.no_show||0));
+  return b;
+}
 function aggregate(saved=true){
   const cols=buildColumns(),total=emptyBucket(),regs=registrosDoPeriodo(),daily=new Map();
-  const {start,end}=getFetchRange(),senhas=new Map();
-  function day(date){if(!daily.has(date))daily.set(date,emptyBucket());return daily.get(date);}
-  for(const a of state.rawAgenda){
-    const parsed=parseDateTimeBR(a[COL_AG.dtaBase]),date=parsed?toISODate(parsed):null,senha=String(a[COL_AG.senha]??'').trim();
-    if(!date||date<start||date>end||!senha)continue;
-    if(!senhas.has(date))senhas.set(date,new Set());senhas.get(date).add(senha);
-  }
-  for(const [date,unique] of senhas)day(date).agenda=unique.size;
-  for(const r of regs)for(const row of ROWS){
-    const k=row.key;if(k==='agenda'||k==='agenda_noshow'||!r[k])continue;
-    const date=dateForRow(r,k);if(date&&date>=start&&date<=end)day(date)[k]++;
-  }
-  if(saved)for(const [date,row] of Object.entries(state.resultadosPorData)){
-    if(date<start||date>end)continue;
-    const b=day(date);
-    for(const k of RK){const v=storedNum(row,k);if(v!==null)b[k]=v;}
-  }
-  for(const [date,b] of daily){
-    b.agenda_noshow=Math.max(0,b.agenda-b.no_show);
+  const source=saved?state.resultadosPorTurno:state.computedResultadosPorTurno;
+  const {start,end}=getFetchRange();
+  for(const row of Object.values(source)){
+    if(row.TURNO!==state.turno)continue;
+    const date=String(row.DATA||'').slice(0,10);
+    if(!date||date<start||date>end)continue;
+    const b=bucketDoResultado(row);
+    daily.set(date,b);
     const col=colForDate(cols,date);
     for(const k of Object.keys(total)){total[k]+=b[k]||0;if(col)col.bucket[k]+=b[k]||0;}
   }
@@ -1752,6 +1868,7 @@ function openDrill(rowKey, colKey, colIdx){
 
   const regs = agg.registros.filter(r => {
     if (!rowFilterFor(rowKey, r)) return false;
+    if(state.turno!=='TODOS'&&turnoDaMetrica(r,rowKey)!==state.turno)return false;
     const dt = dateForRow(r, rowKey);
     if (!dt) return false;
     const c = colForDate(agg.cols, dt);
@@ -1860,11 +1977,7 @@ async function saveComment(){
     if (error) throw error;
     toast('Comentário salvo', 'Visível para toda a diretoria.', 'ok');
     document.getElementById('commentText').value = '';
-    const { start, end } = getFetchRange();
-    await loadResultados(start,end);
-    await seedResultados();
-    await loadResultados(start,end);
-    await loadComments(start,end);
+    await loadComments();
     renderCommentList();
     render();
   } catch(e){
@@ -1873,22 +1986,22 @@ async function saveComment(){
   } finally { btn.disabled = false; }
 }
 
-async function loadComments(start, end){
+async function loadComments(){
   try {
-    const { data, error } = await sb.from(TABLE_OBS).select('*').gte(COL_OBS.dta, start).lte(COL_OBS.dta, end);
-    if (error) throw error;
-    state.obsAvailable = true;
-    const grouped = {};
-    (data||[]).forEach(c => {
-      const k = c[COL_OBS.dta];
-      if (!grouped[k]) grouped[k] = [];
+    const data=await fetchAllFromTable(TABLE_OBS);
+    state.obsAvailable=true;
+    const grouped={};
+    (data||[]).forEach(c=>{
+      const k=String(c[COL_OBS.dta]||'').slice(0,10);
+      if(!k)return;
+      if(!grouped[k])grouped[k]=[];
       grouped[k].push(c);
     });
-    state.comments = grouped;
+    state.comments=grouped;
   } catch(e){
-    console.warn('Comentários indisponíveis:', e);
-    state.obsAvailable = false;
-    state.comments = {};
+    console.warn('Comentários indisponíveis:',e);
+    state.obsAvailable=false;
+    state.comments={};
   }
 }
 
@@ -2025,7 +2138,8 @@ async function saveMissingCargas(){
     closeMissingModal();
     state.rawAgenda = [];
     state.rawCargas = [];
-    await loadData(true);
+    state.dataLoaded=false;
+    toast('Atualização gravada','Clique em Atualizar para recarregar as bases e recalcular os resultados.','warn');
   } catch(e){
     console.error(e);
     toast('Erro ao salvar', e.message || String(e), 'err');
@@ -2237,23 +2351,20 @@ async function fetchAllFromTable(tableName){
   return all;
 }
 
-async function loadData(force){
-  if (!force && state.rawAgenda.length){
-    render();
-    return;
-  }
-  showLoader(true, 'Carregando AGENDA e CARGAS_RECEBIDAS…');
-  try {
-    const [agendaRows, cargasRows, sobrepostosRows] = await Promise.all([
+async function loadData(force=false, syncSources=false){
+  if(!force&&state.dataLoaded){render();return true;}
+  showLoader(true,'Carregando bases, calculando turnos e gravando BD_RESULTADOS…');
+  try{
+    const [agendaRows,cargasRows,sobrepostosRows]=await Promise.all([
       fetchAllFromTable(TABLE_AGENDA),
       fetchAllFromTable(TABLE_CARGAS),
       fetchAllFromTable(TABLE_SOBREPOSTOS),
-      Object.keys(state.weather).length ? Promise.resolve() : loadWeather()
+      Object.keys(state.weather).length?Promise.resolve():loadWeather()
     ]);
     state.rawAgenda=agendaRows;
     state.rawCargas=cargasRows;
-    state.rawSobrepostos=sobrepostosRows || [];
-    if(force){
+    state.rawSobrepostos=sobrepostosRows||[];
+    if(syncSources){
       const {ok,fail}=await syncCargasComAgenda();
       if(ok){state.rawCargas=await fetchAllFromTable(TABLE_CARGAS);toast('Sincronização',`${ok} registro(s) atualizado(s).`,'ok');}
       if(fail)toast('Sincronização parcial',`${fail} atualização(ões) falharam.`,'warn');
@@ -2261,22 +2372,27 @@ async function loadData(force){
     buildRegistros();
     detectMissingCargas();
     updateMissingAlert();
+    document.getElementById('footerConexao').textContent=
+      `AGENDA: ${nfInt.format(state.rawAgenda.length)} · CARGAS_RECEBIDAS: ${nfInt.format(state.rawCargas.length)} · SOBREPOSTOS: ${nfInt.format(state.rawSobrepostos.length)}`;
 
-    document.getElementById('footerConexao').textContent =
-      `AGENDA: ${nfInt.format(agendaRows.length)} · CARGAS_RECEBIDAS: ${nfInt.format(cargasRows.length)} · SOBREPOSTOS: ${nfInt.format((sobrepostosRows||[]).length)}`;
-
-    const { start, end } = getFetchRange();
-    await loadResultados(start,end);
-    await seedResultados();
-    await loadResultados(start,end);
-    await loadComments(start,end);
+    const computed=calcularResultados();
+    await gravarResultados(computed);
+    const cache={};
+    computed.forEach(row=>cache[chaveResultado(row.DATA,row.TURNO)]=row);
+    state.computedResultadosPorTurno={...cache};
+    state.resultadosPorTurno={...cache};
+    await loadComments();
+    state.dataLoaded=true;
     updatePeriodHints();
     updateEditHint();
     render();
-  } catch(e){
+    return true;
+  }catch(e){
     console.error(e);
-    toast('Erro ao carregar', e.message || String(e), 'err');
-  } finally { showLoader(false); }
+    state.dataLoaded=false;
+    toast('Erro ao carregar/gravar',e.message||String(e),'err');
+    return false;
+  }finally{showLoader(false);}
 }
 
 /* ============================================================================
@@ -2314,6 +2430,11 @@ function loadSession(){
   return null;
 }
 function clearSession(){ try { sessionStorage.removeItem(SESSION_KEY); localStorage.removeItem(REMEMBER_KEY); } catch(e){} }
+function limparCacheSessao(){
+  state.rawAgenda=[];state.rawCargas=[];state.rawSobrepostos=[];state.registros=[];state.missingCargas=[];
+  state.comments={};state.weather={};state.resultadosPorTurno={};state.computedResultadosPorTurno={};state.dataLoaded=false;
+  state.selectedDates.clear();state.lastClickedDate=null;state.drill=null;state.statusFilter=null;
+}
 function showLogin(){ document.getElementById('loginScreen').classList.remove('hide'); document.body.classList.add('locked'); document.getElementById('app').classList.remove('show'); }
 function hideLogin(){ document.getElementById('loginScreen').classList.add('hide'); document.body.classList.remove('locked'); document.getElementById('app').classList.add('show'); }
 function setUserUI(u){
@@ -2382,14 +2503,13 @@ function bindEvents(){
   document.getElementById('fMes').addEventListener('change', e => {
     state.mes = e.target.value || todayISO().slice(0,7);
     state.selectedDates.clear(); state.lastClickedDate = null;
-    state.rawAgenda = []; state.rawCargas = [];
-    loadData(true);
+    updatePeriodHints();
+    render();
   });
   document.getElementById('fCd').addEventListener('change', e => {
     state.cd = e.target.value;
     state.selectedDates.clear(); state.lastClickedDate = null;
-    state.rawAgenda = []; state.rawCargas = [];
-    loadData(true);
+    render();
   });
   document.getElementById('fTurno').addEventListener('change', e => {
     state.turno = e.target.value;
@@ -2470,11 +2590,13 @@ function bindEvents(){
   });
   document.getElementById('btnCloseDrill').addEventListener('click', closeDrill);
 
-  document.getElementById('btnRefresh').addEventListener('click', async () => {
-    state.rawAgenda = []; state.rawCargas = []; state.rawSobrepostos = [];
-    await loadData(true);
-    toast('Atualizado', 'Painel sincronizado.', 'ok');
-  });
+  document.getElementById('btnRefresh').addEventListener('click',abrirModalAtualizacao);
+  document.getElementById('fecharModalAtualizacao').addEventListener('click',fecharModalAtualizacao);
+  document.getElementById('cancelarModalAtualizacao').addEventListener('click',fecharModalAtualizacao);
+  document.getElementById('modalAtualizacao').addEventListener('click',e=>{if(e.target.id==='modalAtualizacao')fecharModalAtualizacao();});
+  document.getElementById('opAtualizarAgenda').addEventListener('click',()=>{fecharModalAtualizacao();abrirModalAtualizarAgenda();});
+  document.getElementById('opAtualizarTudo').addEventListener('click',atualizarTudo);
+  document.getElementById('opAtualizarCargas').addEventListener('click',()=>{fecharModalAtualizacao();abrirModalAtualizarCargas();});
   document.getElementById('btnExport').addEventListener('click', exportData);
   document.getElementById('btnCopy').addEventListener('click', copyTable);
   document.getElementById('btnTheme').addEventListener('click', () => {
@@ -2489,6 +2611,8 @@ function bindEvents(){
   document.getElementById('btnLogout').addEventListener('click', () => {
     if (!confirm('Deseja sair do painel?')) return;
     clearSession();
+    limparCacheSessao();
+    appBooted=false;
     state.user = null;
     document.getElementById('loginUser').value = '';
     document.getElementById('loginPass').value = '';
@@ -2518,19 +2642,17 @@ function bindEvents(){
   document.getElementById('closeMissing').addEventListener('click', closeMissingModal);
   document.getElementById('cancelMissing').addEventListener('click', closeMissingModal);
   document.getElementById('saveMissing').addEventListener('click', saveMissingCargas);
-  document.getElementById('btnAtualizarCargas')?.addEventListener('click',abrirModalAtualizarCargas);
   document.getElementById('closeAtualizarCargas')?.addEventListener('click',fecharModalAtualizarCargas);
   document.getElementById('cancelAtualizarCargas')?.addEventListener('click',fecharModalAtualizarCargas);
   document.getElementById('processarAtualizarCargas')?.addEventListener('click',processarAtualizacaoCargas);
   document.getElementById('cargasPasteArea')?.addEventListener('input',exibirPreviewCargasImportadas);
   document.getElementById('modalAtualizarCargas')?.addEventListener('click',e=>{if(e.target.id==='modalAtualizarCargas')fecharModalAtualizarCargas();});
-  document.getElementById('btnAtualizarAgenda')?.addEventListener('click',abrirModalAtualizarAgenda);
   document.getElementById('closeAtualizarAgenda')?.addEventListener('click',fecharModalAtualizarAgenda);
   document.getElementById('cancelAtualizarAgenda')?.addEventListener('click',fecharModalAtualizarAgenda);
   document.getElementById('processarAtualizarAgenda')?.addEventListener('click',processarAtualizacaoAgenda);
   document.getElementById('agendaPasteArea')?.addEventListener('input',exibirPreviewAgendaImportada);
   document.getElementById('modalAtualizarAgenda')?.addEventListener('click',e=>{if(e.target.id==='modalAtualizarAgenda')fecharModalAtualizarAgenda();});
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'){fecharModalAtualizarCargas();fecharModalAtualizarAgenda();}});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){fecharModalAtualizacao();fecharModalAtualizarCargas();fecharModalAtualizarAgenda();}});
 
   document.getElementById('modalMissing').addEventListener('click', e => {
     if (e.target.id === 'modalMissing') closeMissingModal();
@@ -2557,15 +2679,15 @@ function bindEvents(){
    BOOTSTRAP
    ============================================================================ */
 let appBooted = false;
+let eventsBound = false;
 async function bootstrapApp(){
-  if (appBooted) return;
-  appBooted = true;
-  bindEvents();
+  if(!eventsBound){bindEvents();eventsBound=true;}
+  appBooted=true;
   updatePeriodHints();
   updateEditHint();
   const mesInput = document.getElementById('fMes');
   mesInput.max = todayISO().slice(0,7);
-  await loadData();
+  await loadData(true,false);
   mostrarBotoesAtualizacao();
 }
 
