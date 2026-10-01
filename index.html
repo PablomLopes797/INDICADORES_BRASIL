@@ -270,7 +270,7 @@ table.grid thead th.selected i{color:#fef3c7}
 table.grid thead th .obs-dot{position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:#fbbf24;box-shadow:0 0 8px 0 #fbbf24,0 0 0 2px rgba(251,191,36,.25);animation:obsPulse 2s ease-in-out infinite}
 @keyframes obsPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.2);opacity:.75}}
 table.grid th.corner{position:sticky;left:0;z-index:6;background:var(--card-head-1);text-align:left;padding-left:16px;min-width:190px;width:190px;font-family:var(--sans);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);box-shadow:1px 0 0 var(--line),8px 0 14px -10px rgba(0,0,0,.5)}
-table.grid th.total-col{position:sticky;right:112px;z-index:6;background:var(--total-cell);box-shadow:-1px 0 0 var(--line),-8px 0 14px -10px rgba(0,0,0,.5);min-width:88px;width:88px;font-size:11px;color:var(--txt)}
+table.grid th.total-col{position:sticky;right:96px;z-index:6;background:var(--total-cell);box-shadow:-1px 0 0 var(--line),-8px 0 14px -10px rgba(0,0,0,.5);min-width:88px;width:88px;font-size:11px;color:var(--txt)}
 table.grid th.avg-col{position:sticky;right:0;z-index:6;background:var(--derived-total);box-shadow:-1px 0 0 var(--line);min-width:96px;width:96px;font-size:11px;color:var(--txt)}
 table.grid td{padding:8px 5px;text-align:right;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--txt);border-bottom:1px solid var(--line-soft);white-space:nowrap;transition:background .12s}
 table.grid td.zero{color:var(--muted-2) !important;background:transparent !important}
@@ -278,7 +278,7 @@ table.grid td.empty{color:var(--muted-2) !important;background:transparent !impo
 table.grid td.rowlabel{position:sticky;left:0;z-index:3;background:var(--row-label);text-align:left;padding-left:16px;font-family:var(--sans);font-size:11.5px;font-weight:700;letter-spacing:.3px;color:var(--txt-2);display:flex;align-items:center;gap:9px;height:100%;min-height:36px;box-shadow:1px 0 0 var(--line),8px 0 14px -10px rgba(0,0,0,.5);border-bottom:1px solid var(--line-soft)}
 table.grid td.rowlabel .dot{width:7px;height:7px;border-radius:50%;flex:none;background:var(--c,var(--blue));box-shadow:0 0 10px 0 var(--c,var(--blue));transition:transform .15s,box-shadow .15s}
 table.grid tbody tr:hover td.rowlabel{background:var(--row-label-h)}
-table.grid td.total-cell{position:sticky;right:112px;z-index:3;background:var(--total-cell);color:var(--txt);font-weight:800;font-size:12.5px;box-shadow:-1px 0 0 var(--line),-8px 0 14px -10px rgba(0,0,0,.5)}
+table.grid td.total-cell{position:sticky;right:96px;z-index:3;background:var(--total-cell);color:var(--txt);font-weight:800;font-size:12.5px;box-shadow:-1px 0 0 var(--line),-8px 0 14px -10px rgba(0,0,0,.5)}
 table.grid td.avg-cell{position:sticky;right:0;z-index:3;background:color-mix(in srgb,var(--purple) 10%,var(--total-cell));color:var(--avg-txt);font-weight:800;font-size:12.5px;box-shadow:-1px 0 0 var(--line)}
 table.grid tbody tr:hover td.total-cell{background:var(--total-cell-h)}
 table.grid tbody tr:hover td.avg-cell{background:color-mix(in srgb,var(--purple) 18%,var(--total-cell))}
@@ -536,6 +536,10 @@ table.missing input.filled{border-color:rgba(16,185,129,.6)}
       </div>
       <div class="field"><label>&nbsp;</label>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary" id="btnAtualizarCargas" style="display:none">
+            <svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+            Atualizar Cargas
+          </button>
           <button class="btn btn-warn" id="btnMissing" style="display:none">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
             Cargas faltantes <span class="badge" id="missingCount">0</span>
@@ -738,6 +742,34 @@ table.missing input.filled{border-color:rgba(16,185,129,.6)}
   </div>
 </div>
 
+
+<!-- MODAL ATUALIZAR CARGAS -->
+<div class="overlay" id="modalAtualizarCargas">
+  <div class="modal wide">
+    <div class="modal-head">
+      <div>
+        <h2><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Atualizar CARGAS_RECEBIDAS</h2>
+        <p>Cole duas colunas do Excel, nesta ordem: <b>CARGA</b> e <b>TERMO</b>.</p>
+      </div>
+      <button class="x-btn" id="closeAtualizarCargas">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:12px;padding:12px;border-radius:10px;background:color-mix(in srgb,var(--cyan) 10%,transparent);border:1px solid color-mix(in srgb,var(--cyan) 35%,transparent);font-size:12px;color:var(--txt-2);line-height:1.5">
+        Aceita dados copiados do Excel separados por <b>tabulação</b>, <b>ponto e vírgula</b>, <b>barra vertical</b> ou dois espaços. A primeira linha pode conter <b>CARGA</b> e <b>TERMO</b>.
+      </div>
+      <textarea id="cargasPasteArea" style="width:100%;min-height:260px;resize:vertical;background:var(--input-bg);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.6;outline:none" placeholder="CARGA&#9;TERMO&#10;123456&#9;01/10/2026 08:30&#10;123457&#9;01/10/2026 09:15"></textarea>
+      <div id="cargasPastePreview" style="display:none;margin-top:14px;padding:12px;border-radius:10px;background:var(--card-2);border:1px solid var(--line);font-size:12px;color:var(--txt-2)"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="cancelAtualizarCargas">Cancelar</button>
+      <button class="btn btn-primary" id="processarAtualizarCargas">
+        <svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+        Atualizar Supabase
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="loader" id="loader"><div class="spinner"></div><p id="loaderText">Processando…</p></div>
 <div class="toasts" id="toasts"></div>
 
@@ -928,6 +960,149 @@ function refDateObj(str){
 const RC={no_show:'NO SHOW',agenda_noshow:'AGENDA - NOSHOW',recebido:'RECEBIDO',backlog_recebido:'BACKLOG RECEBIDO',backlog_pendente:'BACKLOG PENDENTE',no_prazo:'NO PRAZO',abaixo_4hrs:'< 4 HRS',recusado:'RECUSADO',pct_no_prazo:'% NO PRAZO',pct_recebido:'% RECEBIDO'};
 const RK=['no_show','recebido','backlog_recebido','backlog_pendente','no_prazo','abaixo_4hrs','recusado'];
 function canEdit(){return String(state.user?.USER||'')===EDIT_USER;}
+/* ============================================================
+   ATUALIZAÇÃO DE CARGAS_RECEBIDAS — usuário 5520967
+   ============================================================ */
+function podeAtualizarCargas(){
+  return String(state.user?.USER || '') === EDIT_USER;
+}
+function mostrarBotaoAtualizarCargas(){
+  const botao = document.getElementById('btnAtualizarCargas');
+  if(botao) botao.style.display = podeAtualizarCargas() ? 'inline-flex' : 'none';
+}
+function abrirModalAtualizarCargas(){
+  if(!podeAtualizarCargas()){
+    toast('Acesso negado','Somente o usuário autorizado pode atualizar as cargas.','warn');
+    return;
+  }
+  const area = document.getElementById('cargasPasteArea');
+  const preview = document.getElementById('cargasPastePreview');
+  area.value = '';
+  preview.style.display = 'none';
+  preview.innerHTML = '';
+  document.getElementById('modalAtualizarCargas').classList.add('show');
+  setTimeout(()=>area.focus(),120);
+}
+function fecharModalAtualizarCargas(){
+  document.getElementById('modalAtualizarCargas')?.classList.remove('show');
+}
+function normalizarTextoImportado(v){
+  return String(v ?? '').trim().replace(/^["']|["']$/g,'').trim();
+}
+function linhaPareceCabecalho(c,t){
+  const cc = normUpper(c), tt = normUpper(t);
+  return cc === 'CARGA' || cc === 'CARGAS' || tt === 'TERMO' || cc.includes('CARGA') || tt.includes('TERMO');
+}
+function interpretarCargasColadas(texto){
+  const linhas = String(texto || '').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  const registros = [], erros = [];
+  linhas.forEach((linha,i)=>{
+    let partes;
+    if(linha.includes('\t')) partes = linha.split('\t');
+    else if(linha.includes(';')) partes = linha.split(';');
+    else if(linha.includes('|')) partes = linha.split('|');
+    else partes = linha.split(/\s{2,}/);
+    const carga = normalizarTextoImportado(partes[0]);
+    const termo = normalizarTextoImportado(partes.slice(1).join(' '));
+    if(i === 0 && linhaPareceCabecalho(carga,termo)) return;
+    if(!carga || !termo){
+      erros.push({linha:i+1,motivo:'A linha precisa conter CARGA e TERMO.'});
+      return;
+    }
+    registros.push({carga,termo,linha:i+1});
+  });
+  return {registros,erros};
+}
+function exibirPreviewCargasImportadas(){
+  const resultado = interpretarCargasColadas(document.getElementById('cargasPasteArea').value);
+  const preview = document.getElementById('cargasPastePreview');
+  preview.style.display = 'block';
+  preview.innerHTML = `
+    <div style="display:flex;gap:16px;flex-wrap:wrap">
+      <span>Registros válidos: <b style="color:var(--green)">${resultado.registros.length}</b></span>
+      <span>Linhas com erro: <b style="color:${resultado.erros.length ? 'var(--red)' : 'var(--green)'}">${resultado.erros.length}</b></span>
+    </div>
+    ${resultado.erros.length ? `<div style="margin-top:10px;color:#fca5a5;font-size:11px;line-height:1.5">${resultado.erros.slice(0,10).map(e=>`<div>Linha ${e.linha}: ${escapeHTML(e.motivo)}</div>`).join('')}</div>` : ''}
+  `;
+}
+async function buscarCargaNoSupabase(carga){
+  const {data,error} = await sb.from(TABLE_CARGAS).select('CARGA,TERMO').eq('CARGA',carga).limit(1);
+  if(error) throw error;
+  return data?.[0] || null;
+}
+async function inserirCargaRecebida(carga,termo){
+  const {error} = await sb.from(TABLE_CARGAS).insert({CARGA:carga,TERMO:termo});
+  if(error) throw error;
+}
+async function atualizarTermoCarga(carga,termo){
+  const {error} = await sb.from(TABLE_CARGAS).update({TERMO:termo}).eq('CARGA',carga);
+  if(error) throw error;
+}
+async function processarAtualizacaoCargas(){
+  if(!podeAtualizarCargas()){
+    toast('Acesso negado','Somente o usuário 5520967 pode executar esta operação.','warn');
+    return;
+  }
+  const resultado = interpretarCargasColadas(document.getElementById('cargasPasteArea').value);
+  if(!resultado.registros.length){
+    toast('Nenhum registro encontrado','Cole as colunas CARGA e TERMO antes de continuar.','warn');
+    return;
+  }
+  if(resultado.erros.length){
+    toast('Dados incompletos',`${resultado.erros.length} linha(s) não possuem CARGA e TERMO válidos.`,'err');
+    return;
+  }
+  if(!confirm(`Serão processadas ${resultado.registros.length} carga(s).\n\nCargas novas serão inseridas.\nCargas existentes terão o TERMO atualizado somente se for diferente.\n\nDeseja continuar?`)) return;
+
+  const botao = document.getElementById('processarAtualizarCargas');
+  botao.disabled = true;
+  showLoader(true,`Atualizando ${resultado.registros.length} carga(s)...`);
+
+  const resumo = {inseridas:0,atualizadas:0,ignoradas:0,erros:[]};
+  try{
+    const porCarga = new Map();
+    resultado.registros.forEach(r=>porCarga.set(r.carga,r.termo));
+
+    for(const [carga,termo] of porCarga.entries()){
+      try{
+        const existente = await buscarCargaNoSupabase(carga);
+        if(!existente){
+          await inserirCargaRecebida(carga,termo);
+          resumo.inseridas++;
+          continue;
+        }
+        const termoAtual = normalizarTextoImportado(existente.TERMO);
+        if(termoAtual === termo){
+          resumo.ignoradas++;
+          continue;
+        }
+        await atualizarTermoCarga(carga,termo);
+        resumo.atualizadas++;
+      }catch(erroCarga){
+        console.error('Erro na carga:',carga,erroCarga);
+        resumo.erros.push({carga,erro:erroCarga.message || String(erroCarga)});
+      }
+    }
+
+    toast(
+      'Atualização concluída',
+      `Inseridas: ${resumo.inseridas} · Atualizadas: ${resumo.atualizadas} · Sem alteração: ${resumo.ignoradas} · Erros: ${resumo.erros.length}`,
+      resumo.erros.length ? 'warn' : 'ok'
+    );
+    if(!resumo.erros.length) fecharModalAtualizarCargas();
+
+    state.rawAgenda = [];
+    state.rawCargas = [];
+    await loadData(true);
+  }catch(erro){
+    console.error(erro);
+    toast('Erro na atualização',erro.message || String(erro),'err');
+  }finally{
+    botao.disabled = false;
+    showLoader(false);
+  }
+}
+
 function storedNum(row,key){const v=row?.[RC[key]];if(v===null||v===undefined||v==='')return null;const n=Number(v);return Number.isFinite(n)?n:null;}
 function getManualValue(key,date){return state.gran==='dia'&&key!=='agenda'?storedNum(state.resultadosPorData[date],key):null;}
 async function loadResultados(start,end){
@@ -2431,6 +2606,14 @@ function bindEvents(){
   document.getElementById('closeMissing').addEventListener('click', closeMissingModal);
   document.getElementById('cancelMissing').addEventListener('click', closeMissingModal);
   document.getElementById('saveMissing').addEventListener('click', saveMissingCargas);
+  document.getElementById('btnAtualizarCargas')?.addEventListener('click',abrirModalAtualizarCargas);
+  document.getElementById('closeAtualizarCargas')?.addEventListener('click',fecharModalAtualizarCargas);
+  document.getElementById('cancelAtualizarCargas')?.addEventListener('click',fecharModalAtualizarCargas);
+  document.getElementById('processarAtualizarCargas')?.addEventListener('click',processarAtualizacaoCargas);
+  document.getElementById('cargasPasteArea')?.addEventListener('input',exibirPreviewCargasImportadas);
+  document.getElementById('modalAtualizarCargas')?.addEventListener('click',e=>{if(e.target.id==='modalAtualizarCargas')fecharModalAtualizarCargas();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')fecharModalAtualizarCargas();});
+
   document.getElementById('modalMissing').addEventListener('click', e => {
     if (e.target.id === 'modalMissing') closeMissingModal();
   });
@@ -2465,6 +2648,7 @@ async function bootstrapApp(){
   const mesInput = document.getElementById('fMes');
   mesInput.max = todayISO().slice(0,7);
   await loadData();
+  mostrarBotaoAtualizarCargas();
 }
 
 (async function init(){
