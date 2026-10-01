@@ -435,6 +435,33 @@ table.missing input{width:100%;background:var(--input-bg);color:var(--txt);borde
 table.missing input:focus{border-color:var(--cyan);box-shadow:0 0 0 4px rgba(34,211,238,.14)}
 table.missing input.filled{border-color:rgba(16,185,129,.6)}
 
+
+/* ============================================================
+   CORREÇÃO FINAL — colunas fixas opacas
+   Somente as colunas de dias se movem horizontalmente.
+   ============================================================ */
+table.grid th.corner,
+table.grid th.total-col,
+table.grid th.avg-col,
+table.grid td.rowlabel,
+table.grid td.total-cell,
+table.grid td.avg-cell{
+  background:color-mix(in srgb,var(--bg-2) 94%,var(--blue)) !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+}
+table.grid tbody tr:hover td.rowlabel,
+table.grid tbody tr:hover td.total-cell,
+table.grid tbody tr:hover td.avg-cell,
+table.grid tr.derived:hover td.rowlabel,
+table.grid tr.pct:hover td.rowlabel{
+  background:color-mix(in srgb,var(--bg-2) 86%,var(--blue)) !important;
+}
+table.grid td.rowlabel,
+table.grid td.total-cell,
+table.grid td.avg-cell{
+  box-shadow:none !important;
+}
 </style>
 </head>
 <body class="locked">
@@ -539,6 +566,10 @@ table.missing input.filled{border-color:rgba(16,185,129,.6)}
           <button class="btn btn-primary" id="btnAtualizarCargas" style="display:none">
             <svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
             Atualizar Cargas
+          </button>
+          <button class="btn btn-primary" id="btnAtualizarAgenda" style="display:none">
+            <svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+            Atualizar Agenda
           </button>
           <button class="btn btn-warn" id="btnMissing" style="display:none">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
@@ -748,24 +779,39 @@ table.missing input.filled{border-color:rgba(16,185,129,.6)}
   <div class="modal wide">
     <div class="modal-head">
       <div>
-        <h2><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Atualizar CARGAS_RECEBIDAS</h2>
-        <p>Cole duas colunas do Excel, nesta ordem: <b>CARGA</b> e <b>TERMO</b>.</p>
+        <h2>Atualizar CARGAS_RECEBIDAS</h2>
+        <p>Cole duas colunas do Excel: <b>CARGA</b> e <b>TERMO</b>.</p>
       </div>
       <button class="x-btn" id="closeAtualizarCargas">×</button>
     </div>
     <div class="modal-body">
-      <div style="margin-bottom:12px;padding:12px;border-radius:10px;background:color-mix(in srgb,var(--cyan) 10%,transparent);border:1px solid color-mix(in srgb,var(--cyan) 35%,transparent);font-size:12px;color:var(--txt-2);line-height:1.5">
-        Aceita dados copiados do Excel separados por <b>tabulação</b>, <b>ponto e vírgula</b>, <b>barra vertical</b> ou dois espaços. A primeira linha pode conter <b>CARGA</b> e <b>TERMO</b>.
-      </div>
-      <textarea id="cargasPasteArea" style="width:100%;min-height:260px;resize:vertical;background:var(--input-bg);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.6;outline:none" placeholder="CARGA&#9;TERMO&#10;123456&#9;01/10/2026 08:30&#10;123457&#9;01/10/2026 09:15"></textarea>
+      <textarea id="cargasPasteArea" style="width:100%;min-height:260px;resize:vertical;background:var(--input-bg);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.6;outline:none" placeholder="CARGA&#9;TERMO"></textarea>
       <div id="cargasPastePreview" style="display:none;margin-top:14px;padding:12px;border-radius:10px;background:var(--card-2);border:1px solid var(--line);font-size:12px;color:var(--txt-2)"></div>
     </div>
     <div class="modal-foot">
       <button class="btn" id="cancelAtualizarCargas">Cancelar</button>
-      <button class="btn btn-primary" id="processarAtualizarCargas">
-        <svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
-        Atualizar Supabase
-      </button>
+      <button class="btn btn-primary" id="processarAtualizarCargas">Atualizar Supabase</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ATUALIZAR AGENDA -->
+<div class="overlay" id="modalAtualizarAgenda">
+  <div class="modal wide">
+    <div class="modal-head">
+      <div>
+        <h2>Atualizar AGENDA</h2>
+        <p>Cole: <b>AGENDA · SENHA · CARGA · STATUS · FORNECEDOR · CHEGADA · DTA_BASE</b>.</p>
+      </div>
+      <button class="x-btn" id="closeAtualizarAgenda">×</button>
+    </div>
+    <div class="modal-body">
+      <textarea id="agendaPasteArea" style="width:100%;min-height:280px;resize:vertical;background:var(--input-bg);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.6;outline:none" placeholder="AGENDA&#9;SENHA&#9;CARGA&#9;STATUS&#9;FORNECEDOR&#9;CHEGADA&#9;DTA_BASE"></textarea>
+      <div id="agendaPastePreview" style="display:none;margin-top:14px;padding:12px;border-radius:10px;background:var(--card-2);border:1px solid var(--line);font-size:12px;color:var(--txt-2)"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="cancelAtualizarAgenda">Cancelar</button>
+      <button class="btn btn-primary" id="processarAtualizarAgenda">Atualizar Supabase</button>
     </div>
   </div>
 </div>
@@ -960,146 +1006,198 @@ function refDateObj(str){
 const RC={no_show:'NO SHOW',agenda_noshow:'AGENDA - NOSHOW',recebido:'RECEBIDO',backlog_recebido:'BACKLOG RECEBIDO',backlog_pendente:'BACKLOG PENDENTE',no_prazo:'NO PRAZO',abaixo_4hrs:'< 4 HRS',recusado:'RECUSADO',pct_no_prazo:'% NO PRAZO',pct_recebido:'% RECEBIDO'};
 const RK=['no_show','recebido','backlog_recebido','backlog_pendente','no_prazo','abaixo_4hrs','recusado'];
 function canEdit(){return String(state.user?.USER||'')===EDIT_USER;}
-/* ============================================================
-   ATUALIZAÇÃO DE CARGAS_RECEBIDAS — usuário 5520967
-   ============================================================ */
 function podeAtualizarCargas(){
   return String(state.user?.USER || '') === EDIT_USER;
 }
-function mostrarBotaoAtualizarCargas(){
-  const botao = document.getElementById('btnAtualizarCargas');
-  if(botao) botao.style.display = podeAtualizarCargas() ? 'inline-flex' : 'none';
+function mostrarBotoesAtualizacao(){
+  const d = podeAtualizarCargas() ? 'inline-flex' : 'none';
+  document.getElementById('btnAtualizarCargas')?.style.setProperty('display',d);
+  document.getElementById('btnAtualizarAgenda')?.style.setProperty('display',d);
+}
+function normalizarTextoImportado(v){
+  return String(v ?? '').trim().replace(/^["']|["']$/g,'').trim();
+}
+function dividirLinhaImportada(linha){
+  if(linha.includes('\t')) return linha.split('\t');
+  if(linha.includes(';')) return linha.split(';');
+  if(linha.includes('|')) return linha.split('|');
+  return linha.split(/\s{2,}/);
 }
 function abrirModalAtualizarCargas(){
-  if(!podeAtualizarCargas()){
-    toast('Acesso negado','Somente o usuário autorizado pode atualizar as cargas.','warn');
-    return;
-  }
-  const area = document.getElementById('cargasPasteArea');
-  const preview = document.getElementById('cargasPastePreview');
-  area.value = '';
-  preview.style.display = 'none';
-  preview.innerHTML = '';
+  if(!podeAtualizarCargas()){toast('Acesso negado','Somente o usuário autorizado pode atualizar as cargas.','warn');return;}
+  const area=document.getElementById('cargasPasteArea');
+  const preview=document.getElementById('cargasPastePreview');
+  area.value='';preview.style.display='none';preview.innerHTML='';
   document.getElementById('modalAtualizarCargas').classList.add('show');
   setTimeout(()=>area.focus(),120);
 }
 function fecharModalAtualizarCargas(){
   document.getElementById('modalAtualizarCargas')?.classList.remove('show');
 }
-function normalizarTextoImportado(v){
-  return String(v ?? '').trim().replace(/^["']|["']$/g,'').trim();
-}
 function linhaPareceCabecalho(c,t){
-  const cc = normUpper(c), tt = normUpper(t);
-  return cc === 'CARGA' || cc === 'CARGAS' || tt === 'TERMO' || cc.includes('CARGA') || tt.includes('TERMO');
+  const cc=normUpper(c),tt=normUpper(t);
+  return cc==='CARGA'||cc==='CARGAS'||tt==='TERMO'||cc.includes('CARGA')||tt.includes('TERMO');
 }
 function interpretarCargasColadas(texto){
-  const linhas = String(texto || '').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
-  const registros = [], erros = [];
+  const linhas=String(texto||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  const registros=[],erros=[];
   linhas.forEach((linha,i)=>{
-    let partes;
-    if(linha.includes('\t')) partes = linha.split('\t');
-    else if(linha.includes(';')) partes = linha.split(';');
-    else if(linha.includes('|')) partes = linha.split('|');
-    else partes = linha.split(/\s{2,}/);
-    const carga = normalizarTextoImportado(partes[0]);
-    const termo = normalizarTextoImportado(partes.slice(1).join(' '));
-    if(i === 0 && linhaPareceCabecalho(carga,termo)) return;
-    if(!carga || !termo){
-      erros.push({linha:i+1,motivo:'A linha precisa conter CARGA e TERMO.'});
-      return;
-    }
+    const partes=dividirLinhaImportada(linha).map(normalizarTextoImportado);
+    const carga=partes[0]||'',termo=partes.slice(1).join(' ').trim();
+    if(i===0&&linhaPareceCabecalho(carga,termo))return;
+    if(!carga||!termo){erros.push({linha:i+1,motivo:'A linha precisa conter CARGA e TERMO.'});return;}
     registros.push({carga,termo,linha:i+1});
   });
   return {registros,erros};
 }
 function exibirPreviewCargasImportadas(){
-  const resultado = interpretarCargasColadas(document.getElementById('cargasPasteArea').value);
-  const preview = document.getElementById('cargasPastePreview');
-  preview.style.display = 'block';
-  preview.innerHTML = `
-    <div style="display:flex;gap:16px;flex-wrap:wrap">
-      <span>Registros válidos: <b style="color:var(--green)">${resultado.registros.length}</b></span>
-      <span>Linhas com erro: <b style="color:${resultado.erros.length ? 'var(--red)' : 'var(--green)'}">${resultado.erros.length}</b></span>
-    </div>
-    ${resultado.erros.length ? `<div style="margin-top:10px;color:#fca5a5;font-size:11px;line-height:1.5">${resultado.erros.slice(0,10).map(e=>`<div>Linha ${e.linha}: ${escapeHTML(e.motivo)}</div>`).join('')}</div>` : ''}
-  `;
-}
-async function buscarCargaNoSupabase(carga){
-  const {data,error} = await sb.from(TABLE_CARGAS).select('CARGA,TERMO').eq('CARGA',carga).limit(1);
-  if(error) throw error;
-  return data?.[0] || null;
-}
-async function inserirCargaRecebida(carga,termo){
-  const {error} = await sb.from(TABLE_CARGAS).insert({CARGA:carga,TERMO:termo});
-  if(error) throw error;
-}
-async function atualizarTermoCarga(carga,termo){
-  const {error} = await sb.from(TABLE_CARGAS).update({TERMO:termo}).eq('CARGA',carga);
-  if(error) throw error;
+  const r=interpretarCargasColadas(document.getElementById('cargasPasteArea').value);
+  const p=document.getElementById('cargasPastePreview');
+  p.style.display='block';
+  p.innerHTML=`<div style="display:flex;gap:16px;flex-wrap:wrap"><span>Registros válidos: <b style="color:var(--green)">${r.registros.length}</b></span><span>Linhas com erro: <b style="color:${r.erros.length?'var(--red)':'var(--green)'}">${r.erros.length}</b></span></div>${r.erros.length?`<div style="margin-top:10px;color:#fca5a5;font-size:11px">${r.erros.slice(0,10).map(e=>`<div>Linha ${e.linha}: ${escapeHTML(e.motivo)}</div>`).join('')}</div>`:''}`;
 }
 async function processarAtualizacaoCargas(){
-  if(!podeAtualizarCargas()){
-    toast('Acesso negado','Somente o usuário 5520967 pode executar esta operação.','warn');
-    return;
-  }
-  const resultado = interpretarCargasColadas(document.getElementById('cargasPasteArea').value);
-  if(!resultado.registros.length){
-    toast('Nenhum registro encontrado','Cole as colunas CARGA e TERMO antes de continuar.','warn');
-    return;
-  }
-  if(resultado.erros.length){
-    toast('Dados incompletos',`${resultado.erros.length} linha(s) não possuem CARGA e TERMO válidos.`,'err');
-    return;
-  }
-  if(!confirm(`Serão processadas ${resultado.registros.length} carga(s).\n\nCargas novas serão inseridas.\nCargas existentes terão o TERMO atualizado somente se for diferente.\n\nDeseja continuar?`)) return;
+  if(!podeAtualizarCargas()){toast('Acesso negado','Somente o usuário 5520967 pode executar esta operação.','warn');return;}
+  const resultado=interpretarCargasColadas(document.getElementById('cargasPasteArea').value);
+  if(!resultado.registros.length){toast('Nenhum registro encontrado','Cole as colunas CARGA e TERMO.','warn');return;}
+  if(resultado.erros.length){toast('Dados incompletos',`${resultado.erros.length} linha(s) com erro.`,'err');return;}
+  if(!confirm(`Processar ${resultado.registros.length} carga(s)?\n\nCargas novas serão inseridas.\nCargas existentes terão o TERMO atualizado somente se for diferente.`))return;
 
-  const botao = document.getElementById('processarAtualizarCargas');
-  botao.disabled = true;
-  showLoader(true,`Atualizando ${resultado.registros.length} carga(s)...`);
+  const botao=document.getElementById('processarAtualizarCargas');
+  botao.disabled=true;showLoader(true,'Atualizando cargas...');
 
-  const resumo = {inseridas:0,atualizadas:0,ignoradas:0,erros:[]};
+  const resumo={inseridas:0,atualizadas:0,ignoradas:0,erros:[]};
   try{
-    const porCarga = new Map();
+    const porCarga=new Map();
     resultado.registros.forEach(r=>porCarga.set(r.carga,r.termo));
 
     for(const [carga,termo] of porCarga.entries()){
       try{
-        const existente = await buscarCargaNoSupabase(carga);
+        const {data,error}=await sb.from(TABLE_CARGAS).select('CARGA,TERMO').eq('CARGA',carga).limit(1);
+        if(error)throw error;
+        const existente=data?.[0]||null;
+
         if(!existente){
-          await inserirCargaRecebida(carga,termo);
+          const ins=await sb.from(TABLE_CARGAS).insert({CARGA:carga,TERMO:termo});
+          if(ins.error)throw ins.error;
           resumo.inseridas++;
           continue;
         }
-        const termoAtual = normalizarTextoImportado(existente.TERMO);
-        if(termoAtual === termo){
-          resumo.ignoradas++;
-          continue;
-        }
-        await atualizarTermoCarga(carga,termo);
+
+        const termoAtual=normalizarTextoImportado(existente.TERMO);
+        if(termoAtual===termo){resumo.ignoradas++;continue;}
+
+        const upd=await sb.from(TABLE_CARGAS).update({TERMO:termo}).eq('CARGA',carga);
+        if(upd.error)throw upd.error;
         resumo.atualizadas++;
-      }catch(erroCarga){
-        console.error('Erro na carga:',carga,erroCarga);
-        resumo.erros.push({carga,erro:erroCarga.message || String(erroCarga)});
+      }catch(e){
+        console.error('Erro na carga:',carga,e);
+        resumo.erros.push({carga,erro:e.message||String(e)});
       }
     }
 
-    toast(
-      'Atualização concluída',
-      `Inseridas: ${resumo.inseridas} · Atualizadas: ${resumo.atualizadas} · Sem alteração: ${resumo.ignoradas} · Erros: ${resumo.erros.length}`,
-      resumo.erros.length ? 'warn' : 'ok'
-    );
-    if(!resumo.erros.length) fecharModalAtualizarCargas();
+    toast('Atualização concluída',`Inseridas: ${resumo.inseridas} · Atualizadas: ${resumo.atualizadas} · Sem alteração: ${resumo.ignoradas} · Erros: ${resumo.erros.length}`,resumo.erros.length?'warn':'ok');
+    if(!resumo.erros.length)fecharModalAtualizarCargas();
 
-    state.rawAgenda = [];
-    state.rawCargas = [];
+    state.rawAgenda=[];state.rawCargas=[];
     await loadData(true);
-  }catch(erro){
-    console.error(erro);
-    toast('Erro na atualização',erro.message || String(erro),'err');
+  }catch(e){
+    console.error(e);
+    toast('Erro na atualização',e.message||String(e),'err');
   }finally{
-    botao.disabled = false;
-    showLoader(false);
+    botao.disabled=false;showLoader(false);
+  }
+}
+
+function abrirModalAtualizarAgenda(){
+  if(!podeAtualizarCargas()){toast('Acesso negado','Somente o usuário autorizado pode atualizar a agenda.','warn');return;}
+  const area=document.getElementById('agendaPasteArea');
+  const preview=document.getElementById('agendaPastePreview');
+  area.value='';preview.style.display='none';preview.innerHTML='';
+  document.getElementById('modalAtualizarAgenda').classList.add('show');
+  setTimeout(()=>area.focus(),120);
+}
+function fecharModalAtualizarAgenda(){
+  document.getElementById('modalAtualizarAgenda')?.classList.remove('show');
+}
+function eCabecalhoAgenda(partes){
+  const cab=partes.map(normUpper);
+  return cab.some(p=>['AGENDA','SENHA','CARGA','STATUS','FORNECEDOR','CHEGADA','DTA_BASE','DTA BASE'].includes(p));
+}
+function interpretarAgendaColada(texto){
+  const linhas=String(texto||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  const registros=[],erros=[];
+  linhas.forEach((linha,i)=>{
+    const partes=dividirLinhaImportada(linha).map(normalizarTextoImportado);
+    if(i===0&&eCabecalhoAgenda(partes))return;
+    if(partes.length<7){erros.push({linha:i+1,motivo:'São necessárias as 7 colunas: AGENDA, SENHA, CARGA, STATUS, FORNECEDOR, CHEGADA e DTA_BASE.'});return;}
+    const r={agenda:partes[0],senha:partes[1],carga:partes[2],status:partes[3],fornecedor:partes[4],chegada:partes[5],dtaBase:partes[6],linha:i+1};
+    if(!r.carga||!r.agenda){erros.push({linha:i+1,motivo:'AGENDA e CARGA são obrigatórios.'});return;}
+    registros.push(r);
+  });
+  return {registros,erros};
+}
+function exibirPreviewAgendaImportada(){
+  const r=interpretarAgendaColada(document.getElementById('agendaPasteArea').value);
+  const p=document.getElementById('agendaPastePreview');
+  p.style.display='block';
+  p.innerHTML=`<div style="display:flex;gap:16px;flex-wrap:wrap"><span>Registros válidos: <b style="color:var(--green)">${r.registros.length}</b></span><span>Linhas com erro: <b style="color:${r.erros.length?'var(--red)':'var(--green)'}">${r.erros.length}</b></span></div>${r.erros.length?`<div style="margin-top:10px;color:#fca5a5;font-size:11px">${r.erros.slice(0,10).map(e=>`<div>Linha ${e.linha}: ${escapeHTML(e.motivo)}</div>`).join('')}</div>`:''}`;
+}
+async function processarAtualizacaoAgenda(){
+  if(!podeAtualizarCargas()){toast('Acesso negado','Somente o usuário 5520967 pode executar esta operação.','warn');return;}
+  const resultado=interpretarAgendaColada(document.getElementById('agendaPasteArea').value);
+  if(!resultado.registros.length){toast('Nenhum registro encontrado','Cole as 7 colunas da AGENDA.','warn');return;}
+  if(resultado.erros.length){toast('Dados incompletos',`${resultado.erros.length} linha(s) com erro.`,'err');return;}
+  if(!confirm(`Processar ${resultado.registros.length} linha(s) da AGENDA?\n\nRegistros novos serão inseridos.\nRegistros existentes serão atualizados.`))return;
+
+  const botao=document.getElementById('processarAtualizarAgenda');
+  botao.disabled=true;showLoader(true,'Atualizando AGENDA...');
+
+  const resumo={inseridas:0,atualizadas:0,erros:[]};
+  try{
+    const porCarga=new Map();
+    resultado.registros.forEach(r=>porCarga.set(r.carga,r));
+
+    for(const registro of porCarga.values()){
+      const payload={
+        [COL_AG.agenda]:registro.agenda,
+        [COL_AG.senha]:registro.senha||null,
+        [COL_AG.carga]:registro.carga,
+        [COL_AG.status]:registro.status||null,
+        [COL_AG.fornecedor]:registro.fornecedor||null,
+        [COL_AG.chegada]:registro.chegada||null,
+        [COL_AG.dtaBase]:registro.dtaBase||null
+      };
+
+      try{
+        const existe=await sb.from(TABLE_AGENDA).select(COL_AG.carga).eq(COL_AG.carga,registro.carga).limit(1);
+        if(existe.error)throw existe.error;
+
+        if(existe.data?.length){
+          const upd=await sb.from(TABLE_AGENDA).update(payload).eq(COL_AG.carga,registro.carga);
+          if(upd.error)throw upd.error;
+          resumo.atualizadas++;
+        }else{
+          const ins=await sb.from(TABLE_AGENDA).insert(payload);
+          if(ins.error)throw ins.error;
+          resumo.inseridas++;
+        }
+      }catch(e){
+        console.error('Erro na agenda:',registro.carga,e);
+        resumo.erros.push({carga:registro.carga,erro:e.message||String(e)});
+      }
+    }
+
+    toast('Atualização da AGENDA concluída',`Inseridas: ${resumo.inseridas} · Atualizadas: ${resumo.atualizadas} · Erros: ${resumo.erros.length}`,resumo.erros.length?'warn':'ok');
+    if(!resumo.erros.length)fecharModalAtualizarAgenda();
+
+    state.rawAgenda=[];state.rawCargas=[];
+    await loadData(true);
+  }catch(e){
+    console.error(e);
+    toast('Erro na atualização',e.message||String(e),'err');
+  }finally{
+    botao.disabled=false;showLoader(false);
   }
 }
 
@@ -2612,7 +2710,20 @@ function bindEvents(){
   document.getElementById('processarAtualizarCargas')?.addEventListener('click',processarAtualizacaoCargas);
   document.getElementById('cargasPasteArea')?.addEventListener('input',exibirPreviewCargasImportadas);
   document.getElementById('modalAtualizarCargas')?.addEventListener('click',e=>{if(e.target.id==='modalAtualizarCargas')fecharModalAtualizarCargas();});
-  document.addEventListener('keydown',e=>{if(e.key==='Escape')fecharModalAtualizarCargas();});
+
+  document.getElementById('btnAtualizarAgenda')?.addEventListener('click',abrirModalAtualizarAgenda);
+  document.getElementById('closeAtualizarAgenda')?.addEventListener('click',fecharModalAtualizarAgenda);
+  document.getElementById('cancelAtualizarAgenda')?.addEventListener('click',fecharModalAtualizarAgenda);
+  document.getElementById('processarAtualizarAgenda')?.addEventListener('click',processarAtualizacaoAgenda);
+  document.getElementById('agendaPasteArea')?.addEventListener('input',exibirPreviewAgendaImportada);
+  document.getElementById('modalAtualizarAgenda')?.addEventListener('click',e=>{if(e.target.id==='modalAtualizarAgenda')fecharModalAtualizarAgenda();});
+
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){
+      fecharModalAtualizarCargas();
+      fecharModalAtualizarAgenda();
+    }
+  });
 
   document.getElementById('modalMissing').addEventListener('click', e => {
     if (e.target.id === 'modalMissing') closeMissingModal();
@@ -2648,7 +2759,7 @@ async function bootstrapApp(){
   const mesInput = document.getElementById('fMes');
   mesInput.max = todayISO().slice(0,7);
   await loadData();
-  mostrarBotaoAtualizarCargas();
+  mostrarBotoesAtualizacao();
 }
 
 (async function init(){
