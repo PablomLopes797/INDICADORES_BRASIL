@@ -436,32 +436,9 @@ table.missing input:focus{border-color:var(--cyan);box-shadow:0 0 0 4px rgba(34,
 table.missing input.filled{border-color:rgba(16,185,129,.6)}
 
 
-/* ============================================================
-   CORREÇÃO FINAL — colunas fixas opacas
-   Somente as colunas de dias se movem horizontalmente.
-   ============================================================ */
-table.grid th.corner,
-table.grid th.total-col,
-table.grid th.avg-col,
-table.grid td.rowlabel,
-table.grid td.total-cell,
-table.grid td.avg-cell{
-  background:color-mix(in srgb,var(--bg-2) 94%,var(--blue)) !important;
-  backdrop-filter:none !important;
-  -webkit-backdrop-filter:none !important;
-}
-table.grid tbody tr:hover td.rowlabel,
-table.grid tbody tr:hover td.total-cell,
-table.grid tbody tr:hover td.avg-cell,
-table.grid tr.derived:hover td.rowlabel,
-table.grid tr.pct:hover td.rowlabel{
-  background:color-mix(in srgb,var(--bg-2) 86%,var(--blue)) !important;
-}
-table.grid td.rowlabel,
-table.grid td.total-cell,
-table.grid td.avg-cell{
-  box-shadow:none !important;
-}
+table.grid th.corner,table.grid th.total-col,table.grid th.avg-col,table.grid td.rowlabel,table.grid td.total-cell,table.grid td.avg-cell{background:color-mix(in srgb,var(--bg-2) 94%,var(--blue)) !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;}
+table.grid tbody tr:hover td.rowlabel,table.grid tbody tr:hover td.total-cell,table.grid tbody tr:hover td.avg-cell,table.grid tr.derived:hover td.rowlabel,table.grid tr.pct:hover td.rowlabel{background:color-mix(in srgb,var(--bg-2) 86%,var(--blue)) !important;}
+table.grid td.rowlabel,table.grid td.total-cell,table.grid td.avg-cell{box-shadow:none !important;}
 </style>
 </head>
 <body class="locked">
@@ -774,48 +751,20 @@ table.grid td.avg-cell{
 </div>
 
 
-<!-- MODAL ATUALIZAR CARGAS -->
 <div class="overlay" id="modalAtualizarCargas">
   <div class="modal wide">
-    <div class="modal-head">
-      <div>
-        <h2>Atualizar CARGAS_RECEBIDAS</h2>
-        <p>Cole duas colunas do Excel: <b>CARGA</b> e <b>TERMO</b>.</p>
-      </div>
-      <button class="x-btn" id="closeAtualizarCargas">×</button>
-    </div>
-    <div class="modal-body">
-      <textarea id="cargasPasteArea" style="width:100%;min-height:260px;resize:vertical;background:var(--input-bg);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.6;outline:none" placeholder="CARGA&#9;TERMO"></textarea>
-      <div id="cargasPastePreview" style="display:none;margin-top:14px;padding:12px;border-radius:10px;background:var(--card-2);border:1px solid var(--line);font-size:12px;color:var(--txt-2)"></div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn" id="cancelAtualizarCargas">Cancelar</button>
-      <button class="btn btn-primary" id="processarAtualizarCargas">Atualizar Supabase</button>
-    </div>
+    <div class="modal-head"><div><h2>Atualizar CARGAS_RECEBIDAS</h2><p>Cole: <b>CARGA</b> e <b>TERMO</b>.</p></div><button class="x-btn" id="closeAtualizarCargas">×</button></div>
+    <div class="modal-body"><textarea id="cargasPasteArea" style="width:100%;min-height:260px;resize:vertical;background:var(--input-bg);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.6;outline:none" placeholder="CARGA&#9;TERMO"></textarea><div id="cargasPastePreview" style="display:none;margin-top:14px;padding:12px;border-radius:10px;background:var(--card-2);border:1px solid var(--line);font-size:12px;color:var(--txt-2)"></div></div>
+    <div class="modal-foot"><button class="btn" id="cancelAtualizarCargas">Cancelar</button><button class="btn btn-primary" id="processarAtualizarCargas">Atualizar Supabase</button></div>
   </div>
 </div>
-
-<!-- MODAL ATUALIZAR AGENDA -->
 <div class="overlay" id="modalAtualizarAgenda">
   <div class="modal wide">
-    <div class="modal-head">
-      <div>
-        <h2>Atualizar AGENDA</h2>
-        <p>Cole: <b>AGENDA · SENHA · CARGA · STATUS · FORNECEDOR · CHEGADA · DTA_BASE</b>.</p>
-      </div>
-      <button class="x-btn" id="closeAtualizarAgenda">×</button>
-    </div>
-    <div class="modal-body">
-      <textarea id="agendaPasteArea" style="width:100%;min-height:280px;resize:vertical;background:var(--input-bg);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.6;outline:none" placeholder="AGENDA&#9;SENHA&#9;CARGA&#9;STATUS&#9;FORNECEDOR&#9;CHEGADA&#9;DTA_BASE"></textarea>
-      <div id="agendaPastePreview" style="display:none;margin-top:14px;padding:12px;border-radius:10px;background:var(--card-2);border:1px solid var(--line);font-size:12px;color:var(--txt-2)"></div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn" id="cancelAtualizarAgenda">Cancelar</button>
-      <button class="btn btn-primary" id="processarAtualizarAgenda">Atualizar Supabase</button>
-    </div>
+    <div class="modal-head"><div><h2>Atualizar AGENDA</h2><p>Cole: <b>AGENDA · SENHA · CARGA · STATUS · FORNECEDOR · CHEGADA · DTA_BASE</b>.</p></div><button class="x-btn" id="closeAtualizarAgenda">×</button></div>
+    <div class="modal-body"><textarea id="agendaPasteArea" style="width:100%;min-height:280px;resize:vertical;background:var(--input-bg);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.6;outline:none" placeholder="AGENDA&#9;SENHA&#9;CARGA&#9;STATUS&#9;FORNECEDOR&#9;CHEGADA&#9;DTA_BASE"></textarea><div id="agendaPastePreview" style="display:none;margin-top:14px;padding:12px;border-radius:10px;background:var(--card-2);border:1px solid var(--line);font-size:12px;color:var(--txt-2)"></div></div>
+    <div class="modal-foot"><button class="btn" id="cancelAtualizarAgenda">Cancelar</button><button class="btn btn-primary" id="processarAtualizarAgenda">Atualizar Supabase</button></div>
   </div>
 </div>
-
 <div class="loader" id="loader"><div class="spinner"></div><p id="loaderText">Processando…</p></div>
 <div class="toasts" id="toasts"></div>
 
@@ -831,6 +780,7 @@ const TABLE_AGENDA = "AGENDA";              // Base de agendamento
 const TABLE_CARGAS = "CARGAS_RECEBIDAS";    // Base de cargas recebidas
 const TABLE_OBS    = "OBS_REC";
 const TABLE_RESULTADOS = "BD_RESULTADOS";
+const TABLE_SOBREPOSTOS = "SOBREPOSTOS";
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -873,6 +823,7 @@ const ROWS = [
   { key:'no_prazo',         label:'NO PRAZO',          color:'#22c55e' },
   { key:'abaixo_4hrs',      label:'< 4 HRS',           color:'#facc15' },
   { key:'recusado',         label:'RECUSADO',          color:'#f43f5e' },
+  { key:'sobrepostas',      label:'SOBREPOSTAS',       color:'#a78bfa' },
 ];
 
 const WD = ['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
@@ -895,6 +846,7 @@ const state = {
   drill: null,
   rawAgenda: [],       // Dados da tabela AGENDA
   rawCargas: [],       // Dados da tabela CARGAS_RECEBIDAS
+  rawSobrepostos: [],  // Dados da tabela SOBREPOSTOS
   registros: [],       // Registros unificados
   missingCargas: [],   // Cargas em CARGAS_RECEBIDAS sem entrada em AGENDA
   cds: [],
@@ -935,7 +887,7 @@ function hexA(hex,a){
 function emptyBucket(){
   return {
     agenda:0, agenda_noshow:0, recebido:0, backlog_recebido:0, backlog_pendente:0,
-    no_prazo:0, abaixo_4hrs:0, no_show:0, recusado:0
+    no_prazo:0, abaixo_4hrs:0, no_show:0, recusado:0, sobrepostas:0
   };
 }
 function toISODate(dt){
@@ -1006,200 +958,22 @@ function refDateObj(str){
 const RC={no_show:'NO SHOW',agenda_noshow:'AGENDA - NOSHOW',recebido:'RECEBIDO',backlog_recebido:'BACKLOG RECEBIDO',backlog_pendente:'BACKLOG PENDENTE',no_prazo:'NO PRAZO',abaixo_4hrs:'< 4 HRS',recusado:'RECUSADO',pct_no_prazo:'% NO PRAZO',pct_recebido:'% RECEBIDO'};
 const RK=['no_show','recebido','backlog_recebido','backlog_pendente','no_prazo','abaixo_4hrs','recusado'];
 function canEdit(){return String(state.user?.USER||'')===EDIT_USER;}
-function podeAtualizarCargas(){
-  return String(state.user?.USER || '') === EDIT_USER;
-}
-function mostrarBotoesAtualizacao(){
-  const d = podeAtualizarCargas() ? 'inline-flex' : 'none';
-  document.getElementById('btnAtualizarCargas')?.style.setProperty('display',d);
-  document.getElementById('btnAtualizarAgenda')?.style.setProperty('display',d);
-}
-function normalizarTextoImportado(v){
-  return String(v ?? '').trim().replace(/^["']|["']$/g,'').trim();
-}
-function dividirLinhaImportada(linha){
-  if(linha.includes('\t')) return linha.split('\t');
-  if(linha.includes(';')) return linha.split(';');
-  if(linha.includes('|')) return linha.split('|');
-  return linha.split(/\s{2,}/);
-}
-function abrirModalAtualizarCargas(){
-  if(!podeAtualizarCargas()){toast('Acesso negado','Somente o usuário autorizado pode atualizar as cargas.','warn');return;}
-  const area=document.getElementById('cargasPasteArea');
-  const preview=document.getElementById('cargasPastePreview');
-  area.value='';preview.style.display='none';preview.innerHTML='';
-  document.getElementById('modalAtualizarCargas').classList.add('show');
-  setTimeout(()=>area.focus(),120);
-}
-function fecharModalAtualizarCargas(){
-  document.getElementById('modalAtualizarCargas')?.classList.remove('show');
-}
-function linhaPareceCabecalho(c,t){
-  const cc=normUpper(c),tt=normUpper(t);
-  return cc==='CARGA'||cc==='CARGAS'||tt==='TERMO'||cc.includes('CARGA')||tt.includes('TERMO');
-}
-function interpretarCargasColadas(texto){
-  const linhas=String(texto||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
-  const registros=[],erros=[];
-  linhas.forEach((linha,i)=>{
-    const partes=dividirLinhaImportada(linha).map(normalizarTextoImportado);
-    const carga=partes[0]||'',termo=partes.slice(1).join(' ').trim();
-    if(i===0&&linhaPareceCabecalho(carga,termo))return;
-    if(!carga||!termo){erros.push({linha:i+1,motivo:'A linha precisa conter CARGA e TERMO.'});return;}
-    registros.push({carga,termo,linha:i+1});
-  });
-  return {registros,erros};
-}
-function exibirPreviewCargasImportadas(){
-  const r=interpretarCargasColadas(document.getElementById('cargasPasteArea').value);
-  const p=document.getElementById('cargasPastePreview');
-  p.style.display='block';
-  p.innerHTML=`<div style="display:flex;gap:16px;flex-wrap:wrap"><span>Registros válidos: <b style="color:var(--green)">${r.registros.length}</b></span><span>Linhas com erro: <b style="color:${r.erros.length?'var(--red)':'var(--green)'}">${r.erros.length}</b></span></div>${r.erros.length?`<div style="margin-top:10px;color:#fca5a5;font-size:11px">${r.erros.slice(0,10).map(e=>`<div>Linha ${e.linha}: ${escapeHTML(e.motivo)}</div>`).join('')}</div>`:''}`;
-}
-async function processarAtualizacaoCargas(){
-  if(!podeAtualizarCargas()){toast('Acesso negado','Somente o usuário 5520967 pode executar esta operação.','warn');return;}
-  const resultado=interpretarCargasColadas(document.getElementById('cargasPasteArea').value);
-  if(!resultado.registros.length){toast('Nenhum registro encontrado','Cole as colunas CARGA e TERMO.','warn');return;}
-  if(resultado.erros.length){toast('Dados incompletos',`${resultado.erros.length} linha(s) com erro.`,'err');return;}
-  if(!confirm(`Processar ${resultado.registros.length} carga(s)?\n\nCargas novas serão inseridas.\nCargas existentes terão o TERMO atualizado somente se for diferente.`))return;
-
-  const botao=document.getElementById('processarAtualizarCargas');
-  botao.disabled=true;showLoader(true,'Atualizando cargas...');
-
-  const resumo={inseridas:0,atualizadas:0,ignoradas:0,erros:[]};
-  try{
-    const porCarga=new Map();
-    resultado.registros.forEach(r=>porCarga.set(r.carga,r.termo));
-
-    for(const [carga,termo] of porCarga.entries()){
-      try{
-        const {data,error}=await sb.from(TABLE_CARGAS).select('CARGA,TERMO').eq('CARGA',carga).limit(1);
-        if(error)throw error;
-        const existente=data?.[0]||null;
-
-        if(!existente){
-          const ins=await sb.from(TABLE_CARGAS).insert({CARGA:carga,TERMO:termo});
-          if(ins.error)throw ins.error;
-          resumo.inseridas++;
-          continue;
-        }
-
-        const termoAtual=normalizarTextoImportado(existente.TERMO);
-        if(termoAtual===termo){resumo.ignoradas++;continue;}
-
-        const upd=await sb.from(TABLE_CARGAS).update({TERMO:termo}).eq('CARGA',carga);
-        if(upd.error)throw upd.error;
-        resumo.atualizadas++;
-      }catch(e){
-        console.error('Erro na carga:',carga,e);
-        resumo.erros.push({carga,erro:e.message||String(e)});
-      }
-    }
-
-    toast('Atualização concluída',`Inseridas: ${resumo.inseridas} · Atualizadas: ${resumo.atualizadas} · Sem alteração: ${resumo.ignoradas} · Erros: ${resumo.erros.length}`,resumo.erros.length?'warn':'ok');
-    if(!resumo.erros.length)fecharModalAtualizarCargas();
-
-    state.rawAgenda=[];state.rawCargas=[];
-    await loadData(true);
-  }catch(e){
-    console.error(e);
-    toast('Erro na atualização',e.message||String(e),'err');
-  }finally{
-    botao.disabled=false;showLoader(false);
-  }
-}
-
-function abrirModalAtualizarAgenda(){
-  if(!podeAtualizarCargas()){toast('Acesso negado','Somente o usuário autorizado pode atualizar a agenda.','warn');return;}
-  const area=document.getElementById('agendaPasteArea');
-  const preview=document.getElementById('agendaPastePreview');
-  area.value='';preview.style.display='none';preview.innerHTML='';
-  document.getElementById('modalAtualizarAgenda').classList.add('show');
-  setTimeout(()=>area.focus(),120);
-}
-function fecharModalAtualizarAgenda(){
-  document.getElementById('modalAtualizarAgenda')?.classList.remove('show');
-}
-function eCabecalhoAgenda(partes){
-  const cab=partes.map(normUpper);
-  return cab.some(p=>['AGENDA','SENHA','CARGA','STATUS','FORNECEDOR','CHEGADA','DTA_BASE','DTA BASE'].includes(p));
-}
-function interpretarAgendaColada(texto){
-  const linhas=String(texto||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
-  const registros=[],erros=[];
-  linhas.forEach((linha,i)=>{
-    const partes=dividirLinhaImportada(linha).map(normalizarTextoImportado);
-    if(i===0&&eCabecalhoAgenda(partes))return;
-    if(partes.length<7){erros.push({linha:i+1,motivo:'São necessárias as 7 colunas: AGENDA, SENHA, CARGA, STATUS, FORNECEDOR, CHEGADA e DTA_BASE.'});return;}
-    const r={agenda:partes[0],senha:partes[1],carga:partes[2],status:partes[3],fornecedor:partes[4],chegada:partes[5],dtaBase:partes[6],linha:i+1};
-    if(!r.carga||!r.agenda){erros.push({linha:i+1,motivo:'AGENDA e CARGA são obrigatórios.'});return;}
-    registros.push(r);
-  });
-  return {registros,erros};
-}
-function exibirPreviewAgendaImportada(){
-  const r=interpretarAgendaColada(document.getElementById('agendaPasteArea').value);
-  const p=document.getElementById('agendaPastePreview');
-  p.style.display='block';
-  p.innerHTML=`<div style="display:flex;gap:16px;flex-wrap:wrap"><span>Registros válidos: <b style="color:var(--green)">${r.registros.length}</b></span><span>Linhas com erro: <b style="color:${r.erros.length?'var(--red)':'var(--green)'}">${r.erros.length}</b></span></div>${r.erros.length?`<div style="margin-top:10px;color:#fca5a5;font-size:11px">${r.erros.slice(0,10).map(e=>`<div>Linha ${e.linha}: ${escapeHTML(e.motivo)}</div>`).join('')}</div>`:''}`;
-}
-async function processarAtualizacaoAgenda(){
-  if(!podeAtualizarCargas()){toast('Acesso negado','Somente o usuário 5520967 pode executar esta operação.','warn');return;}
-  const resultado=interpretarAgendaColada(document.getElementById('agendaPasteArea').value);
-  if(!resultado.registros.length){toast('Nenhum registro encontrado','Cole as 7 colunas da AGENDA.','warn');return;}
-  if(resultado.erros.length){toast('Dados incompletos',`${resultado.erros.length} linha(s) com erro.`,'err');return;}
-  if(!confirm(`Processar ${resultado.registros.length} linha(s) da AGENDA?\n\nRegistros novos serão inseridos.\nRegistros existentes serão atualizados.`))return;
-
-  const botao=document.getElementById('processarAtualizarAgenda');
-  botao.disabled=true;showLoader(true,'Atualizando AGENDA...');
-
-  const resumo={inseridas:0,atualizadas:0,erros:[]};
-  try{
-    const porCarga=new Map();
-    resultado.registros.forEach(r=>porCarga.set(r.carga,r));
-
-    for(const registro of porCarga.values()){
-      const payload={
-        [COL_AG.agenda]:registro.agenda,
-        [COL_AG.senha]:registro.senha||null,
-        [COL_AG.carga]:registro.carga,
-        [COL_AG.status]:registro.status||null,
-        [COL_AG.fornecedor]:registro.fornecedor||null,
-        [COL_AG.chegada]:registro.chegada||null,
-        [COL_AG.dtaBase]:registro.dtaBase||null
-      };
-
-      try{
-        const existe=await sb.from(TABLE_AGENDA).select(COL_AG.carga).eq(COL_AG.carga,registro.carga).limit(1);
-        if(existe.error)throw existe.error;
-
-        if(existe.data?.length){
-          const upd=await sb.from(TABLE_AGENDA).update(payload).eq(COL_AG.carga,registro.carga);
-          if(upd.error)throw upd.error;
-          resumo.atualizadas++;
-        }else{
-          const ins=await sb.from(TABLE_AGENDA).insert(payload);
-          if(ins.error)throw ins.error;
-          resumo.inseridas++;
-        }
-      }catch(e){
-        console.error('Erro na agenda:',registro.carga,e);
-        resumo.erros.push({carga:registro.carga,erro:e.message||String(e)});
-      }
-    }
-
-    toast('Atualização da AGENDA concluída',`Inseridas: ${resumo.inseridas} · Atualizadas: ${resumo.atualizadas} · Erros: ${resumo.erros.length}`,resumo.erros.length?'warn':'ok');
-    if(!resumo.erros.length)fecharModalAtualizarAgenda();
-
-    state.rawAgenda=[];state.rawCargas=[];
-    await loadData(true);
-  }catch(e){
-    console.error(e);
-    toast('Erro na atualização',e.message||String(e),'err');
-  }finally{
-    botao.disabled=false;showLoader(false);
-  }
-}
+function podeAtualizarCargas(){return String(state.user?.USER||'')===EDIT_USER;}
+function mostrarBotoesAtualizacao(){const d=podeAtualizarCargas()?'inline-flex':'none';document.getElementById('btnAtualizarCargas')?.style.setProperty('display',d);document.getElementById('btnAtualizarAgenda')?.style.setProperty('display',d);}
+function normalizarTextoImportado(v){return String(v??'').trim().replace(/^["']|["']$/g,'').trim();}
+function dividirLinhaImportada(linha){if(linha.includes('\t'))return linha.split('\t');if(linha.includes(';'))return linha.split(';');if(linha.includes('|'))return linha.split('|');return linha.split(/\s{2,}/);}
+function abrirModalAtualizarCargas(){if(!podeAtualizarCargas()){toast('Acesso negado','Somente o usuário autorizado pode atualizar as cargas.','warn');return;}const area=document.getElementById('cargasPasteArea'),preview=document.getElementById('cargasPastePreview');area.value='';preview.style.display='none';preview.innerHTML='';document.getElementById('modalAtualizarCargas').classList.add('show');setTimeout(()=>area.focus(),120);}
+function fecharModalAtualizarCargas(){document.getElementById('modalAtualizarCargas')?.classList.remove('show');}
+function linhaPareceCabecalho(c,t){const cc=normUpper(c),tt=normUpper(t);return cc==='CARGA'||cc==='CARGAS'||tt==='TERMO'||cc.includes('CARGA')||tt.includes('TERMO');}
+function interpretarCargasColadas(texto){const linhas=String(texto||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean),registros=[],erros=[];linhas.forEach((linha,i)=>{const partes=dividirLinhaImportada(linha).map(normalizarTextoImportado);const carga=partes[0]||'',termo=partes.slice(1).join(' ').trim();if(i===0&&linhaPareceCabecalho(carga,termo))return;if(!carga||!termo){erros.push({linha:i+1,motivo:'A linha precisa conter CARGA e TERMO.'});return;}registros.push({carga,termo,linha:i+1});});return {registros,erros};}
+function exibirPreviewCargasImportadas(){const r=interpretarCargasColadas(document.getElementById('cargasPasteArea').value),p=document.getElementById('cargasPastePreview');p.style.display='block';p.innerHTML=`<div style="display:flex;gap:16px;flex-wrap:wrap"><span>Registros válidos: <b style="color:var(--green)">${r.registros.length}</b></span><span>Linhas com erro: <b style="color:${r.erros.length?'var(--red)':'var(--green)'}">${r.erros.length}</b></span></div>${r.erros.length?`<div style="margin-top:10px;color:#fca5a5;font-size:11px">${r.erros.slice(0,10).map(e=>`<div>Linha ${e.linha}: ${escapeHTML(e.motivo)}</div>`).join('')}</div>`:''}`;}
+async function processarAtualizacaoCargas(){if(!podeAtualizarCargas()){toast('Acesso negado','Somente o usuário 5520967 pode executar esta operação.','warn');return;}const resultado=interpretarCargasColadas(document.getElementById('cargasPasteArea').value);if(!resultado.registros.length){toast('Nenhum registro encontrado','Cole as colunas CARGA e TERMO.','warn');return;}if(resultado.erros.length){toast('Dados incompletos',`${resultado.erros.length} linha(s) com erro.`,'err');return;}if(!confirm(`Processar ${resultado.registros.length} carga(s)?\n\nCargas novas serão inseridas.\nCargas existentes terão o TERMO atualizado somente se for diferente.`))return;const botao=document.getElementById('processarAtualizarCargas');botao.disabled=true;showLoader(true,'Atualizando cargas...');const resumo={inseridas:0,atualizadas:0,ignoradas:0,erros:[]};try{const porCarga=new Map();resultado.registros.forEach(r=>porCarga.set(r.carga,r.termo));for(const [carga,termo] of porCarga.entries()){try{const {data,error}=await sb.from(TABLE_CARGAS).select('CARGA,TERMO').eq('CARGA',carga).limit(1);if(error)throw error;const existente=data?.[0]||null;if(!existente){const ins=await sb.from(TABLE_CARGAS).insert({CARGA:carga,TERMO:termo});if(ins.error)throw ins.error;resumo.inseridas++;continue;}const termoAtual=normalizarTextoImportado(existente.TERMO);if(termoAtual===termo){resumo.ignoradas++;continue;}const upd=await sb.from(TABLE_CARGAS).update({TERMO:termo}).eq('CARGA',carga);if(upd.error)throw upd.error;resumo.atualizadas++;}catch(e){console.error('Erro na carga:',carga,e);resumo.erros.push({carga,erro:e.message||String(e)});}}toast('Atualização concluída',`Inseridas: ${resumo.inseridas} · Atualizadas: ${resumo.atualizadas} · Sem alteração: ${resumo.ignoradas} · Erros: ${resumo.erros.length}`,resumo.erros.length?'warn':'ok');if(!resumo.erros.length)fecharModalAtualizarCargas();state.rawAgenda=[];state.rawCargas=[];state.rawSobrepostos=[];await loadData(true);}catch(e){console.error(e);toast('Erro na atualização',e.message||String(e),'err');}finally{botao.disabled=false;showLoader(false);}}
+function abrirModalAtualizarAgenda(){if(!podeAtualizarCargas()){toast('Acesso negado','Somente o usuário autorizado pode atualizar a agenda.','warn');return;}const area=document.getElementById('agendaPasteArea'),preview=document.getElementById('agendaPastePreview');area.value='';preview.style.display='none';preview.innerHTML='';document.getElementById('modalAtualizarAgenda').classList.add('show');setTimeout(()=>area.focus(),120);}
+function fecharModalAtualizarAgenda(){document.getElementById('modalAtualizarAgenda')?.classList.remove('show');}
+function eCabecalhoAgenda(partes){const cab=partes.map(normUpper);return cab.some(p=>['AGENDA','SENHA','CARGA','STATUS','FORNECEDOR','CHEGADA','DTA_BASE','DTA BASE'].includes(p));}
+function interpretarAgendaColada(texto){const linhas=String(texto||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean),registros=[],erros=[];linhas.forEach((linha,i)=>{const partes=dividirLinhaImportada(linha).map(normalizarTextoImportado);if(i===0&&eCabecalhoAgenda(partes))return;if(partes.length<7){erros.push({linha:i+1,motivo:'São necessárias as 7 colunas: AGENDA, SENHA, CARGA, STATUS, FORNECEDOR, CHEGADA e DTA_BASE.'});return;}const r={agenda:partes[0],senha:partes[1],carga:partes[2],status:partes[3],fornecedor:partes[4],chegada:partes[5],dtaBase:partes[6],linha:i+1};if(!r.carga||!r.agenda){erros.push({linha:i+1,motivo:'AGENDA e CARGA são obrigatórios.'});return;}registros.push(r);});return {registros,erros};}
+function exibirPreviewAgendaImportada(){const r=interpretarAgendaColada(document.getElementById('agendaPasteArea').value),p=document.getElementById('agendaPastePreview');p.style.display='block';p.innerHTML=`<div style="display:flex;gap:16px;flex-wrap:wrap"><span>Registros válidos: <b style="color:var(--green)">${r.registros.length}</b></span><span>Linhas com erro: <b style="color:${r.erros.length?'var(--red)':'var(--green)'}">${r.erros.length}</b></span></div>${r.erros.length?`<div style="margin-top:10px;color:#fca5a5;font-size:11px">${r.erros.slice(0,10).map(e=>`<div>Linha ${e.linha}: ${escapeHTML(e.motivo)}</div>`).join('')}</div>`:''}`;}
+async function processarAtualizacaoAgenda(){if(!podeAtualizarCargas()){toast('Acesso negado','Somente o usuário 5520967 pode executar esta operação.','warn');return;}const resultado=interpretarAgendaColada(document.getElementById('agendaPasteArea').value);if(!resultado.registros.length){toast('Nenhum registro encontrado','Cole as 7 colunas da AGENDA.','warn');return;}if(resultado.erros.length){toast('Dados incompletos',`${resultado.erros.length} linha(s) com erro.`,'err');return;}if(!confirm(`Processar ${resultado.registros.length} linha(s) da AGENDA?\n\nRegistros novos serão inseridos.\nRegistros existentes serão atualizados.`))return;const botao=document.getElementById('processarAtualizarAgenda');botao.disabled=true;showLoader(true,'Atualizando AGENDA...');const resumo={inseridas:0,atualizadas:0,erros:[]};try{const porCarga=new Map();resultado.registros.forEach(r=>porCarga.set(r.carga,r));for(const registro of porCarga.values()){const payload={[COL_AG.agenda]:registro.agenda,[COL_AG.senha]:registro.senha||null,[COL_AG.carga]:registro.carga,[COL_AG.status]:registro.status||null,[COL_AG.fornecedor]:registro.fornecedor||null,[COL_AG.chegada]:registro.chegada||null,[COL_AG.dtaBase]:registro.dtaBase||null};try{const existe=await sb.from(TABLE_AGENDA).select(COL_AG.carga).eq(COL_AG.carga,registro.carga).limit(1);if(existe.error)throw existe.error;if(existe.data?.length){const upd=await sb.from(TABLE_AGENDA).update(payload).eq(COL_AG.carga,registro.carga);if(upd.error)throw upd.error;resumo.atualizadas++;}else{const ins=await sb.from(TABLE_AGENDA).insert(payload);if(ins.error)throw ins.error;resumo.inseridas++;}}catch(e){console.error('Erro na agenda:',registro.carga,e);resumo.erros.push({carga:registro.carga,erro:e.message||String(e)});}}toast('Atualização da AGENDA concluída',`Inseridas: ${resumo.inseridas} · Atualizadas: ${resumo.atualizadas} · Erros: ${resumo.erros.length}`,resumo.erros.length?'warn':'ok');if(!resumo.erros.length)fecharModalAtualizarAgenda();state.rawAgenda=[];state.rawCargas=[];state.rawSobrepostos=[];await loadData(true);}catch(e){console.error(e);toast('Erro na atualização',e.message||String(e),'err');}finally{botao.disabled=false;showLoader(false);}}
 
 function storedNum(row,key){const v=row?.[RC[key]];if(v===null||v===undefined||v==='')return null;const n=Number(v);return Number.isFinite(n)?n:null;}
 function getManualValue(key,date){return state.gran==='dia'&&key!=='agenda'?storedNum(state.resultadosPorData[date],key):null;}
@@ -1303,6 +1077,8 @@ function buildRegistros(){
     if (carga) cargasSet.add(carga);
   });
 
+  const sobrepostasVistas = new Set();
+
   const now = new Date();
 
   /* --- Registros AGENDA --- */
@@ -1381,6 +1157,41 @@ function buildRegistros(){
       agenda_noshow: 0,
       turnoAgenda: '',
       turnoConf: '',
+    });
+  });
+
+    /* --- Registros SOBREPOSTOS --- */
+  state.rawSobrepostos.forEach(s => {
+    const carga = String(s?.CARGA ?? '').trim();
+    const status = normUpper(s?.STATUS ?? '');
+    const dataRef = refDateISO(s?.TERMO);
+
+    if(!carga || status !== 'SOBREPOSTO' || !dataRef) return;
+
+    const chave = `${carga}::${dataRef}`;
+    if(sobrepostasVistas.has(chave)) return;
+    sobrepostasVistas.add(chave);
+
+    records.push({
+      type:'sobreposta',
+      carga,
+      senha:'',
+      fornecedor:'SOBREPOSTO',
+      dataAgenda:null,
+      dataBase:null,
+      dataTermo:dataRef,
+      agenda:0,
+      recebido:0,
+      sobrepostas:1,
+      no_prazo:0,
+      backlog_recebido:0,
+      backlog_pendente:0,
+      abaixo_4hrs:0,
+      no_show:0,
+      recusado:0,
+      agenda_noshow:0,
+      turnoAgenda:'',
+      turnoConf:''
     });
   });
 
@@ -1928,6 +1739,7 @@ function rowFilterFor(key, r){
     case 'abaixo_4hrs':      return r.abaixo_4hrs === 1;
     case 'no_show':          return r.no_show === 1;
     case 'recusado':         return r.recusado === 1;
+    case 'sobrepostas':      return r.sobrepostas === 1;
     default:                 return false;
   }
 }
@@ -2432,13 +2244,15 @@ async function loadData(force){
   }
   showLoader(true, 'Carregando AGENDA e CARGAS_RECEBIDAS…');
   try {
-    const [agendaRows, cargasRows] = await Promise.all([
+    const [agendaRows, cargasRows, sobrepostosRows] = await Promise.all([
       fetchAllFromTable(TABLE_AGENDA),
       fetchAllFromTable(TABLE_CARGAS),
+      fetchAllFromTable(TABLE_SOBREPOSTOS),
       Object.keys(state.weather).length ? Promise.resolve() : loadWeather()
     ]);
     state.rawAgenda=agendaRows;
     state.rawCargas=cargasRows;
+    state.rawSobrepostos=sobrepostosRows || [];
     if(force){
       const {ok,fail}=await syncCargasComAgenda();
       if(ok){state.rawCargas=await fetchAllFromTable(TABLE_CARGAS);toast('Sincronização',`${ok} registro(s) atualizado(s).`,'ok');}
@@ -2449,7 +2263,7 @@ async function loadData(force){
     updateMissingAlert();
 
     document.getElementById('footerConexao').textContent =
-      `AGENDA: ${nfInt.format(agendaRows.length)} · CARGAS_RECEBIDAS: ${nfInt.format(cargasRows.length)}`;
+      `AGENDA: ${nfInt.format(agendaRows.length)} · CARGAS_RECEBIDAS: ${nfInt.format(cargasRows.length)} · SOBREPOSTOS: ${nfInt.format((sobrepostosRows||[]).length)}`;
 
     const { start, end } = getFetchRange();
     await loadResultados(start,end);
@@ -2657,7 +2471,7 @@ function bindEvents(){
   document.getElementById('btnCloseDrill').addEventListener('click', closeDrill);
 
   document.getElementById('btnRefresh').addEventListener('click', async () => {
-    state.rawAgenda = []; state.rawCargas = [];
+    state.rawAgenda = []; state.rawCargas = []; state.rawSobrepostos = [];
     await loadData(true);
     toast('Atualizado', 'Painel sincronizado.', 'ok');
   });
@@ -2710,20 +2524,13 @@ function bindEvents(){
   document.getElementById('processarAtualizarCargas')?.addEventListener('click',processarAtualizacaoCargas);
   document.getElementById('cargasPasteArea')?.addEventListener('input',exibirPreviewCargasImportadas);
   document.getElementById('modalAtualizarCargas')?.addEventListener('click',e=>{if(e.target.id==='modalAtualizarCargas')fecharModalAtualizarCargas();});
-
   document.getElementById('btnAtualizarAgenda')?.addEventListener('click',abrirModalAtualizarAgenda);
   document.getElementById('closeAtualizarAgenda')?.addEventListener('click',fecharModalAtualizarAgenda);
   document.getElementById('cancelAtualizarAgenda')?.addEventListener('click',fecharModalAtualizarAgenda);
   document.getElementById('processarAtualizarAgenda')?.addEventListener('click',processarAtualizacaoAgenda);
   document.getElementById('agendaPasteArea')?.addEventListener('input',exibirPreviewAgendaImportada);
   document.getElementById('modalAtualizarAgenda')?.addEventListener('click',e=>{if(e.target.id==='modalAtualizarAgenda')fecharModalAtualizarAgenda();});
-
-  document.addEventListener('keydown',e=>{
-    if(e.key==='Escape'){
-      fecharModalAtualizarCargas();
-      fecharModalAtualizarAgenda();
-    }
-  });
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){fecharModalAtualizarCargas();fecharModalAtualizarAgenda();}});
 
   document.getElementById('modalMissing').addEventListener('click', e => {
     if (e.target.id === 'modalMissing') closeMissingModal();
