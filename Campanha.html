@@ -227,7 +227,7 @@
               fechado: campaign?.fechado || 0,
               fracionado: campaign?.fracionado || 0,
               vendaBalcao: campaign ? campaign.vendaBalcao : 0,
-              meta: campaign?.meta ?? metaByCDShift.get(`${cd}|${normShift(turno)}`) ?? null
+              meta: isSunday(date) ? 0 : campaign?.meta ?? metaByCDShift.get(`${cd}|${normShift(turno)}`) ?? null
             };
             shift.total = campaign?.total ?? (shift.fechado + shift.fracionado + shift.vendaBalcao);
             return shift;
@@ -239,7 +239,7 @@
           // Metas editadas localmente têm prioridade; se estiverem em zero, usa a META gravada em CAMPANHA_CX.
           const localMeta = Math.max(0, parseNumeric(state.config.goals[String(cd)], 0));
           const storedDailyMeta = shifts.reduce((sum, shift) => sum + (shift.meta || 0), 0);
-          const meta = localMeta || storedDailyMeta;
+          const meta = isSunday(date) ? 0 : (localMeta || storedDailyMeta);
           byCD.set(String(cd), { date, cd, shifts, fechado, fracionado, vendaBalcao, total, meta, ratio: meta > 0 ? total / meta : null, hasData: present.has(`${date}|${cd}`) });
         }
         byDay.set(date, byCD);
@@ -353,6 +353,7 @@
     function dayNum(date) { return date.slice(-2); }
     // Datas do banco (DD/MM/AAAA ou ISO) são normalizadas internamente para ISO; a tela usa DD/MM/AAAA.
     function displayDate(isoDate) { const [year, month, day] = String(isoDate).slice(0, 10).split('-'); return `${day}/${month}/${year}`; }
+    function isSunday(date) { return new Date(`${date}T12:00:00`).getDay() === 0; }
     function weekday(date) { return new Date(`${date}T12:00:00`).toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '').toUpperCase(); }
     function monthLabel(month) { const [y, m] = month.split('-').map(Number); return new Date(y, m - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }); }
     function totalSummaryRows(active, byDay) {
@@ -380,7 +381,7 @@
       $('subtitle').textContent = isRuptura ? 'Indicador diário de ruptura por Centro de Distribuição · um mês por vez' : 'Atingimento diário de caixas por Centro de Distribuição · um mês por vez';
       $('monthTitle').textContent = `${isRuptura ? 'Visão de ruptura' : 'Visão de caixas'} · ${monthLabel(state.month)}`;
       $('tableHint').textContent = isRuptura ? 'Valor exibido = RUPTURA · verde quando RUPTURA ≤ META · vermelho quando RUPTURA > META.' : 'Linhas = CDs · colunas = dias · expanda para ver métricas e turnos · totais consolidados no rodapé.';
-      $('footnote').textContent = isRuptura ? 'Regra: RUPTURA menor ou igual à META fica verde; acima da META fica vermelho. Dias sem valor de ruptura ou sem meta aparecem como “—”.' : 'Fonte única: CAMPANHA_CX. O rodapé soma META dos turnos ativos, agrega TOTAL CX do dia e calcula TOTAL CX ÷ TOTAL META. Se faltar uma linha diária, usa a meta típica daquele turno no mês.';
+      $('footnote').textContent = isRuptura ? 'Regra: RUPTURA menor ou igual à META fica verde; acima da META fica vermelho. Dias sem valor de ruptura ou sem meta aparecem como “—”.' : 'Fonte única: CAMPANHA_CX. O rodapé soma META dos turnos ativos, agrega TOTAL CX do dia e calcula TOTAL CX ÷ TOTAL META. Aos domingos a meta é zero e o atingimento aparece como “—”. Se faltar uma linha diária, usa a meta típica daquele turno no mês.';
       $('cdBadge').textContent = `${active.length} CDs ativos · ${days.length} dias`;
       $('tableHead').innerHTML = `<tr><th>Centro de distribuição</th>${days.map(date => `<th class="day-head" title="${date}"><span>${displayDate(date)}</span><small>${weekday(date)}</small></th>`).join('')}</tr>`;
       if (!active.length) {
@@ -494,7 +495,7 @@
           const turno = normShift(shift.turno), key = keyOf(date, cd, turno), knownValue = existingMeta.get(key);
           const localDailyGoal = Math.max(0, parseNumeric(state.config.goals[String(cd)], 0));
           const activeTurn = !turns || turns.has(turno);
-          const shiftMeta = localDailyGoal > 0 ? (activeTurn ? localDailyGoal / turnCount : 0) : (knownValue ?? typicalShiftMeta.get(`${cd}|${turno}`) ?? 0);
+          const shiftMeta = isSunday(date) ? 0 : (localDailyGoal > 0 ? (activeTurn ? localDailyGoal / turnCount : 0) : (knownValue ?? typicalShiftMeta.get(`${cd}|${turno}`) ?? 0));
           payload.push({
             'DATA': databaseDateForSave(date), 'TURNO': shift.turno, 'CAIXA PLT FECH': shift.fechado, 'CAIXA DE SEP': shift.fracionado,
             'CX VENDA BALCAO': shift.vendaBalcao, 'META': shiftMeta, 'CD': Number(cd), 'TOTAL CX': shift.total
