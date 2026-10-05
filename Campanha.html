@@ -24,6 +24,7 @@
     .footnote{padding:10px 16px;color:var(--faint);font-size:9px;border-top:1px solid var(--line)}
     button[hidden]{display:none!important}.view-switch{display:inline-flex;align-items:center;gap:3px;padding:3px;border:1px solid var(--line-2);border-radius:11px;background:var(--surface-2)}.view-switch button{border:0;background:transparent;color:var(--muted);padding:7px 11px;border-radius:8px;font-size:10px;font-weight:800;cursor:pointer}.view-switch button.active{color:#071417;background:linear-gradient(110deg,#69dec8,#72a8ff);box-shadow:0 3px 10px rgba(40,100,130,.14)}
     .rupture-value{display:inline-flex;align-items:center;justify-content:center;min-width:58px;padding:5px 8px;border-radius:8px;font:800 10px var(--display);font-variant-numeric:tabular-nums}.rupture-value.good{color:#8be2bc;background:rgba(73,212,160,.12)}.rupture-value.bad{color:#ff9ba6;background:rgba(255,120,135,.12)}.rupture-value.na{color:var(--faint);background:rgba(255,255,255,.03)}
+    .summary-row td{background:#1a2840;color:var(--text);font-weight:800;border-top:1px solid var(--line-2)}.summary-row td:first-child{background:#172338}.summary-row.total-meta td{border-top:2px solid var(--cyan)}.summary-row.total-achievement td{background:rgba(100,217,208,.08)}.summary-label{font:800 9px var(--display);letter-spacing:.035em}.summary-row .metric-value{font-weight:850}body.light .summary-row td{background:#e9eff6;color:#182337}body.light .summary-row td:first-child{background:#dce6f1}body.light .summary-row.total-achievement td{background:#e4f2f0}
     /* Tema claro: paleta editorial de alto contraste para leitura em reunião. */
     body.light{color-scheme:light;--bg:#f2f5fa;--surface:#fff;--surface-2:#eaf0f7;--surface-3:#dce6f1;--line:rgba(27,46,72,.12);--line-2:rgba(27,46,72,.2);--text:#182337;--muted:#53647c;--faint:#75849a;--cyan:#087f79;--blue:#3567ba;--green:#14764f;--red:#b92e40;--amber:#a56800;--shadow:0 14px 35px rgba(32,54,85,.10);background:radial-gradient(ellipse at 10% -10%,rgba(65,188,182,.12),transparent 38%),radial-gradient(ellipse at 94% 2%,rgba(78,120,200,.10),transparent 33%),var(--bg)}
     body.light .toolbar,body.light .card{background:rgba(255,255,255,.94);border-color:var(--line);box-shadow:var(--shadow)}body.light .connection{background:#fff;color:var(--muted)}body.light .month-control{background:#fff;border-color:var(--line-2)}body.light .month-control input{color:var(--text)}body.light .month-control input::-webkit-calendar-picker-indicator{filter:none}body.light .btn{background:#f3f6fa;color:var(--text);border-color:var(--line-2)}body.light .btn:hover{background:#e8eef6}body.light .btn-primary{color:#071417;background:linear-gradient(110deg,#71d8c6,#91b3f6);border:0}body.light .btn-quiet{background:transparent}body.light .view-switch{background:#edf2f8}body.light .view-switch button.active{color:#fff;background:linear-gradient(110deg,#138c81,#4778c7)}
@@ -64,7 +65,7 @@
     <section class="modal"><div class="modal-head"><h2 id="settingsTitle">Configurações da campanha</h2><button class="close" id="closeSettings" aria-label="Fechar">×</button></div>
       <div class="modal-body">
         <section class="modal-section"><h3>CDs ativos</h3><p>CD inativo é ocultado, mas seus dados permanecem no banco de dados.</p><div class="settings-grid" id="cdSettings"></div></section>
-        <section class="modal-section"><h3>Metas diárias por CD</h3><p>Meta inicial do CD 910: 248.148 caixas. CDs sem meta informada começam em zero.</p><div class="settings-grid" id="goalSettings"></div></section>
+        <section class="modal-section"><h3>Metas diárias por CD</h3><p>A meta diária é a soma dos valores META dos turnos ativos em CAMPANHA_CX. Uma meta local maior que zero substitui esse total. Meta inicial do CD 910: 248.148 caixas.</p><div class="settings-grid" id="goalSettings"></div></section>
         <section class="modal-section"><h3>Percentual mínimo</h3><p>Define a cor dos percentuais exibidos. Padrão: 95%.</p><div class="threshold-control"><input id="thresholdInput" type="number" min="0" max="1000" step="0.1" aria-label="Percentual mínimo"><span>%</span></div></section>
         <div class="settings-actions"><button class="btn" id="cancelSettings">Cancelar</button><button class="btn btn-primary" id="applySettings">Salvar configurações</button></div>
       </div>
@@ -83,14 +84,14 @@
       SUPABASE_URL: 'https://iykukdzmdxbluehylkse.supabase.co',
       // Chave pública/publishable fornecida no código original. Nunca usar service_role no navegador.
       SUPABASE_ANON_KEY: 'sb_publishable_AOnZKBKy9NpHheU_VN-bcQ_y5Ldcgce',
-      TABLES: Object.freeze({ PLT_FECH: 'PLT_FECH', CAMPANHA_CX: 'CAMPANHA_CX', CAMPANHA_RUPTURA: 'CAMPANHA_RUPTURA' }),
+      TABLES: Object.freeze({ CAMPANHA_CX: 'CAMPANHA_CX', CAMPANHA_RUPTURA: 'CAMPANHA_RUPTURA' }),
       CDS: Object.freeze([910, 911, 914, 915, 916, 917, 919, 920, 921, 922, 923, 956]),
       TURNOS: Object.freeze(['1 TURNO', '2 TURNO', '3 TURNO']),
       INITIAL_GOALS: Object.freeze({ 910: 248148, 911: 0, 914: 0, 915: 0, 916: 0, 917: 0, 919: 0, 920: 0, 921: 0, 922: 0, 923: 0, 956: 0 }),
       INITIAL_THRESHOLD: 95, PAGE_SIZE: 1000, MAX_ROWS: 300000,
       STORAGE_KEY: 'recvision.campanha-aniversario.config.v1'
     });
-    const state = { config: loadLocalConfig(), pltRows: [], campaignRows: [], ruptureRows: [], days: [], month: '', view: 'caixa', expanded: new Set(), busy: false, loaded: false, loadedMonth: '', loadedView: '' };
+    const state = { config: loadLocalConfig(), campaignRows: [], ruptureRows: [], days: [], month: '', view: 'caixa', expanded: new Set(), busy: false, loaded: false, loadedMonth: '', loadedView: '' };
     const $ = id => document.getElementById(id);
     const fmtNumber = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 });
     const fmtInteger = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 });
@@ -165,11 +166,8 @@
         const ruptureRows = await readMonthRows(CONFIG.TABLES.CAMPANHA_RUPTURA, 'DTA,CD,RUPTURA,META', 'DTA', month, bounds, cdFilter);
         return { ruptureRows };
       }
-      const [pltRows, campaignRows] = await Promise.all([
-        readMonthRows(CONFIG.TABLES.PLT_FECH, 'CD,DTA,TIPO,STATUS,TURNO,"QTD CX"', 'DTA', month, bounds, cdFilter),
-        readMonthRows(CONFIG.TABLES.CAMPANHA_CX, 'DATA,TURNO,"CAIXA PLT FECH","CAIXA DE SEP","CX VENDA BALCAO",META,CD,"TOTAL CX"', 'DATA', month, bounds, cdFilter)
-      ]);
-      return { pltRows, campaignRows };
+      const campaignRows = await readMonthRows(CONFIG.TABLES.CAMPANHA_CX, 'DATA,TURNO,"CAIXA PLT FECH","CAIXA DE SEP","CX VENDA BALCAO",META,CD,"TOTAL CX"', 'DATA', month, bounds, cdFilter);
+      return { campaignRows };
     }
 
     /* ================================================================
@@ -192,46 +190,56 @@
       return br ? `${br[3]}-${br[2]}-${br[1]}` : text;
     }
     function databaseDateForSave(isoDate) {
-      const samples = [...state.campaignRows.map(row => row.DATA), ...state.pltRows.map(row => row.DTA)].map(cleanText).filter(Boolean);
+      const samples = state.campaignRows.map(row => row.DATA).map(cleanText).filter(Boolean);
       return samples.some(value => /^\d{2}\/\d{2}\/\d{4}$/.test(value)) ? displayDate(isoDate) : isoDate;
     }
     function keyOf(date, cd, shift) { return `${date}|${normCode(cd)}|${normShift(shift)}`; }
     function processMonth() {
-      const plt = new Map(), saved = new Map(), present = new Set();
+      const saved = new Map(), metaFrequency = new Map(), metaByCDShift = new Map(), present = new Set();
       const inMonth = new Set(state.days);
-      for (const row of state.pltRows) {
-        const date = rowDate(row.DTA), cd = normCode(row.CD), shift = normShift(row.TURNO);
-        if (!inMonth.has(date) || !CONFIG.CDS.some(item => String(item) === cd)) continue;
-        const type = cleanText(row.TIPO).toLocaleUpperCase('pt-BR');
-        if (type !== 'FECHADO' && type !== 'FRACIONADO') continue;
-        const key = keyOf(date, cd, shift), item = plt.get(key) || { fechado: 0, fracionado: 0 };
-        const qty = parseNumeric(row['QTD CX'], 0);
-        if (type === 'FECHADO') item.fechado += qty;
-        else item.fracionado += qty;
-        plt.set(key, item); present.add(`${date}|${cd}`);
-      }
       for (const row of state.campaignRows) {
         const date = rowDate(row.DATA), cd = normCode(row.CD), shift = normShift(row.TURNO);
         if (!inMonth.has(date) || !CONFIG.CDS.some(item => String(item) === cd)) continue;
         const key = keyOf(date, cd, shift);
-        saved.set(key, { vendaBalcao: parseNumeric(row['CX VENDA BALCAO'], 0) });
+        const storedMeta = parseNullableNumeric(row.META);
+        if (storedMeta !== null) {
+          const shiftKey = `${cd}|${shift}`, values = metaFrequency.get(shiftKey) || new Map();
+          values.set(storedMeta, (values.get(storedMeta) || 0) + 1); metaFrequency.set(shiftKey, values);
+        }
+        saved.set(key, {
+          fechado: parseNumeric(row['CAIXA PLT FECH'], 0), fracionado: parseNumeric(row['CAIXA DE SEP'], 0),
+          vendaBalcao: parseNumeric(row['CX VENDA BALCAO'], 0), total: parseNullableNumeric(row['TOTAL CX']), meta: storedMeta
+        });
         present.add(`${date}|${cd}`);
+      }
+      for (const [key, frequency] of metaFrequency) {
+        const [mostCommon] = [...frequency.entries()].sort((a, b) => b[1] - a[1] || b[0] - a[0])[0];
+        metaByCDShift.set(key, mostCommon);
       }
       const byDay = new Map();
       for (const date of state.days) {
         const byCD = new Map();
         for (const cd of CONFIG.CDS) {
           const shifts = CONFIG.TURNOS.map(turno => {
-            const key = keyOf(date, cd, turno), source = plt.get(key) || { fechado: 0, fracionado: 0 }, campaign = saved.get(key);
-            const shift = { turno, fechado: source.fechado, fracionado: source.fracionado, vendaBalcao: campaign ? campaign.vendaBalcao : 0 };
-            shift.total = shift.fechado + shift.fracionado + shift.vendaBalcao;
+            const key = keyOf(date, cd, turno), campaign = saved.get(key);
+            const shift = {
+              turno,
+              fechado: campaign?.fechado || 0,
+              fracionado: campaign?.fracionado || 0,
+              vendaBalcao: campaign ? campaign.vendaBalcao : 0,
+              meta: campaign?.meta ?? metaByCDShift.get(`${cd}|${normShift(turno)}`) ?? null
+            };
+            shift.total = campaign?.total ?? (shift.fechado + shift.fracionado + shift.vendaBalcao);
             return shift;
           });
           const fechado = shifts.reduce((n, s) => n + s.fechado, 0);
           const fracionado = shifts.reduce((n, s) => n + s.fracionado, 0);
           const vendaBalcao = shifts.reduce((n, s) => n + s.vendaBalcao, 0);
-          const total = fechado + fracionado + vendaBalcao;
-          const meta = Math.max(0, parseNumeric(state.config.goals[String(cd)], 0));
+          const total = shifts.reduce((n, s) => n + s.total, 0);
+          // Metas editadas localmente têm prioridade; se estiverem em zero, usa a META gravada em CAMPANHA_CX.
+          const localMeta = Math.max(0, parseNumeric(state.config.goals[String(cd)], 0));
+          const storedDailyMeta = shifts.reduce((sum, shift) => sum + (shift.meta || 0), 0);
+          const meta = localMeta || storedDailyMeta;
           byCD.set(String(cd), { date, cd, shifts, fechado, fracionado, vendaBalcao, total, meta, ratio: meta > 0 ? total / meta : null, hasData: present.has(`${date}|${cd}`) });
         }
         byDay.set(date, byCD);
@@ -289,16 +297,18 @@
       return `<tr><td><span class="metric-label ${className}">${label}</span></td>${dateValues.map(value => `<td>${valueFn(value)}</td>`).join('')}</tr>`;
     }
     function shiftDetails(cd, byDay) {
-      const header = state.days.flatMap(date => ['F', 'S', 'B', 'T'].map((code, index) => `<th title="${displayDate(date)} · ${['Caixa PLT Fech', 'Caixa de Sep', 'CX Venda Balcão', 'Total CX'][index]}"><span>${displayDate(date)}</span><small>${code}</small></th>`)).join('');
-      const rows = CONFIG.TURNOS.map(turno => {
-        const cells = [];
-        state.days.forEach(date => {
-          const item = getCell(byDay, date, cd).shifts.find(s => s.turno === turno);
-          cells.push(`<td>${fmtNumber.format(item.fechado)}</td>`, `<td>${fmtNumber.format(item.fracionado)}</td>`, `<td>${detailVal(item.vendaBalcao, { sale: true, cd, date, shift: turno })}</td>`, `<td><strong>${fmtNumber.format(item.total)}</strong></td>`);
-        });
-        return `<tr><td class="turn-name">${turno}</td>${cells.join('')}</tr>`;
+      return CONFIG.TURNOS.map((turno, turnIndex) => {
+        const items = state.days.map(date => getCell(byDay, date, cd).shifts.find(item => item.turno === turno));
+        const header = state.days.map((date, index) => `<th title="${displayDate(date)} · ${weekday(date)}"><span>${displayDate(date)}</span><small>${weekday(date)}</small></th>`).join('');
+        const rows = [
+          ['CAIXA PLT FECH', item => fmtNumber.format(item.fechado)],
+          ['CAIXA DE SEP', item => fmtNumber.format(item.fracionado)],
+          ['CX VENDA BALCAO', (item, date) => detailVal(item.vendaBalcao, { sale: true, cd, date, shift: turno })],
+          ['META DO TURNO', item => item.meta === null ? '—' : fmtNumber.format(item.meta)],
+          ['TOTAL CX', item => `<strong>${fmtNumber.format(item.total)}</strong>`]
+        ].map(([label, renderValue]) => `<tr><td class="turn-name">${label}</td>${state.days.map((date, index) => `<td>${renderValue(items[index], date)}</td>`).join('')}</tr>`).join('');
+        return `<details class="turn-details" data-turn-index="${turnIndex}"><summary>${turno} · Abrir indicadores diários</summary><div class="turn-wrap"><table class="turn-table"><thead><tr><th>Métrica</th>${header}</tr></thead><tbody>${rows}</tbody></table></div></details>`;
       }).join('');
-      return `<details class="turn-details"><summary>Detalhar por turno · editar CX Venda Balcão</summary><div class="turn-wrap"><table class="turn-table"><thead><tr><th>Turno · métrica</th>${header}</tr></thead><tbody>${rows}</tbody></table><div style="font-size:8px;color:var(--faint);padding:7px 2px 0">Em cada turno, os valores aparecem na ordem: Caixa PLT Fech · Caixa de Sep · CX Venda Balcão · Total CX.</div></div></details>`;
     }
     function expandedRows(cd, byDay) {
       const values = field => state.days.map(date => getCell(byDay, date, cd)[field]);
@@ -345,6 +355,21 @@
     function displayDate(isoDate) { const [year, month, day] = String(isoDate).slice(0, 10).split('-'); return `${day}/${month}/${year}`; }
     function weekday(date) { return new Date(`${date}T12:00:00`).toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '').toUpperCase(); }
     function monthLabel(month) { const [y, m] = month.split('-').map(Number); return new Date(y, m - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }); }
+    function totalSummaryRows(active, byDay) {
+      const daily = state.days.map(date => {
+        let meta = 0, total = 0;
+        for (const cd of active) { const cell = getCell(byDay, date, cd); meta += cell.meta || 0; total += cell.total || 0; }
+        return { meta, total, ratio: meta > 0 ? total / meta : null };
+      });
+      const row = (label, className, renderCell) => `<tr class="summary-row ${className}"><td><span class="summary-label">${label}</span></td>${daily.map(item => `<td>${renderCell(item)}</td>`).join('')}</tr>`;
+      return row('TOTAL META (CX)', 'total-meta', item => `<strong class="metric-value">${fmtNumber.format(item.meta)}</strong>`) +
+        row('TOTAL CX', 'total-boxes', item => `<strong class="metric-value">${fmtNumber.format(item.total)}</strong>`) +
+        row('ATINGIMENTO TOTAL', 'total-achievement', item => {
+          if (item.ratio === null) return '<span class="percent na"><i class="dot"></i>—</span>';
+          const good = item.ratio >= state.config.threshold / 100;
+          return `<span class="percent ${good ? 'good' : 'bad'}"><i class="dot"></i>${fmtPercent.format(item.ratio)}</span>`;
+        });
+    }
     function render() {
       const { days } = monthBounds(state.month); state.days = days;
       const isRuptura = state.view === 'ruptura';
@@ -354,8 +379,8 @@
       $('viewRuptura').classList.toggle('active', isRuptura); $('viewRuptura').setAttribute('aria-selected', String(isRuptura));
       $('subtitle').textContent = isRuptura ? 'Indicador diário de ruptura por Centro de Distribuição · um mês por vez' : 'Atingimento diário de caixas por Centro de Distribuição · um mês por vez';
       $('monthTitle').textContent = `${isRuptura ? 'Visão de ruptura' : 'Visão de caixas'} · ${monthLabel(state.month)}`;
-      $('tableHint').textContent = isRuptura ? 'Valor exibido = RUPTURA · verde quando RUPTURA ≤ META · vermelho quando RUPTURA > META.' : 'Linhas = CDs · colunas = dias · expanda um CD para ver métricas e turnos.';
-      $('footnote').textContent = isRuptura ? 'Regra: RUPTURA menor ou igual à META fica verde; acima da META fica vermelho. Dias sem valor de ruptura ou sem meta aparecem como “—”.' : 'Percentuais: verde quando atingem o mínimo configurado (padrão 95%) e vermelho quando abaixo. “CX Venda Balcão” sem valor é considerado zero.';
+      $('tableHint').textContent = isRuptura ? 'Valor exibido = RUPTURA · verde quando RUPTURA ≤ META · vermelho quando RUPTURA > META.' : 'Linhas = CDs · colunas = dias · expanda para ver métricas e turnos · totais consolidados no rodapé.';
+      $('footnote').textContent = isRuptura ? 'Regra: RUPTURA menor ou igual à META fica verde; acima da META fica vermelho. Dias sem valor de ruptura ou sem meta aparecem como “—”.' : 'Fonte única: CAMPANHA_CX. O rodapé soma META dos turnos ativos, agrega TOTAL CX do dia e calcula TOTAL CX ÷ TOTAL META. Se faltar uma linha diária, usa a meta típica daquele turno no mês.';
       $('cdBadge').textContent = `${active.length} CDs ativos · ${days.length} dias`;
       $('tableHead').innerHTML = `<tr><th>Centro de distribuição</th>${days.map(date => `<th class="day-head" title="${date}"><span>${displayDate(date)}</span><small>${weekday(date)}</small></th>`).join('')}</tr>`;
       if (!active.length) {
@@ -363,12 +388,13 @@
         return;
       }
       const byDay = isRuptura ? processRupture() : processMonth();
-      $('tableBody').innerHTML = active.map(cd => {
+      const cdRows = active.map(cd => {
         const expanded = state.expanded.has(String(cd));
         const cells = days.map(date => `<td>${isRuptura ? ruptureMarkup(getCell(byDay, date, cd)) : pctMarkup(getCell(byDay, date, cd))}</td>`).join('');
         const details = isRuptura ? expandedRuptureRows(cd, byDay) : expandedRows(cd, byDay);
         return `<tr class="main-row"><td><div class="cd-cell"><button class="expand" type="button" data-expand="${cd}" aria-expanded="${expanded}" aria-label="${expanded ? 'Recolher' : 'Expandir'} CD ${cd}">${expanded ? '−' : '+'}</button><span class="cd-number">CD ${cd}</span></div></td>${cells}</tr>${details}`;
       }).join('');
+      $('tableBody').innerHTML = cdRows + (isRuptura ? '' : totalSummaryRows(active, byDay));
     }
 
     /* ================================================================
@@ -401,18 +427,18 @@
       if (state.busy || !/^\d{4}-\d{2}$/.test($('monthRef').value)) return;
       state.month = $('monthRef').value; state.expanded.clear(); state.loaded = false;
       const view = state.view;
-      setBusy(true, 'load'); setStatus(`Consultando ${view === 'ruptura' ? 'CAMPANHA_RUPTURA' : 'PLT_FECH e CAMPANHA_CX'} · ${monthLabel(state.month)}…`); setConnection('', 'Conectando');
+      setBusy(true, 'load'); setStatus(`Consultando ${view === 'ruptura' ? 'CAMPANHA_RUPTURA' : 'CAMPANHA_CX'} · ${monthLabel(state.month)}…`); setConnection('', 'Conectando');
       try {
         const result = await loadMonth(state.month, view);
         if (view === 'ruptura') state.ruptureRows = result.ruptureRows;
-        else { state.pltRows = result.pltRows; state.campaignRows = result.campaignRows; }
+        else state.campaignRows = result.campaignRows;
         state.loaded = true; state.loadedMonth = state.month; state.loadedView = view; render();
         setConnection('ok', 'Supabase conectado');
-        const count = view === 'ruptura' ? state.ruptureRows.length : state.pltRows.length + state.campaignRows.length;
-        const description = view === 'ruptura' ? `${state.ruptureRows.length.toLocaleString('pt-BR')} registros CAMPANHA_RUPTURA` : `${state.pltRows.length.toLocaleString('pt-BR')} registros PLT_FECH e ${state.campaignRows.length.toLocaleString('pt-BR')} registros CAMPANHA_CX`;
+        const count = view === 'ruptura' ? state.ruptureRows.length : state.campaignRows.length;
+        const description = view === 'ruptura' ? `${state.ruptureRows.length.toLocaleString('pt-BR')} registros CAMPANHA_RUPTURA` : `${state.campaignRows.length.toLocaleString('pt-BR')} registros CAMPANHA_CX`;
         setStatus(count === 0 ? 'Consulta concluída: sem dados para este mês. Confira o formato da data e as permissões RLS.' : `Consulta concluída: ${description}.`, count === 0 ? '' : 'success');
       } catch (error) {
-        console.error(error); if (view === 'ruptura') state.ruptureRows = []; else { state.pltRows = []; state.campaignRows = []; } state.loaded = false; render(); setConnection('err', 'Falha na conexão');
+        console.error(error); if (view === 'ruptura') state.ruptureRows = []; else state.campaignRows = []; state.loaded = false; render(); setConnection('err', 'Falha na conexão');
         setStatus(`Não foi possível carregar o mês. ${error.message || 'Verifique conexão, chave pública, permissões RLS e nomes das colunas.'}`, 'error'); toast('Falha ao consultar o Supabase. Veja os detalhes na mensagem.', 'err');
       } finally { setBusy(false); }
     }
@@ -432,21 +458,48 @@
     }
     function editSale(cd, date, shiftName, value) {
       const campaign = state.campaignRows.find(row => rowDate(row.DATA) === date && normCode(row.CD) === String(cd) && normShift(row.TURNO) === normShift(shiftName));
-      if (campaign) campaign['CX VENDA BALCAO'] = Math.max(0, parseNumeric(value, 0));
-      else state.campaignRows.push({ DATA: date, CD: Number(cd), TURNO: shiftName, 'CX VENDA BALCAO': Math.max(0, parseNumeric(value, 0)) });
+      const sale = Math.max(0, parseNumeric(value, 0));
+      if (campaign) {
+        campaign['CX VENDA BALCAO'] = sale;
+        campaign['TOTAL CX'] = parseNumeric(campaign['CAIXA PLT FECH'], 0) + parseNumeric(campaign['CAIXA DE SEP'], 0) + sale;
+      } else state.campaignRows.push({ DATA: displayDate(date), CD: Number(cd), TURNO: shiftName, 'CAIXA PLT FECH': 0, 'CAIXA DE SEP': 0, 'CX VENDA BALCAO': sale, META: 0, 'TOTAL CX': sale });
       render();
-      // Reabrir os detalhes para manter o contexto após redesenhar a tabela.
-      const details = document.querySelector(`[data-detail-cd="${cd}"] .turn-details`); if (details) details.open = true;
+      // Reabrir o detalhe do turno editado para manter o contexto após redesenhar a tabela.
+      const turnIndex = CONFIG.TURNOS.findIndex(turno => normShift(turno) === normShift(shiftName));
+      const details = document.querySelector(`[data-detail-cd="${cd}"] .turn-details[data-turn-index="${turnIndex}"]`); if (details) details.open = true;
     }
     function campaignPayload() {
       const active = CONFIG.CDS.filter(cd => state.config.active[String(cd)] !== false);
       const payload = [], byDay = processMonth();
+      const existingMeta = new Map(), activeTurns = new Map(), metaFrequency = new Map();
+      for (const row of state.campaignRows) {
+        const cd = normCode(row.CD), turno = normShift(row.TURNO), date = rowDate(row.DATA);
+        if (!state.days.includes(date) || !active.some(item => String(item) === cd)) continue;
+        const key = keyOf(date, cd, turno), value = parseNullableNumeric(row.META), turns = activeTurns.get(cd) || new Set();
+        const hasActivity = value > 0 || ['CAIXA PLT FECH', 'CAIXA DE SEP', 'CX VENDA BALCAO', 'TOTAL CX'].some(field => parseNumeric(row[field], 0) > 0);
+        if (hasActivity && CONFIG.TURNOS.some(item => normShift(item) === turno)) turns.add(turno);
+        if (turns.size) activeTurns.set(cd, turns); else activeTurns.delete(cd);
+        if (value !== null) {
+          existingMeta.set(key, value);
+          const shiftKey = `${cd}|${turno}`, values = metaFrequency.get(shiftKey) || new Map();
+          values.set(value, (values.get(value) || 0) + 1); metaFrequency.set(shiftKey, values);
+        }
+      }
+      const typicalShiftMeta = new Map();
+      for (const [key, values] of metaFrequency) typicalShiftMeta.set(key, [...values.entries()].sort((a, b) => b[1] - a[1] || b[0] - a[0])[0][0]);
       for (const date of state.days) for (const cd of active) {
         const day = byDay.get(date).get(String(cd));
-        for (const shift of day.shifts) payload.push({
-          'DATA': databaseDateForSave(date), 'TURNO': shift.turno, 'CAIXA PLT FECH': shift.fechado, 'CAIXA DE SEP': shift.fracionado,
-          'CX VENDA BALCAO': shift.vendaBalcao, 'META': day.meta, 'CD': Number(cd), 'TOTAL CX': shift.total
-        });
+        const turns = activeTurns.get(String(cd)), turnCount = turns?.size || CONFIG.TURNOS.length;
+        for (const shift of day.shifts) {
+          const turno = normShift(shift.turno), key = keyOf(date, cd, turno), knownValue = existingMeta.get(key);
+          const localDailyGoal = Math.max(0, parseNumeric(state.config.goals[String(cd)], 0));
+          const activeTurn = !turns || turns.has(turno);
+          const shiftMeta = localDailyGoal > 0 ? (activeTurn ? localDailyGoal / turnCount : 0) : (knownValue ?? typicalShiftMeta.get(`${cd}|${turno}`) ?? 0);
+          payload.push({
+            'DATA': databaseDateForSave(date), 'TURNO': shift.turno, 'CAIXA PLT FECH': shift.fechado, 'CAIXA DE SEP': shift.fracionado,
+            'CX VENDA BALCAO': shift.vendaBalcao, 'META': shiftMeta, 'CD': Number(cd), 'TOTAL CX': shift.total
+          });
+        }
       }
       return payload;
     }
