@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101729">
+  <title>Campanha Aniversário Assaí · Rec Vision</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ================================================================
+       CAMPANHA ANIVERSÁRIO ASSAÍ — interface mensal responsiva
+       ================================================================ */
+    :root{color-scheme:dark;--bg:#0a0f1c;--surface:#111a2b;--surface-2:#172238;--surface-3:#1d2a41;--line:rgba(190,207,235,.12);--line-2:rgba(190,207,235,.2);--text:#eff4ff;--muted:#96a6c0;--faint:#6c7b96;--cyan:#64d9d0;--blue:#7ea8ff;--green:#49d4a0;--red:#ff7887;--amber:#ffd17a;--radius:18px;--shadow:0 18px 50px rgba(0,0,0,.28);--sans:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;--display:'Manrope',var(--sans)}
+    *{box-sizing:border-box}html{min-height:100%;background:var(--bg)}body{margin:0;min-height:100vh;color:var(--text);font:14px/1.5 var(--sans);background:radial-gradient(ellipse at 12% -12%,rgba(44,122,157,.22),transparent 38%),radial-gradient(ellipse at 92% 5%,rgba(111,79,184,.17),transparent 31%),var(--bg)}button,input{font:inherit}button{color:inherit}button:focus-visible,input:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+    .page{max-width:1800px;margin:auto;padding:30px clamp(14px,2.5vw,40px) 54px}.topline{display:flex;align-items:center;gap:10px;color:var(--cyan);font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}.mark{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(145deg,#52d8c4,#4c85ff);color:#08131d;font-size:15px;box-shadow:0 7px 20px rgba(68,195,203,.2)}
+    header{display:flex;align-items:flex-start;justify-content:space-between;gap:22px;margin:9px 0 22px}h1,h2,h3,p{margin-top:0}h1{font:800 clamp(25px,3vw,35px)/1.15 var(--display);letter-spacing:-.045em;margin:8px 0 7px}.subtitle{color:var(--muted);margin:0;font-size:13px}.header-right{display:flex;align-items:center;gap:10px;padding-top:8px}.connection{display:inline-flex;align-items:center;gap:8px;padding:8px 11px;border:1px solid var(--line);border-radius:999px;background:rgba(17,26,43,.76);color:var(--muted);font-size:11px;font-weight:700;white-space:nowrap}.connection i{width:8px;height:8px;border-radius:50%;background:var(--amber)}.connection.ok i{background:var(--green)}.connection.err i{background:var(--red)}
+    .toolbar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:13px;background:rgba(17,26,43,.82);border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow);margin-bottom:12px}.month-control{height:42px;display:flex;align-items:center;gap:9px;padding:0 11px;border:1px solid var(--line-2);border-radius:11px;background:var(--bg)}.month-control label{font-size:9px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.1em}.month-control input{border:0;outline:0!important;background:transparent;color:var(--text);font-weight:750;font-size:12px;min-width:145px}.month-control input::-webkit-calendar-picker-indicator{filter:invert(.85);cursor:pointer}.btn{border:1px solid var(--line-2);background:var(--surface-2);border-radius:11px;padding:9px 13px;min-height:40px;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:750;font-size:11px;cursor:pointer;transition:transform .16s,border-color .16s,background .16s;white-space:nowrap}.btn:hover{transform:translateY(-1px);border-color:rgba(100,217,208,.55);background:var(--surface-3)}.btn:disabled{opacity:.55;cursor:wait;transform:none}.btn-primary{color:#071417;background:linear-gradient(110deg,#69dec8,#72a8ff);border:0;box-shadow:0 8px 24px rgba(84,184,195,.18)}.btn-primary:hover{background:linear-gradient(110deg,#8be8d6,#95b9ff)}.btn-quiet{background:transparent}.toolbar-spacer{flex:1}.btn-icon{font-size:15px;line-height:1}.statusline{min-height:19px;margin:0 2px 12px;color:var(--muted);font-size:11px}.statusline.error{color:#ff9da8}.statusline.success{color:#83e4bd}
+    .card{border:1px solid var(--line);border-radius:var(--radius);background:rgba(17,26,43,.88);box-shadow:var(--shadow);overflow:hidden}.card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 19px;border-bottom:1px solid var(--line)}.card-head h2{font:800 14px/1.2 var(--display);letter-spacing:-.02em;margin:0}.card-head p{margin:4px 0 0;color:var(--muted);font-size:10px}.card-badge{font-size:9px;color:var(--cyan);font-weight:800;letter-spacing:.08em;text-transform:uppercase;background:rgba(100,217,208,.09);border:1px solid rgba(100,217,208,.18);padding:6px 9px;border-radius:999px;white-space:nowrap}
+    .table-wrap{overflow:auto;max-height:calc(100vh - 245px);min-height:180px}table{border-collapse:separate;border-spacing:0;white-space:nowrap}table.month-table{width:max-content;min-width:100%;font-variant-numeric:tabular-nums}th,td{text-align:center;padding:9px 7px;border-bottom:1px solid rgba(190,207,235,.075);background:rgba(17,26,43,.88)}th{position:sticky;top:0;z-index:3;color:var(--muted);font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:#141f32;padding-top:11px;padding-bottom:11px}th:first-child,td:first-child{position:sticky;left:0;z-index:2;text-align:left;min-width:162px;width:162px;padding-left:13px;border-right:1px solid var(--line);background:#121c2d}th:first-child{z-index:5;background:#172338}.day-head{min-width:74px}.day-head span{display:block;font-size:10px;color:var(--text)}.day-head small{font-size:8px;color:var(--faint);font-weight:700}.main-row:hover td{background:rgba(34,51,78,.97)}.main-row:hover td:first-child{background:#1a2940}.cd-cell{display:flex;align-items:center;gap:8px}.expand{width:25px;height:25px;flex:none;display:grid;place-items:center;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);cursor:pointer;color:var(--cyan);font-size:17px;line-height:1;transition:.15s}.expand:hover{border-color:rgba(100,217,208,.5);background:var(--surface-3)}.cd-number{font:800 11px var(--display)}.cd-sub{display:block;margin-top:1px;font-size:8px;color:var(--faint)}
+    .percent{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-width:55px;border-radius:999px;padding:5px 6px;font:800 10px var(--display);font-variant-numeric:tabular-nums}.percent .dot{width:6px;height:6px;border-radius:50%;flex:none}.percent.good{color:#81e3ba;background:rgba(73,212,160,.1)}.percent.good .dot{background:var(--green);box-shadow:0 0 8px rgba(73,212,160,.7)}.percent.bad{color:#ff9ba6;background:rgba(255,120,135,.1)}.percent.bad .dot{background:var(--red);box-shadow:0 0 8px rgba(255,120,135,.65)}.percent.na{color:var(--faint);background:rgba(255,255,255,.025)}.percent.na .dot{background:var(--faint)}
+    .detail-row td{padding:0;background:#0d1523}.detail-row td:first-child{z-index:2;background:#0d1523}.detail-shell{padding:10px 8px 15px 10px;min-width:max-content}.detail-table{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%}.detail-table th,.detail-table td{position:static;background:transparent;border-bottom:1px solid rgba(190,207,235,.06);padding:7px 7px;text-align:center;min-width:74px;font-size:9px}.detail-table thead th{position:sticky;top:0;background:#101a2b;color:var(--faint);font-size:8px;z-index:1}.detail-table th:first-child,.detail-table td:first-child{position:sticky;left:0;text-align:left;min-width:162px;width:162px;padding-left:13px;background:#101a2b;border-right:1px solid var(--line);z-index:2}.detail-table thead th:first-child{z-index:3}.metric-label{font-size:9px;color:var(--muted);font-weight:750}.metric-label.primary{color:var(--cyan)}.metric-value{font-variant-numeric:tabular-nums;color:#dce6f7}.metric-value.dim{color:#697994}.edit-sale{width:65px;padding:4px 5px;border:1px solid var(--line);border-radius:6px;background:#09111e;color:var(--text);font-size:9px;text-align:right}.turn-details{margin:11px 5px 0;border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.02);max-width:calc(100vw - 260px)}.turn-details summary{cursor:pointer;padding:8px 10px;color:var(--cyan);font-size:9px;font-weight:800;letter-spacing:.04em}.turn-wrap{overflow:auto;padding:0 7px 8px}.turn-table{border-collapse:collapse;width:max-content;min-width:100%}.turn-table th,.turn-table td{position:static;text-align:right;background:transparent;min-width:70px;padding:6px 8px;border-bottom:1px solid rgba(190,207,235,.06);font-size:9px}.turn-table th:first-child,.turn-table td:first-child{position:sticky;left:0;background:#111a2b;text-align:left;min-width:130px;z-index:1}.turn-table thead th{color:var(--faint);font-size:8px;text-transform:uppercase}.turn-table .turn-name{color:var(--text);font-weight:750}.loading-cell,.empty-cell{text-align:center!important;padding:35px!important;color:var(--muted);font-size:11px}
+    .footnote{padding:10px 16px;color:var(--faint);font-size:9px;border-top:1px solid var(--line)}
+    button[hidden]{display:none!important}.view-switch{display:inline-flex;align-items:center;gap:3px;padding:3px;border:1px solid var(--line-2);border-radius:11px;background:var(--surface-2)}.view-switch button{border:0;background:transparent;color:var(--muted);padding:7px 11px;border-radius:8px;font-size:10px;font-weight:800;cursor:pointer}.view-switch button.active{color:#071417;background:linear-gradient(110deg,#69dec8,#72a8ff);box-shadow:0 3px 10px rgba(40,100,130,.14)}
+    .rupture-value{display:inline-flex;align-items:center;justify-content:center;min-width:58px;padding:5px 8px;border-radius:8px;font:800 10px var(--display);font-variant-numeric:tabular-nums}.rupture-value.good{color:#8be2bc;background:rgba(73,212,160,.12)}.rupture-value.bad{color:#ff9ba6;background:rgba(255,120,135,.12)}.rupture-value.na{color:var(--faint);background:rgba(255,255,255,.03)}
+    /* Tema claro: paleta editorial de alto contraste para leitura em reunião. */
+    body.light{color-scheme:light;--bg:#f2f5fa;--surface:#fff;--surface-2:#eaf0f7;--surface-3:#dce6f1;--line:rgba(27,46,72,.12);--line-2:rgba(27,46,72,.2);--text:#182337;--muted:#53647c;--faint:#75849a;--cyan:#087f79;--blue:#3567ba;--green:#14764f;--red:#b92e40;--amber:#a56800;--shadow:0 14px 35px rgba(32,54,85,.10);background:radial-gradient(ellipse at 10% -10%,rgba(65,188,182,.12),transparent 38%),radial-gradient(ellipse at 94% 2%,rgba(78,120,200,.10),transparent 33%),var(--bg)}
+    body.light .toolbar,body.light .card{background:rgba(255,255,255,.94);border-color:var(--line);box-shadow:var(--shadow)}body.light .connection{background:#fff;color:var(--muted)}body.light .month-control{background:#fff;border-color:var(--line-2)}body.light .month-control input{color:var(--text)}body.light .month-control input::-webkit-calendar-picker-indicator{filter:none}body.light .btn{background:#f3f6fa;color:var(--text);border-color:var(--line-2)}body.light .btn:hover{background:#e8eef6}body.light .btn-primary{color:#071417;background:linear-gradient(110deg,#71d8c6,#91b3f6);border:0}body.light .btn-quiet{background:transparent}body.light .view-switch{background:#edf2f8}body.light .view-switch button.active{color:#fff;background:linear-gradient(110deg,#138c81,#4778c7)}
+    body.light th{background:#eaf0f7;color:#53647c}body.light th:first-child{background:#e2eaf3}body.light td{background:rgba(255,255,255,.96)}body.light th:first-child,body.light td:first-child{background:#f8fafc;border-color:var(--line)}body.light .main-row:hover td{background:#edf4fb}body.light .main-row:hover td:first-child{background:#e5eef8}body.light .day-head span{color:#182337}body.light .expand{background:#edf2f8;color:#087f79}body.light .percent.good{color:#116442;background:#e3f5eb}body.light .percent.bad{color:#a92638;background:#fde9ec}body.light .percent.na{color:#748197;background:#f0f3f7}body.light .rupture-value.good{color:#116442;background:#e3f5eb}body.light .rupture-value.bad{color:#a92638;background:#fde9ec}body.light .rupture-value.na{color:#748197;background:#f0f3f7}
+    body.light .detail-row td,body.light .detail-row td:first-child{background:#f5f8fc}body.light .detail-table thead th,body.light .detail-table th:first-child,body.light .detail-table td:first-child{background:#edf2f8}body.light .detail-table td{background:transparent}body.light .metric-value{color:#26354c}body.light .metric-value.dim{color:#8a97a9}body.light .edit-sale{background:#fff;color:var(--text)}body.light .turn-details{background:#f9fbfd}body.light .turn-table th:first-child,body.light .turn-table td:first-child{background:#f1f5fa}body.light .turn-name{color:var(--text)}body.light .modal{background:#fff}body.light .modal-head{background:rgba(255,255,255,.96)}body.light .setting-item{background:#f7f9fc}body.light .setting-item input[type=number],body.light .threshold-control input{background:#fff;color:var(--text)}body.light .toast{background:#fff;color:var(--text)}
+    .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(3,7,13,.74);backdrop-filter:blur(9px);z-index:20}.overlay.open{display:flex}.modal{width:min(700px,100%);max-height:min(88vh,900px);overflow:auto;background:#121c2e;border:1px solid var(--line-2);border-radius:20px;box-shadow:0 30px 100px rgba(0,0,0,.55)}.modal-head{position:sticky;top:0;z-index:1;padding:18px 20px;background:rgba(18,28,46,.96);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}.modal-head h2{font:800 17px var(--display);margin:0}.close{border:1px solid var(--line);background:transparent;border-radius:9px;width:34px;height:34px;cursor:pointer;font-size:18px;color:var(--muted)}.modal-body{padding:19px 20px}.modal-section+.modal-section{margin-top:21px;padding-top:19px;border-top:1px solid var(--line)}.modal-section h3{font:800 11px var(--display);text-transform:uppercase;letter-spacing:.1em;margin:0 0 6px}.modal-section>p{font-size:10px;color:var(--muted);margin:0 0 12px}.settings-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.setting-item{display:flex;align-items:center;justify-content:space-between;gap:7px;border:1px solid var(--line);background:rgba(255,255,255,.025);padding:9px 10px;border-radius:10px}.setting-item b{font-size:10px}.setting-item label{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:9px;cursor:pointer}.setting-item input[type=checkbox]{accent-color:var(--cyan)}.setting-item input[type=number]{width:82px;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:7px;padding:5px 7px;text-align:right;font-size:10px}.settings-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:19px}.threshold-control{display:flex;align-items:center;gap:10px}.threshold-control input{width:110px;background:var(--bg);border:1px solid var(--line-2);color:var(--text);padding:9px 10px;border-radius:9px}.threshold-control span{color:var(--muted);font-size:12px}.toast-area{position:fixed;right:18px;bottom:18px;display:flex;flex-direction:column;gap:9px;z-index:30}.toast{max-width:min(440px,calc(100vw - 36px));padding:12px 15px;border-radius:12px;background:#1a2940;border:1px solid var(--line-2);box-shadow:var(--shadow);font-size:11px}.toast.ok{border-color:rgba(73,212,160,.4)}.toast.err{border-color:rgba(255,120,135,.45)}.loader{display:inline-block;width:13px;height:13px;border:2px solid rgba(7,20,23,.3);border-top-color:#071417;border-radius:50%;animation:spin .7s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+    @media(max-width:640px){.page{padding:19px 10px 34px}header{display:block;margin-bottom:16px}.header-right{padding-top:11px}.toolbar{gap:7px;padding:10px}.month-control{flex:1;min-width:100%}.month-control input{flex:1}.toolbar-spacer{display:none}.toolbar .btn{flex:1;padding:8px 9px;font-size:10px}.card-head{padding:13px}.settings-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.modal-body{padding:15px}.table-wrap{max-height:calc(100vh - 265px)}.turn-details{max-width:calc(100vw - 190px)}}@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="topline"><span class="mark">A</span> REC VISION <span style="opacity:.42">/</span> PAINEL EXECUTIVO</div>
+    <header>
+      <div><h1>Campanha Aniversário Assaí</h1><p class="subtitle" id="subtitle">Atingimento diário por Centro de Distribuição · um mês por vez</p></div>
+      <div class="header-right"><div class="connection" id="connection"><i></i><span id="connectionText">Aguardando conexão</span></div></div>
+    </header>
+    <section class="toolbar" aria-label="Navegação mensal e ações">
+      <div class="view-switch" role="tablist" aria-label="Visão do indicador"><button type="button" class="active" id="viewCaixa" data-view="caixa" role="tab" aria-selected="true">Caixas</button><button type="button" id="viewRuptura" data-view="ruptura" role="tab" aria-selected="false">Ruptura</button></div>
+      <button class="btn" id="prevMonth" aria-label="Mês anterior" title="Mês anterior">‹</button>
+      <div class="month-control"><label for="monthRef">Mês</label><input type="month" id="monthRef" aria-label="Selecionar mês e ano"></div>
+      <button class="btn" id="nextMonth" aria-label="Próximo mês" title="Próximo mês">›</button>
+      <button class="btn btn-primary" id="refreshBtn"><span class="btn-icon">↻</span><span>Atualizar</span></button>
+      <button class="btn" id="saveBtn" title="Grava os valores mensais calculados em CAMPANHA_CX"><span class="btn-icon">⬆</span><span>Salvar campanha</span></button>
+      <div class="toolbar-spacer"></div>
+      <button class="btn btn-quiet" id="themeToggle" type="button" aria-pressed="true" title="Alternar tema"><span class="btn-icon">◐</span><span>Modo escuro</span></button>
+      <button class="btn btn-quiet" id="settingsBtn"><span class="btn-icon">⚙</span><span>Configurações</span></button>
+    </section>
+    <p class="statusline" id="statusline" role="status" aria-live="polite">Carregando o mês vigente…</p>
+    <section class="card" aria-label="Acompanhamento mensal da campanha">
+      <div class="card-head"><div><h2 id="monthTitle">Acompanhamento mensal</h2><p id="tableHint">Linhas = CDs · colunas = dias · expanda um CD para ver métricas e turnos.</p></div><span class="card-badge" id="cdBadge">—</span></div>
+      <div class="table-wrap" id="tableWrap"><table class="month-table" id="monthTable"><thead id="tableHead"></thead><tbody id="tableBody"><tr><td class="loading-cell">Aguardando dados…</td></tr></tbody></table></div>
+      <div class="footnote" id="footnote">Percentuais: verde quando atingem o mínimo configurado (padrão 95%) e vermelho quando abaixo. “CX Venda Balcão” sem valor é considerado zero.</div>
+    </section>
+  </main>
+
+  <!-- Configurações locais: status de CDs, metas e percentual mínimo. -->
+  <div class="overlay" id="settingsOverlay" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <section class="modal"><div class="modal-head"><h2 id="settingsTitle">Configurações da campanha</h2><button class="close" id="closeSettings" aria-label="Fechar">×</button></div>
+      <div class="modal-body">
+        <section class="modal-section"><h3>CDs ativos</h3><p>CD inativo é ocultado, mas seus dados permanecem no banco de dados.</p><div class="settings-grid" id="cdSettings"></div></section>
+        <section class="modal-section"><h3>Metas diárias por CD</h3><p>Meta inicial do CD 910: 248.148 caixas. CDs sem meta informada começam em zero.</p><div class="settings-grid" id="goalSettings"></div></section>
+        <section class="modal-section"><h3>Percentual mínimo</h3><p>Define a cor dos percentuais exibidos. Padrão: 95%.</p><div class="threshold-control"><input id="thresholdInput" type="number" min="0" max="1000" step="0.1" aria-label="Percentual mínimo"><span>%</span></div></section>
+        <div class="settings-actions"><button class="btn" id="cancelSettings">Cancelar</button><button class="btn btn-primary" id="applySettings">Salvar configurações</button></div>
+      </div>
+    </section>
+  </div>
+  <div class="toast-area" id="toastArea" aria-live="polite"></div>
+
+  <script>
+  (() => {
+    'use strict';
+
+    /* ================================================================
+       1. CONFIGURAÇÕES
+       ================================================================ */
+    const CONFIG = Object.freeze({
+      SUPABASE_URL: 'https://iykukdzmdxbluehylkse.supabase.co',
+      // Chave pública/publishable fornecida no código original. Nunca usar service_role no navegador.
+      SUPABASE_ANON_KEY: 'sb_publishable_AOnZKBKy9NpHheU_VN-bcQ_y5Ldcgce',
+      TABLES: Object.freeze({ PLT_FECH: 'PLT_FECH', CAMPANHA_CX: 'CAMPANHA_CX', CAMPANHA_RUPTURA: 'CAMPANHA_RUPTURA' }),
+      CDS: Object.freeze([910, 911, 914, 915, 916, 917, 919, 920, 921, 922, 923, 956]),
+      TURNOS: Object.freeze(['1 TURNO', '2 TURNO', '3 TURNO']),
+      INITIAL_GOALS: Object.freeze({ 910: 248148, 911: 0, 914: 0, 915: 0, 916: 0, 917: 0, 919: 0, 920: 0, 921: 0, 922: 0, 923: 0, 956: 0 }),
+      INITIAL_THRESHOLD: 95, PAGE_SIZE: 1000, MAX_ROWS: 300000,
+      STORAGE_KEY: 'recvision.campanha-aniversario.config.v1'
+    });
+    const state = { config: loadLocalConfig(), pltRows: [], campaignRows: [], ruptureRows: [], days: [], month: '', view: 'caixa', expanded: new Set(), busy: false, loaded: false, loadedMonth: '', loadedView: '' };
+    const $ = id => document.getElementById(id);
+    const fmtNumber = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 });
+    const fmtInteger = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 });
+    const fmtPercent = new Intl.NumberFormat('pt-BR', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const fmtPercentDetail = new Intl.NumberFormat('pt-BR', { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const fmtPercentPoints = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    /* ================================================================
+       2. CONEXÃO COM SUPABASE (REST API)
+       ================================================================ */
+    function apiUrl(table, params = {}) {
+      const url = new URL(`${CONFIG.SUPABASE_URL}/rest/v1/${encodeURIComponent(table)}`);
+      Object.entries(params).forEach(([key, value]) => {
+        // PostgREST aceita gte e lt como valores repetidos para a mesma coluna.
+        if (Array.isArray(value)) value.forEach(item => url.searchParams.append(key, item));
+        else url.searchParams.set(key, value);
+      });
+      return url;
+    }
+    async function supabaseRequest(table, params = {}, options = {}) {
+      const headers = { apikey: CONFIG.SUPABASE_ANON_KEY, Authorization: `Bearer ${CONFIG.SUPABASE_ANON_KEY}`, Accept: 'application/json', ...(options.headers || {}) };
+      if (options.body !== undefined) headers['Content-Type'] = 'application/json';
+      const response = await fetch(apiUrl(table, params), { method: options.method || 'GET', headers, body: options.body === undefined ? undefined : JSON.stringify(options.body) });
+      const text = await response.text(); let payload = null;
+      if (text) { try { payload = JSON.parse(text); } catch { payload = text; } }
+      if (!response.ok) {
+        const detail = payload && typeof payload === 'object' ? (payload.message || payload.details || payload.hint || JSON.stringify(payload)) : String(payload || response.statusText);
+        throw new Error(`Supabase (${response.status}): ${detail}`);
+      }
+      return payload;
+    }
+
+    /* ================================================================
+       3. LEITURA DOS DADOS — mês inteiro em lotes paginados.
+       Os filtros CD recebem números (ex.: 910), nunca o rótulo "CD 910".
+       ================================================================ */
+    async function readAllRows(table, select, filters) {
+      const all = [];
+      for (let offset = 0; offset < CONFIG.MAX_ROWS; offset += CONFIG.PAGE_SIZE) {
+        const batch = await supabaseRequest(table, { select, ...filters, limit: String(CONFIG.PAGE_SIZE), offset: String(offset) });
+        if (!Array.isArray(batch)) throw new Error(`Resposta inesperada ao consultar ${table}.`);
+        all.push(...batch);
+        if (batch.length < CONFIG.PAGE_SIZE) return all;
+      }
+      throw new Error(`A consulta de ${table} ultrapassou o limite de segurança (${CONFIG.MAX_ROWS.toLocaleString('pt-BR')} registros).`);
+    }
+    function monthBounds(month) {
+      const [year, monthNumber] = month.split('-').map(Number);
+      const first = `${year}-${String(monthNumber).padStart(2, '0')}-01`;
+      const nextDate = new Date(Date.UTC(year, monthNumber, 1));
+      const next = `${nextDate.getUTCFullYear()}-${String(nextDate.getUTCMonth() + 1).padStart(2, '0')}-01`;
+      const count = new Date(Date.UTC(year, monthNumber, 0)).getUTCDate();
+      const days = Array.from({ length: count }, (_, i) => `${year}-${String(monthNumber).padStart(2, '0')}-${String(i + 1).padStart(2, '0')}`);
+      return { first, next, days };
+    }
+    async function readMonthRows(table, select, column, month, bounds, cdFilter) {
+      const [year, mm] = month.split('-');
+      // Os valores atuais no banco vêm como texto DD/MM/AAAA; também aceitamos AAAA-MM-DD.
+      const dateFormats = await Promise.allSettled([
+        readAllRows(table, select, { [column]: `like.*${mm}/${year}`, CD: cdFilter }),
+        readAllRows(table, select, { [column]: `like.${year}-${mm}-*`, CD: cdFilter })
+      ]);
+      const successful = dateFormats.filter(result => result.status === 'fulfilled').flatMap(result => result.value);
+      if (dateFormats.some(result => result.status === 'fulfilled')) return successful;
+      // Fallback para colunas nativas DATE/TIMESTAMP, nas quais LIKE pode não ser suportado.
+      return readAllRows(table, select, { [column]: [`gte.${bounds.first}`, `lt.${bounds.next}`], CD: cdFilter });
+    }
+    async function loadMonth(month, view) {
+      const bounds = monthBounds(month);
+      const cdFilter = `in.(${CONFIG.CDS.join(',')})`;
+      if (view === 'ruptura') {
+        const ruptureRows = await readMonthRows(CONFIG.TABLES.CAMPANHA_RUPTURA, 'DTA,CD,RUPTURA,META', 'DTA', month, bounds, cdFilter);
+        return { ruptureRows };
+      }
+      const [pltRows, campaignRows] = await Promise.all([
+        readMonthRows(CONFIG.TABLES.PLT_FECH, 'CD,DTA,TIPO,STATUS,TURNO,"QTD CX"', 'DTA', month, bounds, cdFilter),
+        readMonthRows(CONFIG.TABLES.CAMPANHA_CX, 'DATA,TURNO,"CAIXA PLT FECH","CAIXA DE SEP","CX VENDA BALCAO",META,CD,"TOTAL CX"', 'DATA', month, bounds, cdFilter)
+      ]);
+      return { pltRows, campaignRows };
+    }
+
+    /* ================================================================
+       4. PROCESSAMENTO E AGRUPAMENTO local por DATA + CD + TURNO.
+       ================================================================ */
+    function cleanText(value) { return value == null ? '' : String(value).trim(); }
+    function normCode(value) { const n = Number(cleanText(value)); return Number.isFinite(n) ? String(n) : cleanText(value); }
+    function normShift(value) { return cleanText(value).toLocaleUpperCase('pt-BR').replace(/\s+/g, ' '); }
+    function parseNumeric(value, fallback = 0) {
+      if (value === null || value === undefined || value === '') return fallback;
+      if (typeof value === 'number') return Number.isFinite(value) ? value : fallback;
+      let text = String(value).trim().replace(/\s/g, '').replace(/%$/, ''); if (!text) return fallback;
+      if (text.includes(',') && text.includes('.')) text = text.lastIndexOf(',') > text.lastIndexOf('.') ? text.replace(/\./g, '').replace(',', '.') : text.replace(/,/g, '');
+      else if (text.includes(',')) text = text.replace(',', '.');
+      else if (/^-?\d{1,3}(?:\.\d{3})+$/.test(text)) text = text.replace(/\./g, '');
+      const result = Number(text); return Number.isFinite(result) ? result : fallback;
+    }
+    function rowDate(value) {
+      const text = cleanText(value).slice(0, 10), br = text.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+      return br ? `${br[3]}-${br[2]}-${br[1]}` : text;
+    }
+    function databaseDateForSave(isoDate) {
+      const samples = [...state.campaignRows.map(row => row.DATA), ...state.pltRows.map(row => row.DTA)].map(cleanText).filter(Boolean);
+      return samples.some(value => /^\d{2}\/\d{2}\/\d{4}$/.test(value)) ? displayDate(isoDate) : isoDate;
+    }
+    function keyOf(date, cd, shift) { return `${date}|${normCode(cd)}|${normShift(shift)}`; }
+    function processMonth() {
+      const plt = new Map(), saved = new Map(), present = new Set();
+      const inMonth = new Set(state.days);
+      for (const row of state.pltRows) {
+        const date = rowDate(row.DTA), cd = normCode(row.CD), shift = normShift(row.TURNO);
+        if (!inMonth.has(date) || !CONFIG.CDS.some(item => String(item) === cd)) continue;
+        const type = cleanText(row.TIPO).toLocaleUpperCase('pt-BR');
+        if (type !== 'FECHADO' && type !== 'FRACIONADO') continue;
+        const key = keyOf(date, cd, shift), item = plt.get(key) || { fechado: 0, fracionado: 0 };
+        const qty = parseNumeric(row['QTD CX'], 0);
+        if (type === 'FECHADO') item.fechado += qty;
+        else item.fracionado += qty;
+        plt.set(key, item); present.add(`${date}|${cd}`);
+      }
+      for (const row of state.campaignRows) {
+        const date = rowDate(row.DATA), cd = normCode(row.CD), shift = normShift(row.TURNO);
+        if (!inMonth.has(date) || !CONFIG.CDS.some(item => String(item) === cd)) continue;
+        const key = keyOf(date, cd, shift);
+        saved.set(key, { vendaBalcao: parseNumeric(row['CX VENDA BALCAO'], 0) });
+        present.add(`${date}|${cd}`);
+      }
+      const byDay = new Map();
+      for (const date of state.days) {
+        const byCD = new Map();
+        for (const cd of CONFIG.CDS) {
+          const shifts = CONFIG.TURNOS.map(turno => {
+            const key = keyOf(date, cd, turno), source = plt.get(key) || { fechado: 0, fracionado: 0 }, campaign = saved.get(key);
+            const shift = { turno, fechado: source.fechado, fracionado: source.fracionado, vendaBalcao: campaign ? campaign.vendaBalcao : 0 };
+            shift.total = shift.fechado + shift.fracionado + shift.vendaBalcao;
+            return shift;
+          });
+          const fechado = shifts.reduce((n, s) => n + s.fechado, 0);
+          const fracionado = shifts.reduce((n, s) => n + s.fracionado, 0);
+          const vendaBalcao = shifts.reduce((n, s) => n + s.vendaBalcao, 0);
+          const total = fechado + fracionado + vendaBalcao;
+          const meta = Math.max(0, parseNumeric(state.config.goals[String(cd)], 0));
+          byCD.set(String(cd), { date, cd, shifts, fechado, fracionado, vendaBalcao, total, meta, ratio: meta > 0 ? total / meta : null, hasData: present.has(`${date}|${cd}`) });
+        }
+        byDay.set(date, byCD);
+      }
+      return byDay;
+    }
+    function getCell(byDay, date, cd) { return byDay.get(date)?.get(String(cd)); }
+    function parseNullableNumeric(value) {
+      if (value === null || value === undefined || cleanText(value) === '' || /^[-–—]$/.test(cleanText(value))) return null;
+      const number = parseNumeric(value, NaN);
+      return Number.isFinite(number) ? number : null;
+    }
+    function processRupture() {
+      const grouped = new Map(), validDays = new Set(state.days);
+      for (const row of state.ruptureRows) {
+        const date = rowDate(row.DTA), cd = normCode(row.CD);
+        if (!validDays.has(date) || !CONFIG.CDS.some(item => String(item) === cd)) continue;
+        const key = `${date}|${cd}`;
+        const item = grouped.get(key) || { date, cd, rupture: 0, meta: null, hasRupture: false, hasData: true, isPercent: false };
+        const amount = parseNullableNumeric(row.RUPTURA), meta = parseNullableNumeric(row.META);
+        if (String(row.RUPTURA || '').includes('%') || String(row.META || '').includes('%')) item.isPercent = true;
+        if (amount !== null) { item.rupture += amount; item.hasRupture = true; }
+        // Em registros repetidos por DATA+CD, soma-se RUPTURA e preserva-se a META mais alta.
+        if (meta !== null) item.meta = item.meta === null ? meta : Math.max(item.meta, meta);
+        grouped.set(key, item);
+      }
+      const byDay = new Map();
+      for (const date of state.days) {
+        const byCD = new Map();
+        for (const cd of CONFIG.CDS) byCD.set(String(cd), grouped.get(`${date}|${cd}`) || { date, cd, rupture: null, meta: null, hasRupture: false, hasData: false });
+        byDay.set(date, byCD);
+      }
+      return byDay;
+    }
+
+    /* ================================================================
+       5. CÁLCULO DA VISÃO mensal — meta diária, uma vez por CD/dia.
+       ================================================================ */
+    function pctMarkup(cell) {
+      if (!cell || !cell.hasData || cell.ratio === null) return '<span class="percent na" title="Sem dado ou meta não configurada"><i class="dot"></i>—</span>';
+      const good = cell.ratio >= state.config.threshold / 100;
+      return `<span class="percent ${good ? 'good' : 'bad'}" title="${fmtPercentDetail.format(cell.ratio)} de atingimento"><i class="dot"></i>${fmtPercent.format(cell.ratio)}</span>`;
+    }
+    function ruptureMarkup(cell) {
+      if (!cell || !cell.hasData || !cell.hasRupture || cell.meta === null) return '<span class="rupture-value na" title="Sem valor de ruptura ou meta">—</span>';
+      const good = cell.rupture <= cell.meta;
+      return `<span class="rupture-value ${good ? 'good' : 'bad'}" title="Ruptura ${formatRupture(cell.rupture, cell)} · Meta ${formatRupture(cell.meta, cell)}">${formatRupture(cell.rupture, cell)}</span>`;
+    }
+    function formatRupture(value, cell) { return cell && cell.isPercent ? `${fmtPercentPoints.format(value)}%` : fmtNumber.format(value); }
+    function detailVal(value, options = {}) {
+      if (options.sale) return `<input class="edit-sale" type="number" min="0" step="1" value="${escapeHTML(String(value))}" data-sale-cd="${options.cd}" data-sale-date="${options.date}" data-sale-shift="${options.shift}" aria-label="CX Venda Balcão CD ${options.cd}, ${options.date}, ${options.shift}">`;
+      return `<span class="metric-value${value === 0 ? ' dim' : ''}">${fmtNumber.format(value)}</span>`;
+    }
+    function metricRow(label, dateValues, className = '', valueFn = value => `<span class="metric-value${value === null ? ' dim' : ''}">${value === null ? '—' : fmtNumber.format(value)}</span>`) {
+      return `<tr><td><span class="metric-label ${className}">${label}</span></td>${dateValues.map(value => `<td>${valueFn(value)}</td>`).join('')}</tr>`;
+    }
+    function shiftDetails(cd, byDay) {
+      const header = state.days.flatMap(date => ['F', 'S', 'B', 'T'].map((code, index) => `<th title="${displayDate(date)} · ${['Caixa PLT Fech', 'Caixa de Sep', 'CX Venda Balcão', 'Total CX'][index]}"><span>${displayDate(date)}</span><small>${code}</small></th>`)).join('');
+      const rows = CONFIG.TURNOS.map(turno => {
+        const cells = [];
+        state.days.forEach(date => {
+          const item = getCell(byDay, date, cd).shifts.find(s => s.turno === turno);
+          cells.push(`<td>${fmtNumber.format(item.fechado)}</td>`, `<td>${fmtNumber.format(item.fracionado)}</td>`, `<td>${detailVal(item.vendaBalcao, { sale: true, cd, date, shift: turno })}</td>`, `<td><strong>${fmtNumber.format(item.total)}</strong></td>`);
+        });
+        return `<tr><td class="turn-name">${turno}</td>${cells.join('')}</tr>`;
+      }).join('');
+      return `<details class="turn-details"><summary>Detalhar por turno · editar CX Venda Balcão</summary><div class="turn-wrap"><table class="turn-table"><thead><tr><th>Turno · métrica</th>${header}</tr></thead><tbody>${rows}</tbody></table><div style="font-size:8px;color:var(--faint);padding:7px 2px 0">Em cada turno, os valores aparecem na ordem: Caixa PLT Fech · Caixa de Sep · CX Venda Balcão · Total CX.</div></div></details>`;
+    }
+    function expandedRows(cd, byDay) {
+      const values = field => state.days.map(date => getCell(byDay, date, cd)[field]);
+      const ratioValues = state.days.map(date => {
+        const cell = getCell(byDay, date, cd);
+        if (!cell.hasData || cell.ratio === null) return null;
+        return cell.ratio;
+      });
+      const first = state.days.map(date => displayDate(date));
+      const rows = [
+        metricRow('Atingimento', ratioValues, 'primary', value => {
+          if (value === null) return '<span class="metric-value dim">—</span>';
+          const good = value >= state.config.threshold / 100;
+          return `<span class="percent ${good ? 'good' : 'bad'}">${fmtPercentDetail.format(value)}</span>`;
+        }),
+        metricRow('CAIXA PLT FECH', values('fechado')),
+        metricRow('CAIXA DE SEP', values('fracionado')),
+        metricRow('CX VENDA BALCAO', values('vendaBalcao')),
+        metricRow('META', values('meta')),
+        metricRow('TOTAL CX', values('total'), 'primary', value => `<strong class="metric-value">${fmtNumber.format(value)}</strong>`)
+      ].join('');
+      return `<tr class="detail-row" data-detail-cd="${cd}" ${state.expanded.has(String(cd)) ? '' : 'hidden'}><td colspan="${state.days.length + 1}"><div class="detail-shell"><table class="detail-table"><thead><tr><th>CD ${cd} · Métrica</th>${first.map((day, i) => `<th>${day}<small style="display:block;color:var(--faint);font-size:7px">${weekday(state.days[i])}</small></th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>${shiftDetails(cd, byDay)}</div></td></tr>`;
+    }
+    function expandedRuptureRows(cd, byDay) {
+      const cells = state.days.map(date => getCell(byDay, date, cd));
+      const rows = [
+        metricRow('RUPTURA', cells, '', cell => cell.hasRupture ? `<span class="metric-value">${formatRupture(cell.rupture, cell)}</span>` : '<span class="metric-value dim">—</span>'),
+        metricRow('META', cells, '', cell => cell.meta !== null ? `<span class="metric-value">${formatRupture(cell.meta, cell)}</span>` : '<span class="metric-value dim">—</span>'),
+        metricRow('COMPARATIVO', cells, 'primary', cell => {
+          if (!cell.hasRupture || cell.meta === null) return '<span class="metric-value dim">Sem dados</span>';
+          const good = cell.rupture <= cell.meta;
+          return `<span class="rupture-value ${good ? 'good' : 'bad'}">${good ? 'Dentro da meta' : 'Acima da meta'}</span>`;
+        })
+      ].join('');
+      return `<tr class="detail-row" data-detail-cd="${cd}" ${state.expanded.has(String(cd)) ? '' : 'hidden'}><td colspan="${state.days.length + 1}"><div class="detail-shell"><table class="detail-table"><thead><tr><th>CD ${cd} · Indicador</th>${state.days.map(date => `<th>${displayDate(date)}<small style="display:block;color:var(--faint);font-size:7px">${weekday(date)}</small></th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div></td></tr>`;
+    }
+
+    /* ================================================================
+       6. RENDERIZAÇÃO DA TABELA mensal
+       ================================================================ */
+    function escapeHTML(value) { return String(value).replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch])); }
+    function dayNum(date) { return date.slice(-2); }
+    // Datas do banco (DD/MM/AAAA ou ISO) são normalizadas internamente para ISO; a tela usa DD/MM/AAAA.
+    function displayDate(isoDate) { const [year, month, day] = String(isoDate).slice(0, 10).split('-'); return `${day}/${month}/${year}`; }
+    function weekday(date) { return new Date(`${date}T12:00:00`).toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '').toUpperCase(); }
+    function monthLabel(month) { const [y, m] = month.split('-').map(Number); return new Date(y, m - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }); }
+    function render() {
+      const { days } = monthBounds(state.month); state.days = days;
+      const isRuptura = state.view === 'ruptura';
+      const active = CONFIG.CDS.filter(cd => state.config.active[String(cd)] !== false);
+      $('saveBtn').hidden = isRuptura;
+      $('viewCaixa').classList.toggle('active', !isRuptura); $('viewCaixa').setAttribute('aria-selected', String(!isRuptura));
+      $('viewRuptura').classList.toggle('active', isRuptura); $('viewRuptura').setAttribute('aria-selected', String(isRuptura));
+      $('subtitle').textContent = isRuptura ? 'Indicador diário de ruptura por Centro de Distribuição · um mês por vez' : 'Atingimento diário de caixas por Centro de Distribuição · um mês por vez';
+      $('monthTitle').textContent = `${isRuptura ? 'Visão de ruptura' : 'Visão de caixas'} · ${monthLabel(state.month)}`;
+      $('tableHint').textContent = isRuptura ? 'Valor exibido = RUPTURA · verde quando RUPTURA ≤ META · vermelho quando RUPTURA > META.' : 'Linhas = CDs · colunas = dias · expanda um CD para ver métricas e turnos.';
+      $('footnote').textContent = isRuptura ? 'Regra: RUPTURA menor ou igual à META fica verde; acima da META fica vermelho. Dias sem valor de ruptura ou sem meta aparecem como “—”.' : 'Percentuais: verde quando atingem o mínimo configurado (padrão 95%) e vermelho quando abaixo. “CX Venda Balcão” sem valor é considerado zero.';
+      $('cdBadge').textContent = `${active.length} CDs ativos · ${days.length} dias`;
+      $('tableHead').innerHTML = `<tr><th>Centro de distribuição</th>${days.map(date => `<th class="day-head" title="${date}"><span>${displayDate(date)}</span><small>${weekday(date)}</small></th>`).join('')}</tr>`;
+      if (!active.length) {
+        $('tableBody').innerHTML = `<tr><td class="empty-cell" colspan="${days.length + 1}">Nenhum CD ativo. Ative ao menos um CD nas configurações.</td></tr>`;
+        return;
+      }
+      const byDay = isRuptura ? processRupture() : processMonth();
+      $('tableBody').innerHTML = active.map(cd => {
+        const expanded = state.expanded.has(String(cd));
+        const cells = days.map(date => `<td>${isRuptura ? ruptureMarkup(getCell(byDay, date, cd)) : pctMarkup(getCell(byDay, date, cd))}</td>`).join('');
+        const details = isRuptura ? expandedRuptureRows(cd, byDay) : expandedRows(cd, byDay);
+        return `<tr class="main-row"><td><div class="cd-cell"><button class="expand" type="button" data-expand="${cd}" aria-expanded="${expanded}" aria-label="${expanded ? 'Recolher' : 'Expandir'} CD ${cd}">${expanded ? '−' : '+'}</button><span class="cd-number">CD ${cd}</span></div></td>${cells}</tr>${details}`;
+      }).join('');
+    }
+
+    /* ================================================================
+       7. EVENTOS, configurações locais e persistência em CAMPANHA_CX
+       ================================================================ */
+    function loadLocalConfig() {
+      const defaults = { active: Object.fromEntries(CONFIG.CDS.map(cd => [String(cd), true])), goals: { ...CONFIG.INITIAL_GOALS }, threshold: CONFIG.INITIAL_THRESHOLD };
+      try {
+        const stored = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEY) || 'null');
+        if (!stored || typeof stored !== 'object') return defaults;
+        return { active: { ...defaults.active, ...(stored.active || {}) }, goals: { ...defaults.goals, ...(stored.goals || {}) }, threshold: Math.max(0, parseNumeric(stored.threshold, CONFIG.INITIAL_THRESHOLD)) };
+      } catch { return defaults; }
+    }
+    function saveLocalConfig() { localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(state.config)); }
+    function setConnection(kind, text) { $('connection').className = `connection ${kind || ''}`.trim(); $('connectionText').textContent = text; }
+    function setStatus(text, kind = '') { $('statusline').textContent = text; $('statusline').className = `statusline ${kind}`.trim(); }
+    function toast(message, kind = 'ok') { const node = document.createElement('div'); node.className = `toast ${kind}`; node.textContent = message; $('toastArea').appendChild(node); window.setTimeout(() => node.remove(), 4800); }
+    function setTheme(theme, persist = true) {
+      const light = theme === 'light'; document.body.classList.toggle('light', light);
+      $('themeToggle').innerHTML = light ? '<span class="btn-icon">◐</span><span>Modo escuro</span>' : '<span class="btn-icon">☼</span><span>Modo claro</span>';
+      $('themeToggle').setAttribute('aria-pressed', String(light));
+      if (persist) { try { localStorage.setItem('recvision.campanha-aniversario.theme', light ? 'light' : 'dark'); } catch {} }
+    }
+    function setBusy(busy, action = 'load') {
+      state.busy = busy; ['prevMonth','nextMonth','monthRef','refreshBtn','saveBtn','viewCaixa','viewRuptura'].forEach(id => $(id).disabled = busy);
+      $('refreshBtn').innerHTML = busy && action === 'load' ? '<span class="loader"></span><span>Carregando…</span>' : '<span class="btn-icon">↻</span><span>Atualizar</span>';
+      $('saveBtn').innerHTML = busy && action === 'save' ? '<span class="loader"></span><span>Salvando…</span>' : '<span class="btn-icon">⬆</span><span>Salvar campanha</span>';
+    }
+    async function refresh() {
+      if (state.busy || !/^\d{4}-\d{2}$/.test($('monthRef').value)) return;
+      state.month = $('monthRef').value; state.expanded.clear(); state.loaded = false;
+      const view = state.view;
+      setBusy(true, 'load'); setStatus(`Consultando ${view === 'ruptura' ? 'CAMPANHA_RUPTURA' : 'PLT_FECH e CAMPANHA_CX'} · ${monthLabel(state.month)}…`); setConnection('', 'Conectando');
+      try {
+        const result = await loadMonth(state.month, view);
+        if (view === 'ruptura') state.ruptureRows = result.ruptureRows;
+        else { state.pltRows = result.pltRows; state.campaignRows = result.campaignRows; }
+        state.loaded = true; state.loadedMonth = state.month; state.loadedView = view; render();
+        setConnection('ok', 'Supabase conectado');
+        const count = view === 'ruptura' ? state.ruptureRows.length : state.pltRows.length + state.campaignRows.length;
+        const description = view === 'ruptura' ? `${state.ruptureRows.length.toLocaleString('pt-BR')} registros CAMPANHA_RUPTURA` : `${state.pltRows.length.toLocaleString('pt-BR')} registros PLT_FECH e ${state.campaignRows.length.toLocaleString('pt-BR')} registros CAMPANHA_CX`;
+        setStatus(count === 0 ? 'Consulta concluída: sem dados para este mês. Confira o formato da data e as permissões RLS.' : `Consulta concluída: ${description}.`, count === 0 ? '' : 'success');
+      } catch (error) {
+        console.error(error); if (view === 'ruptura') state.ruptureRows = []; else { state.pltRows = []; state.campaignRows = []; } state.loaded = false; render(); setConnection('err', 'Falha na conexão');
+        setStatus(`Não foi possível carregar o mês. ${error.message || 'Verifique conexão, chave pública, permissões RLS e nomes das colunas.'}`, 'error'); toast('Falha ao consultar o Supabase. Veja os detalhes na mensagem.', 'err');
+      } finally { setBusy(false); }
+    }
+    function openSettings() {
+      $('cdSettings').innerHTML = CONFIG.CDS.map(cd => `<div class="setting-item"><b>CD ${cd}</b><label><input type="checkbox" data-active-cd="${cd}" ${state.config.active[String(cd)] !== false ? 'checked' : ''}> Ativo</label></div>`).join('');
+      $('goalSettings').innerHTML = CONFIG.CDS.map(cd => `<div class="setting-item"><b>CD ${cd}</b><input type="number" min="0" step="1" data-goal-cd="${cd}" value="${escapeHTML(String(parseNumeric(state.config.goals[String(cd)], 0)))}" aria-label="Meta diária CD ${cd}"></div>`).join('');
+      $('thresholdInput').value = String(state.config.threshold); $('settingsOverlay').classList.add('open'); document.body.style.overflow = 'hidden';
+    }
+    function closeSettings() { $('settingsOverlay').classList.remove('open'); document.body.style.overflow = ''; }
+    function applySettings() {
+      const active = { ...state.config.active }, goals = { ...state.config.goals };
+      document.querySelectorAll('[data-active-cd]').forEach(input => active[input.dataset.activeCd] = input.checked);
+      document.querySelectorAll('[data-goal-cd]').forEach(input => goals[input.dataset.goalCd] = Math.max(0, parseNumeric(input.value, 0)));
+      const threshold = parseNumeric($('thresholdInput').value, NaN);
+      if (!Number.isFinite(threshold) || threshold < 0) { toast('Informe um percentual válido (zero ou maior).', 'err'); return; }
+      state.config = { active, goals, threshold }; saveLocalConfig(); closeSettings(); render(); toast('Configurações salvas neste navegador.');
+    }
+    function editSale(cd, date, shiftName, value) {
+      const campaign = state.campaignRows.find(row => rowDate(row.DATA) === date && normCode(row.CD) === String(cd) && normShift(row.TURNO) === normShift(shiftName));
+      if (campaign) campaign['CX VENDA BALCAO'] = Math.max(0, parseNumeric(value, 0));
+      else state.campaignRows.push({ DATA: date, CD: Number(cd), TURNO: shiftName, 'CX VENDA BALCAO': Math.max(0, parseNumeric(value, 0)) });
+      render();
+      // Reabrir os detalhes para manter o contexto após redesenhar a tabela.
+      const details = document.querySelector(`[data-detail-cd="${cd}"] .turn-details`); if (details) details.open = true;
+    }
+    function campaignPayload() {
+      const active = CONFIG.CDS.filter(cd => state.config.active[String(cd)] !== false);
+      const payload = [], byDay = processMonth();
+      for (const date of state.days) for (const cd of active) {
+        const day = byDay.get(date).get(String(cd));
+        for (const shift of day.shifts) payload.push({
+          'DATA': databaseDateForSave(date), 'TURNO': shift.turno, 'CAIXA PLT FECH': shift.fechado, 'CAIXA DE SEP': shift.fracionado,
+          'CX VENDA BALCAO': shift.vendaBalcao, 'META': day.meta, 'CD': Number(cd), 'TOTAL CX': shift.total
+        });
+      }
+      return payload;
+    }
+    async function saveCampaign() {
+      if (state.busy) return;
+      if (state.view !== 'caixa') { toast('O salvamento está disponível apenas na visão Caixas.', 'err'); return; }
+      if (!state.loaded || state.loadedMonth !== state.month || state.loadedView !== 'caixa') { toast('Atualize os dados do mês antes de salvar.', 'err'); return; }
+      const payload = campaignPayload();
+      setBusy(true, 'save'); setStatus(`Gravando ${payload.length.toLocaleString('pt-BR')} combinações de data, CD e turno…`);
+      try {
+        // PostgREST requer UNIQUE em DATA+CD+TURNO para mesclar atualizações sem duplicar.
+        for (let i = 0; i < payload.length; i += 500) {
+          await supabaseRequest(CONFIG.TABLES.CAMPANHA_CX, { on_conflict: 'DATA,CD,TURNO' }, { method: 'POST', body: payload.slice(i, i + 500), headers: { Prefer: 'resolution=merge-duplicates,return=minimal' } });
+        }
+        state.campaignRows = state.campaignRows.filter(old => !(state.days.includes(rowDate(old.DATA)) && activeCode(old.CD)));
+        state.campaignRows.push(...payload); render(); setConnection('ok', 'Supabase conectado'); setStatus(`Campanha de ${monthLabel(state.month)} gravada/atualizada em CAMPANHA_CX.`, 'success'); toast('Campanha mensal salva no Supabase.');
+      } catch (error) {
+        console.error(error); const hint = /conflict|unique|duplicate/i.test(error.message) ? ' Confirme a restrição UNIQUE em (DATA, CD, TURNO).' : ' Verifique as políticas RLS de INSERT/UPDATE.';
+        setStatus(`Não foi possível gravar em CAMPANHA_CX. ${error.message}${hint}`, 'error'); toast('Problema ao gravar; confira a mensagem na tela.', 'err');
+      } finally { setBusy(false); }
+    }
+    function activeCode(value) { return CONFIG.CDS.some(cd => String(cd) === normCode(value) && state.config.active[String(cd)] !== false); }
+    function shiftMonth(delta) {
+      const [year, month] = state.month.split('-').map(Number); const date = new Date(Date.UTC(year, month - 1 + delta, 1));
+      $('monthRef').value = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`; refresh();
+    }
+    function changeView(view) {
+      if (view !== 'caixa' && view !== 'ruptura' || state.view === view) return;
+      state.view = view; state.loaded = false; state.expanded.clear(); render(); refresh();
+    }
+
+    /* ================================================================
+       8. EVENTOS DA INTERFACE
+       ================================================================ */
+    $('prevMonth').addEventListener('click', () => shiftMonth(-1)); $('nextMonth').addEventListener('click', () => shiftMonth(1));
+    $('monthRef').addEventListener('change', refresh); $('refreshBtn').addEventListener('click', refresh); $('saveBtn').addEventListener('click', saveCampaign);
+    $('viewCaixa').addEventListener('click', () => changeView('caixa')); $('viewRuptura').addEventListener('click', () => changeView('ruptura'));
+    $('themeToggle').addEventListener('click', () => setTheme(document.body.classList.contains('light') ? 'dark' : 'light'));
+    $('settingsBtn').addEventListener('click', openSettings); $('closeSettings').addEventListener('click', closeSettings); $('cancelSettings').addEventListener('click', closeSettings); $('applySettings').addEventListener('click', applySettings);
+    $('settingsOverlay').addEventListener('click', event => { if (event.target === $('settingsOverlay')) closeSettings(); });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') closeSettings(); });
+    $('tableBody').addEventListener('click', event => {
+      const button = event.target.closest('[data-expand]'); if (!button) return;
+      const cd = String(button.dataset.expand); state.expanded.has(cd) ? state.expanded.delete(cd) : state.expanded.add(cd); render();
+    });
+    $('tableBody').addEventListener('change', event => {
+      const input = event.target.closest('[data-sale-cd]'); if (!input) return;
+      const cd = input.dataset.saleCd, date = input.dataset.saleDate, shift = input.dataset.saleShift, value = input.value;
+      state.expanded.add(String(cd)); editSale(cd, date, shift, value);
+    });
+
+    // Mês corrente por padrão (inclui o ano); navegação e mudança recarregam automaticamente.
+    let savedTheme = 'light'; try { savedTheme = localStorage.getItem('recvision.campanha-aniversario.theme') || 'light'; } catch {}
+    setTheme(savedTheme, false);
+    const now = new Date(); $('monthRef').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    state.month = $('monthRef').value; render(); refresh();
+  })();
+  </script>
+</body>
+</html>
