@@ -1482,6 +1482,8 @@ function renderKPIs(agg){
 
   const agenda   = t.agenda || 0;
   const recebido = t.recebido || 0;
+  const noShow   = t.no_show || 0;
+  const pctNoShow = agenda > 0 ? noShow / agenda * 100 : 0;
   const noPrazo  = t.no_prazo || 0;
   const backlogR = t.backlog_recebido || 0;
   const backlogP = t.backlog_pendente || 0;
@@ -1492,6 +1494,8 @@ function renderKPIs(agg){
   const cards = [
     { label:'AGENDA',            value:intFmt(agenda),      color:'#60a5fa',
       sub:`Agendados no período` },
+    { label:'NO SHOW',           value:intFmt(noShow),      color:'#f43f5e',
+      sub:`${agenda>0?pctFmt(pctNoShow):'–'} da agenda` },
     { label:'RECEBIDO',          value:intFmt(recebido),    color:'#22d3ee',
       sub:`${agenda>0?pctFmt(pctRecebido):'–'} da agenda` },
     { label:'NO PRAZO',          value:intFmt(noPrazo),     color:'#22c55e',
