@@ -108,15 +108,6 @@
       </div>
     </section>
   </div>
-  <div class="overlay" id="editorLoginOverlay" role="dialog" aria-modal="true" aria-labelledby="editorLoginTitle">
-    <section class="modal editor-modal"><div class="modal-head"><h2 id="editorLoginTitle">Acesso de edição</h2><button class="close" id="closeEditorLogin" aria-label="Fechar">×</button></div>
-      <div class="modal-body"><p class="editor-intro">Informe a senha fixa de edição deste painel. O Supabase valida novamente a senha antes de gravar alterações.</p>
-        <label class="editor-field">Senha de edição<input id="editorPass" type="password" autocomplete="off" inputmode="numeric" maxlength="6" pattern="[0-9]{6}"></label>
-        <p class="editor-error" id="editorLoginError" role="alert" hidden></p>
-        <div class="settings-actions"><button class="btn" id="cancelEditorLogin" type="button">Cancelar</button><button class="btn btn-primary" id="editorLoginSubmit" type="button">Validar e editar</button></div>
-      </div>
-    </section>
-  </div>
   <div class="toast-area" id="toastArea" aria-live="polite"></div>
 
   <script>
@@ -131,14 +122,13 @@
       // Chaves públicas do cliente: publishable em apikey e JWT anon em Authorization. Nunca usar service_role no navegador.
       SUPABASE_API_KEY: 'sb_publishable_AOnZKBKy9NpHheU_VN-bcQ_y5Ldcgce',
       SUPABASE_ANON_JWT: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5a3VrZHptZHhibHVlaHlsa3NlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwMDkzNTksImV4cCI6MjEwNTU4NTM1OX0.6p5lD3nZ94FtMFwqamNk1QpKF1cho0jrBZe4kpmR1pk',
-      EDIT_PASSWORD: '150807',
       TABLES: Object.freeze({ CAMPANHA_CX: 'CAMPANHA_CX', CAMPANHA_RUPTURA: 'CAMPANHA_RUPTURA', CAMPANHA_REGRAS: 'CAMAPNHA_REGRAS' }),
       CDS: Object.freeze([910, 911, 914, 915, 916, 917, 919, 920, 921, 922, 923, 956]),
       TURNOS: Object.freeze(['1 TURNO', '2 TURNO', '3 TURNO']),
       INITIAL_THRESHOLD: 95, PAGE_SIZE: 1000, MAX_ROWS: 300000,
       STORAGE_KEY: 'recvision.campanha-aniversario.config.v1'
     });
-    const state = { config: loadLocalConfig(), campaignRows: [], ruptureRows: [], rulesRows: [], days: [], month: '', view: 'caixa', expanded: new Set(), busy: false, editMode: false, editCredentials: null, editDraft: new Map(), openTurn: '', editRenderTimer: 0 };
+    const state = { config: loadLocalConfig(), campaignRows: [], ruptureRows: [], rulesRows: [], days: [], month: '', view: 'caixa', expanded: new Set(), busy: false, editMode: false, editDraft: new Map(), openTurn: '', editRenderTimer: 0 };
     const $ = id => document.getElementById(id);
     const fmtNumber = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 });
     const fmtInteger = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 });
@@ -346,7 +336,7 @@
     }
     function formatRupture(value, cell) { return cell && cell.isPercent ? `${fmtPercentPoints.format(value)}%` : fmtNumber.format(value); }
     function editableValue(value, options = {}) {
-      if (state.editMode && !isFutureDate(options.date)) return `<input class="edit-value" type="number" min="0" step="1" value="${escapeHTML(String(value))}" data-edit-field="${options.field}" data-edit-cd="${options.cd}" data-edit-date="${options.date}" data-edit-turn="${escapeHTML(options.turno)}" aria-label="Editar ${options.label} CD ${options.cd}, ${displayDate(options.date)}, ${options.turno}">`;
+      if (state.editMode && state.expanded.has(String(options.cd)) && !isFutureDate(options.date)) return `<input class="edit-value" type="number" min="0" step="1" value="${escapeHTML(String(value))}" data-edit-field="${options.field}" data-edit-cd="${options.cd}" data-edit-date="${options.date}" data-edit-turn="${escapeHTML(options.turno)}" aria-label="Editar ${options.label} CD ${options.cd}, ${displayDate(options.date)}, ${options.turno}">`;
       return `<span class="metric-value${value === 0 ? ' dim' : ''}">${fmtNumber.format(value)}</span>`;
     }
     function metricRow(label, dateValues, className = '', valueFn = value => `<span class="metric-value${value === null ? ' dim' : ''}">${value === null ? '—' : fmtNumber.format(value)}</span>`) {
@@ -363,7 +353,7 @@
           ['CX VENDA BALCAO', (item, date) => isFutureDate(date) ? '—' : editableValue(item.vendaBalcao, { field: 'vendaBalcao', label: 'CX VENDA BALCAO', cd, date, turno })],
           ['TOTAL CX', (item, date) => actual(item.total, date, true)]
         ].map(([label, renderValue]) => `<tr><td class="turn-name">${label}</td>${state.days.map((date, index) => `<td>${renderValue(items[index], date)}</td>`).join('')}</tr>`).join('');
-        const open = state.openTurn === `${cd}|${normShift(turno)}` ? 'open' : '';
+        const open = state.editMode || state.openTurn === `${cd}|${normShift(turno)}` ? 'open' : '';
         return `<details class="turn-details" data-turn-index="${turnIndex}" ${open}><summary>${turno} · Realizado diário</summary><div class="turn-wrap"><table class="turn-table"><thead><tr><th>Métrica</th>${header}</tr></thead><tbody>${rows}</tbody></table><div style="font-size:8px;color:var(--faint);padding:7px 2px 0">TOTAL CX do turno é calculado pela soma dos três valores realizados. A META CX cadastrada é diária por CD, sem divisão por turno.</div></div></details>`;
       }).join('');
     }
@@ -566,7 +556,7 @@
       $('viewRuptura').classList.toggle('active', isRuptura); $('viewRuptura').setAttribute('aria-selected', String(isRuptura));
       $('subtitle').textContent = isRuptura ? 'Indicador diário de ruptura por Centro de Distribuição · um mês por vez' : 'Atingimento diário de caixas por Centro de Distribuição · um mês por vez';
       $('monthTitle').textContent = `${isRuptura ? 'Visão de ruptura' : 'Visão de caixas'} · ${monthLabel(state.month)}`;
-      $('tableHint').textContent = isRuptura ? 'Valor exibido = RUPTURA · verde quando RUPTURA ≤ META · vermelho quando RUPTURA > META.' : 'Cada CD tem duas barras: atingimento da meta total do mês e atingimento da meta acumulada até ontem.';
+      $('tableHint').textContent = isRuptura ? 'Valor exibido = RUPTURA · verde quando RUPTURA ≤ META · vermelho quando RUPTURA > META.' : state.editMode ? 'Edição diária por CD e turno: altere apenas CAIXA PLT FECH, CAIXA DE SEP e CX VENDA BALCAO. TOTAL CX, meta e atingimento são calculados pelo painel.' : 'Cada CD tem duas barras: atingimento da meta total do mês e atingimento da meta acumulada até ontem.';
       $('footnote').textContent = isRuptura ? 'Regra: RUPTURA menor ou igual à META fica verde; acima da META fica vermelho. Dias sem valor de ruptura ou sem meta aparecem como “—”.' : `META CX cadastrada é diária por CD. A meta do mês = meta diária × dias do mês, excluindo domingos. A barra “Total do mês” considera o realizado até hoje; “Acumulado até ontem” exclui o dia atual e mostra a meta prevista e o CX produzido até ontem. Turnos não têm metas individuais.`;
       $('cdBadge').textContent = `${active.length} CDs ativos · ${days.length} dias`;
       $('tableHead').innerHTML = `<tr><th>Centro de distribuição</th>${days.map(date => `<th class="day-head" title="${date}"><span>${displayDate(date)}</span><small>${weekday(date)}</small></th>`).join('')}</tr>`;
@@ -613,7 +603,7 @@
     function setBusy(busy, action = 'load') {
       state.busy = busy; const locked = busy || state.editMode;
       ['prevMonth','nextMonth','monthRef','refreshBtn','viewCaixa','viewRuptura','settingsBtn'].forEach(id => $(id).disabled = locked);
-      $('editBtn').disabled = busy; $('saveEditsBtn').disabled = busy; $('cancelEditBtn').disabled = busy; $('editorLoginSubmit').disabled = busy;
+      $('editBtn').disabled = busy; $('saveEditsBtn').disabled = busy; $('cancelEditBtn').disabled = busy;
       $('refreshBtn').innerHTML = busy && action === 'load' ? '<span class="loader"></span><span>Carregando…</span>' : '<span class="btn-icon">↻</span><span>Atualizar</span>';
     }
     async function refresh() {
@@ -651,31 +641,11 @@
       if (!Number.isFinite(threshold) || threshold < 0) { toast('Informe um percentual válido (zero ou maior).', 'err'); return; }
       state.config = { active, threshold }; saveLocalConfig(); closeSettings(); render(); toast('Configurações salvas neste navegador.');
     }
-    function openEditorLogin() {
+    function startEdit() {
       if (state.busy || state.editMode || state.view !== 'caixa') return;
-      $('editorLoginError').hidden = true; $('editorPass').value = '';
-      $('editorLoginOverlay').classList.add('open'); document.body.style.overflow = 'hidden'; $('editorPass').focus();
-    }
-    function closeEditorLogin() { $('editorLoginOverlay').classList.remove('open'); $('editorPass').value = ''; document.body.style.overflow = ''; }
-    async function verifyEditor() {
-      const pass = $('editorPass').value.trim();
-      const errorNode = $('editorLoginError'); errorNode.hidden = true;
-      if (!pass) { errorNode.textContent = 'Informe a senha de edição.'; errorNode.hidden = false; return; }
-      if (pass !== CONFIG.EDIT_PASSWORD) { errorNode.textContent = 'Senha incorreta.'; errorNode.hidden = false; $('editorPass').select(); return; }
-      setBusy(true, 'auth');
-      try {
-        const valid = await supabaseRpc('verify_campaign_editor', { p_pass: pass });
-        if (valid !== true) throw new Error('Senha de edição inválida.');
-        state.editMode = true; state.editCredentials = { pass }; state.editDraft.clear(); state.openTurn = '';
-        $('editorPass').value = '';
-        closeEditorLogin(); render(); toast('Acesso autorizado. Edite os valores realizados e clique em Salvar alterações.');
-      } catch (error) {
-        const detail = error.message || 'Falha desconhecida na validação.';
-        errorNode.textContent = /PGRST202|could not find the function|schema cache/i.test(detail)
-          ? `A função segura verify_campaign_editor não foi encontrada no schema publicado do Supabase. Confira a implantação do script SQL e o recarregamento do schema. Detalhe: ${detail}`
-          : detail;
-        errorNode.hidden = false;
-      } finally { setBusy(false); }
+      state.editMode = true; state.editDraft.clear(); state.openTurn = '';
+      setBusy(false);
+      render(); toast('Modo de edição ativado. Altere os valores realizados e clique em Salvar alterações.');
     }
     function stageEdit(field, cd, date, turno, value) {
       if (!state.editMode || isFutureDate(date)) return;
@@ -688,11 +658,11 @@
     }
     function cancelEdit() {
       window.clearTimeout(state.editRenderTimer); state.editRenderTimer = 0;
-      state.editMode = false; state.editCredentials = null; state.editDraft.clear(); state.openTurn = '';
+      state.editMode = false; state.editDraft.clear(); state.openTurn = '';
       setBusy(false); render(); toast('Edição cancelada; nenhuma alteração foi enviada.');
     }
     async function saveEdits() {
-      if (!state.editMode || !state.editCredentials || state.busy) return;
+      if (!state.editMode || state.busy) return;
       window.clearTimeout(state.editRenderTimer); state.editRenderTimer = 0;
       const byDay = processMonth(), changes = [];
       for (const key of state.editDraft.keys()) {
@@ -704,8 +674,8 @@
       if (!changes.length) { cancelEdit(); toast('Não havia alterações para salvar.'); return; }
       let saved = false; setBusy(true, 'save');
       try {
-        await supabaseRpc('save_campaign_edits', { p_pass: state.editCredentials.pass, p_changes: changes });
-        state.editMode = false; state.editCredentials = null; state.editDraft.clear(); state.openTurn = '';
+        await supabaseRpc('save_campaign_edits', { p_changes: changes });
+        state.editMode = false; state.editDraft.clear(); state.openTurn = '';
         render(); toast(`${changes.length} turno(s) enviados ao Supabase.`); saved = true;
       } catch (error) {
         setStatus(`Não foi possível salvar as alterações. ${error.message || 'Verifique as permissões e a configuração RPC.'}`, 'error');
@@ -737,12 +707,9 @@
     $('viewCaixa').addEventListener('click', () => changeView('caixa')); $('viewRuptura').addEventListener('click', () => changeView('ruptura'));
     $('themeToggle').addEventListener('click', () => setTheme(document.body.classList.contains('light') ? 'dark' : 'light'));
     $('settingsBtn').addEventListener('click', openSettings); $('closeSettings').addEventListener('click', closeSettings); $('cancelSettings').addEventListener('click', closeSettings); $('applySettings').addEventListener('click', applySettings);
-    $('editBtn').addEventListener('click', openEditorLogin); $('saveEditsBtn').addEventListener('click', saveEdits); $('cancelEditBtn').addEventListener('click', cancelEdit);
-    $('closeEditorLogin').addEventListener('click', closeEditorLogin); $('cancelEditorLogin').addEventListener('click', closeEditorLogin); $('editorLoginSubmit').addEventListener('click', verifyEditor);
-    $('editorPass').addEventListener('keydown', event => { if (event.key === 'Enter') verifyEditor(); });
+    $('editBtn').addEventListener('click', startEdit); $('saveEditsBtn').addEventListener('click', saveEdits); $('cancelEditBtn').addEventListener('click', cancelEdit);
     $('settingsOverlay').addEventListener('click', event => { if (event.target === $('settingsOverlay')) closeSettings(); });
-    $('editorLoginOverlay').addEventListener('click', event => { if (event.target === $('editorLoginOverlay')) closeEditorLogin(); });
-    document.addEventListener('keydown', event => { if (event.key === 'Escape') { closeSettings(); closeEditorLogin(); } });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') closeSettings(); });
     $('tableBody').addEventListener('click', event => {
       const summary = event.target.closest('.turn-details > summary');
       if (summary) {
@@ -768,3 +735,4 @@
   </script>
 </body>
 </html>
+
