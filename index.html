@@ -1481,33 +1481,33 @@ function renderKPIs(agg){
   const badge = focused ? (state.selectedDates.size === 1 ? 'Foco' : `${state.selectedDates.size} dias`) : 'Total';
 
   const agenda   = t.agenda || 0;
-  const recebido = t.recebido || 0;
   const noShow   = t.no_show || 0;
-  const pctNoShow = agenda > 0 ? noShow / agenda * 100 : 0;
-  const noPrazo  = t.no_prazo || 0;
+  const agendaNoShow = Math.max(0, agenda - noShow);
+  const recebido = t.recebido || 0;
   const backlogR = t.backlog_recebido || 0;
   const backlogP = t.backlog_pendente || 0;
-  const denom=Math.max(0,agenda-(t.no_show||0));
-  const pctNoPrazo=denom?noPrazo/denom*100:0;
-  const pctRecebido=denom?recebido/denom*100:0;
+  const noPrazo  = t.no_prazo || 0;
+  const abaixo4  = t.abaixo_4hrs || 0;
+  const recusado = t.recusado || 0;
+  const sobrepostas = t.sobrepostas || 0;
+  const pctNoShow = agenda > 0 ? noShow / agenda * 100 : 0;
+  const pctNoPrazo = agendaNoShow > 0 ? noPrazo / agendaNoShow * 100 : 0;
+  const pctRecebido = agendaNoShow > 0 ? recebido / agendaNoShow * 100 : 0;
 
+  // Mantém exatamente a sequência das linhas da tabela (incluindo as duas percentuais).
   const cards = [
-    { label:'AGENDA',            value:intFmt(agenda),      color:'#60a5fa',
-      sub:`Agendados no período` },
-    { label:'NO SHOW',           value:intFmt(noShow),      color:'#f43f5e',
-      sub:`${agenda>0?pctFmt(pctNoShow):'–'} da agenda` },
-    { label:'RECEBIDO',          value:intFmt(recebido),    color:'#22d3ee',
-      sub:`${agenda>0?pctFmt(pctRecebido):'–'} da agenda` },
-    { label:'NO PRAZO',          value:intFmt(noPrazo),     color:'#22c55e',
-      sub:`${recebido>0?pctFmt(pctNoPrazo):'–'} do recebido` },
-    { label:'BACKLOG RECEBIDO',  value:intFmt(backlogR),    color:'#0ea5e9',
-      sub:`Recebido fora do ciclo` },
-    { label:'BACKLOG PENDENTE',  value:intFmt(backlogP),    color:'#eab308',
-      sub:`Passou do ciclo sem receber` },
-    { label:'% NO PRAZO',        value:pctFmt(pctNoPrazo),  color:'#a855f7',
-      sub:`NO PRAZO / (AGENDA - NO SHOW)` },
-    { label:'% RECEBIDO',        value:pctFmt(pctRecebido), color:'#ec4899',
-      sub:`RECEBIDO / (AGENDA - NO SHOW)` },
+    { label:'AGENDA',            value:intFmt(agenda),         color:'#60a5fa', sub:'Agendados no período' },
+    { label:'NO SHOW',           value:intFmt(noShow),         color:'#ef4444', sub:`${agenda>0?pctFmt(pctNoShow):'–'} da agenda` },
+    { label:'AGENDA - NOSHOW',   value:intFmt(agendaNoShow),   color:'#38bdf8', sub:'Agenda menos no show' },
+    { label:'RECEBIDAS',         value:intFmt(recebido),       color:'#22d3ee', sub:'Cargas recebidas' },
+    { label:'BACKLOG RECEBIDO',  value:intFmt(backlogR),       color:'#0ea5e9', sub:'Recebido fora do ciclo' },
+    { label:'BACKLOG PENDENTE',  value:intFmt(backlogP),       color:'#eab308', sub:'Passou do ciclo sem receber' },
+    { label:'NO PRAZO',          value:intFmt(noPrazo),        color:'#22c55e', sub:'Recebidas dentro do prazo' },
+    { label:'< 4 HRS',           value:intFmt(abaixo4),        color:'#facc15', sub:'Recebidas em menos de 4 horas' },
+    { label:'RECUSADAS',         value:intFmt(recusado),       color:'#f43f5e', sub:'Cargas recusadas' },
+    { label:'SOBREPOSTAS',       value:intFmt(sobrepostas),    color:'#a78bfa', sub:'Cargas sobrepostas' },
+    { label:'% NO PRAZO',        value:pctFmt(pctNoPrazo),     color:'#a855f7', sub:'NO PRAZO / AGENDA - NOSHOW' },
+    { label:'% RECEBIDO',        value:pctFmt(pctRecebido),    color:'#ec4899', sub:'RECEBIDAS / AGENDA - NOSHOW' },
   ];
 
   document.getElementById('kpis').innerHTML = cards.map(c => `
