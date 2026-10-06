@@ -50,8 +50,7 @@
     .month-table th:first-child,.month-table td:first-child{min-width:192px;width:192px}.month-table .main-row td{padding-top:5px;padding-bottom:5px}.cd-progress-cell{display:grid;gap:3px;min-width:0;padding:0}.cd-progress-cell .cd-cell{min-height:0;gap:6px}.main-row .expand{width:22px;height:22px;border-radius:7px;font-size:15px}.cd-progress{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px;width:calc(100% - 28px);max-width:165px;margin-left:28px}.cd-progress-track{grid-column:auto;height:6px;min-width:0;overflow:hidden;border-radius:99px;background:rgba(130,150,180,.18);box-shadow:inset 0 1px 2px rgba(0,0,0,.12)}.cd-progress-percent{min-width:42px;text-align:right;font:800 9px var(--display);font-variant-numeric:tabular-nums}.cd-progress-percent.good{color:var(--green)}.cd-progress-percent.bad{color:var(--red)}.cd-progress-percent.na{color:var(--muted)}.cd-progress-fill{position:relative;height:100%;width:var(--progress);border-radius:inherit;transform-origin:left;animation:cdProgressFill .95s cubic-bezier(.2,.72,.25,1) both}.cd-progress-fill.good{background:linear-gradient(90deg,#138356,var(--green))}.cd-progress-fill.bad{background:linear-gradient(90deg,#b92e40,var(--red))}.cd-progress-fill.na{background:var(--faint)}.cd-progress-fill::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 25%,rgba(255,255,255,.35) 50%,transparent 75%);background-size:200% 100%;animation:cdProgressShine 1.8s linear infinite}body.light .month-totals{background:rgba(255,255,255,.97)}body.light .month-total-item{background:#f3f6fa}body.light .month-total-item strong{color:#182337}body.light .cd-progress-track{background:rgba(27,46,72,.12)}body.light .cd-progress-fill.good{background:linear-gradient(90deg,#0d6544,#2cae78)}body.light .cd-progress-fill.bad{background:linear-gradient(90deg,#982334,#d84d5e)}
     @media(max-width:960px){.monthly-layout{grid-template-columns:minmax(0,1fr)}.month-totals{grid-row:1;position:sticky;top:6px;z-index:8;grid-template-columns:1fr 1fr;gap:7px;padding:9px}.month-totals-head{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding-bottom:5px}.month-total-item{padding:8px;gap:4px}.month-total-item strong{font-size:15px}.monthly-card{grid-row:2}.monthly-layout.no-totals .monthly-card{grid-row:1}}
     @media(max-width:640px){.month-table th:first-child,.month-table td:first-child{min-width:185px;width:185px}.cd-progress{width:calc(100% - 25px);margin-left:25px}.month-total-item span{font-size:8px}.month-total-item strong{font-size:14px}}
-    .monthly-layout{display:block}.month-table th.month-sticky-meta,.month-table td.month-sticky-meta{position:sticky;right:140px;z-index:4;min-width:140px;width:140px;text-align:right;background:#121c2d;box-shadow:-8px 0 14px -13px rgba(0,0,0,.72)}.month-table th.month-sticky-realized,.month-table td.month-sticky-realized{position:sticky;right:0;z-index:4;min-width:140px;width:140px;text-align:right;background:#121c2d;box-shadow:-8px 0 14px -13px rgba(0,0,0,.72)}.month-table thead th.month-sticky-meta,.month-table thead th.month-sticky-realized{z-index:7;background:#172338}.month-table td.month-sticky-meta,.month-table td.month-sticky-realized{font-size:9px;font-weight:800;font-variant-numeric:tabular-nums}.month-table .main-row:hover td.month-sticky-meta,.month-table .main-row:hover td.month-sticky-realized{background:#1a2940}body.light .month-table td.month-sticky-meta,body.light .month-table td.month-sticky-realized{background:#f8fafc}body.light .month-table thead th.month-sticky-meta,body.light .month-table thead th.month-sticky-realized{background:#e2eaf3}body.light .month-table .main-row:hover td.month-sticky-meta,body.light .month-table .main-row:hover td.month-sticky-realized{background:#e5eef8}
-    @media(max-width:700px){.month-table th.month-sticky-meta,.month-table td.month-sticky-meta,.month-table th.month-sticky-realized,.month-table td.month-sticky-realized{position:static;right:auto;box-shadow:none}}
+    .monthly-layout{display:block}.cd-progress-cell{display:flex;flex-direction:column;gap:4px;min-width:0;padding:0}.cd-progress-cell .cd-cell{min-height:0;gap:6px}.cd-progress{display:grid;grid-template-columns:1fr;gap:4px;width:calc(100% - 28px);max-width:165px;margin-left:28px}.cd-progress-item{display:grid;gap:2px;min-width:0}.cd-progress-head{display:flex;align-items:center;justify-content:space-between;gap:5px;line-height:1.1}.cd-progress-head>span{font-size:7px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.025em}.cd-progress-head .cd-progress-percent{min-width:0;font-size:8px}.cd-progress-track{grid-column:auto;width:100%;height:5px;min-width:0;overflow:hidden;border-radius:99px;background:rgba(130,150,180,.18);box-shadow:inset 0 1px 2px rgba(0,0,0,.12)}.cd-progress-values{display:grid;grid-template-columns:1fr;gap:1px;color:var(--muted);font-size:7px;line-height:1.15;font-variant-numeric:tabular-nums}.cd-progress-values span{display:flex;align-items:baseline;justify-content:space-between;gap:4px;white-space:nowrap}.cd-progress-values b{color:var(--text);font-weight:800;white-space:nowrap}body.light .cd-progress-track{background:rgba(27,46,72,.12)}body.light .cd-progress-values b{color:#182337}
     @keyframes cdProgressFill{from{width:0}to{width:var(--progress)}}@keyframes cdProgressShine{from{background-position:100% 0}to{background-position:-100% 0}}
   </style>
 </head>
@@ -111,9 +110,8 @@
   </div>
   <div class="overlay" id="editorLoginOverlay" role="dialog" aria-modal="true" aria-labelledby="editorLoginTitle">
     <section class="modal editor-modal"><div class="modal-head"><h2 id="editorLoginTitle">Acesso de edição</h2><button class="close" id="closeEditorLogin" aria-label="Fechar">×</button></div>
-      <div class="modal-body"><p class="editor-intro">Informe uma credencial cadastrada em USER_CAMPANHA. A validação é feita pelo Supabase; a tabela de credenciais não é consultada diretamente pelo navegador.</p>
-        <label class="editor-field">Matrícula<input id="editorUser" type="text" autocomplete="username" inputmode="numeric" maxlength="80"></label>
-        <label class="editor-field">Senha<input id="editorPass" type="password" autocomplete="current-password" maxlength="200"></label>
+      <div class="modal-body"><p class="editor-intro">Informe a senha fixa de edição deste painel. O Supabase valida novamente a senha antes de gravar alterações.</p>
+        <label class="editor-field">Senha de edição<input id="editorPass" type="password" autocomplete="off" inputmode="numeric" maxlength="6" pattern="[0-9]{6}"></label>
         <p class="editor-error" id="editorLoginError" role="alert" hidden></p>
         <div class="settings-actions"><button class="btn" id="cancelEditorLogin" type="button">Cancelar</button><button class="btn btn-primary" id="editorLoginSubmit" type="button">Validar e editar</button></div>
       </div>
@@ -133,6 +131,7 @@
       // Chaves públicas do cliente: publishable em apikey e JWT anon em Authorization. Nunca usar service_role no navegador.
       SUPABASE_API_KEY: 'sb_publishable_AOnZKBKy9NpHheU_VN-bcQ_y5Ldcgce',
       SUPABASE_ANON_JWT: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5a3VrZHptZHhibHVlaHlsa3NlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwMDkzNTksImV4cCI6MjEwNTU4NTM1OX0.6p5lD3nZ94FtMFwqamNk1QpKF1cho0jrBZe4kpmR1pk',
+      EDIT_PASSWORD: '150807',
       TABLES: Object.freeze({ CAMPANHA_CX: 'CAMPANHA_CX', CAMPANHA_RUPTURA: 'CAMPANHA_RUPTURA', CAMPANHA_REGRAS: 'CAMAPNHA_REGRAS' }),
       CDS: Object.freeze([910, 911, 914, 915, 916, 917, 919, 920, 921, 922, 923, 956]),
       TURNOS: Object.freeze(['1 TURNO', '2 TURNO', '3 TURNO']),
@@ -392,8 +391,8 @@
         metricRow('CAIXA DE SEP', values('fracionado', true)),
         metricRow('CX VENDA BALCAO', values('vendaBalcao', true)),
         metricRow('META DIÁRIA CX', values('meta')),
-        metricRow('ACUMULADO DO DIA', cumulativeValues, 'primary', value => value === null ? '<span class="metric-value dim">—</span>' : `<strong class="metric-value">${fmtNumber.format(value)}</strong>`),
-        metricRow('TOTAL CX', values('total', true), 'primary', value => value === null ? '<span class="metric-value dim">—</span>' : `<strong class="metric-value">${fmtNumber.format(value)}</strong>`)
+        metricRow('TOTAL CX', values('total', true), 'primary', value => value === null ? '<span class="metric-value dim">—</span>' : `<strong class="metric-value">${fmtNumber.format(value)}</strong>`),
+        metricRow('ACUMULADO DO DIA', cumulativeValues, 'primary', value => value === null ? '<span class="metric-value dim">—</span>' : `<strong class="metric-value">${fmtNumber.format(value)}</strong>`)
       ].join('');
       return `<tr class="detail-row" data-detail-cd="${cd}" ${state.expanded.has(String(cd)) ? '' : 'hidden'}><td colspan="${state.days.length + 1}"><div class="detail-shell"><table class="detail-table"><thead><tr><th>CD ${cd} · Métrica</th>${first.map((day, i) => `<th>${day}<small style="display:block;color:var(--faint);font-size:7px">${weekday(state.days[i])}</small></th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>${shiftDetails(cd, byDay)}</div></td></tr>`;
     }
@@ -408,7 +407,7 @@
           return `<span class="rupture-value ${good ? 'good' : 'bad'}">${good ? 'Dentro da meta' : 'Acima da meta'}</span>`;
         })
       ].join('');
-      return `<tr class="detail-row" data-detail-cd="${cd}" ${state.expanded.has(String(cd)) ? '' : 'hidden'}><td colspan="${state.days.length + 3}"><div class="detail-shell"><table class="detail-table"><thead><tr><th>CD ${cd} · Indicador</th>${state.days.map(date => `<th>${displayDate(date)}<small style="display:block;color:var(--faint);font-size:7px">${weekday(date)}</small></th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div></td></tr>`;
+      return `<tr class="detail-row" data-detail-cd="${cd}" ${state.expanded.has(String(cd)) ? '' : 'hidden'}><td colspan="${state.days.length + 1}"><div class="detail-shell"><table class="detail-table"><thead><tr><th>CD ${cd} · Indicador</th>${state.days.map(date => `<th>${displayDate(date)}<small style="display:block;color:var(--faint);font-size:7px">${weekday(date)}</small></th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div></td></tr>`;
     }
 
     /* ================================================================
@@ -420,6 +419,7 @@
     function displayDate(isoDate) { const [year, month, day] = String(isoDate).slice(0, 10).split('-'); return `${day}/${month}/${year}`; }
     function localISODate() { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`; }
     function isFutureDate(date) { return String(date) > localISODate(); }
+    function yesterdayISO() { const date = new Date(`${localISODate()}T12:00:00`); date.setDate(date.getDate() - 1); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; }
     function isSunday(date) { return new Date(`${date}T12:00:00`).getDay() === 0; }
     function weekday(date) { return new Date(`${date}T12:00:00`).toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '').toUpperCase(); }
     function monthLabel(month) { const [y, m] = month.split('-').map(Number); return new Date(y, m - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }); }
@@ -435,23 +435,33 @@
     function monthlyProgress(cd, byDay) {
       const dailyMeta = dailyMetaForCD(cd);
       const monthlyMeta = monthlyMetaForCD(cd);
-      let realized = 0;
+      let realized = 0, realizedYesterday = 0, daysWithoutSundayUntilYesterday = 0;
+      const yesterday = yesterdayISO();
       for (const date of state.days) {
-        if (isFutureDate(date)) continue;
-        realized += getCell(byDay, date, cd)?.total || 0;
+        const total = getCell(byDay, date, cd)?.total || 0;
+        if (!isFutureDate(date)) realized += total;
+        if (date <= yesterday) {
+          realizedYesterday += total;
+          if (!isSunday(date)) daysWithoutSundayUntilYesterday++;
+        }
       }
       const ratio = monthlyMeta !== null && monthlyMeta > 0 ? realized / monthlyMeta : null;
-      return { dailyMeta, monthlyMeta, realized, ratio, fill: ratio === null ? 0 : Math.min(100, Math.max(0, ratio * 100)) };
+      const metaYesterday = dailyMeta === null ? null : dailyMeta * daysWithoutSundayUntilYesterday;
+      const ratioYesterday = metaYesterday !== null && metaYesterday > 0 ? realizedYesterday / metaYesterday : null;
+      return { dailyMeta, monthlyMeta, realized, ratio, fill: ratio === null ? 0 : Math.min(100, Math.max(0, ratio * 100)), metaYesterday, realizedYesterday, ratioYesterday, fillYesterday: ratioYesterday === null ? 0 : Math.min(100, Math.max(0, ratioYesterday * 100)) };
     }
     function progressMarkup(cd, progress) {
       const percentText = progress.ratio === null ? '—' : fmtPercent.format(progress.ratio);
+      const yesterdayPercentText = progress.ratioYesterday === null ? '—' : fmtPercent.format(progress.ratioYesterday);
       const tone = progress.ratio === null ? 'na' : progress.ratio >= state.config.threshold / 100 ? 'good' : 'bad';
-      const statusText = progress.dailyMeta === null ? 'Meta diária não cadastrada' : progress.monthlyMeta <= 0 ? 'Meta mensal igual a zero' : percentText;
+      const yesterdayTone = progress.ratioYesterday === null ? 'na' : progress.ratioYesterday >= state.config.threshold / 100 ? 'good' : 'bad';
       const month = monthLabel(state.month);
-      const accessibleValue = progress.ratio === null ? 0 : progress.fill;
+      const monthStatus = progress.dailyMeta === null ? 'Meta diária não cadastrada' : progress.monthlyMeta <= 0 ? 'Meta mensal igual a zero' : percentText;
+      const yesterdayStatus = progress.metaYesterday === null ? 'Meta diária não cadastrada' : progress.metaYesterday <= 0 ? 'Ainda não há dias válidos até ontem' : yesterdayPercentText;
+      const yesterdayMetaText = progress.metaYesterday === null ? '—' : `${fmtNumber.format(progress.metaYesterday)} CX`;
       return `<div class="cd-progress" title="Atingimento mensal CD ${cd} · ${escapeHTML(month)}: ${percentText}">
-        <div class="cd-progress-track" role="progressbar" aria-label="Progresso mensal CD ${cd} · ${escapeHTML(month)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${accessibleValue.toFixed(1)}" aria-valuetext="${escapeHTML(statusText)}"><div class="cd-progress-fill ${tone}" style="--progress:${progress.fill.toFixed(1)}%"></div></div>
-        <span class="cd-progress-percent ${tone}">${percentText}</span>
+        <div class="cd-progress-item"><div class="cd-progress-head"><span>Total do mês</span><strong class="cd-progress-percent ${tone}">${percentText}</strong></div><div class="cd-progress-track" role="progressbar" aria-label="Atingimento total do mês CD ${cd} · ${escapeHTML(month)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${(progress.ratio === null ? 0 : progress.fill).toFixed(1)}" aria-valuetext="${escapeHTML(monthStatus)}"><div class="cd-progress-fill ${tone}" style="--progress:${progress.fill.toFixed(1)}%"></div></div></div>
+        <div class="cd-progress-item"><div class="cd-progress-head"><span>Acumulado até ontem</span><strong class="cd-progress-percent ${yesterdayTone}">${yesterdayPercentText}</strong></div><div class="cd-progress-track" role="progressbar" aria-label="Atingimento acumulado até ontem CD ${cd}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${(progress.ratioYesterday === null ? 0 : progress.fillYesterday).toFixed(1)}" aria-valuetext="${escapeHTML(yesterdayStatus)}"><div class="cd-progress-fill ${yesterdayTone}" style="--progress:${progress.fillYesterday.toFixed(1)}%"></div></div><div class="cd-progress-values"><span>Meta até ontem: <b>${yesterdayMetaText}</b></span><span>Produzido: <b>${fmtNumber.format(progress.realizedYesterday)} CX</b></span></div></div>
       </div>`;
     }
     function syncDailyCdOptions(active) {
@@ -479,7 +489,6 @@
       svg.setAttribute('aria-label', `Atingimento diário: ${name}`);
       const points = state.days.map((date, index) => ({ date, index, ratio: dailyChartRatio(active, byDay, date, selection) }));
       const valid = points.filter(point => point.ratio !== null);
-      if (!valid.length) { svg.innerHTML = '<text class="chart-empty" x="560" y="175" text-anchor="middle">Sem dados concluídos para este recorte.</text>'; return; }
       const W = 1120, H = 350, L = 72, R = 142, T = 32, B = 48, plotW = W - L - R, plotH = H - T - B;
       const target = state.config.threshold / 100, rawMax = Math.max(target * 1.2, ...valid.map(point => point.ratio), 1);
       const max = Math.ceil(rawMax * 5) / 5, y = value => T + plotH - value / max * plotH;
@@ -507,9 +516,9 @@
         if (index % labelStep === 0 || index === valid[valid.length - 1].index) marks += `<text class="chart-point-label" x="${px.toFixed(1)}" y="${Math.max(T+12,py-11).toFixed(1)}" text-anchor="middle" fill="${color}">${fmtPercent.format(point.ratio)}</text>`;
         previous = point;
       });
-      const dateStep = Math.max(1, Math.ceil(points.length / 12));
-      const dates = points.map((point,index) => index % dateStep === 0 || index === points.length-1 ? `<text class="chart-axis-label" x="${x(index).toFixed(1)}" y="${H-15}" text-anchor="middle">${dayNum(point.date)}</text>` : '').join('');
-      svg.innerHTML = `${grid}${targetLine}${segments}${marks}${dates}`;
+      const dates = points.map((point,index) => `<text class="chart-axis-label" x="${x(index).toFixed(1)}" y="${H-15}" text-anchor="middle">${dayNum(point.date)}</text>`).join('');
+      const emptyLabel = valid.length ? '' : '<text class="chart-empty" x="560" y="175" text-anchor="middle">Sem dados concluídos; calendário completo exibido.</text>';
+      svg.innerHTML = `${grid}${targetLine}${segments}${marks}${emptyLabel}${dates}`;
     }
     function renderAverageBarChart(active, byDay) {
       const svg = $('averageBarChart'), target = state.config.threshold / 100;
@@ -557,13 +566,12 @@
       $('viewRuptura').classList.toggle('active', isRuptura); $('viewRuptura').setAttribute('aria-selected', String(isRuptura));
       $('subtitle').textContent = isRuptura ? 'Indicador diário de ruptura por Centro de Distribuição · um mês por vez' : 'Atingimento diário de caixas por Centro de Distribuição · um mês por vez';
       $('monthTitle').textContent = `${isRuptura ? 'Visão de ruptura' : 'Visão de caixas'} · ${monthLabel(state.month)}`;
-      $('tableHint').textContent = isRuptura ? 'Valor exibido = RUPTURA · verde quando RUPTURA ≤ META · vermelho quando RUPTURA > META.' : 'A barra mostra o progresso mensal. As colunas congeladas à direita mostram META CX do mês e realizado acumulado, alinhados à linha de cada CD.';
-      $('footnote').textContent = isRuptura ? 'Regra: RUPTURA menor ou igual à META fica verde; acima da META fica vermelho. Dias sem valor de ruptura ou sem meta aparecem como “—”.' : `META CX cadastrada é diária por CD. A meta do mês = meta diária × dias do mês, excluindo domingos. O acumulado considera os realizados do mês selecionado até a data atual; turnos não têm metas individuais.`;
+      $('tableHint').textContent = isRuptura ? 'Valor exibido = RUPTURA · verde quando RUPTURA ≤ META · vermelho quando RUPTURA > META.' : 'Cada CD tem duas barras: atingimento da meta total do mês e atingimento da meta acumulada até ontem.';
+      $('footnote').textContent = isRuptura ? 'Regra: RUPTURA menor ou igual à META fica verde; acima da META fica vermelho. Dias sem valor de ruptura ou sem meta aparecem como “—”.' : `META CX cadastrada é diária por CD. A meta do mês = meta diária × dias do mês, excluindo domingos. A barra “Total do mês” considera o realizado até hoje; “Acumulado até ontem” exclui o dia atual e mostra a meta prevista e o CX produzido até ontem. Turnos não têm metas individuais.`;
       $('cdBadge').textContent = `${active.length} CDs ativos · ${days.length} dias`;
-      const monthlyHeaders = isRuptura ? '' : '<th class="month-sticky-meta">META CX DO MÊS</th><th class="month-sticky-realized">CX REALIZADO NO MÊS</th>';
-      $('tableHead').innerHTML = `<tr><th>Centro de distribuição</th>${days.map(date => `<th class="day-head" title="${date}"><span>${displayDate(date)}</span><small>${weekday(date)}</small></th>`).join('')}${monthlyHeaders}</tr>`;
+      $('tableHead').innerHTML = `<tr><th>Centro de distribuição</th>${days.map(date => `<th class="day-head" title="${date}"><span>${displayDate(date)}</span><small>${weekday(date)}</small></th>`).join('')}</tr>`;
       if (!active.length) {
-        $('tableBody').innerHTML = `<tr><td class="empty-cell" colspan="${days.length + 1 + (isRuptura ? 0 : 2)}">Nenhum CD ativo. Ative ao menos um CD nas configurações.</td></tr>`;
+        $('tableBody').innerHTML = `<tr><td class="empty-cell" colspan="${days.length + 1}">Nenhum CD ativo. Ative ao menos um CD nas configurações.</td></tr>`;
         if (!isRuptura) { syncDailyCdOptions(active); renderCharts(active, new Map()); }
         return;
       }
@@ -575,8 +583,7 @@
         const cdTitle = `<div class="cd-cell"><button class="expand" type="button" data-expand="${cd}" aria-expanded="${expanded}" aria-label="${expanded ? 'Recolher' : 'Expandir'} CD ${cd}">${expanded ? '−' : '+'}</button><span class="cd-number">CD ${cd}</span></div>`;
         const monthly = isRuptura ? null : monthlyProgress(cd, byDay);
         const label = isRuptura ? cdTitle : `<div class="cd-progress-cell">${cdTitle}${progressMarkup(cd, monthly)}</div>`;
-        const monthlyCells = monthly ? `<td class="month-sticky-meta" title="Meta mensal do CD ${cd}">${monthly.monthlyMeta === null ? '—' : `${fmtNumber.format(monthly.monthlyMeta)} CX`}</td><td class="month-sticky-realized" title="Realizado acumulado do mês no CD ${cd}">${fmtNumber.format(monthly.realized)} CX</td>` : '';
-        return `<tr class="main-row"><td>${label}</td>${cells}${monthlyCells}</tr>${details}`;
+        return `<tr class="main-row"><td>${label}</td>${cells}</tr>${details}`;
       }).join('');
       $('tableBody').innerHTML = cdRows;
       if (!isRuptura) { syncDailyCdOptions(active); renderCharts(active, byDay); }
@@ -646,23 +653,27 @@
     }
     function openEditorLogin() {
       if (state.busy || state.editMode || state.view !== 'caixa') return;
-      $('editorLoginError').hidden = true; $('editorUser').value = ''; $('editorPass').value = '';
-      $('editorLoginOverlay').classList.add('open'); document.body.style.overflow = 'hidden'; $('editorUser').focus();
+      $('editorLoginError').hidden = true; $('editorPass').value = '';
+      $('editorLoginOverlay').classList.add('open'); document.body.style.overflow = 'hidden'; $('editorPass').focus();
     }
-    function closeEditorLogin() { $('editorLoginOverlay').classList.remove('open'); $('editorUser').value = ''; $('editorPass').value = ''; document.body.style.overflow = ''; }
+    function closeEditorLogin() { $('editorLoginOverlay').classList.remove('open'); $('editorPass').value = ''; document.body.style.overflow = ''; }
     async function verifyEditor() {
-      const user = $('editorUser').value, pass = $('editorPass').value;
+      const pass = $('editorPass').value.trim();
       const errorNode = $('editorLoginError'); errorNode.hidden = true;
-      if (!user || !pass) { errorNode.textContent = 'Informe matrícula e senha.'; errorNode.hidden = false; return; }
+      if (!pass) { errorNode.textContent = 'Informe a senha de edição.'; errorNode.hidden = false; return; }
+      if (pass !== CONFIG.EDIT_PASSWORD) { errorNode.textContent = 'Senha incorreta.'; errorNode.hidden = false; $('editorPass').select(); return; }
       setBusy(true, 'auth');
       try {
-        const valid = await supabaseRpc('verify_campaign_editor', { p_user: user, p_pass: pass });
-        if (valid !== true) throw new Error('Matrícula ou senha inválidas. Confira os registros em USER_CAMPANHA.');
-        state.editMode = true; state.editCredentials = { user, pass }; state.editDraft.clear(); state.openTurn = '';
-        $('editorUser').value = ''; $('editorPass').value = '';
+        const valid = await supabaseRpc('verify_campaign_editor', { p_pass: pass });
+        if (valid !== true) throw new Error('Senha de edição inválida.');
+        state.editMode = true; state.editCredentials = { pass }; state.editDraft.clear(); state.openTurn = '';
+        $('editorPass').value = '';
         closeEditorLogin(); render(); toast('Acesso autorizado. Edite os valores realizados e clique em Salvar alterações.');
       } catch (error) {
-        errorNode.textContent = /RPC \(/.test(error.message) ? 'A validação segura ainda não está configurada. Execute o script SQL fornecido no Supabase e tente novamente.' : error.message;
+        const detail = error.message || 'Falha desconhecida na validação.';
+        errorNode.textContent = /PGRST202|could not find the function|schema cache/i.test(detail)
+          ? `A função segura verify_campaign_editor não foi encontrada no schema publicado do Supabase. Confira a implantação do script SQL e o recarregamento do schema. Detalhe: ${detail}`
+          : detail;
         errorNode.hidden = false;
       } finally { setBusy(false); }
     }
@@ -693,7 +704,7 @@
       if (!changes.length) { cancelEdit(); toast('Não havia alterações para salvar.'); return; }
       let saved = false; setBusy(true, 'save');
       try {
-        await supabaseRpc('save_campaign_edits', { p_user: state.editCredentials.user, p_pass: state.editCredentials.pass, p_changes: changes });
+        await supabaseRpc('save_campaign_edits', { p_pass: state.editCredentials.pass, p_changes: changes });
         state.editMode = false; state.editCredentials = null; state.editDraft.clear(); state.openTurn = '';
         render(); toast(`${changes.length} turno(s) enviados ao Supabase.`); saved = true;
       } catch (error) {
@@ -728,7 +739,7 @@
     $('settingsBtn').addEventListener('click', openSettings); $('closeSettings').addEventListener('click', closeSettings); $('cancelSettings').addEventListener('click', closeSettings); $('applySettings').addEventListener('click', applySettings);
     $('editBtn').addEventListener('click', openEditorLogin); $('saveEditsBtn').addEventListener('click', saveEdits); $('cancelEditBtn').addEventListener('click', cancelEdit);
     $('closeEditorLogin').addEventListener('click', closeEditorLogin); $('cancelEditorLogin').addEventListener('click', closeEditorLogin); $('editorLoginSubmit').addEventListener('click', verifyEditor);
-    $('editorUser').addEventListener('keydown', event => { if (event.key === 'Enter') verifyEditor(); }); $('editorPass').addEventListener('keydown', event => { if (event.key === 'Enter') verifyEditor(); });
+    $('editorPass').addEventListener('keydown', event => { if (event.key === 'Enter') verifyEditor(); });
     $('settingsOverlay').addEventListener('click', event => { if (event.target === $('settingsOverlay')) closeSettings(); });
     $('editorLoginOverlay').addEventListener('click', event => { if (event.target === $('editorLoginOverlay')) closeEditorLogin(); });
     document.addEventListener('keydown', event => { if (event.key === 'Escape') { closeSettings(); closeEditorLogin(); } });
