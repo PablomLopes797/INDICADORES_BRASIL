@@ -108,6 +108,15 @@
       </div>
     </section>
   </div>
+  <div class="overlay" id="editorLoginOverlay" role="dialog" aria-modal="true" aria-labelledby="editorLoginTitle">
+    <section class="modal editor-modal"><div class="modal-head"><h2 id="editorLoginTitle">Acesso de edição</h2><button class="close" id="closeEditorLogin" aria-label="Fechar">×</button></div>
+      <div class="modal-body"><p class="editor-intro">A senha é verificada somente neste HTML para liberar a edição; ela não é enviada ao Supabase.</p>
+        <label class="editor-field">Senha de edição<input id="editorPass" type="password" autocomplete="off" inputmode="numeric" maxlength="6" pattern="[0-9]{6}"></label>
+        <p class="editor-error" id="editorLoginError" role="alert" hidden></p>
+        <div class="settings-actions"><button class="btn" id="cancelEditorLogin" type="button">Cancelar</button><button class="btn btn-primary" id="editorLoginSubmit" type="button">Editar</button></div>
+      </div>
+    </section>
+  </div>
   <div class="toast-area" id="toastArea" aria-live="polite"></div>
 
   <script>
@@ -122,6 +131,7 @@
       // Chaves públicas do cliente: publishable em apikey e JWT anon em Authorization. Nunca usar service_role no navegador.
       SUPABASE_API_KEY: 'sb_publishable_AOnZKBKy9NpHheU_VN-bcQ_y5Ldcgce',
       SUPABASE_ANON_JWT: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5a3VrZHptZHhibHVlaHlsa3NlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwMDkzNTksImV4cCI6MjEwNTU4NTM1OX0.6p5lD3nZ94FtMFwqamNk1QpKF1cho0jrBZe4kpmR1pk',
+      EDIT_PASSWORD: '150807',
       TABLES: Object.freeze({ CAMPANHA_CX: 'CAMPANHA_CX', CAMPANHA_RUPTURA: 'CAMPANHA_RUPTURA', CAMPANHA_REGRAS: 'CAMAPNHA_REGRAS' }),
       CDS: Object.freeze([910, 911, 914, 915, 916, 917, 919, 920, 921, 922, 923, 956]),
       TURNOS: Object.freeze(['1 TURNO', '2 TURNO', '3 TURNO']),
@@ -159,19 +169,6 @@
       }
       return payload;
     }
-    async function supabaseRpc(functionName, body) {
-      const url = `${CONFIG.SUPABASE_URL}/rest/v1/rpc/${encodeURIComponent(functionName)}`;
-      const headers = { apikey: CONFIG.SUPABASE_API_KEY, Authorization: `Bearer ${CONFIG.SUPABASE_ANON_JWT}`, Accept: 'application/json', 'Content-Type': 'application/json' };
-      const response = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
-      const text = await response.text(); let payload = null;
-      if (text) { try { payload = JSON.parse(text); } catch { payload = text; } }
-      if (!response.ok) {
-        const detail = payload && typeof payload === 'object' ? (payload.message || payload.details || payload.hint || JSON.stringify(payload)) : String(payload || response.statusText);
-        throw new Error(`Supabase RPC (${response.status}): ${detail}`);
-      }
-      return payload;
-    }
-
     /* ================================================================
        3. LEITURA DOS DADOS — mês inteiro em lotes paginados.
        Os filtros CD recebem números (ex.: 910), nunca o rótulo "CD 910".
@@ -603,7 +600,8 @@
     function setBusy(busy, action = 'load') {
       state.busy = busy; const locked = busy || state.editMode;
       ['prevMonth','nextMonth','monthRef','refreshBtn','viewCaixa','viewRuptura','settingsBtn'].forEach(id => $(id).disabled = locked);
-      $('editBtn').disabled = busy; $('saveEditsBtn').disabled = busy; $('cancelEditBtn').disabled = busy;
+      $('editBtn').disabled = busy; $('saveEditsBtn').disabled = busy; $('cancelEditBtn').disabled = busy; $('editorLoginSubmit').disabled = busy;
+      document.querySelectorAll('input.edit-value').forEach(input => { input.disabled = busy; });
       $('refreshBtn').innerHTML = busy && action === 'load' ? '<span class="loader"></span><span>Carregando…</span>' : '<span class="btn-icon">↻</span><span>Atualizar</span>';
     }
     async function refresh() {
@@ -641,7 +639,23 @@
       if (!Number.isFinite(threshold) || threshold < 0) { toast('Informe um percentual válido (zero ou maior).', 'err'); return; }
       state.config = { active, threshold }; saveLocalConfig(); closeSettings(); render(); toast('Configurações salvas neste navegador.');
     }
-    function startEdit() {
+    function openEditorLogin() {
+      if (state.busy || state.editMode || state.view !== 'caixa') return;
+      $('editorLoginError').hidden = true; $('editorPass').value = '';
+      $('editorLoginOverlay').classList.add('open'); document.body.style.overflow = 'hidden'; $('editorPass').focus();
+    }
+    function closeEditorLogin() {
+      $('editorLoginOverlay').classList.remove('open'); $('editorPass').value = ''; document.body.style.overflow = '';
+    }
+    function verifyEditor() {
+      const pass = $('editorPass').value.trim(), errorNode = $('editorLoginError');
+      errorNode.hidden = true;
+      if (pass !== CONFIG.EDIT_PASSWORD) {
+        errorNode.textContent = 'Senha incorreta.'; errorNode.hidden = false; $('editorPass').select(); return;
+      }
+      closeEditorLogin(); startEditUnlocked();
+    }
+    function startEditUnlocked() {
       if (state.busy || state.editMode || state.view !== 'caixa') return;
       state.editMode = true; state.editDraft.clear(); state.openTurn = '';
       setBusy(false);
@@ -664,24 +678,75 @@
     async function saveEdits() {
       if (!state.editMode || state.busy) return;
       window.clearTimeout(state.editRenderTimer); state.editRenderTimer = 0;
-      const byDay = processMonth(), changes = [];
-      for (const key of state.editDraft.keys()) {
-        const [date, cd, turno] = key.split('|');
-        const shift = getCell(byDay, date, cd)?.shifts.find(item => normShift(item.turno) === normShift(turno));
-        if (!shift) continue;
-        changes.push({ DATA: date, CD: Number(cd), TURNO: turno, 'CAIXA PLT FECH': shift.fechado, 'CAIXA DE SEP': shift.fracionado, 'CX VENDA BALCAO': shift.vendaBalcao });
-      }
-      if (!changes.length) { cancelEdit(); toast('Não havia alterações para salvar.'); return; }
-      let saved = false; setBusy(true, 'save');
+      let ok = 0, fail = 0, refreshAfterSave = false;
+      setBusy(true, 'save');
       try {
-        await supabaseRpc('save_campaign_edits', { p_changes: changes });
-        state.editMode = false; state.editDraft.clear(); state.openTurn = '';
-        render(); toast(`${changes.length} turno(s) enviados ao Supabase.`); saved = true;
+        if (!state.editDraft.size) {
+          state.editMode = false; state.openTurn = ''; render(); toast('Não havia alterações para salvar.'); return;
+        }
+        const byDay = processMonth();
+        for (const [key, draft] of state.editDraft) {
+          const [date, cd, turno] = key.split('|');
+          const shift = getCell(byDay, date, cd)?.shifts.find(item => normShift(item.turno) === normShift(turno));
+          const fallback = {
+            fechado: shift?.fechado ?? 0,
+            fracionado: shift?.fracionado ?? 0,
+            vendaBalcao: shift?.vendaBalcao ?? 0
+          };
+          const payload = {
+            DATA: displayDate(date),
+            CD: Number(cd),
+            TURNO: turno,
+            'CAIXA PLT FECH': parseNumeric(draft?.fechado, fallback.fechado),
+            'CAIXA DE SEP': parseNumeric(draft?.fracionado, fallback.fracionado),
+            'CX VENDA BALCAO': parseNumeric(draft?.vendaBalcao, fallback.vendaBalcao)
+          };
+          try {
+            const response = await fetch(apiUrl(CONFIG.TABLES.CAMPANHA_CX, { on_conflict: 'DATA,CD,TURNO' }), {
+              method: 'POST',
+              headers: {
+                apikey: CONFIG.SUPABASE_API_KEY,
+                Authorization: `Bearer ${CONFIG.SUPABASE_ANON_JWT}`,
+                'Content-Type': 'application/json',
+                Prefer: 'resolution=merge-duplicates,return=representation'
+              },
+              body: JSON.stringify(payload)
+            });
+            if (response.ok) {
+              ok++;
+              console.info('[CAMPANHA_CX] Turno gravado:', payload);
+            } else {
+              const responseText = await response.text();
+              fail++;
+              const detail = responseText || response.statusText || 'Sem detalhes retornados';
+              console.error(`[CAMPANHA_CX] HTTP ${response.status}: ${detail}`, payload);
+              setStatus(`Falha HTTP ${response.status} no CD ${payload.CD}, ${payload.TURNO}: ${detail}`, 'error');
+            }
+          } catch (error) {
+            fail++;
+            console.error(`[CAMPANHA_CX] Falha de rede ao salvar DATA=${payload.DATA}, CD=${payload.CD}, TURNO=${payload.TURNO}:`, error, payload);
+            setStatus(`Falha de rede no CD ${payload.CD}, ${payload.TURNO}: ${error.message || error}`, 'error');
+          }
+        }
+        if (fail === 0) {
+          state.editMode = false;
+          state.editDraft.clear();
+          state.openTurn = '';
+          render();
+          toast(`${ok} turno(s) gravados no Supabase.`);
+          refreshAfterSave = true;
+        } else {
+          toast(`${ok} salvos, ${fail} falharam. Veja o console.`, 'err');
+          setStatus('Falha: confira constraint UNIQUE e RLS.', 'error');
+          // Mantém o editDraft para permitir uma nova tentativa.
+        }
       } catch (error) {
-        setStatus(`Não foi possível salvar as alterações. ${error.message || 'Verifique as permissões e a configuração RPC.'}`, 'error');
-        toast('Falha ao salvar. Os rascunhos permanecem na tela para tentar novamente.', 'err');
+        fail++;
+        console.error('[CAMPANHA_CX] Erro inesperado ao salvar alterações:', error);
+        toast(`${ok} salvos, ${fail} falharam. Veja o console.`, 'err');
+        setStatus('Falha: confira constraint UNIQUE e RLS.', 'error');
       } finally { setBusy(false); }
-      if (saved) await refresh();
+      if (refreshAfterSave) await refresh();
     }
     function shiftMonth(delta) {
       if (state.editMode) { toast('Salve ou cancele as alterações antes de trocar o mês.', 'err'); return; }
@@ -707,9 +772,12 @@
     $('viewCaixa').addEventListener('click', () => changeView('caixa')); $('viewRuptura').addEventListener('click', () => changeView('ruptura'));
     $('themeToggle').addEventListener('click', () => setTheme(document.body.classList.contains('light') ? 'dark' : 'light'));
     $('settingsBtn').addEventListener('click', openSettings); $('closeSettings').addEventListener('click', closeSettings); $('cancelSettings').addEventListener('click', closeSettings); $('applySettings').addEventListener('click', applySettings);
-    $('editBtn').addEventListener('click', startEdit); $('saveEditsBtn').addEventListener('click', saveEdits); $('cancelEditBtn').addEventListener('click', cancelEdit);
+    $('editBtn').addEventListener('click', openEditorLogin); $('saveEditsBtn').addEventListener('click', saveEdits); $('cancelEditBtn').addEventListener('click', cancelEdit);
+    $('closeEditorLogin').addEventListener('click', closeEditorLogin); $('cancelEditorLogin').addEventListener('click', closeEditorLogin); $('editorLoginSubmit').addEventListener('click', verifyEditor);
+    $('editorPass').addEventListener('keydown', event => { if (event.key === 'Enter') verifyEditor(); });
     $('settingsOverlay').addEventListener('click', event => { if (event.target === $('settingsOverlay')) closeSettings(); });
-    document.addEventListener('keydown', event => { if (event.key === 'Escape') closeSettings(); });
+    $('editorLoginOverlay').addEventListener('click', event => { if (event.target === $('editorLoginOverlay')) closeEditorLogin(); });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') { closeSettings(); closeEditorLogin(); } });
     $('tableBody').addEventListener('click', event => {
       const summary = event.target.closest('.turn-details > summary');
       if (summary) {
@@ -735,4 +803,3 @@
   </script>
 </body>
 </html>
-
