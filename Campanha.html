@@ -132,7 +132,7 @@
       SUPABASE_API_KEY: 'sb_publishable_AOnZKBKy9NpHheU_VN-bcQ_y5Ldcgce',
       SUPABASE_ANON_JWT: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5a3VrZHptZHhibHVlaHlsa3NlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwMDkzNTksImV4cCI6MjEwNTU4NTM1OX0.6p5lD3nZ94FtMFwqamNk1QpKF1cho0jrBZe4kpmR1pk',
       EDIT_PASSWORD: '150807',
-      TABLES: Object.freeze({ CAMPANHA_CX: 'CAMPANHA_CX', CAMPANHA_RUPTURA: 'CAMPANHA_RUPTURA', CAMPANHA_REGRAS: 'CAMAPNHA_REGRAS' }),
+      TABLES: Object.freeze({ CAMPANHA_CX: 'CAMPANHA_CX', CAMPANHA_RUPTURA: 'CAMPANHA_RUPTURA', CAMPANHA_REGRAS: 'CAMAPNHA_REGRAS', CAMPANHA_VISIBLE: 'CAMPANHA_VISIBLE' }),
       CDS: Object.freeze([910, 911, 914, 915, 916, 917, 919, 920, 921, 922, 923, 956]),
       TURNOS: Object.freeze(['1 TURNO', '2 TURNO', '3 TURNO']),
       INITIAL_THRESHOLD: 95, PAGE_SIZE: 1000, MAX_ROWS: 300000,
@@ -168,6 +168,27 @@
         throw new Error(`Supabase (${response.status}): ${detail}`);
       }
       return payload;
+    }
+    async function loadCDVisibility() {
+      const rows = await readAllRows(CONFIG.TABLES.CAMPANHA_VISIBLE, 'CD,VISIBLE', { CD: `in.(${CONFIG.CDS.join(',')})` });
+      const active = { ...state.config.active };
+      for (const row of rows) {
+        const cd = normCode(row.CD);
+        if (Object.hasOwn(active, cd)) active[cd] = row.VISIBLE === true || String(row.VISIBLE).toLowerCase() === 'true';
+      }
+      state.config = { ...state.config, active };
+      saveLocalConfig();
+      return rows.length;
+    }
+    async function saveCDVisibility(previous, active) {
+      const changed = CONFIG.CDS.filter(cd => (previous[String(cd)] !== false) !== (active[String(cd)] !== false));
+      if (!changed.length) return;
+      const response = await fetch(apiUrl(CONFIG.TABLES.CAMPANHA_VISIBLE, { on_conflict: 'CD' }), {
+        method: 'POST',
+        headers: { apikey: CONFIG.SUPABASE_API_KEY, Authorization: `Bearer ${CONFIG.SUPABASE_ANON_JWT}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify(changed.map(cd => ({ CD: Number(cd), VISIBLE: active[String(cd)] !== false })))
+      });
+      if (!response.ok) { const detail = await response.text(); throw new Error(`Supabase (${response.status}): ${detail || response.statusText}`); }
     }
     /* ================================================================
        3. LEITURA DOS DADOS — mês inteiro em lotes paginados.
@@ -356,11 +377,18 @@
     }
     function expandedRows(cd, byDay) {
       const values = (field, actual = false) => state.days.map(date => actual && isFutureDate(date) ? null : getCell(byDay, date, cd)[field]);
-      let runningTotal = 0;
+      let runningTotal = 0, runningMeta = 0;
+      const yesterday = yesterdayISO();
       const cumulativeValues = state.days.map(date => {
-        if (isFutureDate(date)) return null;
+        if (date > yesterday) return null;
         runningTotal += getCell(byDay, date, cd)?.total || 0;
         return runningTotal;
+      });
+      const cumulativeMetaValues = state.days.map(date => {
+        if (date > yesterday) return null;
+        const cell = getCell(byDay, date, cd);
+        if (!isSunday(date) && cell?.meta !== null && cell?.meta !== undefined) runningMeta += cell.meta;
+        return runningMeta;
       });
       const ratioValues = state.days.map(date => {
         const cell = getCell(byDay, date, cd);
@@ -374,12 +402,13 @@
           const good = value >= state.config.threshold / 100;
           return `<span class="percent ${good ? 'good' : 'bad'}">${fmtPercentDetail.format(value)}</span>`;
         }),
-        metricRow('CAIXA PLT FECH', values('fechado', true)),
-        metricRow('CAIXA DE SEP', values('fracionado', true)),
-        metricRow('CX VENDA BALCAO', values('vendaBalcao', true)),
+        metricRow('CAIXA FECHADA PRODUZIDA', values('fechado', true)),
+        metricRow('CAIXA FRACIONADA PRODUZIDA', values('fracionado', true)),
+        metricRow('CX VENDA BALCÃO PRODUZIDA', values('vendaBalcao', true)),
         metricRow('META DIÁRIA CX', values('meta')),
-        metricRow('TOTAL CX', values('total', true), 'primary', value => value === null ? '<span class="metric-value dim">—</span>' : `<strong class="metric-value">${fmtNumber.format(value)}</strong>`),
-        metricRow('ACUMULADO DO DIA', cumulativeValues, 'primary', value => value === null ? '<span class="metric-value dim">—</span>' : `<strong class="metric-value">${fmtNumber.format(value)}</strong>`)
+        metricRow('CX TOTAL PRODUZIDA', values('total', true), 'primary', value => value === null ? '<span class="metric-value dim">—</span>' : `<strong class="metric-value">${fmtNumber.format(value)}</strong>`),
+        metricRow('META CX ACUMULADA ATÉ ONTEM', cumulativeMetaValues, 'primary', value => value === null ? '<span class="metric-value dim">—</span>' : `<strong class="metric-value">${fmtNumber.format(value)}</strong>`),
+        metricRow('ACUMULADO CX PRODUZIDA DO DIA', cumulativeValues, 'primary', value => value === null ? '<span class="metric-value dim">—</span>' : `<strong class="metric-value">${fmtNumber.format(value)}</strong>`)
       ].join('');
       return `<tr class="detail-row" data-detail-cd="${cd}" ${state.expanded.has(String(cd)) ? '' : 'hidden'}><td colspan="${state.days.length + 1}"><div class="detail-shell"><table class="detail-table"><thead><tr><th>CD ${cd} · Métrica</th>${first.map((day, i) => `<th>${day}<small style="display:block;color:var(--faint);font-size:7px">${weekday(state.days[i])}</small></th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>${shiftDetails(cd, byDay)}</div></td></tr>`;
     }
@@ -611,9 +640,12 @@
       const view = state.view;
       setBusy(true, 'load'); setStatus(`Consultando ${view === 'ruptura' ? 'CAMPANHA_RUPTURA' : 'CAMPANHA_CX'} · ${monthLabel(state.month)}…`); setConnection('', 'Conectando');
       try {
-        const result = await loadMonth(state.month, view);
-        if (view === 'ruptura') state.ruptureRows = result.ruptureRows;
-        else { state.campaignRows = result.campaignRows; state.rulesRows = result.rulesRows; }
+        const [visibilityResult, result] = await Promise.allSettled([loadCDVisibility(), loadMonth(state.month, view)]);
+        if (visibilityResult.status === 'rejected') console.warn('[CAMPANHA_VISIBLE] Falha ao carregar visibilidade; usando cache local:', visibilityResult.reason);
+        if (result.status === 'rejected') throw result.reason;
+        const monthData = result.value;
+        if (view === 'ruptura') state.ruptureRows = monthData.ruptureRows;
+        else { state.campaignRows = monthData.campaignRows; state.rulesRows = monthData.rulesRows; }
         render();
         setConnection('ok', 'Supabase conectado');
         const count = view === 'ruptura' ? state.ruptureRows.length : state.campaignRows.length;
@@ -632,12 +664,15 @@
       $('thresholdInput').value = String(state.config.threshold); $('settingsOverlay').classList.add('open'); document.body.style.overflow = 'hidden';
     }
     function closeSettings() { $('settingsOverlay').classList.remove('open'); document.body.style.overflow = ''; }
-    function applySettings() {
+    async function applySettings() {
       const active = { ...state.config.active };
       document.querySelectorAll('[data-active-cd]').forEach(input => active[input.dataset.activeCd] = input.checked);
       const threshold = parseNumeric($('thresholdInput').value, NaN);
       if (!Number.isFinite(threshold) || threshold < 0) { toast('Informe um percentual válido (zero ou maior).', 'err'); return; }
-      state.config = { active, threshold }; saveLocalConfig(); closeSettings(); render(); toast('Configurações salvas neste navegador.');
+      const previous = { ...state.config.active };
+      state.config = { active, threshold }; saveLocalConfig(); closeSettings(); render();
+      try { await saveCDVisibility(previous, active); toast('Configurações salvas e visibilidade sincronizada com o Supabase.'); }
+      catch (error) { console.error('[CAMPANHA_VISIBLE] Falha ao salvar:', error); toast('Configurações mantidas neste navegador, mas a visibilidade não foi sincronizada. Verifique permissões RLS e tente novamente.', 'err'); setStatus(`Falha ao salvar visibilidade: ${error.message || error}`, 'error'); }
     }
     function openEditorLogin() {
       if (state.busy || state.editMode || state.view !== 'caixa') return;
@@ -798,7 +833,9 @@
     let savedTheme = 'light'; try { savedTheme = localStorage.getItem('recvision.campanha-aniversario.theme') || 'light'; } catch {}
     setTheme(savedTheme, false);
     const now = new Date(); $('monthRef').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    state.month = $('monthRef').value; render(); refresh();
+    state.month = $('monthRef').value; refresh();
+    let lastCalendarDay = localISODate();
+    window.setInterval(() => { const today = localISODate(); if (today !== lastCalendarDay) { lastCalendarDay = today; if (!state.editMode && !state.busy) refresh(); } }, 60_000);
   })();
   </script>
 </body>
