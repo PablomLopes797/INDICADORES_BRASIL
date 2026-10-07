@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#101729">
-  <title>Campanha Aniversário Assaí · Painel Executivo</title>
+  <title>Controle de Produção em CXs</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -58,7 +58,7 @@
   <main class="page">
     <div class="topline">PAINEL EXECUTIVO</div>
     <header>
-      <div><h1>Campanha Aniversário Assaí</h1><p class="subtitle" id="subtitle">Atingimento diário por Centro de Distribuição · um mês por vez</p></div>
+      <div><h1>Controle de Produção em CXs</h1><p class="subtitle" id="subtitle">Atingimento diário por Centro de Distribuição · um mês por vez</p></div>
       <div class="header-right"><div class="connection" id="connection"><i></i><span id="connectionText">Aguardando conexão</span></div></div>
     </header>
     <section class="toolbar" aria-label="Navegação mensal e ações">
@@ -427,7 +427,7 @@
         metricRow('META CX ACUMULADA ATÉ ONTEM', cumulativeMetaValues, 'primary', value => value === null ? '<span class="metric-value dim">—</span>' : `<strong class="metric-value">${fmtNumber.format(value)}</strong>`),
         metricRow('ACUMULADO CX PRODUZIDA DO DIA', cumulativeValues, 'primary', value => value === null ? '<span class="metric-value dim">—</span>' : `<strong class="metric-value">${fmtNumber.format(value)}</strong>`)
       ].join('');
-      return `<tr class="detail-row" data-detail-cd="${cd}" ${state.expanded.has(String(cd)) ? '' : 'hidden'}><td colspan="${state.days.length + 1}"><div class="detail-shell"><table class="detail-table"><thead><tr><th>CD ${cd} · Métrica</th>${first.map((day, i) => `<th>${day}<small style="display:block;color:var(--faint);font-size:7px">${weekday(state.days[i])}</small></th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>${shiftDetails(cd, byDay)}</div></td></tr>`;
+      return `<tr class="detail-row" data-detail-cd="${cd}" ${state.expanded.has(String(cd)) ? '' : 'hidden'}><td colspan="${state.days.length + 1}"><div class="detail-shell"><table class="detail-table"><thead><tr><th>${cd} · Métrica</th>${first.map((day, i) => `<th>${day}<small style="display:block;color:var(--faint);font-size:7px">${weekday(state.days[i])}</small></th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>${shiftDetails(cd, byDay)}</div></td></tr>`;
     }
     function expandedRuptureRows(cd, byDay) {
       const cells = state.days.map(date => getCell(byDay, date, cd));
@@ -448,7 +448,7 @@
           return `<span class="rupture-value ${good ? 'good' : 'bad'}">${good ? 'Dentro da meta' : 'Acima da meta'}</span>`;
         })
       ].join('');
-      return `<tr class="detail-row" data-detail-cd="${cd}" ${state.expanded.has(String(cd)) ? '' : 'hidden'}><td colspan="${state.days.length + 1}"><div class="detail-shell"><table class="detail-table"><thead><tr><th>CD ${cd} · Indicador</th>${state.days.map(date => `<th>${displayDate(date)}<small style="display:block;color:var(--faint);font-size:7px">${weekday(date)}</small></th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div></td></tr>`;
+      return `<tr class="detail-row" data-detail-cd="${cd}" ${state.expanded.has(String(cd)) ? '' : 'hidden'}><td colspan="${state.days.length + 1}"><div class="detail-shell"><table class="detail-table"><thead><tr><th>${cd} · Indicador</th>${state.days.map(date => `<th>${displayDate(date)}<small style="display:block;color:var(--faint);font-size:7px">${weekday(date)}</small></th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div></td></tr>`;
     }
 
     /* ================================================================
@@ -507,7 +507,7 @@
     }
     function syncDailyCdOptions(active) {
       const select = $('dailyCdSelect'), previous = select.value || 'BR';
-      select.innerHTML = '<option value="BR">Visão Brasil</option>' + active.map(cd => `<option value="${cd}">CD ${cd}</option>`).join('');
+      select.innerHTML = '<option value="BR">Visão Brasil</option>' + active.map(cd => `<option value="${cd}">${cd}</option>`).join('');
       select.value = previous === 'BR' || active.some(cd => String(cd) === previous) ? previous : 'BR';
     }
     function dailyChartRatio(active, byDay, date, selection) {
@@ -525,7 +525,7 @@
     }
     function renderDailyLineChart(active, byDay) {
       const svg = $('dailyLineChart'), selection = $('dailyCdSelect').value || 'BR';
-      const name = selection === 'BR' ? 'Visão Brasil' : `CD ${selection}`;
+      const name = selection === 'BR' ? 'Visão Brasil' : `${selection}`;
       $('dailyChartCaption').textContent = `${name} · atingimento diário concluído; verde no mínimo configurado ou acima, vermelho abaixo.`;
       svg.setAttribute('aria-label', `Atingimento diário: ${name}`);
       const points = state.days.map((date, index) => ({ date, index, ratio: dailyChartRatio(active, byDay, date, selection) }));
@@ -585,9 +585,9 @@
         if (item.average===null) { bars+=`<text class="chart-data-label" x="${cx}" y="${H-B-8}" text-anchor="middle" fill="var(--muted)">—</text>`; }
         else {
           const yy=y(item.average), height=T+plotH-yy, color=good?'var(--green)':'var(--red)';
-          bars+=`<rect class="chart-bar" x="${(cx-barW/2).toFixed(1)}" y="${yy.toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(height,1).toFixed(1)}" rx="7" fill="${color}" style="animation-delay:${index*35}ms"><title>CD ${item.cd} · média ${fmtPercent.format(item.average)} · ${item.count} dias</title></rect><text class="chart-data-label" x="${cx.toFixed(1)}" y="${Math.max(T+12,yy-9).toFixed(1)}" text-anchor="middle">${fmtPercent.format(item.average)}</text>`;
+          bars+=`<rect class="chart-bar" x="${(cx-barW/2).toFixed(1)}" y="${yy.toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(height,1).toFixed(1)}" rx="7" fill="${color}" style="animation-delay:${index*35}ms"><title>${item.cd} · média ${fmtPercent.format(item.average)} · ${item.count} dias</title></rect><text class="chart-data-label" x="${cx.toFixed(1)}" y="${Math.max(T+12,yy-9).toFixed(1)}" text-anchor="middle">${fmtPercent.format(item.average)}</text>`;
         }
-        bars+=`<text class="chart-axis-label" x="${cx.toFixed(1)}" y="${H-24}" text-anchor="middle">CD ${item.cd}</text>`;
+        bars+=`<text class="chart-axis-label" x="${cx.toFixed(1)}" y="${H-24}" text-anchor="middle">${item.cd}</text>`;
       });
       const targetY=y(target), targetLine=`<line class="chart-threshold" x1="${L}" y1="${targetY}" x2="${W-R}" y2="${targetY}"/><text class="chart-threshold-label" x="${W-R+8}" y="${targetY-7}">Meta ${fmtPercent.format(target)}</text>`;
       svg.innerHTML=`${grid}${bars}${targetLine}`;
@@ -621,7 +621,7 @@
         const expanded = state.expanded.has(String(cd));
         const cells = days.map(date => `<td>${isRuptura ? ruptureMarkup(getCell(byDay, date, cd)) : pctMarkup(getCell(byDay, date, cd))}</td>`).join('');
         const details = isRuptura ? expandedRuptureRows(cd, byDay) : expandedRows(cd, byDay);
-        const cdTitle = `<div class="cd-cell"><button class="expand" type="button" data-expand="${cd}" aria-expanded="${expanded}" aria-label="${expanded ? 'Recolher' : 'Expandir'} CD ${cd}">${expanded ? '−' : '+'}</button><span class="cd-number">CD ${cd}</span></div>`;
+        const cdTitle = `<div class="cd-cell"><button class="expand" type="button" data-expand="${cd}" aria-expanded="${expanded}" aria-label="${expanded ? 'Recolher' : 'Expandir'} CD ${cd}">${expanded ? '−' : '+'}</button><span class="cd-number">${cd}</span></div>`;
         const monthly = isRuptura ? null : monthlyProgress(cd, byDay);
         const label = isRuptura ? cdTitle : `<div class="cd-progress-cell">${cdTitle}${progressMarkup(cd, monthly)}</div>`;
         return `<tr class="main-row"><td>${label}</td>${cells}</tr>${details}`;
@@ -683,9 +683,9 @@
       } finally { setBusy(false); }
     }
     function openSettings() {
-      $('cdSettings').innerHTML = CONFIG.CDS.map(cd => `<div class="setting-item"><b>CD ${cd}</b><label><input type="checkbox" data-active-cd="${cd}" ${state.config.active[String(cd)] !== false ? 'checked' : ''}> Ativo</label></div>`).join('');
+      $('cdSettings').innerHTML = CONFIG.CDS.map(cd => `<div class="setting-item"><b>${cd}</b><label><input type="checkbox" data-active-cd="${cd}" ${state.config.active[String(cd)] !== false ? 'checked' : ''}> Ativo</label></div>`).join('');
       const goals = new Map(state.rulesRows.map(row => [normCode(row.CD), parseNullableNumeric(row['META CX'])]));
-      $('goalSettings').innerHTML = CONFIG.CDS.map(cd => { const goal = goals.get(String(cd)); return `<div class="setting-item"><b>CD ${cd}</b><span class="rule-goal">${goal === null || goal === undefined ? 'Sem regra' : `${fmtNumber.format(goal)} CX/dia`}</span></div>`; }).join('');
+      $('goalSettings').innerHTML = CONFIG.CDS.map(cd => { const goal = goals.get(String(cd)); return `<div class="setting-item"><b>${cd}</b><span class="rule-goal">${goal === null || goal === undefined ? 'Sem regra' : `${fmtNumber.format(goal)} CX/dia`}</span></div>`; }).join('');
       $('thresholdInput').value = String(state.config.threshold); $('settingsOverlay').classList.add('open'); document.body.style.overflow = 'hidden';
     }
     function closeSettings() { $('settingsOverlay').classList.remove('open'); document.body.style.overflow = ''; }
