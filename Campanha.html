@@ -132,13 +132,13 @@
       SUPABASE_API_KEY: 'sb_publishable_AOnZKBKy9NpHheU_VN-bcQ_y5Ldcgce',
       SUPABASE_ANON_JWT: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5a3VrZHptZHhibHVlaHlsa3NlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwMDkzNTksImV4cCI6MjEwNTU4NTM1OX0.6p5lD3nZ94FtMFwqamNk1QpKF1cho0jrBZe4kpmR1pk',
       EDIT_PASSWORD: '150807',
-      TABLES: Object.freeze({ CAMPANHA_CX: 'CAMPANHA_CX', CAMPANHA_RUPTURA: 'CAMPANHA_RUPTURA', CAMPANHA_REGRAS: 'CAMAPNHA_REGRAS', CAMPANHA_VISIBLE: 'CAMPANHA_VISIBLE' }),
+      TABLES: Object.freeze({ CAMPANHA_CX: 'CAMPANHA_CX', CAMPANHA_RUPTURA: 'CAMPANHA_RUPTURA', CAMPANHA_REGRAS: 'CAMAPNHA_REGRAS', CAMPANHA_VISIBLE: 'CAMPANHA_VISIBLE', VENDA_BALCAO: 'VENDA_BALCAO' }),
       CDS: Object.freeze([910, 911, 914, 915, 916, 917, 919, 920, 921, 922, 923, 956]),
       TURNOS: Object.freeze(['1 TURNO', '2 TURNO', '3 TURNO']),
       INITIAL_THRESHOLD: 95, PAGE_SIZE: 1000, MAX_ROWS: 300000,
       STORAGE_KEY: 'recvision.campanha-aniversario.config.v1'
     });
-    const state = { config: loadLocalConfig(), campaignRows: [], ruptureRows: [], rulesRows: [], days: [], month: '', view: 'caixa', expanded: new Set(), busy: false, editMode: false, editDraft: new Map(), openTurn: '', editRenderTimer: 0 };
+    const state = { config: loadLocalConfig(), campaignRows: [], ruptureRows: [], rulesRows: [], vendaRows: [], saleDraft: new Map(), days: [], month: '', view: 'caixa', expanded: new Set(), busy: false, editMode: false, editDraft: new Map(), openTurn: '', editRenderTimer: 0 };
     const $ = id => document.getElementById(id);
     const fmtNumber = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 });
     const fmtInteger = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 });
@@ -232,11 +232,12 @@
         const ruptureRows = await readMonthRows(CONFIG.TABLES.CAMPANHA_RUPTURA, 'DTA,CD,RUPTURA,META', 'DTA', month, bounds, cdFilter);
         return { ruptureRows };
       }
-      const [campaignRows, rulesRows] = await Promise.all([
-        readMonthRows(CONFIG.TABLES.CAMPANHA_CX, 'DATA,TURNO,"CAIXA PLT FECH","CAIXA DE SEP","CX VENDA BALCAO",CD', 'DATA', month, bounds, cdFilter),
-        readAllRows(CONFIG.TABLES.CAMPANHA_REGRAS, 'CD,"META CX"', { CD: cdFilter })
+      const [campaignRows, rulesRows, vendaRows] = await Promise.all([
+        readMonthRows(CONFIG.TABLES.CAMPANHA_CX, 'DATA,TURNO,"CAIXA PLT FECH","CAIXA DE SEP",CD', 'DATA', month, bounds, cdFilter),
+        readAllRows(CONFIG.TABLES.CAMPANHA_REGRAS, 'CD,"META CX"', { CD: cdFilter }),
+        readMonthRows(CONFIG.TABLES.VENDA_BALCAO, 'DTA,CD,"VENDA CX"', 'DTA', month, bounds, cdFilter)
       ]);
-      return { campaignRows, rulesRows };
+      return { campaignRows, rulesRows, vendaRows };
     }
 
     /* ================================================================
@@ -260,18 +261,28 @@
     }
     function keyOf(date, cd, shift) { return `${date}|${normCode(cd)}|${normShift(shift)}`; }
     function processMonth() {
-      const saved = new Map(), present = new Set(), metaByCD = new Map();
+      const saved = new Map(), present = new Set(), metaByCD = new Map(), saleByCD = new Map();
       const inMonth = new Set(state.days);
       for (const row of state.campaignRows) {
         const date = rowDate(row.DATA), cd = normCode(row.CD), shift = normShift(row.TURNO);
         if (!inMonth.has(date) || !CONFIG.CDS.some(item => String(item) === cd)) continue;
         const key = keyOf(date, cd, shift);
-        const entry = saved.get(key) || { fechado: 0, fracionado: 0, vendaBalcao: 0 };
+        const entry = saved.get(key) || { fechado: 0, fracionado: 0 };
         entry.fechado += parseNumeric(row['CAIXA PLT FECH'], 0);
         entry.fracionado += parseNumeric(row['CAIXA DE SEP'], 0);
-        entry.vendaBalcao += parseNumeric(row['CX VENDA BALCAO'], 0);
         saved.set(key, entry);
         present.add(`${date}|${cd}`);
+      }
+      for (const row of state.vendaRows) {
+        const date = rowDate(row.DTA), cd = normCode(row.CD);
+        if (!inMonth.has(date) || !CONFIG.CDS.some(item => String(item) === cd)) continue;
+        const key = `${date}|${cd}`;
+        saleByCD.set(key, (saleByCD.get(key) || 0) + parseNumeric(row['VENDA CX'], 0));
+        present.add(key);
+      }
+      for (const [key, value] of state.saleDraft) {
+        const [date, cd] = key.split('|');
+        if (inMonth.has(date)) { saleByCD.set(key, value); present.add(`${date}|${cd}`); }
       }
       for (const row of state.rulesRows) {
         const cd = normCode(row.CD), meta = parseNullableNumeric(row['META CX']);
@@ -280,7 +291,7 @@
       for (const [key, draft] of state.editDraft) {
         const [date, cd] = key.split('|');
         if (!inMonth.has(date)) continue;
-        saved.set(key, { ...(saved.get(key) || { fechado: 0, fracionado: 0, vendaBalcao: 0 }), ...draft });
+        saved.set(key, { ...(saved.get(key) || { fechado: 0, fracionado: 0 }), ...draft });
         present.add(`${date}|${cd}`);
       }
       const byDay = new Map();
@@ -293,18 +304,17 @@
               turno,
               fechado: campaign?.fechado || 0,
               fracionado: campaign?.fracionado || 0,
-              vendaBalcao: campaign?.vendaBalcao || 0,
               meta: null
             };
-            shift.total = shift.fechado + shift.fracionado + shift.vendaBalcao;
+            shift.total = shift.fechado + shift.fracionado;
             return shift;
           });
-          const total = shifts.reduce((n, s) => n + s.total, 0);
+          const vendaBalcao = saleByCD.get(`${date}|${cd}`) || 0;
+          const total = shifts.reduce((n, shift) => n + shift.total, 0) + vendaBalcao;
           const fechado = shifts.reduce((n, shift) => n + shift.fechado, 0);
           const fracionado = shifts.reduce((n, shift) => n + shift.fracionado, 0);
-          const vendaBalcao = shifts.reduce((n, shift) => n + shift.vendaBalcao, 0);
           const meta = isSunday(date) ? 0 : (metaByCD.get(String(cd)) ?? null);
-          byCD.set(String(cd), { date, cd, shifts, fechado, fracionado, vendaBalcao, total, meta, ratio: meta > 0 ? total / meta : null, hasData: present.has(`${date}|${cd}`) });
+          byCD.set(String(cd), { date, cd, shifts, fechado, fracionado, vendaBalcao, hasVendaBalcao: saleByCD.has(`${date}|${cd}`), total, meta, ratio: meta > 0 ? total / meta : null, hasData: present.has(`${date}|${cd}`) });
         }
         byDay.set(date, byCD);
       }
@@ -358,7 +368,7 @@
       return `<span class="metric-value${value === 0 ? ' dim' : ''}">${fmtNumber.format(value)}</span>`;
     }
     function metricRow(label, dateValues, className = '', valueFn = value => `<span class="metric-value${value === null ? ' dim' : ''}">${value === null ? '—' : fmtNumber.format(value)}</span>`) {
-      return `<tr><td><span class="metric-label ${className}">${label}</span></td>${dateValues.map(value => `<td>${valueFn(value)}</td>`).join('')}</tr>`;
+      return `<tr><td><span class="metric-label ${className}">${label}</span></td>${dateValues.map((value, index) => `<td>${valueFn(value, index)}</td>`).join('')}</tr>`;
     }
     function shiftDetails(cd, byDay) {
       return CONFIG.TURNOS.map((turno, turnIndex) => {
@@ -366,13 +376,12 @@
         const header = state.days.map((date, index) => `<th title="${displayDate(date)} · ${weekday(date)}"><span>${displayDate(date)}</span><small>${weekday(date)}</small></th>`).join('');
         const actual = (value, date, strong = false) => isFutureDate(date) ? '—' : (strong ? `<strong>${fmtNumber.format(value)}</strong>` : fmtNumber.format(value));
         const rows = [
-          ['CAIXA PLT FECH', (item, date) => isFutureDate(date) ? '—' : editableValue(item.fechado, { field: 'fechado', label: 'CAIXA PLT FECH', cd, date, turno })],
-          ['CAIXA DE SEP', (item, date) => isFutureDate(date) ? '—' : editableValue(item.fracionado, { field: 'fracionado', label: 'CAIXA DE SEP', cd, date, turno })],
-          ['CX VENDA BALCAO', (item, date) => isFutureDate(date) ? '—' : editableValue(item.vendaBalcao, { field: 'vendaBalcao', label: 'CX VENDA BALCAO', cd, date, turno })],
-          ['TOTAL CX', (item, date) => actual(item.total, date, true)]
+          ['CAIXA FECHADA PRODUZIDA', (item, date) => isFutureDate(date) ? '—' : editableValue(item.fechado, { field: 'fechado', label: 'CAIXA FECHADA PRODUZIDA', cd, date, turno })],
+          ['CAIXA FRACIONADA PRODUZIDA', (item, date) => isFutureDate(date) ? '—' : editableValue(item.fracionado, { field: 'fracionado', label: 'CAIXA FRACIONADA PRODUZIDA', cd, date, turno })],
+          ['CX TOTAL PRODUZIDA', (item, date) => actual(item.total, date, true)]
         ].map(([label, renderValue]) => `<tr><td class="turn-name">${label}</td>${state.days.map((date, index) => `<td>${renderValue(items[index], date)}</td>`).join('')}</tr>`).join('');
         const open = state.editMode || state.openTurn === `${cd}|${normShift(turno)}` ? 'open' : '';
-        return `<details class="turn-details" data-turn-index="${turnIndex}" ${open}><summary>${turno} · Realizado diário</summary><div class="turn-wrap"><table class="turn-table"><thead><tr><th>Métrica</th>${header}</tr></thead><tbody>${rows}</tbody></table><div style="font-size:8px;color:var(--faint);padding:7px 2px 0">TOTAL CX do turno é calculado pela soma dos três valores realizados. A META CX cadastrada é diária por CD, sem divisão por turno.</div></div></details>`;
+        return `<details class="turn-details" data-turn-index="${turnIndex}" ${open}><summary>${turno} · Realizado diário</summary><div class="turn-wrap"><table class="turn-table"><thead><tr><th>Métrica</th>${header}</tr></thead><tbody>${rows}</tbody></table><div style="font-size:8px;color:var(--faint);padding:7px 2px 0">CX TOTAL PRODUZIDA do turno é calculada pela soma das caixas fechadas e fracionadas. A META CX cadastrada é diária por CD, sem divisão por turno.</div></div></details>`;
       }).join('');
     }
     function expandedRows(cd, byDay) {
@@ -404,7 +413,15 @@
         }),
         metricRow('CAIXA FECHADA PRODUZIDA', values('fechado', true)),
         metricRow('CAIXA FRACIONADA PRODUZIDA', values('fracionado', true)),
-        metricRow('CX VENDA BALCÃO PRODUZIDA', values('vendaBalcao', true)),
+        metricRow('CX VENDA BALCÃO', values('vendaBalcao', true), '', (value, index) => {
+          const date = state.days[index], cell = getCell(byDay, date, cd), key = `${date}|${cd}`;
+          const pending = state.saleDraft.get(key), hasValue = pending !== undefined || cell?.hasVendaBalcao;
+          if (state.editMode && state.expanded.has(String(cd)) && !isFutureDate(date)) {
+            const shown = pending !== undefined ? pending : (cell?.hasVendaBalcao ? value : '');
+            return `<input class="edit-value sale-edit-value" type="number" min="0" step="any" value="${escapeHTML(String(shown))}" data-sale-edit="true" data-sale-cd="${cd}" data-sale-date="${date}" aria-label="Editar CX VENDA BALCÃO CD ${cd}, ${displayDate(date)}">`;
+          }
+          return hasValue ? `<span class="metric-value">${fmtNumber.format(value)}</span>` : '<span class="metric-value dim">—</span>';
+        }),
         metricRow('META DIÁRIA CX', values('meta')),
         metricRow('CX TOTAL PRODUZIDA', values('total', true), 'primary', value => value === null ? '<span class="metric-value dim">—</span>' : `<strong class="metric-value">${fmtNumber.format(value)}</strong>`),
         metricRow('META CX ACUMULADA ATÉ ONTEM', cumulativeMetaValues, 'primary', value => value === null ? '<span class="metric-value dim">—</span>' : `<strong class="metric-value">${fmtNumber.format(value)}</strong>`),
@@ -415,7 +432,15 @@
     function expandedRuptureRows(cd, byDay) {
       const cells = state.days.map(date => getCell(byDay, date, cd));
       const rows = [
-        metricRow('RUPTURA', cells, '', cell => cell.hasRupture ? `<span class="metric-value">${formatRupture(cell.rupture, cell)}</span>` : '<span class="metric-value dim">—</span>'),
+        metricRow('RUPTURA', cells, '', (cell, index) => {
+          const date = state.days[index];
+          if (state.editMode && state.expanded.has(String(cd)) && !isFutureDate(date)) {
+            const key = `${date}|${cd}|RUPTURA`, pending = state.editDraft.get(key);
+            const value = pending === undefined ? (cell.hasRupture ? cell.rupture : '') : pending;
+            return `<input class="edit-value rupture-edit-value" type="number" min="0" step="any" value="${escapeHTML(String(value))}" data-rup-edit="true" data-rup-cd="${cd}" data-rup-date="${date}" aria-label="Editar RUPTURA CD ${cd}, ${displayDate(date)}">`;
+          }
+          return cell.hasRupture ? `<span class="metric-value">${formatRupture(cell.rupture, cell)}</span>` : '<span class="metric-value dim">—</span>';
+        }),
         metricRow('META', cells, '', cell => cell.meta !== null ? `<span class="metric-value">${formatRupture(cell.meta, cell)}</span>` : '<span class="metric-value dim">—</span>'),
         metricRow('COMPARATIVO', cells, 'primary', cell => {
           if (!cell.hasRupture || cell.meta === null) return '<span class="metric-value dim">Sem dados</span>';
@@ -575,14 +600,14 @@
       const isRuptura = state.view === 'ruptura';
       const active = CONFIG.CDS.filter(cd => state.config.active[String(cd)] !== false);
       $('chartsWrap').hidden = isRuptura;
-      $('editBtn').hidden = isRuptura || state.editMode;
-      $('saveEditsBtn').hidden = isRuptura || !state.editMode;
-      $('cancelEditBtn').hidden = isRuptura || !state.editMode;
+      $('editBtn').hidden = state.editMode;
+      $('saveEditsBtn').hidden = !state.editMode;
+      $('cancelEditBtn').hidden = !state.editMode;
       $('viewCaixa').classList.toggle('active', !isRuptura); $('viewCaixa').setAttribute('aria-selected', String(!isRuptura));
       $('viewRuptura').classList.toggle('active', isRuptura); $('viewRuptura').setAttribute('aria-selected', String(isRuptura));
       $('subtitle').textContent = isRuptura ? 'Indicador diário de ruptura por Centro de Distribuição · um mês por vez' : 'Atingimento diário de caixas por Centro de Distribuição · um mês por vez';
       $('monthTitle').textContent = `${isRuptura ? 'Visão de ruptura' : 'Visão de caixas'} · ${monthLabel(state.month)}`;
-      $('tableHint').textContent = isRuptura ? 'Valor exibido = RUPTURA · verde quando RUPTURA ≤ META · vermelho quando RUPTURA > META.' : state.editMode ? 'Edição diária por CD e turno: altere apenas CAIXA PLT FECH, CAIXA DE SEP e CX VENDA BALCAO. TOTAL CX, meta e atingimento são calculados pelo painel.' : 'Cada CD tem duas barras: atingimento da meta total do mês e atingimento da meta acumulada até ontem.';
+      $('tableHint').textContent = isRuptura ? (state.editMode ? 'Edite RUPTURA nos detalhes do CD; a META permanece inalterada.' : 'Valor exibido = RUPTURA · verde quando RUPTURA ≤ META · vermelho quando RUPTURA > META.') : state.editMode ? 'Edite as caixas fechadas e fracionadas nos turnos; CX VENDA BALCÃO é editada somente nos detalhes gerais do CD. Total, meta e atingimento são calculados pelo painel.' : 'Cada CD tem duas barras: atingimento da meta total do mês e atingimento da meta acumulada até ontem.';
       $('footnote').textContent = isRuptura ? 'Regra: RUPTURA menor ou igual à META fica verde; acima da META fica vermelho. Dias sem valor de ruptura ou sem meta aparecem como “—”.' : `META CX cadastrada é diária por CD. A meta do mês = meta diária × dias do mês, excluindo domingos. A barra “Total do mês” considera o realizado até hoje; “Acumulado até ontem” exclui o dia atual e mostra a meta prevista e o CX produzido até ontem. Turnos não têm metas individuais.`;
       $('cdBadge').textContent = `${active.length} CDs ativos · ${days.length} dias`;
       $('tableHead').innerHTML = `<tr><th>Centro de distribuição</th>${days.map(date => `<th class="day-head" title="${date}"><span>${displayDate(date)}</span><small>${weekday(date)}</small></th>`).join('')}</tr>`;
@@ -630,7 +655,7 @@
       state.busy = busy; const locked = busy || state.editMode;
       ['prevMonth','nextMonth','monthRef','refreshBtn','viewCaixa','viewRuptura','settingsBtn'].forEach(id => $(id).disabled = locked);
       $('editBtn').disabled = busy; $('saveEditsBtn').disabled = busy; $('cancelEditBtn').disabled = busy; $('editorLoginSubmit').disabled = busy;
-      document.querySelectorAll('input.edit-value').forEach(input => { input.disabled = busy; });
+      document.querySelectorAll('input.edit-value, input.rupture-edit-value, input.sale-edit-value').forEach(input => { input.disabled = busy; });
       $('refreshBtn').innerHTML = busy && action === 'load' ? '<span class="loader"></span><span>Carregando…</span>' : '<span class="btn-icon">↻</span><span>Atualizar</span>';
     }
     async function refresh() {
@@ -645,7 +670,7 @@
         if (result.status === 'rejected') throw result.reason;
         const monthData = result.value;
         if (view === 'ruptura') state.ruptureRows = monthData.ruptureRows;
-        else { state.campaignRows = monthData.campaignRows; state.rulesRows = monthData.rulesRows; }
+        else { state.campaignRows = monthData.campaignRows; state.rulesRows = monthData.rulesRows; state.vendaRows = monthData.vendaRows; }
         render();
         setConnection('ok', 'Supabase conectado');
         const count = view === 'ruptura' ? state.ruptureRows.length : state.campaignRows.length;
@@ -653,7 +678,7 @@
         if (view === 'caixa' && state.rulesRows.length === 0) setStatus(`Consulta concluída: ${description}. Cadastre a META CX diária de cada CD em CAMAPNHA_REGRAS para calcular a meta mensal.`, 'error');
         else setStatus(count === 0 ? 'Consulta concluída: sem dados para este mês. Confira o formato da data e as permissões RLS.' : `Consulta concluída: ${description}.`, count === 0 ? '' : 'success');
       } catch (error) {
-        console.error(error); if (view === 'ruptura') state.ruptureRows = []; else { state.campaignRows = []; state.rulesRows = []; } render(); setConnection('err', 'Falha na conexão');
+        console.error(error); if (view === 'ruptura') state.ruptureRows = []; else { state.campaignRows = []; state.rulesRows = []; state.vendaRows = []; } render(); setConnection('err', 'Falha na conexão');
         setStatus(`Não foi possível carregar o mês. ${error.message || 'Verifique conexão, chave pública, permissões RLS e nomes das colunas.'}`, 'error'); toast('Falha ao consultar o Supabase. Veja os detalhes na mensagem.', 'err');
       } finally { setBusy(false); }
     }
@@ -675,7 +700,7 @@
       catch (error) { console.error('[CAMPANHA_VISIBLE] Falha ao salvar:', error); toast('Configurações mantidas neste navegador, mas a visibilidade não foi sincronizada. Verifique permissões RLS e tente novamente.', 'err'); setStatus(`Falha ao salvar visibilidade: ${error.message || error}`, 'error'); }
     }
     function openEditorLogin() {
-      if (state.busy || state.editMode || state.view !== 'caixa') return;
+      if (state.busy || state.editMode) return;
       $('editorLoginError').hidden = true; $('editorPass').value = '';
       $('editorLoginOverlay').classList.add('open'); document.body.style.overflow = 'hidden'; $('editorPass').focus();
     }
@@ -691,32 +716,125 @@
       closeEditorLogin(); startEditUnlocked();
     }
     function startEditUnlocked() {
-      if (state.busy || state.editMode || state.view !== 'caixa') return;
-      state.editMode = true; state.editDraft.clear(); state.openTurn = '';
+      if (state.busy || state.editMode) return;
+      state.editMode = true; state.editDraft.clear(); state.saleDraft.clear(); state.openTurn = '';
       setBusy(false);
       render(); toast('Modo de edição ativado. Altere os valores realizados e clique em Salvar alterações.');
     }
     function stageEdit(field, cd, date, turno, value) {
       if (!state.editMode || isFutureDate(date)) return;
       const key = keyOf(date, cd, turno), draft = state.editDraft.get(key) || {};
-      const fieldName = { fechado: 'fechado', fracionado: 'fracionado', vendaBalcao: 'vendaBalcao' }[field];
+      const fieldName = { fechado: 'fechado', fracionado: 'fracionado' }[field];
       if (!fieldName) return;
       draft[fieldName] = Math.max(0, parseNumeric(value, 0)); state.editDraft.set(key, draft);
       state.expanded.add(String(cd)); state.openTurn = `${cd}|${normShift(turno)}`;
       window.clearTimeout(state.editRenderTimer); state.editRenderTimer = window.setTimeout(() => { state.editRenderTimer = 0; if (state.editMode) render(); }, 450);
     }
+    function stageSaleEdit(cd, date, value) {
+      if (!state.editMode || state.view !== 'caixa' || isFutureDate(date)) return;
+      state.saleDraft.set(`${date}|${cd}`, Math.max(0, parseNumeric(value, 0)));
+    }
+    function stageRuptureEdit(cd, date, value) {
+      if (!state.editMode || state.view !== 'ruptura' || isFutureDate(date)) return;
+      state.editDraft.set(`${date}|${cd}|RUPTURA`, Math.max(0, parseNumeric(value, 0)));
+    }
+    async function saveRuptureEdits() {
+      if (!state.editMode || state.busy) return;
+      if (!state.editDraft.size) { state.editMode = false; render(); toast('Não havia alterações para salvar.'); return; }
+      setBusy(true, 'save');
+      let ok = 0, fail = 0;
+      try {
+        for (const [key, value] of state.editDraft) {
+          const [date, cd] = key.split('|');
+          const matches = state.ruptureRows.filter(row => rowDate(row.DTA) === date && normCode(row.CD) === cd);
+          try {
+            if (!matches.length) {
+              const payload = { DTA: displayDate(date), CD: Number(cd), RUPTURA: value };
+              const response = await fetch(apiUrl(CONFIG.TABLES.CAMPANHA_RUPTURA), {
+                method: 'POST',
+                headers: { apikey: CONFIG.SUPABASE_API_KEY, Authorization: `Bearer ${CONFIG.SUPABASE_ANON_JWT}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+                body: JSON.stringify(payload)
+              });
+              if (!response.ok) { const detail = await response.text(); throw new Error(`HTTP ${response.status}: ${detail || response.statusText}`); }
+              state.ruptureRows.push(payload);
+            } else {
+              const perRow = value / matches.length;
+              const percentMode = matches.some(row => String(row.RUPTURA || '').includes('%'));
+              const storedValue = percentMode ? `${perRow}%` : perRow;
+              const dateGroups = new Map();
+              for (const row of matches) {
+                const groupKey = `${row.DTA}|${row.CD}`;
+                dateGroups.set(groupKey, [...(dateGroups.get(groupKey) || []), row]);
+              }
+              for (const groupRows of dateGroups.values()) {
+                const source = groupRows[0];
+                const response = await fetch(apiUrl(CONFIG.TABLES.CAMPANHA_RUPTURA, { DTA: `eq.${source.DTA}`, CD: `eq.${source.CD}` }), {
+                  method: 'PATCH',
+                  headers: { apikey: CONFIG.SUPABASE_API_KEY, Authorization: `Bearer ${CONFIG.SUPABASE_ANON_JWT}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+                  body: JSON.stringify({ RUPTURA: storedValue })
+                });
+                if (!response.ok) { const detail = await response.text(); throw new Error(`HTTP ${response.status}: ${detail || response.statusText}`); }
+                groupRows.forEach(row => { row.RUPTURA = storedValue; });
+              }
+            }
+            state.editDraft.delete(key);
+            ok++;
+          } catch (error) { fail++; console.error(`[CAMPANHA_RUPTURA] Falha ao salvar CD ${cd} em ${date}:`, error); setStatus(`Falha ao salvar RUPTURA CD ${cd}: ${error.message || error}`, 'error'); }
+        }
+        if (!fail) {
+          state.editMode = false; state.editDraft.clear(); render(); toast(`${ok} valor(es) de RUPTURA salvos no Supabase.`);
+        } else {
+          render(); toast(`${ok} salvo(s), ${fail} não salvo(s). Verifique os detalhes na mensagem de status.`, 'err');
+        }
+      } finally { setBusy(false); }
+      if (!fail) await refresh();
+    }
     function cancelEdit() {
       window.clearTimeout(state.editRenderTimer); state.editRenderTimer = 0;
-      state.editMode = false; state.editDraft.clear(); state.openTurn = '';
+      state.editMode = false; state.editDraft.clear(); state.saleDraft.clear(); state.openTurn = '';
       setBusy(false); render(); toast('Edição cancelada; nenhuma alteração foi enviada.');
+    }
+    async function saveVendaBalcaoEdits() {
+      let ok = 0, fail = 0;
+      for (const [key, value] of [...state.saleDraft]) {
+        const [date, cd] = key.split('|');
+        const matches = state.vendaRows.filter(row => rowDate(row.DTA) === date && normCode(row.CD) === cd);
+        try {
+          let response;
+          if (!matches.length) {
+            const payload = { DTA: displayDate(date), CD: Number(cd), 'VENDA CX': value };
+            response = await fetch(apiUrl(CONFIG.TABLES.VENDA_BALCAO), {
+              method: 'POST',
+              headers: { apikey: CONFIG.SUPABASE_API_KEY, Authorization: `Bearer ${CONFIG.SUPABASE_ANON_JWT}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+              body: JSON.stringify(payload)
+            });
+            if (response.ok) state.vendaRows.push(payload);
+          } else {
+            const source = matches[0], perRow = value / matches.length;
+            response = await fetch(apiUrl(CONFIG.TABLES.VENDA_BALCAO, { DTA: `eq.${source.DTA}`, CD: `eq.${source.CD}` }), {
+              method: 'PATCH',
+              headers: { apikey: CONFIG.SUPABASE_API_KEY, Authorization: `Bearer ${CONFIG.SUPABASE_ANON_JWT}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+              body: JSON.stringify({ 'VENDA CX': perRow })
+            });
+            if (response.ok) matches.forEach(row => { row['VENDA CX'] = perRow; });
+          }
+          if (!response.ok) { const detail = await response.text(); throw new Error(`HTTP ${response.status}: ${detail || response.statusText}`); }
+          state.saleDraft.delete(key); ok++;
+        } catch (error) {
+          fail++; console.error(`[VENDA_BALCAO] Falha ao salvar CD ${cd} em ${date}:`, error);
+          setStatus(`Falha ao salvar CX VENDA BALCÃO CD ${cd} em ${displayDate(date)}: ${error.message || error}`, 'error');
+        }
+      }
+      return { ok, fail };
     }
     async function saveEdits() {
       if (!state.editMode || state.busy) return;
       window.clearTimeout(state.editRenderTimer); state.editRenderTimer = 0;
+      if (state.view === 'ruptura') return saveRuptureEdits();
       let ok = 0, fail = 0, refreshAfterSave = false;
       setBusy(true, 'save');
       try {
-        if (!state.editDraft.size) {
+        if (!state.editDraft.size && !state.saleDraft.size) {
           state.editMode = false; state.openTurn = ''; render(); toast('Não havia alterações para salvar.'); return;
         }
         const byDay = processMonth();
@@ -726,7 +844,6 @@
           const fallback = {
             fechado: shift?.fechado ?? 0,
             fracionado: shift?.fracionado ?? 0,
-            vendaBalcao: shift?.vendaBalcao ?? 0
           };
           const payload = {
             DATA: displayDate(date),
@@ -734,7 +851,6 @@
             TURNO: turno,
             'CAIXA PLT FECH': parseNumeric(draft?.fechado, fallback.fechado),
             'CAIXA DE SEP': parseNumeric(draft?.fracionado, fallback.fracionado),
-            'CX VENDA BALCAO': parseNumeric(draft?.vendaBalcao, fallback.vendaBalcao)
           };
           try {
             const response = await fetch(apiUrl(CONFIG.TABLES.CAMPANHA_CX, { on_conflict: 'DATA,CD,TURNO' }), {
@@ -763,12 +879,15 @@
             setStatus(`Falha de rede no CD ${payload.CD}, ${payload.TURNO}: ${error.message || error}`, 'error');
           }
         }
+        const saleResult = await saveVendaBalcaoEdits();
+        ok += saleResult.ok; fail += saleResult.fail;
         if (fail === 0) {
           state.editMode = false;
           state.editDraft.clear();
+          state.saleDraft.clear();
           state.openTurn = '';
           render();
-          toast(`${ok} turno(s) gravados no Supabase.`);
+          toast(`${ok} alteração(ões) gravada(s) no Supabase.`);
           refreshAfterSave = true;
         } else {
           toast(`${ok} salvos, ${fail} falharam. Veja o console.`, 'err');
@@ -825,6 +944,10 @@
       const cd = String(button.dataset.expand); state.expanded.has(cd) ? state.expanded.delete(cd) : state.expanded.add(cd); render();
     });
     $('tableBody').addEventListener('change', event => {
+      const saleInput = event.target.closest('[data-sale-edit]');
+      if (saleInput) { stageSaleEdit(saleInput.dataset.saleCd, saleInput.dataset.saleDate, saleInput.value); return; }
+      const ruptureInput = event.target.closest('[data-rup-edit]');
+      if (ruptureInput) { stageRuptureEdit(ruptureInput.dataset.rupCd, ruptureInput.dataset.rupDate, ruptureInput.value); return; }
       const input = event.target.closest('[data-edit-field]'); if (!input) return;
       stageEdit(input.dataset.editField, input.dataset.editCd, input.dataset.editDate, input.dataset.editTurn, input.value);
     });
