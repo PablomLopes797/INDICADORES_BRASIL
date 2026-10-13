@@ -439,6 +439,25 @@ table.missing input.filled{border-color:rgba(16,185,129,.6)}
 table.grid th.corner,table.grid th.total-col,table.grid th.avg-col,table.grid td.rowlabel,table.grid td.total-cell,table.grid td.avg-cell{background:color-mix(in srgb,var(--bg-2) 94%,var(--blue)) !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;}
 table.grid tbody tr:hover td.rowlabel,table.grid tbody tr:hover td.total-cell,table.grid tbody tr:hover td.avg-cell,table.grid tr.derived:hover td.rowlabel,table.grid tr.pct:hover td.rowlabel{background:color-mix(in srgb,var(--bg-2) 86%,var(--blue)) !important;}
 table.grid td.rowlabel,table.grid td.total-cell,table.grid td.avg-cell{box-shadow:none !important;}
+
+/* Resumo de agendamentos por dia e hora/ciclo */
+.agenda-hour-card{margin-top:18px;overflow:hidden}
+.agenda-hour-note{font-size:10.5px;color:var(--muted);font-weight:600}
+.agenda-hour-scroll{max-height:68vh;overflow:auto;overscroll-behavior:contain}
+.agenda-hour-table{border-collapse:separate;border-spacing:0;min-width:max-content;width:100%;font-family:var(--mono);font-size:11px}
+.agenda-hour-table th,.agenda-hour-table td{padding:9px 11px;text-align:center;border-right:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);white-space:nowrap}
+.agenda-hour-table thead th{position:sticky;top:0;z-index:4;background:var(--card-head-1);color:var(--muted);font:800 10px var(--sans);letter-spacing:.06em}
+.agenda-hour-table th.hour-sticky{position:sticky;left:0;z-index:5;min-width:96px;text-align:left;background:var(--card-head-1);color:var(--txt-2)}
+.agenda-hour-table thead th.hour-sticky{z-index:7}
+.agenda-hour-table td.hour-label{position:sticky;left:0;z-index:2;text-align:left;background:var(--bg-2);font-weight:800;color:var(--derived-txt)}
+.agenda-hour-table td.hour-total,.agenda-hour-table th.hour-total{position:sticky;right:0;z-index:3;background:var(--total-cell);font-weight:900;color:var(--txt)}
+.agenda-hour-table thead th.hour-total{z-index:6}
+.agenda-hour-table td.has-count{color:var(--txt);font-weight:800}
+.agenda-hour-table td.no-count{color:var(--muted-2)}
+.agenda-hour-table tfoot th,.agenda-hour-table tfoot td{position:sticky;bottom:0;z-index:4;background:var(--derived-total);font-weight:900;color:var(--derived-txt)}
+.agenda-hour-table tfoot th{left:0;z-index:6;text-align:left}
+.agenda-hour-table tfoot td:last-child{right:0;z-index:7}
+.agenda-hour-empty{padding:22px;color:var(--muted);text-align:center;font-size:12px}
 </style>
 </head>
 <body class="locked">
@@ -604,6 +623,14 @@ table.grid td.rowlabel,table.grid td.total-cell,table.grid td.avg-cell{box-shado
     </div>
     <div class="table-scroll" id="tableScroll"><div id="tableHost"></div></div>
     <div class="legend" id="legend"></div>
+  </section>
+
+  <section class="card agenda-hour-card" aria-labelledby="agendaHourTitle">
+    <div class="card-head">
+      <div class="card-title" id="agendaHourTitle">Agendas por dia e hora / ciclo</div>
+      <span class="agenda-hour-note" id="agendaHourNote">Contagem da base AGENDA · faixa horária de 60 minutos</span>
+    </div>
+    <div class="agenda-hour-scroll" id="agendaHourHost" aria-live="polite"></div>
   </section>
 
   <section class="card drill-card" id="drillCard">
@@ -1797,10 +1824,45 @@ function renderCharts(agg){
     : 'Composição do Período';
 }
 
+function renderAgendaHourSummary(){
+  const host=document.getElementById('agendaHourHost');
+  if(!host)return;
+  const [year,month]=state.mes.split('-').map(Number);
+  const daysInMonth=new Date(year,month,0).getDate();
+  // Usa a data e hora reais gravadas em AGENDA, sem deslocamento entre dias.
+  const hours=[22,23,...Array.from({length:22},(_,i)=>i)];
+  const counts=Array.from({length:24},()=>Array(daysInMonth).fill(0));
+  const cargasContadas=new Set();
+  for(const row of state.rawAgenda||[]){
+    const dt=parseDateTimeBR(row?.[COL_AG.agenda]);
+    if(!dt||dt.getFullYear()!==year||dt.getMonth()+1!==month)continue;
+    // Mantém o critério do painel: uma agenda válida precisa ter carga e data/hora.
+    const carga=String(row?.[COL_AG.carga]??'').trim();
+    if(!carga)continue;
+    // Evita somar duas vezes a mesma carga caso a consulta retorne duplicatas.
+    if(cargasContadas.has(carga))continue;
+    cargasContadas.add(carga);
+    counts[dt.getHours()][dt.getDate()-1]++;
+  }
+  const dayTotals=Array(daysInMonth).fill(0);
+  let grandTotal=0;
+  for(let h=0;h<24;h++)for(let d=0;d<daysInMonth;d++){dayTotals[d]+=counts[h][d];grandTotal+=counts[h][d];}
+  const dayHeaders=Array.from({length:daysInMonth},(_,i)=>`<th scope="col">${String(i+1).padStart(2,'0')}/${String(month).padStart(2,'0')}</th>`).join('');
+  const rows=hours.map(hour=>{
+    const vals=counts[hour];
+    const total=vals.reduce((a,b)=>a+b,0);
+    return `<tr><td class="hour-label">${String(hour).padStart(2,'0')}:00</td>${vals.map(n=>`<td class="${n?'has-count':'no-count'}">${nfInt.format(n)}</td>`).join('')}<td class="hour-total">${nfInt.format(total)}</td></tr>`;
+  }).join('');
+  host.innerHTML=`<table class="agenda-hour-table"><thead><tr><th class="hour-sticky" scope="col">Hora / ciclo</th>${dayHeaders}<th class="hour-total" scope="col">Total hora</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><th scope="row">Total do dia</th>${dayTotals.map(n=>`<td>${nfInt.format(n)}</td>`).join('')}<td>${nfInt.format(grandTotal)}</td></tr></tfoot></table>`;
+  const note=document.getElementById('agendaHourNote');
+  if(note)note.textContent=`${MES_EXT[month-1]} de ${year} · ${nfInt.format(grandTotal)} agendas · data real da AGENDA · faixas HH:00–HH:59`;
+}
+
 function render(){
   const agg = aggregate();
   renderKPIs(agg);
   renderTable(agg);
+  renderAgendaHourSummary();
   renderCharts(agg);
   updateFocusBar();
   if (state.drill) renderDrill(agg);
