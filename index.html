@@ -745,16 +745,13 @@ table.grid td.rowlabel,table.grid td.total-cell,table.grid td.avg-cell{box-shado
 
 <div class="overlay" id="modalAtualizarCargas">
   <div class="modal wide">
-    <div class="modal-head"><div><h2>Atualizar CARGAS_RECEBIDAS</h2><p>Cole: <b>CARGA</b> e <b>TERMO</b>.</p></div><button class="x-btn" id="closeAtualizarCargas">×</button></div>
-    <div class="modal-body"><textarea id="cargasPasteArea" style="width:100%;min-height:260px;resize:vertical;background:var(--input-bg);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.6;outline:none" placeholder="CARGA&#9;TERMO"></textarea><div id="cargasPastePreview" style="display:none;margin-top:14px;padding:12px;border-radius:10px;background:var(--card-2);border:1px solid var(--line);font-size:12px;color:var(--txt-2)"></div></div>
-    <div class="modal-foot"><button class="btn" id="cancelAtualizarCargas">Cancelar</button><button class="btn btn-primary" id="processarAtualizarCargas">Atualizar Supabase</button></div>
-  </div>
-</div>
-<div class="overlay" id="modalAtualizarAgenda">
-  <div class="modal wide">
-    <div class="modal-head"><div><h2>Atualizar AGENDA</h2><p>Cole: <b>AGENDA · SENHA · CARGA · STATUS · FORNECEDOR · CHEGADA · DTA_BASE</b>.</p></div><button class="x-btn" id="closeAtualizarAgenda">×</button></div>
-    <div class="modal-body"><textarea id="agendaPasteArea" style="width:100%;min-height:280px;resize:vertical;background:var(--input-bg);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.6;outline:none" placeholder="AGENDA&#9;SENHA&#9;CARGA&#9;STATUS&#9;FORNECEDOR&#9;CHEGADA&#9;DTA_BASE"></textarea><div id="agendaPastePreview" style="display:none;margin-top:14px;padding:12px;border-radius:10px;background:var(--card-2);border:1px solid var(--line);font-size:12px;color:var(--txt-2)"></div></div>
-    <div class="modal-foot"><button class="btn" id="cancelAtualizarAgenda">Cancelar</button><button class="btn btn-primary" id="processarAtualizarAgenda">Atualizar Supabase</button></div>
+    <div class="modal-head"><div><h2>Atualizar dados</h2><p>Preencha um ou mais conjuntos; campos vazios serão ignorados.</p></div><button class="x-btn" id="closeAtualizarCargas" aria-label="Fechar">×</button></div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:16px;max-height:70vh;overflow:auto">
+      <div><label for="cargasPasteArea" style="display:block;margin:0 0 7px;font-size:11px;font-weight:800;letter-spacing:.8px">ATUALIZAR CARGAS · CARGA / TERMO</label><textarea id="cargasPasteArea" style="width:100%;min-height:110px;resize:vertical;background:var(--input-bg);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.6;outline:none" placeholder="CARGA&#9;TERMO"></textarea><div id="cargasPastePreview" style="display:none;margin-top:8px;padding:10px;border-radius:10px;background:var(--card-2);border:1px solid var(--line);font-size:12px;color:var(--txt-2)"></div></div>
+      <div><label for="agendaPasteArea" style="display:block;margin:0 0 7px;font-size:11px;font-weight:800;letter-spacing:.8px">ATUALIZAR AGENDA · AGENDA / SENHA / CARGA / STATUS / FORNECEDOR / CHEGADA / DTA_BASE</label><textarea id="agendaPasteArea" style="width:100%;min-height:130px;resize:vertical;background:var(--input-bg);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.6;outline:none" placeholder="AGENDA&#9;SENHA&#9;CARGA&#9;STATUS&#9;FORNECEDOR&#9;CHEGADA&#9;DTA_BASE"></textarea><div id="agendaPastePreview" style="display:none;margin-top:8px;padding:10px;border-radius:10px;background:var(--card-2);border:1px solid var(--line);font-size:12px;color:var(--txt-2)"></div></div>
+      <div><label for="sobrepostosPasteArea" style="display:block;margin:0 0 7px;font-size:11px;font-weight:800;letter-spacing:.8px">SOBREPOSTOS · CARGA / QTD_PLTS / STATUS / TERMO</label><textarea id="sobrepostosPasteArea" style="width:100%;min-height:110px;resize:vertical;background:var(--input-bg);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.6;outline:none" placeholder="CARGA&#9;QTD_PLTS&#9;STATUS&#9;TERMO"></textarea><div id="sobrepostosPastePreview" style="display:none;margin-top:8px;padding:10px;border-radius:10px;background:var(--card-2);border:1px solid var(--line);font-size:12px;color:var(--txt-2)"></div></div>
+    </div>
+    <div class="modal-foot"><button class="btn" id="cancelAtualizarCargas">Cancelar</button><button class="btn btn-primary" id="processarAtualizarCargas">SALVAR</button></div>
   </div>
 </div>
 <div class="overlay" id="modalAtualizacao">
@@ -998,18 +995,35 @@ async function atualizarTudo(){
 }
 function normalizarTextoImportado(v){return String(v??'').trim().replace(/^["']|["']$/g,'').trim();}
 function dividirLinhaImportada(linha){if(linha.includes('\t'))return linha.split('\t');if(linha.includes(';'))return linha.split(';');if(linha.includes('|'))return linha.split('|');return linha.split(/\s{2,}/);}
-function abrirModalAtualizarCargas(){if(!podeAtualizarCargas()){toast('Acesso negado','Somente o usuário autorizado pode atualizar as cargas.','warn');return;}const area=document.getElementById('cargasPasteArea'),preview=document.getElementById('cargasPastePreview');area.value='';preview.style.display='none';preview.innerHTML='';document.getElementById('modalAtualizarCargas').classList.add('show');setTimeout(()=>area.focus(),120);}
+function abrirModalAtualizarCargas(foco='cargasPasteArea'){if(!podeAtualizarCargas()){toast('Acesso negado','Somente o usuário autorizado pode atualizar os dados.','warn');return;}['cargasPasteArea','agendaPasteArea','sobrepostosPasteArea'].forEach(id=>document.getElementById(id).value='');['cargasPastePreview','agendaPastePreview','sobrepostosPastePreview'].forEach(id=>{const e=document.getElementById(id);e.style.display='none';e.innerHTML='';});document.getElementById('modalAtualizarCargas').classList.add('show');setTimeout(()=>document.getElementById(foco)?.focus(),120);}
 function fecharModalAtualizarCargas(){document.getElementById('modalAtualizarCargas')?.classList.remove('show');}
 function linhaPareceCabecalho(c,t){const cc=normUpper(c),tt=normUpper(t);return cc==='CARGA'||cc==='CARGAS'||tt==='TERMO'||cc.includes('CARGA')||tt.includes('TERMO');}
 function interpretarCargasColadas(texto){const linhas=String(texto||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean),registros=[],erros=[];linhas.forEach((linha,i)=>{const partes=dividirLinhaImportada(linha).map(normalizarTextoImportado);const carga=partes[0]||'',termo=partes.slice(1).join(' ').trim();if(i===0&&linhaPareceCabecalho(carga,termo))return;if(!carga||!termo){erros.push({linha:i+1,motivo:'A linha precisa conter CARGA e TERMO.'});return;}registros.push({carga,termo,linha:i+1});});return {registros,erros};}
 function exibirPreviewCargasImportadas(){const r=interpretarCargasColadas(document.getElementById('cargasPasteArea').value),p=document.getElementById('cargasPastePreview');p.style.display='block';p.innerHTML=`<div style="display:flex;gap:16px;flex-wrap:wrap"><span>Registros válidos: <b style="color:var(--green)">${r.registros.length}</b></span><span>Linhas com erro: <b style="color:${r.erros.length?'var(--red)':'var(--green)'}">${r.erros.length}</b></span></div>${r.erros.length?`<div style="margin-top:10px;color:#fca5a5;font-size:11px">${r.erros.slice(0,10).map(e=>`<div>Linha ${e.linha}: ${escapeHTML(e.motivo)}</div>`).join('')}</div>`:''}`;}
-async function processarAtualizacaoCargas(){if(!podeAtualizarCargas()){toast('Acesso negado','Somente o usuário 5520967 pode executar esta operação.','warn');return;}const resultado=interpretarCargasColadas(document.getElementById('cargasPasteArea').value);if(!resultado.registros.length){toast('Nenhum registro encontrado','Cole as colunas CARGA e TERMO.','warn');return;}if(resultado.erros.length){toast('Dados incompletos',`${resultado.erros.length} linha(s) com erro.`,'err');return;}if(!confirm(`Processar ${resultado.registros.length} carga(s)?\n\nCargas novas serão inseridas.\nCargas existentes terão o TERMO atualizado somente se for diferente.`))return;const botao=document.getElementById('processarAtualizarCargas');botao.disabled=true;showLoader(true,'Atualizando cargas...');const resumo={inseridas:0,atualizadas:0,ignoradas:0,erros:[]};try{const porCarga=new Map();resultado.registros.forEach(r=>porCarga.set(r.carga,r.termo));for(const [carga,termo] of porCarga.entries()){try{const {data,error}=await sb.from(TABLE_CARGAS).select('CARGA,TERMO').eq('CARGA',carga).limit(1);if(error)throw error;const existente=data?.[0]||null;if(!existente){const ins=await sb.from(TABLE_CARGAS).insert({CARGA:carga,TERMO:termo});if(ins.error)throw ins.error;resumo.inseridas++;continue;}const termoAtual=normalizarTextoImportado(existente.TERMO);if(termoAtual===termo){resumo.ignoradas++;continue;}const upd=await sb.from(TABLE_CARGAS).update({TERMO:termo}).eq('CARGA',carga);if(upd.error)throw upd.error;resumo.atualizadas++;}catch(e){console.error('Erro na carga:',carga,e);resumo.erros.push({carga,erro:e.message||String(e)});}}toast('Atualização concluída',`Inseridas: ${resumo.inseridas} · Atualizadas: ${resumo.atualizadas} · Sem alteração: ${resumo.ignoradas} · Erros: ${resumo.erros.length}`,resumo.erros.length?'warn':'ok');if(!resumo.erros.length)fecharModalAtualizarCargas();state.dataLoaded=false;toast('Atualização gravada','Clique em Atualizar para recarregar as bases e recalcular os resultados.','warn');}catch(e){console.error(e);toast('Erro na atualização',e.message||String(e),'err');}finally{botao.disabled=false;showLoader(false);}}
-function abrirModalAtualizarAgenda(){if(!podeAtualizarCargas()){toast('Acesso negado','Somente o usuário autorizado pode atualizar a agenda.','warn');return;}const area=document.getElementById('agendaPasteArea'),preview=document.getElementById('agendaPastePreview');area.value='';preview.style.display='none';preview.innerHTML='';document.getElementById('modalAtualizarAgenda').classList.add('show');setTimeout(()=>area.focus(),120);}
-function fecharModalAtualizarAgenda(){document.getElementById('modalAtualizarAgenda')?.classList.remove('show');}
-function eCabecalhoAgenda(partes){const cab=partes.map(normUpper);return cab.some(p=>['AGENDA','SENHA','CARGA','STATUS','FORNECEDOR','CHEGADA','DTA_BASE','DTA BASE'].includes(p));}
-function interpretarAgendaColada(texto){const linhas=String(texto||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean),registros=[],erros=[];linhas.forEach((linha,i)=>{const partes=dividirLinhaImportada(linha).map(normalizarTextoImportado);if(i===0&&eCabecalhoAgenda(partes))return;if(partes.length<7){erros.push({linha:i+1,motivo:'São necessárias as 7 colunas: AGENDA, SENHA, CARGA, STATUS, FORNECEDOR, CHEGADA e DTA_BASE.'});return;}const r={agenda:partes[0],senha:partes[1],carga:partes[2],status:partes[3],fornecedor:partes[4],chegada:partes[5],dtaBase:partes[6],linha:i+1};if(!r.carga||!r.agenda){erros.push({linha:i+1,motivo:'AGENDA e CARGA são obrigatórios.'});return;}registros.push(r);});return {registros,erros};}
-function exibirPreviewAgendaImportada(){const r=interpretarAgendaColada(document.getElementById('agendaPasteArea').value),p=document.getElementById('agendaPastePreview');p.style.display='block';p.innerHTML=`<div style="display:flex;gap:16px;flex-wrap:wrap"><span>Registros válidos: <b style="color:var(--green)">${r.registros.length}</b></span><span>Linhas com erro: <b style="color:${r.erros.length?'var(--red)':'var(--green)'}">${r.erros.length}</b></span></div>${r.erros.length?`<div style="margin-top:10px;color:#fca5a5;font-size:11px">${r.erros.slice(0,10).map(e=>`<div>Linha ${e.linha}: ${escapeHTML(e.motivo)}</div>`).join('')}</div>`:''}`;}
-async function processarAtualizacaoAgenda(){if(!podeAtualizarCargas()){toast('Acesso negado','Somente o usuário 5520967 pode executar esta operação.','warn');return;}const resultado=interpretarAgendaColada(document.getElementById('agendaPasteArea').value);if(!resultado.registros.length){toast('Nenhum registro encontrado','Cole as 7 colunas da AGENDA.','warn');return;}if(resultado.erros.length){toast('Dados incompletos',`${resultado.erros.length} linha(s) com erro.`,'err');return;}if(!confirm(`Processar ${resultado.registros.length} linha(s) da AGENDA?\n\nRegistros novos serão inseridos.\nRegistros existentes serão atualizados.`))return;const botao=document.getElementById('processarAtualizarAgenda');botao.disabled=true;showLoader(true,'Atualizando AGENDA...');const resumo={inseridas:0,atualizadas:0,erros:[]};try{const porCarga=new Map();resultado.registros.forEach(r=>porCarga.set(r.carga,r));for(const registro of porCarga.values()){const payload={[COL_AG.agenda]:registro.agenda,[COL_AG.senha]:registro.senha||null,[COL_AG.carga]:registro.carga,[COL_AG.status]:registro.status||null,[COL_AG.fornecedor]:registro.fornecedor||null,[COL_AG.chegada]:registro.chegada||null,[COL_AG.dtaBase]:registro.dtaBase||null};try{const existe=await sb.from(TABLE_AGENDA).select(COL_AG.carga).eq(COL_AG.carga,registro.carga).limit(1);if(existe.error)throw existe.error;if(existe.data?.length){const upd=await sb.from(TABLE_AGENDA).update(payload).eq(COL_AG.carga,registro.carga);if(upd.error)throw upd.error;resumo.atualizadas++;}else{const ins=await sb.from(TABLE_AGENDA).insert(payload);if(ins.error)throw ins.error;resumo.inseridas++;}}catch(e){console.error('Erro na agenda:',registro.carga,e);resumo.erros.push({carga:registro.carga,erro:e.message||String(e)});}}toast('Atualização da AGENDA concluída',`Inseridas: ${resumo.inseridas} · Atualizadas: ${resumo.atualizadas} · Erros: ${resumo.erros.length}`,resumo.erros.length?'warn':'ok');if(!resumo.erros.length)fecharModalAtualizarAgenda();state.dataLoaded=false;toast('Atualização gravada','Clique em Atualizar para recarregar as bases e recalcular os resultados.','warn');}catch(e){console.error(e);toast('Erro na atualização',e.message||String(e),'err');}finally{botao.disabled=false;showLoader(false);}}
+function interpretarSobrepostosColados(texto){const linhas=String(texto||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean),registros=[],erros=[];linhas.forEach((linha,i)=>{const partes=dividirLinhaImportada(linha).map(normalizarTextoImportado);if(i===0&&partes.some(p=>['CARGA','QTD_PLTS','STATUS','TERMO'].includes(normUpper(p))))return;if(partes.length<4){erros.push({linha:i+1,motivo:'São necessárias as 4 colunas: CARGA, QTD_PLTS, STATUS e TERMO.'});return;}const [carga,qtdRaw,status,termo]=partes;const qtd=Number(String(qtdRaw).replace(',','.'));if(!carga||!Number.isFinite(qtd)){erros.push({linha:i+1,motivo:'CARGA obrigatória e QTD_PLTS numérico.'});return;}registros.push({carga,qtd,status,termo,linha:i+1});});return {registros,erros};}
+function mostrarPreviewImportacao(resultado,elemento){elemento.style.display='block';elemento.innerHTML=`<div>Registros válidos: <b style="color:var(--green)">${resultado.registros.length}</b> · Linhas com erro: <b style="color:${resultado.erros.length?'var(--red)':'var(--green)'}">${resultado.erros.length}</b></div>${resultado.erros.length?`<div style="margin-top:8px;color:#fca5a5;font-size:11px">${resultado.erros.slice(0,8).map(e=>`<div>Linha ${e.linha}: ${escapeHTML(e.motivo)}</div>`).join('')}</div>`:''}`;}
+function exibirPreviewCargasImportadas(){mostrarPreviewImportacao(interpretarCargasColadas(document.getElementById('cargasPasteArea').value),document.getElementById('cargasPastePreview'));}
+function exibirPreviewAgendaImportada(){mostrarPreviewImportacao(interpretarAgendaColada(document.getElementById('agendaPasteArea').value),document.getElementById('agendaPastePreview'));}
+function exibirPreviewSobrepostosImportados(){mostrarPreviewImportacao(interpretarSobrepostosColados(document.getElementById('sobrepostosPasteArea').value),document.getElementById('sobrepostosPastePreview'));}
+async function salvarConjuntoImportado(nome,registros,salvarUm){const resumo={ok:0,erros:[]};let prox=0;const workers=Array.from({length:Math.min(6,registros.length)},async()=>{while(true){const i=prox++;if(i>=registros.length)return;const r=registros[i];try{await salvarUm(r);resumo.ok++;}catch(e){console.error(`Erro ao gravar ${nome}:`,r,e);resumo.erros.push(`${r.carga||''}: ${e.message||String(e)}`);}}});await Promise.all(workers);return resumo;}
+async function processarAtualizacaoCargas(){
+ if(!podeAtualizarCargas()){toast('Acesso negado','Somente o usuário autorizado pode executar esta operação.','warn');return;}
+ const textos={cargas:document.getElementById('cargasPasteArea').value,agenda:document.getElementById('agendaPasteArea').value,sobrepostos:document.getElementById('sobrepostosPasteArea').value};
+ const dados={cargas:textos.cargas.trim()?interpretarCargasColadas(textos.cargas):null,agenda:textos.agenda.trim()?interpretarAgendaColada(textos.agenda):null,sobrepostos:textos.sobrepostos.trim()?interpretarSobrepostosColados(textos.sobrepostos):null};
+ const nomes={cargas:'ATUALIZAR CARGAS',agenda:'ATUALIZAR AGENDA',sobrepostos:'SOBREPOSTOS'};const preenchidos=Object.keys(dados).filter(k=>dados[k]);
+ if(!preenchidos.length){toast('Nada para salvar','Preencha pelo menos um dos três campos.','warn');return;}
+ const invalidos=preenchidos.filter(k=>dados[k].erros.length||!dados[k].registros.length);if(invalidos.length){invalidos.forEach(k=>mostrarPreviewImportacao(dados[k],document.getElementById(k==='cargas'?'cargasPastePreview':k==='agenda'?'agendaPastePreview':'sobrepostosPastePreview')));toast('Revise os dados',invalidos.map(k=>`${nomes[k]}: ${dados[k].erros.length||'nenhum registro válido'}`).join(' · '),'err');return;}
+ const total=preenchidos.reduce((n,k)=>n+dados[k].registros.length,0);if(!confirm(`Salvar ${total} registro(s) nos conjuntos preenchidos?\n\n${preenchidos.map(k=>`${nomes[k]}: ${dados[k].registros.length}`).join('\n')}\n\nCada conjunto será gravado separadamente; falhas parciais serão informadas.`))return;
+ const botao=document.getElementById('processarAtualizarCargas');if(botao.disabled)return;botao.disabled=true;showLoader(true,'Salvando conjuntos no Supabase...');
+ try{
+ const jobs=[];
+ if(dados.cargas)jobs.push((async()=>{const porCarga=new Map();dados.cargas.registros.forEach(r=>porCarga.set(r.carga,r.termo));const resumo=await salvarConjuntoImportado('CARGAS_RECEBIDAS',[...porCarga.entries()].map(([carga,termo])=>({carga,termo})),async r=>{const {data,error}=await sb.from(TABLE_CARGAS).select('CARGA,TERMO').eq('CARGA',r.carga).limit(1);if(error)throw error;const existente=data?.[0];if(!existente){const x=await sb.from(TABLE_CARGAS).insert({CARGA:r.carga,TERMO:r.termo});if(x.error)throw x.error;}else if(normalizarTextoImportado(existente.TERMO)!==r.termo){const x=await sb.from(TABLE_CARGAS).update({TERMO:r.termo}).eq('CARGA',r.carga);if(x.error)throw x.error;}});return ['ATUALIZAR CARGAS',resumo];})());
+ if(dados.agenda)jobs.push((async()=>{const porCarga=new Map();dados.agenda.registros.forEach(r=>porCarga.set(r.carga,r));return ['ATUALIZAR AGENDA',await salvarConjuntoImportado('AGENDA',[...porCarga.values()],async r=>{const payload={[COL_AG.agenda]:r.agenda,[COL_AG.senha]:r.senha||null,[COL_AG.carga]:r.carga,[COL_AG.status]:r.status||null,[COL_AG.fornecedor]:r.fornecedor||null,[COL_AG.chegada]:r.chegada||null,[COL_AG.dtaBase]:r.dtaBase||null};const ex=await sb.from(TABLE_AGENDA).select(COL_AG.carga).eq(COL_AG.carga,r.carga).limit(1);if(ex.error)throw ex.error;const q=ex.data?.length?await sb.from(TABLE_AGENDA).update(payload).eq(COL_AG.carga,r.carga):await sb.from(TABLE_AGENDA).insert(payload);if(q.error)throw q.error;})];})());
+ if(dados.sobrepostos)jobs.push((async()=>{const porCarga=new Map();dados.sobrepostos.registros.forEach(r=>porCarga.set(r.carga,r));return ['SOBREPOSTOS',await salvarConjuntoImportado('SOBREPOSTOS',[...porCarga.values()],async r=>{const payload={CARGA:r.carga,QTD_PLTS:r.qtd,STATUS:r.status||null,TERMO:r.termo||null};const ex=await sb.from(TABLE_SOBREPOSTOS).select('CARGA').eq('CARGA',r.carga).limit(1);if(ex.error)throw ex.error;const q=ex.data?.length?await sb.from(TABLE_SOBREPOSTOS).update(payload).eq('CARGA',r.carga):await sb.from(TABLE_SOBREPOSTOS).insert(payload);if(q.error)throw q.error;})];})());
+ const resultados=await Promise.all(jobs);resultados.forEach(([nome,r])=>toast(r.erros.length?`${nome}: concluído parcialmente`:`${nome}: salvo`,`${r.ok} registro(s) gravado(s)${r.erros.length?` · ${r.erros.length} erro(s): ${r.erros.slice(0,3).join(' | ')}`:''}`,r.erros.length?'warn':'ok'));
+ const falhou=resultados.some(([,r])=>r.erros.length);if(!falhou){fecharModalAtualizarCargas();state.dataLoaded=false;toast('Atualização gravada','Clique em Atualizar para recarregar as bases e recalcular os resultados.','warn');}else toast('Gravação parcial','Os conjuntos sem erro foram processados. Corrija as linhas indicadas antes de reenviar os conjuntos que falharam.','warn');
+ }catch(e){console.error(e);toast('Erro na atualização',e.message||String(e),'err');}finally{botao.disabled=false;showLoader(false);}
+}
 
 function storedNum(row,key){const col=RC[key];const v=col?row?.[col]:null;if(v===null||v===undefined||v==='')return null;const n=Number(v);return Number.isFinite(n)?n:null;}
 function getManualValue(key,date){
@@ -1042,10 +1056,10 @@ function calcularResultados(){
     if(!porDataTurno.has(k))porDataTurno.set(k,{DATA:data,TURNO:turno,...emptyBucket()});
     return porDataTurno.get(k);
   };
-  // AGENDA mantém o critério original: SENHA distinta por DTA_BASE; o turno usa AGENDA.
+  // AGENDA conta SENHA distinta pela data operacional de AGENDA (22:00–21:59);
+  // DTA_BASE continua sendo usado somente para o indicador NO SHOW.
   for(const a of state.rawAgenda){
-    const parsed=parseDateTimeBR(a[COL_AG.dtaBase]);
-    const data=parsed?toISODate(parsed):null;
+    const data=refDateISO(a[COL_AG.agenda]);
     const senha=String(a[COL_AG.senha]??'').trim();
     if(!data||!senha)continue;
     if(!senhas.has(chaveResultado(data,'TODOS')))senhas.set(chaveResultado(data,'TODOS'),new Set());
@@ -1246,11 +1260,12 @@ function buildRegistros(){
     if (!carga) return;
 
     const dataTermo = refDateISO(c[COL_CR.termo]);
-    const dataAgendaCR = refDateISO(c[COL_CR.agenda]);
+    const agRow = agendaByCarga.get(carga);
+    const dataAgendaOrigem = agRow?.[COL_AG.agenda] || null;
+    const dataAgendaCR = refDateISO(dataAgendaOrigem);
     if (!dataTermo) return;
 
     const isNoPrazo = !!(dataTermo && dataAgendaCR && dataTermo === dataAgendaCR);
-    const agRow = agendaByCarga.get(carga);
     const fornecedor = agRow
       ? (String(agRow[COL_AG.fornecedor] ?? '').trim() || 'SEM FORNECEDOR')
       : 'SEM FORNECEDOR';
@@ -1271,7 +1286,7 @@ function buildRegistros(){
       no_show: 0,
       recusado: 0,
       agenda_noshow: 0,
-      turnoAgenda: turnoPorHorario(c[COL_CR.agenda]),
+      turnoAgenda: turnoPorHorario(dataAgendaOrigem),
       turnoTermo: turnoPorHorario(c[COL_CR.termo]),
       turnoRecusado: turnoPorHorario(c[COL_CR.agenda]),
     });
@@ -2598,7 +2613,7 @@ function bindEvents(){
   document.getElementById('fecharModalAtualizacao').addEventListener('click',fecharModalAtualizacao);
   document.getElementById('cancelarModalAtualizacao').addEventListener('click',fecharModalAtualizacao);
   document.getElementById('modalAtualizacao').addEventListener('click',e=>{if(e.target.id==='modalAtualizacao')fecharModalAtualizacao();});
-  document.getElementById('opAtualizarAgenda').addEventListener('click',()=>{fecharModalAtualizacao();abrirModalAtualizarAgenda();});
+  document.getElementById('opAtualizarAgenda').addEventListener('click',()=>{fecharModalAtualizacao();abrirModalAtualizarCargas('agendaPasteArea');});
   document.getElementById('opAtualizarTudo').addEventListener('click',atualizarTudo);
   document.getElementById('opAtualizarCargas').addEventListener('click',()=>{fecharModalAtualizacao();abrirModalAtualizarCargas();});
   document.getElementById('btnExport').addEventListener('click', exportData);
@@ -2650,13 +2665,10 @@ function bindEvents(){
   document.getElementById('cancelAtualizarCargas')?.addEventListener('click',fecharModalAtualizarCargas);
   document.getElementById('processarAtualizarCargas')?.addEventListener('click',processarAtualizacaoCargas);
   document.getElementById('cargasPasteArea')?.addEventListener('input',exibirPreviewCargasImportadas);
-  document.getElementById('modalAtualizarCargas')?.addEventListener('click',e=>{if(e.target.id==='modalAtualizarCargas')fecharModalAtualizarCargas();});
-  document.getElementById('closeAtualizarAgenda')?.addEventListener('click',fecharModalAtualizarAgenda);
-  document.getElementById('cancelAtualizarAgenda')?.addEventListener('click',fecharModalAtualizarAgenda);
-  document.getElementById('processarAtualizarAgenda')?.addEventListener('click',processarAtualizacaoAgenda);
   document.getElementById('agendaPasteArea')?.addEventListener('input',exibirPreviewAgendaImportada);
-  document.getElementById('modalAtualizarAgenda')?.addEventListener('click',e=>{if(e.target.id==='modalAtualizarAgenda')fecharModalAtualizarAgenda();});
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'){fecharModalAtualizacao();fecharModalAtualizarCargas();fecharModalAtualizarAgenda();}});
+  document.getElementById('sobrepostosPasteArea')?.addEventListener('input',exibirPreviewSobrepostosImportados);
+  document.getElementById('modalAtualizarCargas')?.addEventListener('click',e=>{if(e.target.id==='modalAtualizarCargas')fecharModalAtualizarCargas();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){fecharModalAtualizacao();fecharModalAtualizarCargas();}});
 
   document.getElementById('modalMissing').addEventListener('click', e => {
     if (e.target.id === 'modalMissing') closeMissingModal();
