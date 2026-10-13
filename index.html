@@ -1124,6 +1124,7 @@ async function gravarResultados(rows){
   }
 }
 async function updateResultado(date,patch){
+  if(!canEdit())throw new Error('Somente o usuário 5520967 pode alterar os resultados.');
   const turno=state.turno;
   if(!TURNOS.includes(turno))throw new Error('Turno inválido.');
   const key=chaveResultado(date,turno);
@@ -2030,6 +2031,7 @@ async function loadComments(){
 let editCtx = null;
 
 function openEditModal(rowKey, colKey, colIdx){
+  if(!canEdit()){toast('Ação restrita','Somente o usuário 5520967 pode editar valores manualmente.','warn');return;}
   const rowDef = ROWS.find(r => r.key === rowKey);
   if (!rowDef) return;
   const agg = aggregate();
@@ -2061,6 +2063,7 @@ function closeEditModal(){
 }
 
 async function saveEditModal(){
+  if(!canEdit()){toast('Ação restrita','Somente o usuário 5520967 pode editar valores manualmente.','warn');return;}
   if(!editCtx)return;
   const {rowKey,colKey:date}=editCtx;
   if(state.gran!=='dia'||rowKey==='agenda'||rowKey==='agenda_noshow'){
@@ -2076,6 +2079,7 @@ async function saveEditModal(){
   catch(e){console.error(e);toast('Falha ao gravar',e.message||String(e),'err');}
 }
 async function clearEditModal(){
+  if(!canEdit()){toast('Ação restrita','Somente o usuário 5520967 pode alterar valores manualmente.','warn');return;}
   if(!editCtx||state.gran!=='dia'||!RK.includes(editCtx.rowKey))return;
   const {rowKey,colKey:date}=editCtx;
   const b={...(aggregate().daily.get(date)||emptyBucket()),[rowKey]:(aggregate(false).daily.get(date)||emptyBucket())[rowKey]||0};
