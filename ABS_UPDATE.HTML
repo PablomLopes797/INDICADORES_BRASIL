@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080a12">
+<meta name="description" content="Importador CSV de absenteísmo — Assaí CD 910.">
+<title>Absenteísmo · Assaí CD 910</title>
+<link rel="icon" href="./abs-mark.svg" type="image/svg+xml">
+<style>
+:root{color-scheme:dark;--bg:#080a12;--panel:rgba(16,20,34,.82);--line:rgba(226,232,255,.12);--text:#f0f2fa;--muted:#a2abc2;--quiet:#707a94;--cyan:#22d3ee;--purple:#9275fa;--red:#e84d5b;--green:#34d399;--amber:#fbbf24;--rose:#fb7185;--r:18px;font-family:Inter,"Segoe UI",Arial,sans-serif}*{box-sizing:border-box}body{margin:0;min-width:320px;min-height:100vh;color:var(--text);background:#080a12;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}button,input{font:inherit}button{color:inherit}button:focus-visible,input:focus-visible{outline:2px solid #7dd3fc;outline-offset:2px}.backdrop{position:fixed;inset:0;z-index:-2;overflow:hidden;background:radial-gradient(ellipse at 14% 3%,#261738 0,transparent 46%),radial-gradient(ellipse at 87% 35%,#10313a 0,transparent 42%),linear-gradient(145deg,#070810,#101322 62%,#090b12)}.backdrop video{position:absolute;width:100%;height:100%;object-fit:cover;filter:brightness(.17) saturate(.78)}.backdrop:after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,rgba(5,7,14,.83),rgba(7,8,15,.65) 52%,rgba(5,6,12,.83)),radial-gradient(ellipse at 50% 5%,transparent,rgba(3,4,9,.5))}.mesh{position:absolute;inset:-20% -15% 30%;opacity:.17;transform:perspective(800px) rotateX(58deg) scale(1.8);transform-origin:top;background-image:linear-gradient(rgba(151,119,255,.16) 1px,transparent 1px),linear-gradient(90deg,rgba(34,211,238,.1) 1px,transparent 1px);background-size:56px 56px;mask-image:linear-gradient(#000,transparent 75%)}.app{width:min(1440px,100%);margin:0 auto;padding:22px clamp(14px,3vw,44px) 28px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:12px 17px;border:1px solid var(--line);border-radius:18px;background:rgba(12,15,27,.76);backdrop-filter:blur(18px);box-shadow:0 22px 56px -34px #000;position:relative}.topbar:before{content:"";position:absolute;top:-1px;left:6%;width:52%;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),var(--purple),transparent)}.brand{display:flex;align-items:center;gap:12px}.brand-mark{width:43px;height:43px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(140deg,rgba(232,77,91,.25),rgba(146,117,250,.25));border:1px solid rgba(244,114,125,.3);box-shadow:0 7px 26px -14px rgba(232,77,91,.9)}.brand-mark svg{width:27px;height:27px}.brand-copy strong{display:block;font-size:13px;letter-spacing:1.1px;font-weight:800}.brand-copy strong span{color:#ff7b71}.brand-copy small{display:block;margin-top:2px;color:var(--muted);font-size:9px;letter-spacing:1.5px;font-weight:700}.top-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}.pill{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.035);color:#c5cce0;font-size:10px;font-weight:650}.pill i{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px rgba(52,211,153,.6)}.hero{display:flex;align-items:flex-end;justify-content:space-between;gap:22px;margin:39px 2px 23px}.eyebrow{display:flex;align-items:center;gap:9px;color:#a8b1c9;font-size:9px;font-weight:800;letter-spacing:1.8px}.eyebrow:before{content:"";width:20px;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--red),var(--cyan))}.hero h1{margin:11px 0 7px;font-size:clamp(30px,4.5vw,46px);line-height:1.06;letter-spacing:-1.7px}.hero h1 span{background:linear-gradient(100deg,#ff8178,#c3a8ff 60%,#67e8f9);color:transparent;background-clip:text;-webkit-background-clip:text}.hero p{margin:0;color:#a5aec5;font-size:13px}.btn{min-height:40px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.045);color:#d5d9e8;font-size:11px;font-weight:750;white-space:nowrap;cursor:pointer;transition:transform .16s,background .16s,border-color .16s,box-shadow .16s}.btn:hover:not(:disabled){transform:translateY(-1px);background:rgba(255,255,255,.085);border-color:rgba(255,255,255,.22)}.btn:disabled{opacity:.48;cursor:not-allowed}.btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.btn-primary{background:linear-gradient(110deg,#bd3f50,#895ed6);border-color:rgba(228,133,181,.5);color:#fff;box-shadow:0 10px 26px -15px rgba(232,77,91,.95),0 1px 0 rgba(255,255,255,.2) inset}.btn-primary:hover:not(:disabled){background:linear-gradient(110deg,#d44858,#9a6bea)}.btn-small{min-height:34px;padding:0 11px;font-size:10px}.section-title{display:flex;align-items:center;gap:8px;margin:0 0 11px;color:#949eb8;font-size:9px;letter-spacing:1.55px;font-weight:800}.section-title:before{content:"";width:3px;height:12px;border-radius:4px;background:linear-gradient(var(--cyan),var(--purple))}.bases{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.base-card{position:relative;overflow:hidden;padding:17px 18px;border:1px solid var(--line);border-radius:15px;background:linear-gradient(145deg,rgba(21,25,43,.86),rgba(12,15,28,.86));backdrop-filter:blur(17px);box-shadow:0 19px 44px -34px #000}.base-card:after{content:"";position:absolute;top:0;left:17px;width:50px;height:1px;background:linear-gradient(90deg,var(--cyan),transparent)}.base-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.base-name{font-size:15px;font-weight:800;letter-spacing:.15px}.base-name b{color:#c2b1ff}.base-kind{color:var(--quiet);font-size:9px;letter-spacing:1px;font-weight:750}.base-desc{margin-top:6px;color:#8993ad;font-size:10px}.base-url{margin-top:10px;color:#8392b6;font:10px ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere}.main-card{margin-top:17px;border:1px solid rgba(222,229,255,.13);border-radius:var(--r);background:linear-gradient(150deg,rgba(15,19,34,.91),rgba(9,12,23,.91));backdrop-filter:blur(22px);box-shadow:0 28px 66px -40px #000;overflow:hidden}.main-head{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:19px 21px}.main-head h2{margin:0;font-size:15px;letter-spacing:-.25px}.main-head p{margin:4px 0 0;color:#8a94ae;font-size:10px}.main-head .btn{flex:none}.notice{display:flex;align-items:flex-start;gap:10px;margin:0 21px 18px;padding:12px 13px;border:1px solid rgba(251,191,36,.19);border-radius:11px;background:rgba(251,191,36,.055);color:#c5b995;font-size:10px}.notice svg{flex:none;width:16px;height:16px;fill:none;stroke:#fbbf24;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.notice strong{color:#f2d991}.footer{display:flex;justify-content:space-between;gap:12px;margin-top:16px;padding:0 4px;color:#68728c;font-size:8px;letter-spacing:1.3px;font-weight:700}
+/* modal */
+.overlay{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:18px;background:rgba(3,5,12,.76);backdrop-filter:blur(9px);opacity:1;transition:opacity .18s}.overlay[hidden]{display:none}.modal{width:min(890px,100%);max-height:min(90vh,900px);overflow:auto;border:1px solid rgba(226,232,255,.16);border-radius:19px;background:linear-gradient(150deg,rgba(20,24,42,.99),rgba(10,13,25,.99));box-shadow:0 35px 100px -40px #000,0 0 55px -40px rgba(139,92,246,.6)}.modal-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:19px 21px;border-bottom:1px solid rgba(226,232,255,.09)}.modal-kicker{color:#929db9;font-size:8px;letter-spacing:1.7px;font-weight:800}.modal-header h2{margin:4px 0 0;font-size:18px;letter-spacing:-.4px}.icon-close{width:34px;height:34px;display:grid;place-items:center;border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.035);color:#aeb6cb;cursor:pointer;font-size:20px;line-height:1}.icon-close:hover{background:rgba(255,255,255,.1);color:white}.modal-body{padding:19px 21px 22px}.choice-intro{margin:0 0 15px;color:#9ca6bd;font-size:11px}.choice-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}.choice{min-height:137px;text-align:left;padding:16px;border:1px solid rgba(226,232,255,.11);border-radius:14px;background:rgba(255,255,255,.03);cursor:pointer;transition:.18s}.choice:hover{transform:translateY(-2px);border-color:rgba(167,139,250,.48);background:rgba(139,92,246,.1)}.choice:disabled{cursor:not-allowed;opacity:.6}.choice-icon{width:33px;height:33px;display:grid;place-items:center;border-radius:10px;color:#d3c7ff;background:rgba(139,92,246,.16);font-size:15px;font-weight:800}.choice:nth-child(2) .choice-icon{color:#67e8f9;background:rgba(34,211,238,.12)}.choice:nth-child(3) .choice-icon{color:#fcd34d;background:rgba(251,191,36,.12)}.choice strong{display:block;margin:12px 0 4px;font-size:12px;letter-spacing:.5px}.choice small{display:block;color:#858faa;font-size:9px;line-height:1.55}.back-link{display:inline-flex;align-items:center;gap:6px;margin-bottom:13px;padding:0;border:0;background:none;color:#aeb7ce;font-size:10px;font-weight:700;cursor:pointer}.back-link:hover{color:white}.import-summary{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}.import-summary h3{margin:0 0 4px;font-size:14px}.import-summary p{margin:0;color:#8892ac;font-size:10px}.file-row{display:grid;grid-template-columns:minmax(0,1fr) 155px auto;gap:9px;align-items:end}.field{display:flex;flex-direction:column;gap:6px}.field label,.field-label{color:#a0aac2;font-size:9px;font-weight:750;letter-spacing:.75px}.field input[type=file],.field input[type=password],.field select{width:100%;height:39px;padding:8px 10px;border:1px solid rgba(226,232,255,.14);border-radius:9px;background:#101423;color:#d8deee;font-size:10px}.field input[type=file]::file-selector-button{margin-right:10px;border:0;border-radius:6px;background:rgba(139,92,246,.24);padding:5px 8px;color:#e6ddff;font-size:9px;cursor:pointer}.helper{margin:7px 0 0;color:#717d98;font-size:9px;line-height:1.6}.advanced{margin-top:12px;border:1px solid rgba(226,232,255,.08);border-radius:10px;background:rgba(255,255,255,.018)}.advanced summary{padding:9px 11px;color:#929db7;font-size:9px;font-weight:700;cursor:pointer}.advanced .field{padding:0 11px 11px}.warning{display:flex;gap:8px;margin:14px 0;padding:10px 11px;border:1px solid rgba(251,191,36,.18);border-radius:9px;background:rgba(251,191,36,.05);color:#c6bb9c;font-size:9px;line-height:1.55}.warning b{color:#f4d98e}.warning .warn-icon{flex:none;color:#fbbf24;font-weight:900}.progress-wrap{margin-top:14px}.progress-line{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#9da7bf;font-size:9px}.progress-track{height:6px;margin-top:7px;overflow:hidden;border-radius:20px;background:rgba(255,255,255,.08)}.progress-bar{width:0;height:100%;border-radius:20px;background:linear-gradient(90deg,var(--cyan),var(--purple),var(--red));transition:width .18s}.preview-block{margin-top:15px;border:1px solid rgba(226,232,255,.1);border-radius:11px;overflow:hidden}.preview-top{display:flex;justify-content:space-between;gap:10px;padding:11px 12px;background:rgba(255,255,255,.03)}.preview-top strong{font-size:10px}.preview-count{color:#939eb8;font-size:9px}.table-scroll{max-height:280px;overflow:auto}.preview-table{width:100%;border-collapse:collapse;white-space:nowrap;font-size:9px}.preview-table th,.preview-table td{padding:8px 10px;text-align:left;border-top:1px solid rgba(226,232,255,.065)}.preview-table th{position:sticky;top:0;background:#161a2c;color:#aeb8d1;font-size:8px;letter-spacing:.6px}.preview-table td{color:#d1d7e7}.row-error{color:#fda4af!important}.error-list{max-height:150px;overflow:auto;margin:8px 12px 12px;padding-left:17px;color:#f2a4ac;font-size:9px;line-height:1.65}.preview-empty{padding:17px;color:#8993ad;font-size:10px}.modal-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:16px}.result-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.result-card{padding:12px;border:1px solid rgba(226,232,255,.1);border-radius:10px;background:rgba(255,255,255,.025)}.result-card span{display:block;color:#8f9ab4;font-size:8px;font-weight:750;letter-spacing:.8px}.result-card strong{display:block;margin-top:5px;font-size:20px}.result-card.success strong{color:#6ee7b7}.result-card.fail strong{color:#fda4af}.result-message{margin:12px 0 0;color:#9da7bf;font-size:10px;line-height:1.6}.holiday-message{padding:20px;border:1px dashed rgba(251,191,36,.28);border-radius:12px;background:rgba(251,191,36,.045);color:#d4c69f;font-size:11px;line-height:1.7}.holiday-message strong{display:block;margin-bottom:5px;color:#f6d778;font-size:13px}.toast{position:fixed;right:18px;bottom:18px;z-index:30;max-width:min(450px,calc(100% - 36px));padding:11px 14px;border:1px solid rgba(167,139,250,.3);border-radius:10px;background:rgba(19,23,40,.98);color:#e8eaff;font-size:10px;box-shadow:0 15px 40px -20px #000;opacity:0;transform:translateY(7px);pointer-events:none;transition:.2s}.toast.show{opacity:1;transform:translateY(0)}
+@media(max-width:700px){.app{padding:12px 12px 22px}.topbar{padding:9px 11px;border-radius:14px}.brand-mark{width:38px;height:38px}.brand-copy strong{font-size:11px}.brand-copy small{font-size:8px}.top-meta{gap:6px}.pill{padding:6px 7px;font-size:8px}.hero{align-items:flex-start;flex-direction:column;gap:15px;margin:28px 2px 18px}.hero h1{font-size:34px}.hero p{font-size:11px}.hero>.btn{align-self:stretch}.bases{gap:8px}.base-card{padding:12px}.base-name{font-size:12px}.base-kind{font-size:7px}.base-desc{font-size:9px}.base-url{font-size:8px}.main-head{align-items:flex-start;padding:15px 13px}.main-head h2{font-size:13px}.main-head p{max-width:230px;font-size:9px}.main-head .btn{min-height:36px;padding:0 10px;font-size:9px}.notice{margin:0 13px 14px;padding:10px;font-size:9px}.overlay{padding:8px}.modal{max-height:94vh;border-radius:15px}.modal-header{padding:15px}.modal-header h2{font-size:16px}.modal-body{padding:14px}.choice-grid{grid-template-columns:1fr;gap:8px}.choice{display:grid;grid-template-columns:34px 1fr;grid-template-rows:auto auto;column-gap:10px;align-items:center;min-height:0;padding:11px}.choice-icon{grid-row:1/3}.choice strong{margin:0 0 3px}.choice small{font-size:9px}.file-row{grid-template-columns:1fr}.file-row .btn{width:100%}.import-summary{flex-direction:column;gap:7px}.result-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.footer{font-size:7px}.table-scroll{max-height:42vh}}
+@media(max-width:380px){.topbar{align-items:flex-start}.top-meta{max-width:120px}.pill{font-size:0}.pill i{flex:none}.bases{grid-template-columns:1fr}.hero h1{font-size:31px}.result-grid{grid-template-columns:1fr 1fr}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="backdrop" aria-hidden="true"><video autoplay muted loop playsinline preload="auto"><source src="./7101913-uhd_2560_1440_25fps.mp4" type="video/mp4"></video><div class="mesh"></div></div>
+<main class="app">
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none"><path d="M24 4 41 14v20L24 44 7 34V14L24 4Z" stroke="#f9a6a0" stroke-width="2.2"/><path d="M15 30 23 15l8 15m-13-5h11" stroke="#f5f3ff" stroke-width="2.2" stroke-linecap="round"/><path d="M34 31c3 3 8 1 8-2 0-4-7-3-7-7 0-3 4-4 7-2" stroke="#67e8f9" stroke-width="2.1" stroke-linecap="round"/></svg></span><span class="brand-copy"><strong>ASSAÍ <span>·</span> CD 910</strong><small>SISTEMA DE ABSENTEÍSMO</small></span></div>
+    <div class="top-meta"><span class="pill"><i></i> API REST · SUPABASE</span><span class="pill">ACESSO SUJEITO A RLS</span></div>
+  </header>
+  <section class="hero"><div><div class="eyebrow">GESTÃO DE BASES DE DADOS</div><h1>Importação de <span>absenteísmo</span></h1><p>Atualize as bases QUADRO e SURICATO com prévia e confirmação antes de gravar.</p></div><button class="btn btn-primary" id="openUpdate" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16 6V2m0 4h-4M4 14v4m0-4h4M5 6a6 6 0 0 1 10-1l1 1M15 14a6 6 0 0 1-10 1l-1-1"/></svg>ATUALIZAR</button></section>
+  <section aria-labelledby="basesTitle"><h2 class="section-title" id="basesTitle">BASES CONECTADAS AO SISTEMA</h2><div class="bases">
+    <article class="base-card"><div class="base-head"><div class="base-name"><b>ABS_</b>QUADRO</div><span class="base-kind">CADASTRO</span></div><div class="base-desc">Cadastro de colaboradores, cargos, setores e dados funcionais.</div><div class="base-url">/rest/v1/ABS_QUADRO</div></article>
+    <article class="base-card"><div class="base-head"><div class="base-name"><b>ABS_</b>SURICATO</div><span class="base-kind">AFASTAMENTOS</span></div><div class="base-desc">Registros de datas e matrículas provenientes do Suricato.</div><div class="base-url">/rest/v1/ABS_SURICATO</div></article>
+  </div></section>
+  <section class="main-card" aria-labelledby="mainTitle"><div class="main-head"><div><h2 id="mainTitle">Central de atualização</h2><p>Selecione uma base para importar um arquivo CSV do sistema de origem.</p></div><button class="btn btn-primary" type="button" data-open-update>ATUALIZAR</button></div><div class="notice"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2 18 17H2L10 2Zm0 5v5m0 2v.1"/></svg><span><strong>Importação sem exclusões:</strong> os dados existentes não serão apagados nem substituídos. Como a regra de unicidade do banco não foi verificada, confira a prévia para reduzir o risco de duplicidade. A gravação só começa depois da confirmação.</span></div></section>
+  <footer class="footer"><span>ASSAÍ · CD 910</span><span>HTML STANDALONE · SEM COMPILAÇÃO</span></footer>
+</main>
+
+<div class="overlay" id="overlay" hidden>
+  <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalDesc">
+    <header class="modal-header"><div><div class="modal-kicker">ASSAÍ · CD 910</div><h2 id="modalTitle">Atualizar bases</h2></div><button class="icon-close" id="closeModal" type="button" aria-label="Fechar">×</button></header>
+    <div class="modal-body">
+      <section id="choiceView"><p class="choice-intro" id="modalDesc">Escolha a base que deseja atualizar. Nenhuma alteração é enviada até você confirmar a prévia.</p><div class="choice-grid">
+        <button class="choice" type="button" data-module="quadro"><span class="choice-icon">Q</span><strong>QUADRO</strong><small>Importar cadastro de colaboradores e calcular idade.</small></button>
+        <button class="choice" type="button" data-module="suricato"><span class="choice-icon">S</span><strong>SURICATO</strong><small>Importar datas e matrículas pela posição das colunas.</small></button>
+        <button class="choice" type="button" data-module="ferias"><span class="choice-icon">F</span><strong>FÉRIAS</strong><small>Módulo previsto para uma etapa futura.</small></button>
+      </div></section>
+      <section id="holidayView" hidden><button class="back-link" type="button" data-back>← Voltar às bases</button><div class="holiday-message"><strong>FÉRIAS ainda não implementado</strong>Esta opção está reservada para uma etapa futura. Nenhum arquivo será processado e nenhuma gravação será realizada.</div></section>
+      <section id="importView" hidden>
+        <button class="back-link" type="button" data-back>← Voltar às bases</button>
+        <div class="import-summary"><div><h3 id="importTitle">Importar CSV</h3><p id="importSubtitle">Selecione o arquivo para iniciar a validação.</p></div><span class="pill" id="tablePill">TABELA</span></div>
+        <div class="file-row"><div class="field"><label for="csvFile">ARQUIVO CSV (UTF-8)</label><input id="csvFile" type="file" accept=".csv,text/csv,.txt,text/plain"></div><div class="field"><label for="delimiterMode">SEPARADOR</label><select id="delimiterMode"><option value="auto">Detectar</option><option value="semicolon">Ponto e vírgula (;)</option><option value="comma">Vírgula (,)</option></select></div><button class="btn btn-primary" id="loadFile" type="button" disabled>CARREGAR</button></div>
+        <p class="helper" id="fileHint">Aceita separador vírgula ou ponto e vírgula. A prévia mostra os registros válidos e os erros antes de qualquer envio.</p>
+        <details class="advanced"><summary>Autorização opcional (JWT anon deste mesmo projeto)</summary><div class="field"><label for="anonJwt">JWT anon de sessão</label><input id="anonJwt" type="password" autocomplete="off" placeholder="Deixe vazio para usar somente a chave publicável"><span class="helper">Não cole chave secret/service_role. O JWT fica apenas na memória desta página e não é salvo. A chave `sb_publishable` será enviada no cabeçalho `apikey`; não é um JWT e não é usada como Bearer.</span></div></details>
+        <div class="warning"><span class="warn-icon">!</span><span>Envio em modo <b>inserção</b>: sem UPSERT, exclusão ou deduplicação automática. Matrícula sozinha não é tratada como chave única. Confirme que a prévia corresponde ao arquivo correto.</span></div>
+        <div class="progress-wrap" id="progressWrap" hidden><div class="progress-line"><span id="progressLabel">Preparando…</span><span id="progressPercent">0%</span></div><div class="progress-track"><div class="progress-bar" id="progressBar"></div></div></div>
+        <div id="previewArea" aria-live="polite"></div>
+        <div class="modal-actions"><button class="btn" type="button" data-back id="backButton">Cancelar</button><button class="btn btn-primary" id="confirmImport" type="button" disabled>Confirmar importação</button></div>
+      </section>
+      <section id="resultView" hidden><div class="import-summary"><div><h3 id="resultTitle">Resultado da importação</h3><p id="resultSubtitle">Resumo confirmado pela API.</p></div></div><div class="result-grid" id="resultGrid"></div><p class="result-message" id="resultMessage"></p><div id="resultErrors"></div><div class="modal-actions"><button class="btn btn-primary" id="finishButton" type="button">Fechar</button></div></section>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+'use strict';
+(() => {
+  const SUPABASE_URL = 'https://bebhhbimcaptgrioxxcw.supabase.co';
+  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_LUjptV9j-EiIuG2Bc7UrKg_can_vhn_';
+  const SUPABASE_ANON_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJlYmhoYmltY2FwdGdyaW94eGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyODE2MjksImV4cCI6MjA5OTg1NzYyOX0.WIhrT6A8LAh5BtV1pVz9xnONewehes155OhpgE1lXmI';
+  const TABLES = { quadro: 'ABS_QUADRO', suricato: 'ABS_SURICATO' };
+  const BATCH_SIZE = 100;
+  const PREVIEW_LIMIT = 25;
+  const $ = (selector) => document.querySelector(selector);
+  const ui = {
+    overlay: $('#overlay'), open: $('#openUpdate'), close: $('#closeModal'), choices: $('#choiceView'),
+    holiday: $('#holidayView'), importer: $('#importView'), result: $('#resultView'),
+    file: $('#csvFile'), load: $('#loadFile'), preview: $('#previewArea'), confirm: $('#confirmImport'),
+    title: $('#importTitle'), subtitle: $('#importSubtitle'), table: $('#tablePill'),
+    jwt: $('#anonJwt'), progress: $('#progressWrap'), progressLabel: $('#progressLabel'),
+    progressPercent: $('#progressPercent'), progressBar: $('#progressBar'), toast: $('#toast'),
+  };
+  let selectedModule = null;
+  let pending = null;
+  let toastTimer = 0;
+  let previousFocus = null;
+  let busy = false;
+
+  function notify(message) {
+    ui.toast.textContent = message;
+    ui.toast.classList.add('show');
+    window.clearTimeout(toastTimer);
+    toastTimer = window.setTimeout(() => ui.toast.classList.remove('show'), 3400);
+  }
+  function showView(view) {
+    ui.choices.hidden = view !== 'choices';
+    ui.holiday.hidden = view !== 'holiday';
+    ui.importer.hidden = view !== 'import';
+    ui.result.hidden = view !== 'result';
+  }
+  function openModal() {
+    previousFocus = document.activeElement;
+    ui.overlay.hidden = false;
+    document.body.style.overflow = 'hidden';
+    resetImport();
+    showView('choices');
+    ui.close.focus();
+  }
+  function closeModal() {
+    if (busy) return;
+    ui.overlay.hidden = true;
+    document.body.style.overflow = '';
+    if (previousFocus && typeof previousFocus.focus === 'function') previousFocus.focus();
+  }
+  function resetImport() {
+    selectedModule = null;
+    pending = null;
+    ui.file.value = '';
+    ui.load.disabled = true;
+    ui.confirm.disabled = true;
+    ui.preview.replaceChildren();
+    ui.progress.hidden = true;
+    ui.jwt.value = '';
+    setBusy(false);
+  }
+  function setBusy(value) {
+    busy = value;
+    ui.load.disabled = value || !ui.file.files?.length;
+    ui.file.disabled = value;
+    ui.confirm.disabled = value || !pending || !pending.valid.length;
+    document.querySelectorAll('[data-module],[data-back],#closeModal').forEach((element) => { element.disabled = value; });
+  }
+  function chooseModule(module) {
+    if (module === 'ferias') { showView('holiday'); return; }
+    selectedModule = module;
+    pending = null;
+    ui.file.value = '';
+    ui.load.disabled = true;
+    ui.confirm.disabled = true;
+    ui.preview.replaceChildren();
+    ui.progress.hidden = true;
+    const isQuadro = module === 'quadro';
+    ui.title.textContent = isQuadro ? 'Importação do QUADRO' : 'Importação do SURICATO';
+    ui.subtitle.textContent = isQuadro
+      ? 'Mapeamento posicional para ABS_QUADRO · colunas A, B, C, E, G, I e J.'
+      : 'Mapeamento posicional para ABS_SURICATO · coluna A para DTA e coluna G para MATRICULA.';
+    ui.table.textContent = `DESTINO · ${TABLES[module]}`;
+    showView('import');
+    $('#csvFile').focus();
+  }
+
+  function normalize(value) {
+    return String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+  }
+  function isBlankRow(row) { return row.every((value) => String(value ?? '').trim() === ''); }
+  function firstCsvRecord(text) {
+    let quoted = false, start = 0;
+    for (let i = 0; i < text.length; i += 1) {
+      if (text[i] === '"') {
+        if (quoted && text[i + 1] === '"') { i += 1; continue; }
+        quoted = !quoted;
+      } else if (!quoted && (text[i] === '\n' || text[i] === '\r')) {
+        const candidate = text.slice(start, i);
+        if (candidate.trim()) return candidate;
+        if (text[i] === '\r' && text[i + 1] === '\n') i += 1;
+        start = i + 1;
+      }
+    }
+    return text.slice(start);
+  }
+  function countDelimiter(record, delimiter) {
+    let quoted = false, count = 0;
+    for (let i = 0; i < record.length; i += 1) {
+      if (record[i] === '"') {
+        if (quoted && record[i + 1] === '"') { i += 1; continue; }
+        quoted = !quoted;
+      } else if (!quoted && record[i] === delimiter) count += 1;
+    }
+    return count;
+  }
+  function detectDelimiter(text) {
+    const sample = firstCsvRecord(text.replace(/^\uFEFF/, ''));
+    const semicolons = countDelimiter(sample, ';');
+    const commas = countDelimiter(sample, ',');
+    return semicolons > commas ? ';' : ',';
+  }
+  function parseCsv(text, delimiter) {
+    const source = String(text).replace(/^\uFEFF/, '');
+    const rows = [];
+    let row = [], field = '', quoted = false, afterQuote = false, line = 1, recordLine = 1;
+    for (let i = 0; i < source.length; i += 1) {
+      const char = source[i];
+      if (quoted) {
+        if (char === '"' && source[i + 1] === '"') { field += '"'; i += 1; }
+        else if (char === '"') { quoted = false; afterQuote = true; }
+        else { field += char; if (char === '\n') line += 1; else if (char === '\r' && source[i + 1] !== '\n') line += 1; }
+      } else if (afterQuote) {
+        if (char === delimiter) { row.push(field); field = ''; afterQuote = false; }
+        else if (char === '\n' || char === '\r') {
+          row.push(field); field = ''; afterQuote = false;
+          rows.push({ values: row, line: recordLine }); row = [];
+          if (char === '\r' && source[i + 1] === '\n') i += 1;
+          line += 1; recordLine = line;
+        } else if (char === ' ' || char === '\t') { /* ignora espaço após campo citado */ }
+        else throw new Error(`CSV inválido na linha ${line}: caractere inesperado após campo entre aspas.`);
+      } else if (char === '"') {
+        if (field.length === 0) quoted = true;
+        else throw new Error(`CSV inválido na linha ${line}: aspas inesperadas dentro de campo sem citação.`);
+      } else if (char === delimiter) { row.push(field); field = ''; }
+      else if (char === '\n' || char === '\r') {
+        row.push(field); field = '';
+        rows.push({ values: row, line: recordLine }); row = [];
+        if (char === '\r' && source[i + 1] === '\n') i += 1;
+        line += 1; recordLine = line;
+      } else field += char;
+    }
+    if (quoted) throw new Error(`CSV inválido na linha ${recordLine}: campo entre aspas sem fechamento.`);
+    if (field.length || row.length || afterQuote || (source.length && !/[\r\n]$/.test(source))) {
+      row.push(field); rows.push({ values: row, line: recordLine });
+    }
+    return rows;
+  }
+  function excelSerialToParts(raw) {
+    const serial = Number(raw);
+    if (!Number.isFinite(serial) || serial < 1 || serial > 100000) return null;
+    const date = new Date(Date.UTC(1899, 11, 30) + serial * 86400000);
+    return { year: date.getUTCFullYear(), month: date.getUTCMonth() + 1, day: date.getUTCDate(), hour: date.getUTCHours(), minute: date.getUTCMinutes(), second: date.getUTCSeconds(), hasTime: serial % 1 !== 0, hasZone: false };
+  }
+  function validParts(year, month, day, hour = 0, minute = 0, second = 0) {
+    const test = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
+    if (test.getUTCFullYear() !== year || test.getUTCMonth() + 1 !== month || test.getUTCDate() !== day || hour > 23 || minute > 59 || second > 59) return null;
+    return { year, month, day, hour, minute, second };
+  }
+  function localOffset(parts) {
+    const date = new Date(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second);
+    const eastMinutes = -date.getTimezoneOffset();
+    const sign = eastMinutes >= 0 ? '+' : '-';
+    const abs = Math.abs(eastMinutes);
+    return `${sign}${String(Math.floor(abs / 60)).padStart(2,'0')}:${String(abs % 60).padStart(2,'0')}`;
+  }
+  function parseDateValue(value) {
+    const raw = String(value ?? '').trim();
+    if (!raw) return { ok: true, value: null, display: '' };
+    let p = null, hasTime = false, hasZone = false;
+    let match = raw.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+    if (match) {
+      p = validParts(+match[3], +match[2], +match[1], +(match[4] || 0), +(match[5] || 0), +(match[6] || 0));
+      hasTime = Boolean(match[4]);
+    } else {
+      match = raw.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2})(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?)?$/i);
+      if (match) {
+        p = validParts(+match[1], +match[2], +match[3], +(match[4] || 0), +(match[5] || 0), +(match[6] || 0));
+        hasTime = Boolean(match[4]); hasZone = Boolean(match[8]);
+        if (p && hasZone) {
+          const d = new Date(raw);
+          if (!Number.isNaN(d.getTime())) return { ok: true, value: d.toISOString(), display: raw };
+          p = null;
+        }
+      } else if (/^\d+(\.\d+)?$/.test(raw)) {
+        p = excelSerialToParts(raw);
+        hasTime = Boolean(p?.hasTime);
+      }
+    }
+    if (!p) return { ok: false, value: null, display: raw, reason: `data inválida: “${raw}”` };
+    const date = `${p.year}-${String(p.month).padStart(2,'0')}-${String(p.day).padStart(2,'0')}`;
+    const time = `${String(p.hour).padStart(2,'0')}:${String(p.minute).padStart(2,'0')}:${String(p.second).padStart(2,'0')}`;
+    const localDateTime = `${date}T${time}${localOffset(p)}`;
+    return { ok: true, value: hasTime ? localDateTime : date, display: hasTime ? `${date} ${time.slice(0,5)}` : date };
+  }
+  function ageOn(birthDate, referenceDate = new Date()) {
+    if (!birthDate) return null;
+    const [year, month, day] = birthDate.slice(0,10).split('-').map(Number);
+    if (!validParts(year, month, day)) return null;
+    let age = referenceDate.getFullYear() - year;
+    if (referenceDate.getMonth() + 1 < month || (referenceDate.getMonth() + 1 === month && referenceDate.getDate() < day)) age -= 1;
+    return age >= 0 ? age : null;
+  }
+  function detectHeader(module, row) {
+    const first = normalize(row.values[0]);
+    const second = normalize(row.values[1]);
+    if (module === 'quadro') return first.includes('matricula') && second.includes('nome');
+    const seventh = normalize(row.values[6]);
+    return (first.includes('data') || first === 'dta' || first.includes('date')) && (seventh.includes('matricula') || seventh.includes('employee'));
+  }
+  function rowToRecord(module, row, referenceDate) {
+    const c = row.values.map((value) => String(value ?? '').trim());
+    if (module === 'quadro') {
+      if (c.length < 10) return { error: `linha ${row.line}: esperadas pelo menos 10 colunas (A–J), recebidas ${c.length}` };
+      const matricula = c[0], nome = c[1];
+      const admission = parseDateValue(c[2]);
+      const birth = parseDateValue(c[9]);
+      const problems = [];
+      if (!matricula) problems.push('matrícula vazia (coluna A)');
+      if (!nome) problems.push('nome vazio (coluna B)');
+      if (!admission.ok) problems.push(`admissão ${admission.reason}`);
+      if (!birth.ok) problems.push(`nascimento ${birth.reason}`);
+      if (problems.length) return { error: `linha ${row.line}: ${problems.join('; ')}` };
+      const birthValue = birth.value;
+      const record = {
+        MATRICULA: matricula,
+        NOME: nome,
+        'DATA DE ADMISSÃO': admission.value,
+        CARGO: c[4] || null,
+        CD: c[6] || null,
+        SETOR: c[8] || null,
+        NASCIMENTO: birthValue,
+        IDADE: birthValue ? ageOn(birthValue, referenceDate) : null,
+      };
+      return { valid: { row: row.line, record, preview: [matricula,nome,record.CARGO || '',record.CD || '',record.SETOR || '',admission.display,birth.display,record.IDADE ?? '—'] } };
+    }
+    if (c.length < 7) return { error: `linha ${row.line}: esperadas pelo menos 7 colunas (A–G), recebidas ${c.length}` };
+    const matricula = c[6];
+    const date = parseDateValue(c[0]);
+    const problems = [];
+    if (!matricula) problems.push('matrícula vazia (coluna G)');
+    if (!c[0]) problems.push('DTA vazia (coluna A)');
+    else if (!date.ok) problems.push(`DTA ${date.reason}`);
+    if (problems.length) return { error: `linha ${row.line}: ${problems.join('; ')}` };
+    const record = { DTA: date.value, MATRICULA: matricula };
+    return { valid: { row: row.line, record, preview: [date.display,matricula] } };
+  }
+  function parseFileText(text, module, delimiterMode) {
+    const delimiter = delimiterMode === 'semicolon' ? ';' : delimiterMode === 'comma' ? ',' : detectDelimiter(text);
+    const parsed = parseCsv(text, delimiter);
+    let ignored = 0;
+    const nonblank = parsed.filter((row) => {
+      if (isBlankRow(row.values)) { ignored += 1; return false; }
+      return true;
+    });
+    if (nonblank.length && detectHeader(module, nonblank[0])) { nonblank.shift(); ignored += 1; }
+    const valid = [], errors = [];
+    const referenceDate = new Date();
+    for (const row of nonblank) {
+      const result = rowToRecord(module, row, referenceDate);
+      if (result.error) errors.push(result.error);
+      else valid.push(result.valid);
+    }
+    return { delimiter, found: valid.length + errors.length, ignored, valid, errors, fileRows: parsed.length };
+  }
+  function esc(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  }
+  function renderPreview(result) {
+    const quadro = selectedModule === 'quadro';
+    const columns = quadro ? ['CSV · linha','MATRICULA','NOME','CARGO','CD','SETOR','ADMISSÃO','NASCIMENTO','IDADE'] : ['CSV · linha','DTA importada','MATRICULA'];
+    const rows = result.valid.slice(0, PREVIEW_LIMIT);
+    const wrap = document.createElement('div');
+    wrap.className = 'preview-block';
+    const previewHead = document.createElement('div');
+    previewHead.className = 'preview-top';
+    previewHead.innerHTML = `<strong>Prévia dos registros</strong><span class="preview-count">${result.found} linha(s) · ${result.valid.length} válida(s) · ${result.errors.length} erro(s) · ${result.ignored} vazia(s)/cabeçalho</span>`;
+    wrap.append(previewHead);
+    if (quadro) { const dtaNote = document.createElement('div'); dtaNote.className = 'preview-empty'; dtaNote.textContent = 'DTA será gerado no instante da confirmação e será igual em todos os registros deste envio.'; wrap.append(dtaNote); }
+    if (rows.length) {
+      const scroll = document.createElement('div'); scroll.className = 'table-scroll';
+      const table = document.createElement('table'); table.className = 'preview-table';
+      const thead = document.createElement('thead');
+      thead.innerHTML = `<tr>${columns.map((column) => `<th>${esc(column)}</th>`).join('')}</tr>`;
+      const tbody = document.createElement('tbody');
+      for (const item of rows) tbody.insertAdjacentHTML('beforeend', `<tr>${[item.row,...item.preview].map((value) => `<td>${esc(value)}</td>`).join('')}</tr>`);
+      table.append(thead,tbody); scroll.append(table); wrap.append(scroll);
+      if (result.valid.length > PREVIEW_LIMIT) {
+        const more = document.createElement('div'); more.className = 'preview-empty'; more.textContent = `Exibindo ${PREVIEW_LIMIT} de ${result.valid.length} registros válidos.`; wrap.append(more);
+      }
+    } else {
+      const empty = document.createElement('div'); empty.className = 'preview-empty'; empty.textContent = 'Nenhum registro válido para exibir.'; wrap.append(empty);
+    }
+    if (result.errors.length) {
+      const errors = document.createElement('ol'); errors.className = 'error-list';
+      result.errors.slice(0,30).forEach((message) => { const li = document.createElement('li'); li.textContent = message; errors.append(li); });
+      if (result.errors.length > 30) { const li = document.createElement('li'); li.textContent = `Mais ${result.errors.length - 30} erro(s); consulte o arquivo de origem.`; errors.append(li); }
+      wrap.append(errors);
+    }
+    ui.preview.replaceChildren(wrap);
+    ui.confirm.disabled = !result.valid.length || busy;
+  }
+  async function loadSelectedFile() {
+    const file = ui.file.files?.[0];
+    if (!file || busy) return;
+    pending = null; ui.confirm.disabled = true;
+    ui.progress.hidden = false; updateProgress('Lendo e validando o CSV…', 8);
+    try {
+      const text = await file.text();
+      if (!text.trim()) throw new Error('O arquivo está vazio. Selecione um CSV com linhas de dados.');
+      const result = parseFileText(text, selectedModule, $('#delimiterMode').value);
+      if (!result.fileRows) throw new Error('Não foi possível identificar linhas no arquivo CSV.');
+      pending = { ...result, name: file.name, table: TABLES[selectedModule] };
+      updateProgress(`Validação concluída · separador ${result.delimiter === ';' ? 'ponto e vírgula' : 'vírgula'}`, 100);
+      renderPreview(result);
+      if (!result.valid.length) notify('O CSV não contém registros válidos. Revise os erros na prévia.');
+    } catch (error) {
+      pending = null; ui.confirm.disabled = true;
+      ui.preview.replaceChildren(); updateProgress('Falha na leitura do arquivo.', 0);
+      notify(error?.message || 'Não foi possível ler o arquivo CSV.');
+    }
+  }
+  function updateProgress(label, percent) {
+    ui.progressLabel.textContent = label;
+    ui.progressPercent.textContent = `${percent}%`;
+    ui.progressBar.style.width = `${percent}%`;
+  }
+  function apiHeaders(includeJson = false) {
+    const headers = { apikey: SUPABASE_PUBLISHABLE_KEY, Accept: 'application/json' };
+    const jwt = ui.jwt.value.trim() || SUPABASE_ANON_JWT;
+    if (jwt) headers.Authorization = `Bearer ${jwt}`;
+    if (includeJson) {
+      headers['Content-Type'] = 'application/json';
+      headers.Prefer = 'return=minimal';
+    }
+    return headers;
+  }
+  async function responseMessage(response) {
+    const raw = await response.text();
+    if (!raw) return `${response.status} ${response.statusText}`;
+    try {
+      const parsed = JSON.parse(raw);
+      return [parsed.message, parsed.details, parsed.hint, parsed.code ? `código ${parsed.code}` : ''].filter(Boolean).join(' · ') || raw.slice(0,500);
+    } catch { return raw.slice(0,500); }
+  }
+  function makeResultCard(label, value, className = '') {
+    return `<article class="result-card ${className}"><span>${esc(label)}</span><strong>${esc(value)}</strong></article>`;
+  }
+  function showImportResult(result) {
+    $('#resultTitle').textContent = result.title;
+    $('#resultSubtitle').textContent = result.subtitle;
+    $('#resultGrid').innerHTML = [
+      makeResultCard('LINHAS ENCONTRADAS',result.found),
+      makeResultCard('REGISTROS VÁLIDOS',result.valid),
+      makeResultCard('GRAVADOS · API OK',result.saved,'success'),
+      makeResultCard('IGNORADOS',result.ignored),
+      makeResultCard('ERROS / NÃO CONFIRMADOS',result.failed,'fail'),
+      makeResultCard('NÃO INICIADOS',result.notStarted),
+    ].join('');
+    $('#resultMessage').textContent = result.message;
+    const errors = $('#resultErrors'); errors.replaceChildren();
+    if (result.errors.length) {
+      const box = document.createElement('div'); box.className = 'preview-block';
+      const head = document.createElement('div'); head.className = 'preview-top'; head.innerHTML = `<strong>Detalhes que precisam de revisão</strong><span class="preview-count">${result.errors.length} ocorrência(s)</span>`;
+      const list = document.createElement('ol'); list.className = 'error-list';
+      result.errors.slice(0,50).forEach((message) => { const li = document.createElement('li'); li.textContent = message; list.append(li); });
+      if (result.errors.length > 50) { const li = document.createElement('li'); li.textContent = `Mais ${result.errors.length - 50} ocorrência(s) não exibidas.`; list.append(li); }
+      box.append(head,list); errors.append(box);
+    }
+    showView('result');
+  }
+  async function submitImport() {
+    if (!pending?.valid.length || busy) return;
+    const confirmed = window.confirm(`Confirmar a inserção de ${pending.valid.length} registro(s) válidos em ${pending.table}? ${pending.errors.length} registro(s) com erro serão ignorados.\n\nNenhum registro existente será excluído ou atualizado. A operação pode gerar duplicidades e depende das permissões RLS configuradas no Supabase.`);
+    if (!confirmed) return;
+    setBusy(true); ui.progress.hidden = false; ui.preview.scrollIntoView({block:'nearest',behavior:'smooth'});
+    const importInstant = new Date().toISOString();
+    const records = pending.valid.map((item) => {
+      if (selectedModule !== 'quadro') return item.record;
+      return { ...item.record, DTA: importInstant };
+    });
+    const batches = [];
+    for (let i = 0; i < records.length; i += BATCH_SIZE) batches.push({ start:i, rows:records.slice(i,i+BATCH_SIZE) });
+    let saved = 0, failed = pending.errors.length, notStarted = 0;
+    const errors = [...pending.errors];
+    let stoppedByNetwork = false;
+    for (let index = 0; index < batches.length; index += 1) {
+      const batch = batches[index];
+      const startLine = pending.valid[batch.start].row;
+      const endLine = pending.valid[batch.start + batch.rows.length - 1].row;
+      const pct = Math.round((index / batches.length) * 100);
+      updateProgress(`Enviando lote ${index + 1} de ${batches.length} · linhas CSV ${startLine}–${endLine}`, pct);
+      try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/${encodeURIComponent(pending.table)}`, {
+          method:'POST', headers:apiHeaders(true), body:JSON.stringify(batch.rows), mode:'cors', cache:'no-store',
+        });
+        if (response.ok) saved += batch.rows.length;
+        else {
+          failed += batch.rows.length;
+          errors.push(`Lote ${index + 1} · linhas CSV ${startLine}–${endLine} · HTTP ${response.status}: ${await responseMessage(response)}`);
+        }
+      } catch (error) {
+        failed += batch.rows.length;
+        errors.push(`Lote ${index + 1} · linhas CSV ${startLine}–${endLine} · resposta não confirmada (${error?.message || 'falha de conexão'}). Verifique a tabela antes de tentar novamente.`);
+        notStarted = records.length - batch.start - batch.rows.length;
+        stoppedByNetwork = true;
+        break;
+      }
+      updateProgress(`Lote ${index + 1} de ${batches.length} processado · ${saved} confirmado(s)`, Math.round(((index + 1) / batches.length) * 100));
+    }
+    if (stoppedByNetwork) errors.push(`${notStarted} registro(s) dos lotes seguintes não foram enviados porque a conexão foi interrompida.`);
+    setBusy(false);
+    const message = saved === records.length && errors.length === 0
+      ? 'A API confirmou a inserção de todos os registros válidos. Nenhuma exclusão ou atualização foi executada.'
+      : `${saved} registro(s) tiveram gravação confirmada. Os demais não foram confirmados; leia os detalhes antes de decidir se deve repetir. Não houve tentativa automática de reenvio.`;
+    showImportResult({ title:saved === records.length && errors.length === 0 ? 'Importação confirmada' : 'Importação parcial ou não confirmada', subtitle:`Destino: ${pending.table}`, found:pending.found, valid:pending.valid.length, saved, ignored:pending.ignored, failed, notStarted, errors, message });
+  }
+
+  ui.open.addEventListener('click', openModal);
+  document.querySelectorAll('[data-open-update]').forEach((button) => button.addEventListener('click', openModal));
+  ui.close.addEventListener('click', closeModal);
+  $('#finishButton').addEventListener('click', closeModal);
+  ui.overlay.addEventListener('click', (event) => { if (event.target === ui.overlay) closeModal(); });
+  document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !ui.overlay.hidden) closeModal(); });
+  document.querySelectorAll('[data-module]').forEach((button) => button.addEventListener('click', () => chooseModule(button.dataset.module)));
+  document.querySelectorAll('[data-back]').forEach((button) => button.addEventListener('click', () => { if (!busy) { resetImport(); showView('choices'); } }));
+  ui.file.addEventListener('change', () => {
+    pending = null; ui.preview.replaceChildren(); ui.confirm.disabled = true;
+    ui.load.disabled = busy || !ui.file.files?.length;
+    ui.progress.hidden = true;
+  });
+  ui.load.addEventListener('click', loadSelectedFile);
+  ui.confirm.addEventListener('click', submitImport);
+})();
+</script>
+</body>
+</html>
