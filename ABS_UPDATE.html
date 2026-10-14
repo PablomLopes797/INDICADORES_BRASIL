@@ -281,7 +281,7 @@
   function rowToRecord(module, row, referenceDate) {
     const c = row.values.map((value) => String(value ?? '').trim());
     if (module === 'quadro') {
-      if (c.length < 10) return { error: `linha ${row.line}: esperadas pelo menos 10 colunas (A–J), recebidas ${c.length}` };
+      if (c.length < 27) return { error: `linha ${row.line}: esperadas pelo menos 27 colunas (A–AA; TURNO na coluna AA), recebidas ${c.length}` };
       const matricula = c[0], nome = c[1];
       const admission = parseDateValue(c[2]);
       const birth = parseDateValue(c[9]);
@@ -301,8 +301,9 @@
         SETOR: c[8] || null,
         NASCIMENTO: birthValue,
         IDADE: birthValue ? ageOn(birthValue, referenceDate) : null,
+        TURNO: c[26] || null,
       };
-      return { valid: { row: row.line, record, preview: [matricula,nome,record.CARGO || '',record.CD || '',record.SETOR || '',admission.display,birth.display,record.IDADE ?? '—'] } };
+      return { valid: { row: row.line, record, preview: [matricula,nome,record.CARGO || '',record.CD || '',record.SETOR || '',record.TURNO || '—',admission.display,birth.display,record.IDADE ?? '—'] } };
     }
     if (c.length < 7) return { error: `linha ${row.line}: esperadas pelo menos 7 colunas (A–G), recebidas ${c.length}` };
     const matricula = c[6];
@@ -338,7 +339,7 @@
   }
   function renderPreview(result) {
     const quadro = selectedModule === 'quadro';
-    const columns = quadro ? ['CSV · linha','MATRICULA','NOME','CARGO','CD','SETOR','ADMISSÃO','NASCIMENTO','IDADE'] : ['CSV · linha','DTA importada','MATRICULA'];
+    const columns = quadro ? ['CSV · linha','MATRICULA','NOME','CARGO','CD','SETOR','TURNO','ADMISSÃO','NASCIMENTO','IDADE'] : ['CSV · linha','DTA importada','MATRICULA'];
     const rows = result.valid.slice(0, PREVIEW_LIMIT);
     const wrap = document.createElement('div');
     wrap.className = 'preview-block';
