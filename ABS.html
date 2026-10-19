@@ -235,6 +235,9 @@ table.mx tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent2)}
 .defs div{margin-top:8px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:8px}
 .defs p{margin:0;font-size:10.5px;color:var(--muted);line-height:1.5}
 .defs b{color:var(--text)}
+.last-update{font-size:10px;color:var(--quiet);white-space:nowrap}
+.exec-link{white-space:nowrap}
+@media(max-width:760px){.top-actions{width:100%}.last-update{order:3;width:100%}.hero{padding-top:14px}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--quiet);font-size:9.5px;letter-spacing:1.2px;padding:16px 2px 0}
 .err{border:1px solid rgba(248,113,113,.4);background:rgba(248,113,113,.1);color:var(--text);border-radius:11px;padding:10px 12px;font-size:11.5px;margin-top:10px}
 .badge-demo{border-color:var(--amber)!important;color:var(--amber)!important}
@@ -269,6 +272,8 @@ table.mx tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent2)}
     <div class="top-actions">
       <span class="pill" id="conn"><i class="dot busy" id="connDot"></i><span id="connText">Preparando consulta…</span></span>
       <span class="pill" id="consist"><i class="dot" id="consistDot"></i><span id="consistText">Consistência não verificada</span></span>
+      <span class="pill last-update" id="lastUpdate">Última atualização: —</span>
+      <a class="btn btn-primary exec-link" href="./ABS_UPDATE.html">Atualizar ABS</a>
       <button class="btn" id="themeBtn" type="button">☀️ Modo claro</button>
     </div>
   </header>
@@ -281,7 +286,7 @@ table.mx tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent2)}
     </div>
     <form id="monthForm">
       <div class="field"><label for="monthInput">MÊS DE REFERÊNCIA</label><input id="monthInput" type="month" required></div>
-      <button class="btn btn-primary" id="reloadBtn" type="submit">↻ ATUALIZAR</button>
+      <button class="btn btn-primary" id="reloadBtn" type="submit">↻ ATUALIZAR DADOS</button>
     </form>
   </section>
 
@@ -364,7 +369,7 @@ table.mx tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent2)}
         <p><b>SEM DADOS (?)</b> — o dia não possui nenhuma carga em <code>ABS_SURICATO</code>. Não é possível inferir falta: a linha e o dia ficam fora do numerador e do denominador.</p>
         <p><b>DOMINGO / FERIADO</b> — sem falta para ninguém. Feriados vêm de <code>ABS_FERIADOS</code> (DTA em dd/mm/aaaa). Se houver justificativa registrada, ela é exibida, mas não entra no ABS.</p>
         <p><b>JUSTIFICADOS NÃO-ABS</b> — existe justificativa registrada cujo MOTIVO está fora dos motivos ativos (ex.: FO, TR). Aparecem na composição do dia, mas não entram no ABS. Por isso o invariante correto é: <b>presentes + ausentes + justificados não-ABS = quadro elegível</b>; somando férias e sem dados chega-se ao total do quadro do dia.</p>
-        <p><b>TAXA DE ABSENTEÍSMO</b> — ausentes ÷ quadro elegível (no mês, soma dos dias apurados). <b>ABS MÉDIO/DIA</b> — ausentes ÷ dias apurados (média, não soma do período).</p>
+        <p><b>TAXA DE ABSENTEÍSMO</b> — ausentes ÷ quadro elegível (no mês, soma dos dias apurados). No dia atual, entram apenas os turnos cujo início já ocorreu: 1º 06:00, 2º 13:40, 3º 22:00 do dia anterior e 4º 08:00; o 4º turno não opera aos sábados. <b>ABS MÉDIO/DIA</b> — ausentes ÷ dias apurados (média, não soma do período).</p>
         <p><b>QUADRO DE REFERÊNCIA</b> — quando o mês não possui nenhuma atualização de ABS_QUADRO anterior ao dia apurado, o painel usa a atualização mais antiga disponível e marca a data explicitamente. Nenhum número é estimado ou inventado.</p>
       </div>
     </details>
@@ -380,6 +385,9 @@ const JWT_SB='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 const T={quadro:'ABS_QUADRO',just:'ABS_JUSTIFICATIVAS',suricato:'ABS_SURICATO',ferias:'ABS_FÉRIAS',feriado:'ABS_FERIADOS'};
 const MOTIVOS=['P','FE','AT','AF','FO','TR','F'];
 const MOTIVO_NOME={P:'Presença',FE:'Férias',AT:'Atestado',AF:'Afastamento',FO:'Folga',TR:'Treinamento',F:'Falta'};
+// Início real dos turnos, no fuso America/Sao_Paulo.
+const INICIO_TURNO={'1':6*60,'2':13*60+40,'3':22*60,'4':8*60};
+const TURNO_4='4';
 const ATIVOS_PADRAO=new Set(['F','AT','AF']);
 const DOW=['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
 const PAGE=80;
@@ -402,6 +410,24 @@ const somaDia=(d,n)=>{const x=new Date(d+'T12:00:00Z');x.setUTCDate(x.getUTCDate
 function diasDoMes(y,m){const n=new Date(Date.UTC(y,m,0)).getUTCDate();return Array.from({length:n},(_,i)=>`${y}-${String(m).padStart(2,'0')}-${String(i+1).padStart(2,'0')}`)}
 function limites(y,m){return{ini:new Date(Date.UTC(y,m-1,1,3)).toISOString(),fim:new Date(Date.UTC(y,m,1,3)).toISOString()}}
 
+/* Regra operacional: no dia atual, entram apenas os turnos que já iniciaram.
+   O 3º turno começa às 22:00 do dia anterior e, por isso, já compõe o quadro
+   desde a madrugada. O 4º turno não opera aos sábados. */
+function minutosAgora(){
+  const p=new Intl.DateTimeFormat('en-GB',{timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(new Date()).reduce((a,x)=>(a[x.type]=x.value,a),{});
+  return (+p.hour||0)*60+(+p.minute||0);
+}
+function turnoConsiderado(turno,day){
+  const t=semAcento(turno).replace(/[^0-9]/g,'')||norm(turno);
+  if(dowDe(day)===6 && t===TURNO_4)return false;
+  if(day!==state.hoje)return true;
+  const agora=minutosAgora();
+  if(t==='3')return true; // começou às 22:00 do dia anterior
+  return INICIO_TURNO[t]!==undefined && agora>=INICIO_TURNO[t];
+}
+function pessoasConsideradas(people,day){
+  return people.filter(p=>turnoConsiderado(p.turno,day));
+}
 /* modelo do dia — usa state.present / state.presenceDays / state.ferias / state.just / state.feriados */
 function modeloDia(day){
   const base={day,dow:dowDe(day),domingo:dowDe(day)===0,feriado:false,futuro:false,
@@ -412,7 +438,7 @@ function modeloDia(day){
   base.futuro=day>state.hoje;
   const snap=snapshotPara(day);
   if(!snap)return base;
-  const people=mapaPessoas(snap.rows).filter(filtroFixo);
+  const people=pessoasConsideradas(mapaPessoas(snap.rows).filter(filtroFixo),day);
   base.people=people;base.total=people.length;base.quadroOk=true;base.quadroData=snap.date;base.quadroAproximado=snap.date>day;
   const naoUtil=base.domingo||base.feriado;
   base.presencaOk=state.presenceDays.has(day);
@@ -446,7 +472,7 @@ function consistente(d){ if(d.futuro||d.domingo||d.feriado||!d.quadroOk||!d.pres
 const state={ano:0,mes:0,dias:[],hoje:hoje(),snapshots:new Map(),just:new Map(),present:new Set(),presenceDays:new Set(),
 ferias:new Set(),feriados:new Set(),ativos:new Set(ATIVOS_PADRAO),cargo:new Map(),presentHours:new Map(),turno:'',cd:'',vista:'macro',metric:'abs',chartM:'abs',
 dia:'',setor:'',turnoF:'',cargoF:'',pessoa:'',busca:'',pagina:1,expand:new Set(),cache:new Map(),base:null,
-carregando:false,fonteFeriado:'—',fonteCargo:'ABS_QUADRO.CARGO',erro:'',aviso:''};
+carregando:false,fonteFeriado:'—',fonteCargo:'ABS_QUADRO.CARGO',erro:'',aviso:'',ultimaAtualizacao:null};
 
 /* ---------- rede ---------- */
 const headers=()=>({apikey:KEY_SB,Authorization:'Bearer '+JWT_SB,Accept:'application/json'});
@@ -555,13 +581,13 @@ function renderKpis(a){
       kpi('info','TAXA DE ABSENTEÍSMO',d.taxa===null?'—':pc.format(d.taxa)+'%','ausentes ÷ quadro elegível do dia')+
       kpi('','QUADRO ELEGÍVEL DO DIA',d.elegivel?nf.format(d.elegivel):'—',`total ${nf.format(d.total)} − férias ${nf.format(d.ferias)} − sem dados ${nf.format(d.fora)} = elegível`)+
       kpi('warn','JUSTIFICADOS NÃO-ABS',nf.format(d.jn),'folga/treinamento e afins: fora do ABS')+
-      kpi('','STATUS DA DATA',`<span style="font-size:13px">${st}</span>`,(d.quadroAproximado?`quadro de referência ${brData(d.quadroData)} (sem atualização anterior ao dia) · `:'')+`sem dados: ${nf.format(d.fora)}`);
+      kpi('','STATUS DA DATA',`<span style="font-size:13px">${st}</span>`,(d.day===state.hoje?`turnos iniciados até agora · `:'')+(d.quadroAproximado?`quadro de referência ${brData(d.quadroData)} · `:'')+`sem dados: ${nf.format(d.fora)}`);
     return;
   }
   $('#kpis').innerHTML=
     kpi('bad','ABS MÉDIO POR DIA',nf1.format(a.mediaAbs),`${nf.format(a.ausentes)} ausências em ${nf.format(a.apurados)} dia(s) apurado(s) — média, não soma`)+
     kpi('ok','PRESENTES MÉDIO POR DIA',nf1.format(a.mediaPre),`${nf.format(a.presentes)} presenças no período`)+
-    kpi('info','TAXA DE ABSENTEÍSMO',pct,'ausentes ÷ soma do quadro elegível dos dias apurados')+
+    kpi('info','TAXA DE ABSENTEÍSMO',pct,state.dias.includes(state.hoje)?'dia atual usa somente turnos já iniciados; histórico usa quadro completo':'ausentes ÷ soma do quadro elegível dos dias apurados')+
     kpi('','QUADRO ELEGÍVEL MÉDIO/DIA',nf1.format(a.mediaTotal),`${nf.format(a.elegivel)} elegíveis somados no mês`)+
     kpi('warn','JUSTIFICADOS NÃO-ABS',nf.format(a.jn),'folga/treinamento e afins: fora do ABS')+
     kpi('','DIAS APURADOS',nf.format(a.apurados),`${nf.format(a.semDados)} sem dados · ${nf.format(a.domingo)} dom · ${nf.format(a.feriado)} feriado · ${nf.format(a.futuro)} futuro · ${nf.format(a.semQuadro)} sem quadro`);
@@ -649,10 +675,12 @@ function miniEvolucao(ds,campo,alvo){
       <div class="mini-f"><span>${serie.length?brData(serie[0].day):'—'}</span><span>${serie.length?brData(serie[serie.length-1].day):'—'}</span></div></div>`}).join('')||'<div class="empty">Sem dias apurados no período.</div>';
 }
 function compTurnos(ds,alvo){
-  const vals=[...new Set(ds.flatMap(d=>d.people.map(p=>p.turno)))].sort((x,y)=>String(x).localeCompare(String(y),'pt-BR',{numeric:true}));
+  const vals=[...new Set([...todasPessoas().map(p=>p.turno),...ds.flatMap(d=>d.people.map(p=>p.turno))])].sort((x,y)=>String(x).localeCompare(String(y),'pt-BR',{numeric:true}));
   alvo.innerHTML=vals.map(t=>{let pre=0,aus=0,fer=0,fora=0;
     for(const d of ds)for(const p of d.people.filter(x=>x.turno===t)){const st=statusDe(p,d);if(st.cls==='pre')pre++;else if(st.cls==='abs')aus++;else if(st.cls==='fer')fer++;else if(st.c==='?')fora++}
+    const semOperacao=String(t).replace(/[^0-9]/g,'')===TURNO_4 && ds.some(d=>dowDe(d.day)===6) && (pre+aus+fer+fora===0);
     const tot=pre+aus+fer+fora||1;
+    if(semOperacao)return `<div class="crow"><span class="cl">TURNO ${esc(String(t))}</span><span class="cbar"><span style="color:var(--quiet);padding-left:8px">- · não opera aos sábados</span></span><b class="cv">-</b></div>`;
     return `<div class="crow"><span class="cl">TURNO ${esc(String(t))}</span><span class="cbar">
       <i style="width:${pre/tot*100}%;background:rgba(52,211,153,.75)" title="Presentes ${pre}"></i>
       <i style="width:${aus/tot*100}%;background:rgba(248,113,113,.8)" title="Ausentes (ABS) ${aus}"></i>
@@ -858,6 +886,8 @@ function presentTooltip(mat,day){const horas=state.presentHours&&state.presentHo
 const formatHora=v=>{const d=parseData(v);return d?new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit'}).format(d):String(v)};
 /* ---------- tabela (métrica explícita) ---------- */
 function valorCelula(people,m){
+  const somente4=people.length>0&&people.every(p=>semAcento(p.turno).replace(/[^0-9]/g,'')===TURNO_4);
+  if(dowDe(m.day)===6&&somente4)return{c:'-',s:'4º turno · não opera aos sábados',cls:'nw'};
   if(m.futuro)return{c:'-',s:'futuro',cls:'fut'};
   if(m.domingo||m.feriado)return{c:'—',s:m.feriado?'FER':'DOM',cls:'nw'};
   if(!m.quadroOk)return{c:'—',s:'sem quadro',cls:'cd'};
@@ -958,7 +988,7 @@ function ligar(){
     try{localStorage.setItem('abs-theme',claro?'light':'dark')}catch{};render()};
   tema();$('#themeBtn').onclick=()=>{claro=!claro;tema()};
   $('#monthForm').onsubmit=e=>{e.preventDefault();state.turno='';state.cd='';state.dia='';state.setor='';state.turnoF='';state.cargoF='';state.pessoa='';state.busca='';state.expand=new Set();state.pagina=1;
-    $('#peopleSearch').value='';$('#searchClear').hidden=true;invalidar();carregar()};
+    $('#peopleSearch').value='';$('#searchClear').hidden=true;invalidar();carga()};
   $('#turnoFilter').onchange=e=>{state.turno=e.target.value;state.expand=new Set();invalidar();render()};
   $('#cdFilter').onchange=e=>{state.cd=e.target.value;invalidar();render()};
   $('#motiveBtn').onclick=()=>{const m=$('#motiveMenu');m.hidden=!m.hidden;$('#motiveBtn').setAttribute('aria-expanded',String(!m.hidden))};
@@ -1039,6 +1069,8 @@ async function carga(){
     res.forEach((rows,i)=>{const d=validos[i];if(!rows.length)return;state.presenceDays.add(d);for(const r of rows){const m=norm(r.MATRICULA);if(!m)continue;state.present.add(kk(m,d));
       const k=kk(m,d);if(!state.presentHours.has(k))state.presentHours.set(k,[]);const h=state.presentHours.get(k);if(h.length<6)h.push(r.DTA)}});
     invalidar();preencherFiltros();render();
+    state.ultimaAtualizacao=new Date();
+    $('#lastUpdate').textContent='Última atualização: '+new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',dateStyle:'short',timeStyle:'medium'}).format(state.ultimaAtualizacao);
     const sd=state.dias.filter(d=>d<=state.hoje&&dowDe(d)!==0&&!state.feriados.has(d)&&!state.presenceDays.has(d)).length;
     status('ok',`Dados carregados · ${nf.format(state.present.size)} presenças · ${sd} dia(s) sem carga de presença · ${state.feriados.size} feriado(s)`);
   }catch(e){state.erro=String(e.message||e);status('error','Falha na consulta');$('#viewBody').innerHTML=`<div class="err"><b>Não foi possível carregar os dados.</b><br>${esc(state.erro)}<br><br>Verifique a conexão com o Supabase (a chave anônima está embutida no arquivo) e se o mês selecionado possui dados.</div>`}
@@ -1062,6 +1094,8 @@ $('#monthInput').value=mesInicial;
 const mvIni=mesInicial.match(/^(\d{4})-(\d{2})$/);
 if(mvIni){state.ano=+mvIni[1];state.mes=+mvIni[2];state.dias=diasDoMes(state.ano,state.mes)}
 ligar();carga();
+  // Atualização automática a cada 60 minutos, sem sobrepor uma carga em andamento.
+  setInterval(()=>{if(!state.carregando)carga()},60*60*1000);
 })();
 </script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
