@@ -546,6 +546,8 @@ function statusDe(p,d){
   if(d.futuro)return{c:'-',cls:'fut',txt:'dia futuro'};
   if(d.domingo||d.feriado)return{c:'-',cls:'nw',txt:(d.feriado?'feriado':'domingo')+' · sem falta'};
   if(state.present.has(k))return{c:'P',cls:'pre',txt:'presença registrada no Suricato'};
+  const turnoPessoa=semAcento(p.turno).replace(/[^0-9]/g,'');
+  if(d.dow===6&&turnoPessoa===TURNO_4)return{c:'-',cls:'nw',txt:'4º turno · não trabalha aos sábados'};
   if(state.ferias.has(k))return{c:'FE',cls:'fer',txt:'férias'};
   const j=state.just.get(k);
   if(j)return{c:j,cls:state.ativos.has(j)?'abs':'jus',txt:(MOTIVO_NOME[j]||j)+(state.ativos.has(j)?' · contabilizado como ABS':' · não contabilizado como ABS')};
@@ -835,51 +837,9 @@ function listaPessoas(){
   return l.sort((x,y)=>x.nome.localeCompare(y.nome,'pt-BR'));
 }
 function renderPessoas(a){
-  const l=listaPessoas();
-  const p=state.pessoa?l[0]:null;
-  const ds=a.ds.filter(d=>!d.futuro&&!d.domingo&&!d.feriado&&d.quadroOk&&d.presencaOk);
-  let aus,pre,fer,fora,tot,jn;
-  if(p){aus=ds.filter(d=>statusDe(p,d).cls==='abs').length;pre=ds.filter(d=>statusDe(p,d).c==='P').length;fer=ds.filter(d=>statusDe(p,d).c==='FE').length;fora=ds.filter(d=>statusDe(p,d).c==='?').length;jn=ds.filter(d=>statusDe(p,d).cls==='jus').length;tot=aus+pre+fer+fora+jn}
-  else{aus=a.ausentes;pre=a.presentes;fer=a.ferias;fora=a.fora;jn=a.jn;tot=aus+pre+fer+fora+jn}
-  $('#viewBody').innerHTML=`
-  <div class="grid">
-    <div class="card c12" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between">
-      <div><div style="font-size:9.5px;letter-spacing:1.4px;color:var(--quiet);font-weight:800">CONTEXTO ANALISADO</div>
-      <div style="font-size:15px;font-weight:800;margin-top:3px">${esc(p?p.nome+' · '+p.matricula+' · '+p.setor+' · turno '+p.turno:(state.busca?'BUSCA · "'+state.busca+'"':'TODOS OS COLABORADORES DO CD'))}</div></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <span class="chip">AUSENTES (ABS) ${nf.format(aus)}</span><span class="chip">PRESENTES ${nf.format(pre)}</span>
-        <span class="chip">JUSTIFICADOS NÃO-ABS ${nf.format(jn)}</span><span class="chip">FÉRIAS ${nf.format(fer)}</span>
-        <span class="chip">SEM DADOS ${nf.format(fora)}</span>
-        <span class="chip">TAXA ${(pre+aus+jn)?pc.format(aus/(pre+aus+jn)*100)+'%':'—'}</span>
-        <span class="chip">${nf.format(l.length)} COLABORADOR(ES) NA LISTA</span></div></div>
-    <div class="card c8"><h3>CALENDÁRIO INDIVIDUAL · ${esc(p?p.nome:'selecione um colaborador')}</h3><div id="pCal"></div></div>
-    <div class="card c4"><h3>COMPOSIÇÃO DO MÊS</h3><div id="pComp"></div></div>
-    <div class="card c6"><h3>COLABORADORES COM ABS · POR DIA <em>pessoas distintas ausentes em cada dia apurado</em></h3><div class="scroll" id="pDia" style="max-height:none"></div></div>
-    <div class="card c6"><h3>FAIXAS DE ABS POR COLABORADOR <em>quantos colaboradores por faixa de ausências</em></h3><div id="pFaixa"></div>
-      <div class="hint">Contagem sobre os ${nf.format(l.length)} colaborador(es) do contexto atual, considerando apenas dias apurados (domingos, feriados e dias sem carga ficam fora).</div></div>
-  </div>`;
-  const cals=state.dias.map(d=>({d,m:dia(d)}));
-  $('#pCal').innerHTML=p?`<div class="hg" style="grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;min-width:0">`+
-    DOW.map(x=>`<div class="hh">${x}</div>`).join('')+
-    (()=>{const first=dowDe(state.dias[0]);let pre2='';for(let i=0;i<first;i++)pre2+=`<div class="hc e" style="height:30px"></div>`;
-      return pre2+cals.map(({d,m})=>{const st=statusDe(p,m);const bg=st.cls==='abs'?'rgba(248,113,113,.85)':st.cls==='pre'?'rgba(52,211,153,.7)':st.cls==='fer'?'rgba(96,165,250,.7)':st.cls==='jus'?'rgba(251,191,36,.75)':null;
-        return `<div class="hc" style="height:30px;${bg?`background:${bg}`:''}" title="${esc(brData(d)+' · '+dowNome(d)+' · '+st.txt)}">${d.slice(8)}</div>`}).join('')})()+`</div>
-      <div class="lgd" style="padding-top:10px"><span><i style="background:rgba(248,113,113,.85)"></i>ABS</span><span><i style="background:rgba(52,211,153,.7)"></i>Presença</span><span><i style="background:rgba(96,165,250,.7)"></i>Férias</span><span><i style="background:rgba(251,191,36,.75)"></i>Justificado (não ABS)</span><span><i style="background:var(--track)"></i>Domingo/feriado/sem dados</span></div>`
-    :`<div class="empty">Use a busca acima (nome ou matrícula) ou clique no nome de um colaborador na tabela dia a dia abaixo para abrir o calendário individual.</div>`;
-  const pç=v=>tot?Math.max(1,v/tot*100):0;
-  $('#pComp').innerHTML=`<div style="display:flex;height:24px;border-radius:8px;overflow:hidden;border:1px solid var(--line)">
-      <div style="width:${pç(aus)}%;background:rgba(248,113,113,.8)" title="Ausentes (ABS) ${aus}"></div>
-      <div style="width:${pç(pre)}%;background:rgba(52,211,153,.75)" title="Presentes ${pre}"></div>
-      <div style="width:${pç(jn)}%;background:rgba(251,191,36,.75)" title="Justificados não-ABS ${jn}"></div>
-      <div style="width:${pç(fer)}%;background:rgba(96,165,250,.7)" title="Férias ${fer}"></div>
-      <div style="width:${pç(fora)}%;background:var(--track)" title="Sem dados ${fora}"></div></div>
-    <div class="hint">${nf.format(tot)} registros-dia · ausentes (ABS) ${nf.format(aus)} · presentes ${nf.format(pre)} · justificados não-ABS ${nf.format(jn)} · férias ${nf.format(fer)} · sem dados ${nf.format(fora)}. Taxa = ${nf.format(aus)} ÷ ${nf.format(pre+aus+jn)} = ${(pre+aus+jn)?pc.format(aus/(pre+aus+jn)*100):'—'}%.</div>`;
-  const porDia=ds.map(d=>({code:d.day,label:brData(d.day).slice(0,5),valor:d.people.filter(x=>statusDe(x,d).cls==='abs').length}));
-  $('#pDia').innerHTML=porDia.length?listaRank(porDia,'absDia',x=>`${nf.format(x.valor)}<em>pessoa(s) distintas com ABS</em>`):'<div class="empty">Sem dias apurados no período.</div>';
-  const fx=[0,0,0,0,0];
-  for(const q of l){const n=ds.filter(d=>statusDe(q,d).cls==='abs').length;fx[n===0?0:n<=2?1:n<=5?2:n<=10?3:4]++}
-  const rotF=['0 ausência','1 a 2','3 a 5','6 a 10','11 ou mais'];
-  listaBarras(fx.map((v,i)=>({label:rotF[i],valor:v,txt:`${v} colaborador(es)`})),$('#pFaixa'),x=>nf.format(x.valor));
+  // A aba Pessoas deve exibir exclusivamente a tabela; a busca e os
+  // controles de cópia continuam no bloco peopleTools acima da tabela.
+  $('#viewBody').innerHTML='';
 }
 
 function presentTooltip(mat,day){const horas=state.presentHours&&state.presentHours.get(kk(mat,day));return horas&&horas.length?`P · registros do Suricato em ${brData(day)}: ${horas.map(formatHora).join(', ')}`:'P · presença registrada no Suricato'}
@@ -1053,7 +1013,9 @@ async function carga(){
     const[feriados,just,ferias]=await Promise.all([
       pega(T.feriado,'id,DTA,FERIADO',{},'id.asc').catch(()=>[]),
       pega(T.just,'id,DTA,"MATRICULA COLABORADOR",MOTIVO',{or:`(DTA.ilike.*/${state.mes}/${state.ano}*,DTA.ilike.*/${String(state.mes).padStart(2,'0')}/${state.ano}*)`},'DTA.asc,id.asc').catch(()=>[]),
-      pega(T.ferias,'id,DTA,MATRICULA',{DTA:'gte.'+L.ini,DTA_2:'lt.'+L.fim},'DTA.asc,id.asc').catch(()=>[])
+      // ABS_FERIAS possui somente DTA e MATRICULA; não solicitar coluna id.
+      // As datas são comparadas como date (YYYY-MM-DD), evitando falha silenciosa.
+      pega(T.ferias,'DTA,MATRICULA',{DTA:'gte.'+L.ini.slice(0,10),DTA_2:'lt.'+L.fim.slice(0,10)},'DTA.asc').catch(()=>[])
     ]);
     state.snapshots=snapshots([...prev,...mes]);
     state.feriados=new Set(feriados.map(r=>diaLocal(r.DTA)).filter(Boolean));
