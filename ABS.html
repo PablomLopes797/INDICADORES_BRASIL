@@ -358,6 +358,7 @@ td.st.jc{cursor:context-menu;box-shadow:inset 0 -2px 0 0 rgba(251,191,36,.55)}
           <button data-cm="taxa" type="button">TAXA %</button>
         </div>
       </div>
+      <div class="multi" id="motivosField" style="position:relative"><button class="btn" id="motivosBtn" type="button" aria-expanded="false">Todos os motivos</button><div class="multi-menu" id="motivosMenu" hidden></div></div>
       <button class="btn" id="clearBtn" type="button">Limpar seleções</button>
     </div>
     <div class="filters-on" id="filtersOn" aria-live="polite"></div>
@@ -366,8 +367,8 @@ td.st.jc{cursor:context-menu;box-shadow:inset 0 -2px 0 0 rgba(251,191,36,.55)}
 
     <nav class="tabs" id="tabs">
       <button class="tab on" data-view="macro" type="button">🧭 MACRO · EXECUTIVO</button>
-      <button class="tab" data-view="setores" type="button">🏭 CD · SETORES</button>
-      <button class="tab" data-view="turnos" type="button">🕒 TURNOS · SETORES · CARGOS</button>
+      <button class="tab" data-view="setores" type="button">🏭 SETORES</button>
+      <button class="tab" data-view="turnos" type="button">🕒 TURNOS</button>
       <button class="tab" data-view="pessoas" type="button">👤 PESSOAS</button>
     </nav>
 
@@ -381,7 +382,7 @@ td.st.jc{cursor:context-menu;box-shadow:inset 0 -2px 0 0 rgba(251,191,36,.55)}
           <button class="sclr" id="searchClear" type="button" hidden aria-label="Limpar">✕</button>
         </div>
         <div class="sg" id="suggest" hidden></div>
-        <div class="shint" id="searchHint">Digite para ver sugestões (nome ou matrícula). Enter filtra só o colaborador escolhido; ↑ ↓ navegam.</div>
+        <div class="lgd" id="legendaPess" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:9.5px;color:var(--muted);padding:2px 0 8px"><b style="color:var(--text);font-size:10px;letter-spacing:.6px">LEGENDA</b><span><i style="background:rgba(248,113,113,.7);width:8px;height:8px;display:inline-block;border-radius:2px;margin-right:4px;vertical-align:middle"></i>F/AT/AF · ABS</span><span><i style="background:rgba(52,211,153,.7);width:8px;height:8px;display:inline-block;border-radius:2px;margin-right:4px;vertical-align:middle"></i>P · presença</span><span><i style="background:rgba(96,165,250,.7);width:8px;height:8px;display:inline-block;border-radius:2px;margin-right:4px;vertical-align:middle"></i>FE · férias</span><span><i style="background:rgba(251,191,36,.7);width:8px;height:8px;display:inline-block;border-radius:2px;margin-right:4px;vertical-align:middle"></i>FO/TR · não ABS</span><span style="color:var(--quiet)">DOM/FER · sem falta · ? · sem carga · duplo clique justifica</span></div><div class="shint" id="searchHint">Digite para ver sugestões (nome ou matrícula). Enter filtra só o colaborador escolhido; ↑ ↓ navegam.</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
         <button class="btn" id="copyBtn" type="button">Copiar tabela</button>
@@ -496,7 +497,7 @@ function pessoasConsideradas(people,day){
 function modeloDia(day){
   const base={day,dow:dowDe(day),domingo:dowDe(day)===0,feriado:false,futuro:false,
     quadroData:null,quadroOk:false,presencaOk:false,people:[],
-    total:0,ferias:0,elegivel:0,presentes:0,ausentes:0,fora:0,jn:0,taxa:null,quadroAproximado:false,
+    total:0,ferias:0,elegivel:0,denominador:0,presentes:0,ausentes:0,fora:0,jn:0,taxa:null,quadroAproximado:false,
     porMotivo:{},porSetor:{},porTurno:{},ausentesLista:[],presentesLista:[],jnLista:[]};
   base.feriado=state.feriados.has(day);
   base.futuro=day>state.hoje;
@@ -519,13 +520,15 @@ function modeloDia(day){
       if(j){code=j;isAbs=state.ativos.has(j);if(!isAbs){jn++;jnLista.push(p.matricula)}}
       else if(pa){code='F';isAbs=state.ativos.has('F')}
       else{code='?';fora++}}
+    if(isAbs&&!state.motivoFiltro.has(code)){isAbs=false;jn++;jnLista.push(p.matricula)}
     if(isAbs){ausentes++;ausentesLista.push(p.matricula);porMotivo[code]=(porMotivo[code]||0)+1;porSetor[p.setor]=(porSetor[p.setor]||0)+1;porTurno[p.turno]=(porTurno[p.turno]||0)+1}
   }
   base.presentes=presentes;base.ausentes=ausentes;base.ferias=ferias;base.fora=fora;base.jn=jn;base.jnLista=jnLista;
   base.elegivel=people.length-ferias-fora;
   base.porMotivo=porMotivo;base.porSetor=porSetor;base.porTurno=porTurno;
   base.ausentesLista=ausentesLista;base.presentesLista=presentesLista;
-  base.taxa=base.elegivel>0?ausentes/base.elegivel*100:null;
+  base.denominador=base.total-(state.motivoFiltro.has('FE')?ferias:0);
+  base.taxa=base.denominador>0?ausentes/base.denominador*100:null;
   return base;
 }
 function consistente(d){ if(d.futuro||d.domingo||d.feriado||!d.quadroOk||!d.presencaOk)return true;
@@ -537,7 +540,7 @@ const state={ano:0,mes:0,dias:[],hoje:hoje(),snapshots:new Map(),just:new Map(),
 ferias:new Set(),feriados:new Set(),ativos:new Set(ATIVOS_PADRAO),cargo:new Map(),presentHours:new Map(),turno:'',cd:'',vista:'macro',metric:'abs',chartM:'abs',
 dia:'',setor:'',turnoF:'',cargoF:'',pessoa:'',busca:'',pagina:1,expand:new Set(),cache:new Map(),base:null,
 carregando:false,fonteFeriado:'—',fonteCargo:'ABS_QUADRO.CARGO',erro:'',aviso:'',ultimaAtualizacao:null,
-gestor:'',justObs:new Map(),_lastDayClick:'',_lastDayTime:0};
+gestor:'',justObs:new Map(),_lastDayClick:'',_lastDayTime:0,motivoFiltro:new Set(['P','F','AT','AF','FE','FO','TR'])};
 
 /* ---------- rede ---------- */
 const headers=()=>({apikey:KEY_SB,Authorization:'Bearer '+JWT_SB,Accept:'application/json'});
@@ -584,7 +587,7 @@ const DD=()=>state.dias;
 
 /* ---------- agregação única (fonte de verdade de todos os componentes) ---------- */
 function agregar(ds){
-  const r={ds,ausentes:0,presentes:0,elegivel:0,total:0,ferias:0,jn:0,fora:0,apurados:0,semDados:0,domingo:0,feriado:0,futuro:0,semQuadro:0,
+  const r={ds,ausentes:0,presentes:0,elegivel:0,denominador:0,total:0,ferias:0,jn:0,fora:0,apurados:0,semDados:0,domingo:0,feriado:0,futuro:0,semQuadro:0,
     taxa:null,mediaAbs:0,mediaPre:0,mediaTotal:0,motivos:{},setores:new Map(),turnos:new Map(),cargos:new Map(),
     dows:Array.from({length:7},()=>({aus:0,pre:0,ele:0,dias:0})),pessoas:new Map(),heat:new Map(),inconsist:0};
   for(const d of ds){
@@ -593,16 +596,16 @@ function agregar(ds){
     if(d.domingo){r.domingo++;continue}
     if(!d.quadroOk){r.semQuadro++;continue}
     if(!d.presencaOk){r.semDados++;continue}
-    r.apurados++;r.ausentes+=d.ausentes;r.presentes+=d.presentes;r.elegivel+=d.elegivel;r.total+=d.total;r.ferias+=d.ferias;r.jn+=d.jn;r.fora+=d.fora;
+    r.apurados++;r.denominador+=d.denominador||Math.max(0,d.total-d.ferias);r.ausentes+=d.ausentes;r.presentes+=d.presentes;r.elegivel+=d.elegivel;r.total+=d.total;r.ferias+=d.ferias;r.jn+=d.jn;r.fora+=d.fora;
     if(!consistente(d))r.inconsist++;
     const w=d.dow;r.dows[w].aus+=d.ausentes;r.dows[w].pre+=d.presentes;r.dows[w].ele+=d.elegivel;r.dows[w].dias++;
     for(const[k,v]of Object.entries(d.porMotivo))r.motivos[k]=(r.motivos[k]||0)+v;
-    for(const[k,v]of Object.entries(d.porSetor)){const o=r.setores.get(k)||{aus:0,ele:0,dias:0};o.aus+=v;o.ele+=d.elegivel;o.dias++;r.setores.set(k,o);
+    for(const[k,v]of Object.entries(d.porSetor)){const o=r.setores.get(k)||{aus:0,ele:0,den:0,dias:0};o.aus+=v;o.ele+=d.elegivel;o.den+=d.denominador||Math.max(0,d.total-d.ferias);o.dias++;r.setores.set(k,o);
       if(!r.heat.has(k))r.heat.set(k,[]);r.heat.get(k).push({day:d.day,aus:v,ele:d.elegivel})}
-    for(const[k,v]of Object.entries(d.porTurno)){const o=r.turnos.get(k)||{aus:0,ele:0};o.aus+=v;o.ele+=d.elegivel;r.turnos.set(k,o)}
+    for(const[k,v]of Object.entries(d.porTurno)){const o=r.turnos.get(k)||{aus:0,ele:0,den:0};o.aus+=v;o.ele+=d.elegivel;o.den+=d.denominador||Math.max(0,d.total-d.ferias);r.turnos.set(k,o)}
     for(const mat of d.ausentesLista){const o=r.pessoas.get(mat)||{aus:0,dias:0};o.aus++;o.dias++;r.pessoas.set(mat,o)}
   }
-  r.taxa=r.elegivel>0?r.ausentes/r.elegivel*100:null;
+  r.taxa=r.denominador>0?r.ausentes/r.denominador*100:null;
   r.mediaAbs=r.apurados?r.ausentes/r.apurados:0;
   r.mediaPre=r.apurados?r.presentes/r.apurados:0;
   r.mediaTotal=r.apurados?r.elegivel/r.apurados:0;
@@ -758,8 +761,8 @@ function compTurnos(ds,alvo){
 
 /* ---------- MACRO ---------- */
 function renderMacro(a){
-  const setores=[...a.setores.entries()].map(([k,v])=>({code:k,label:k,valor:a.apurados?v.aus/a.apurados:0,aus:v.aus,ele:v.ele})).sort((x,y)=>y.valor-x.valor);
-  const turnos=[...a.turnos.entries()].map(([k,v])=>({code:k,label:'Turno '+k,valor:a.apurados?v.aus/a.apurados:0,aus:v.aus,ele:v.ele})).sort((x,y)=>y.valor-x.valor);
+  const setores=[...a.setores.entries()].map(([k,v])=>({code:k,label:k,valor:v.den?v.aus/v.den*100:0,aus:v.aus,ele:v.ele,den:v.den})).sort((x,y)=>y.valor-x.valor);
+  const turnos=[...a.turnos.entries()].map(([k,v])=>({code:k,label:'Turno '+k,valor:v.den?v.aus/v.den*100:0,aus:v.aus,ele:v.ele,den:v.den})).sort((x,y)=>y.valor-x.valor);
   const dows=a.dows.map((v,i)=>({i,aus:v.aus,dias:v.dias,media:v.dias?v.aus/v.dias:0,taxa:v.ele?v.aus/v.ele*100:null}));
   const util=dows.filter(d=>d.dias>0);
   const piorDow=[...util].sort((x,y)=>y.media-x.media)[0];
@@ -770,9 +773,9 @@ function renderMacro(a){
   const top10=rank.slice(0,10);
   const conc=a.ausentes?top10.reduce((s,p)=>s+p.aus,0)/a.ausentes*100:0;
   const ins=[];
-  if(piorSetor&&piorSetor.aus>0)ins.push(['crit','SETOR MAIS CRÍTICO',piorSetor.label,`${nf1.format(piorSetor.valor)} ausentes/dia · ${nf.format(piorSetor.aus)} no período · ${pc.format(piorSetor.ele?piorSetor.aus/piorSetor.ele*100:0)}% de taxa`]);
+  if(piorSetor&&piorSetor.aus>0)ins.push(['crit','SETOR MAIS CRÍTICO',piorSetor.label,`${nf1.format(piorSetor.valor)} ausentes/dia · ${nf.format(piorSetor.aus)} no período · ${pc.format((piorSetor.den||piorSetor.ele)?piorSetor.aus/(piorSetor.den||piorSetor.ele)*100:0)}% de taxa`]);
   if(piorDow)ins.push(['crit','DIA DA SEMANA MAIS CRÍTICO',DOW[piorDow.i],`${nf1.format(piorDow.media)} ausentes/dia (${nf.format(piorDow.aus)} em ${nf.format(piorDow.dias)} dia(s))`]);
-  if(piorTurno&&piorTurno.aus>0)ins.push(['warn','TURNO MAIS CRÍTICO',piorTurno.label,`${nf1.format(piorTurno.valor)} ausentes/dia · ${pc.format(piorTurno.ele?piorTurno.aus/piorTurno.ele*100:0)}% de taxa`]);
+  if(piorTurno&&piorTurno.aus>0)ins.push(['warn','TURNO MAIS CRÍTICO',piorTurno.label,`${nf1.format(piorTurno.valor)} ausentes/dia · ${pc.format((piorTurno.den||piorTurno.ele)?piorTurno.aus/(piorTurno.den||piorTurno.ele)*100:0)}% de taxa`]);
   if(motTop)ins.push(['warn','MOTIVO DOMINANTE',motTop[0]+' · '+(MOTIVO_NOME[motTop[0]]||motTop[0]),`${nf.format(motTop[1])} ocorrências · ${pc.format(motTop[1]/(a.ausentes||1)*100)}% do ABS`]);
   ins.push(['','CONCENTRAÇÃO TOP 10',pc.format(conc)+'% do ABS',`os 10 colaboradores com mais ausências somam ${nf.format(top10.reduce((s,p)=>s+p.aus,0))} de ${nf.format(a.ausentes)}`]);
   if(melhor)ins.push(['good','MELHOR DESEMPENHO',melhor.label,`${nf1.format(melhor.valor)} ausentes/dia entre os setores com ocorrência`]);
@@ -800,91 +803,14 @@ function renderMacro(a){
 
 /* ---------- CD · SETORES ---------- */
 function renderSetores(a){
-  const setores=[...a.setores.entries()].map(([k,v])=>({code:k,label:k,valor:a.apurados?v.aus/a.apurados:0,aus:v.aus,ele:v.ele})).sort((x,y)=>y.valor-x.valor);
-  const sel=state.setor?setores.find(s=>s.code===state.setor):null;
-  const ctx=sel?{aus:sel.aus,ele:sel.ele,rot:'SETOR SELECIONADO · '+sel.label}:{aus:a.ausentes,ele:a.elegivel,rot:'CD CONSOLIDADO (TODOS OS SETORES)'};
-  const ctxPre=sel?a.ds.reduce((s,d)=>{if(d.futuro||d.domingo||d.feriado||!d.presencaOk||!d.quadroOk)return s;return s+d.people.filter(p=>p.setor===sel.code&&state.present.has(kk(p.matricula,d.day))).length},0):a.presentes;
-  const ctxTot=sel?a.ds.reduce((s,d)=>{if(d.futuro||d.domingo||d.feriado||!d.presencaOk||!d.quadroOk)return s;return s+d.people.filter(p=>p.setor===sel.code).length},0):a.total;
-  const dsC=a.ds.filter(d=>!state.setor||d.people.some(p=>p.setor===state.setor));
-  $('#viewBody').innerHTML=`
-  <div class="grid">
-    <div class="card c12" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between">
-      <div><div style="font-size:9.5px;letter-spacing:1.4px;color:var(--quiet);font-weight:800">CONTEXTO ANALISADO</div>
-      <div style="font-size:15px;font-weight:800;margin-top:3px">${esc(ctx.rot)}</div></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <span class="chip">AUSENTES (ABS) ${nf.format(ctx.aus)}</span><span class="chip">PRESENTES ${nf.format(ctxPre)}</span>
-        <span class="chip">TOTAL ${nf.format(ctxTot)}</span><span class="chip">TAXA ${ctx.ele?pc.format(ctx.aus/ctx.ele*100)+'%':'—'}</span>
-        <span class="chip">${nf.format(a.apurados)} DIA(S) APURADO(S)</span></div></div>
-    <div class="card c7"><h3>EVOLUÇÃO POR SETOR · DIA A DIA <em>pequenos múltiplos · barra = ausentes no dia</em></h3><div class="mini-grid" id="sMini"></div>
-      <div class="hint">Cada bloco é um setor; a altura de cada barra é o número de ausentes naquele dia apurado. AUSENTES (ABS) = ausência real; PRESENTES = registro no Suricato; ELEGÍVEIS = quadro do dia menos férias e dias sem dados.</div></div>
-    <div class="card c5"><h3>TAXA DE ABSENTEÍSMO POR SETOR <em>ausentes ÷ elegíveis</em></h3><div class="scroll" id="sTaxa" style="max-height:none"></div></div>
-    <div class="card c6"><h3>PARTICIPAÇÃO DOS SETORES NO ABS <em>% do total de ausências do contexto</em></h3><div class="scroll" id="sPart" style="max-height:none"></div></div>
-    <div class="card c6"><h3>COMPOSIÇÃO DO DIA · PRESENTES × AUSENTES × FÉRIAS × SEM DADOS</h3><div id="sComp"></div>
-      <div class="hint">Categorias mutuamente exclusivas: presentes + ausentes (ABS) + justificados não-ABS + férias + sem dados = quadro total do contexto.</div></div>
-  </div>`;
-  miniEvolucao(dsC,'setor',$('#sMini'));
-  const taxas=setores.map(s=>({...s,valor:s.ele?s.aus/s.ele*100:0,txt:`${nf.format(s.aus)} ausentes de ${nf.format(s.ele)} elegíveis`})).filter(s=>s.aus>0).sort((x,y)=>y.valor-x.valor);
-  $('#sTaxa').innerHTML=listaRank(taxas.slice(0,14),'setor',x=>`${pc.format(x.valor)}<em>${nf.format(x.aus)} de ${nf.format(x.ele)} elegíveis</em>`);
-  const totalAbs=setores.reduce((s,x)=>s+x.aus,0)||1;
-  const part=setores.map(s=>({label:s.code,valor:s.aus/totalAbs*100,txt:`${nf.format(s.aus)} de ${nf.format(totalAbs)} ausências do contexto`})).filter(s=>s.valor>0).sort((x,y)=>y.valor-x.valor);
-  $('#sPart').innerHTML=listaRank(part.slice(0,14),'setorPart',x=>`${pc.format(x.valor)}<em>${nf.format(x.aus)} de ${nf.format(totalAbs)} ausências</em>`);
-  const ds=a.ds.filter(d=>!d.futuro&&!d.domingo&&!d.feriado&&d.quadroOk&&d.presencaOk&&(!state.setor||d.people.some(p=>p.setor===state.setor)));
-  const som=(fn)=>ds.reduce((s,d)=>s+fn(d),0);
-  const pre=state.setor?ds.reduce((s,d)=>s+d.people.filter(p=>p.setor===state.setor&&state.present.has(kk(p.matricula,d.day))).length,0):som(d=>d.presentes);
-  const aus=state.setor?ds.reduce((s,d)=>s+d.people.filter(p=>p.setor===state.setor&&statusDe(p,d).cls==='abs').length,0):som(d=>d.ausentes);
-  const fer=state.setor?ds.reduce((s,d)=>s+d.people.filter(p=>p.setor===state.setor&&state.ferias.has(kk(p.matricula,d.day))).length,0):som(d=>d.ferias);
-  const fora=state.setor?ds.reduce((s,d)=>s+d.people.filter(p=>p.setor===state.setor&&statusDe(p,d).c==='?').length,0):som(d=>d.fora);
-  const jn=state.setor?ds.reduce((s,d)=>s+d.people.filter(p=>p.setor===state.setor&&statusDe(p,d).cls==='jus').length,0):som(d=>d.jn);
-  const tot=pre+aus+fer+fora+jn;
-  const pç=(v)=>tot?Math.max(1,v/tot*100):0;
-  $('#sComp').innerHTML=`<div style="display:flex;height:26px;border-radius:8px;overflow:hidden;border:1px solid var(--line)">
-      <div style="width:${pç(pre)}%;background:rgba(52,211,153,.75)" title="Presentes: ${pre} (${tot?pc.format(pre/tot*100):'—'}%)"></div>
-      <div style="width:${pç(aus)}%;background:rgba(248,113,113,.8)" title="Ausentes (ABS): ${aus} (${tot?pc.format(aus/tot*100):'—'}%)"></div>
-      <div style="width:${pç(jn)}%;background:rgba(251,191,36,.75)" title="Justificados não-ABS: ${jn}"></div>
-      <div style="width:${pç(fer)}%;background:rgba(96,165,250,.7)" title="Férias: ${fer}"></div>
-      <div style="width:${pç(fora)}%;background:var(--track)" title="Sem dados: ${fora}"></div></div>
-    <div class="lgd" style="padding-top:8px"><span><i style="background:rgba(52,211,153,.75)"></i>Presentes ${nf.format(pre)} · ${tot?pc.format(pre/tot*100):'—'}%</span>
-    <span><i style="background:rgba(248,113,113,.8)"></i>Ausentes (ABS) ${nf.format(aus)} · ${tot?pc.format(aus/tot*100):'—'}%</span>
-    <span><i style="background:rgba(251,191,36,.75)"></i>Justificados não-ABS ${nf.format(jn)}</span>
-    <span><i style="background:rgba(96,165,250,.7)"></i>Férias ${nf.format(fer)}</span><span><i style="background:var(--track)"></i>Sem dados ${nf.format(fora)}</span></div>
-    <div class="hint">Conferência: presentes + ausentes + justificados não-ABS = <b>${nf.format(pre+aus+jn)}</b> = quadro elegível; + férias ${nf.format(fer)} + sem dados ${nf.format(fora)} = ${nf.format(tot)} registros-dia.</div>`;
+  // Visao SETORES: apenas a tabela pivo (renderTabela).
+  $('#viewBody').innerHTML='';
 }
 
 /* ---------- TURNOS ---------- */
 function renderTurnos(a){
-  const turnos=[...a.turnos.entries()].map(([k,v])=>({code:k,label:'Turno '+k,valor:a.apurados?v.aus/a.apurados:0,aus:v.aus,ele:v.ele})).sort((x,y)=>x.code.localeCompare(y.code,'pt-BR',{numeric:true}));
-  const sel=state.turnoF?turnos.find(t=>t.code===state.turnoF):null;
-  const rot=sel?'TURNO SELECIONADO · '+sel.label:'TOTAL CD · TODOS OS TURNOS';
-  const ctx=sel?{aus:sel.aus,ele:sel.ele}:{aus:a.ausentes,ele:a.elegivel};
-  const dsT=a.ds.filter(d=>!state.turnoF||d.people.some(p=>p.turno===state.turnoF));
-  $('#viewBody').innerHTML=`
-  <div class="grid">
-    <div class="card c12" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between">
-      <div><div style="font-size:9.5px;letter-spacing:1.4px;color:var(--quiet);font-weight:800">CONTEXTO ANALISADO</div>
-      <div style="font-size:15px;font-weight:800;margin-top:3px">${esc(rot)}</div></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <span class="chip">AUSENTES (ABS) ${nf.format(ctx.aus)}</span><span class="chip">QUADRO ELEGÍVEL ${nf.format(ctx.ele)}</span>
-        <span class="chip">TAXA ${ctx.ele?pc.format(ctx.aus/ctx.ele*100)+'%':'—'}</span><span class="chip">${nf.format(a.apurados)} DIA(S) APURADO(S)</span></div></div>
-    <div class="card c12"><h3>CONTEXTO POR TURNO <em>TOTAL CD primeiro, depois cada turno</em></h3><div class="scroll" id="tRank" style="max-height:none"></div>
-      <div class="hint">Clique em uma linha para isolar o turno nos cards, nos gráficos e na tabela abaixo. "MÉDIA/DIA" é ausentes ÷ dias apurados; a taxa é ausentes ÷ quadro elegível.</div></div>
-    <div class="card c7"><h3>EVOLUÇÃO POR TURNO · DIA A DIA <em>pequenos múltiplos · barra = ausentes no dia</em></h3><div class="mini-grid" id="tMini"></div></div>
-    <div class="card c5"><h3>COMPOSIÇÃO DO DIA POR TURNO <em>presentes × ausentes (ABS) × férias × sem dados</em></h3><div id="tComp"></div>
-      <div class="lgd" style="padding-top:8px"><span><i style="background:rgba(52,211,153,.75)"></i>Presentes</span><span><i style="background:rgba(248,113,113,.8)"></i>Ausentes (ABS)</span><span><i style="background:rgba(96,165,250,.7)"></i>Férias</span><span><i style="background:var(--track)"></i>Sem dados</span></div></div>
-    <div class="card c6"><h3>TAXA DE ABSENTEÍSMO POR TURNO <em>ausentes ÷ elegíveis</em></h3><div id="tTaxa"></div></div>
-    <div class="card c6"><h3>SETORES DENTRO DO CONTEXTO <em>média de ausentes por dia apurado</em></h3><div class="scroll" id="tSetor" style="max-height:none"></div></div>
-  </div>`;
-  const itens=[{code:'',label:'TOTAL CD · todos os turnos',sub:'consolidado do centro de distribuição',valor:a.apurados?a.ausentes/a.apurados:0,aus:a.ausentes,ele:a.elegivel}]
-    .concat(turnos.map(t=>({...t,sub:`${nf.format(t.aus)} ausências · ${pc.format(t.ele?t.aus/t.ele*100:0)}% de taxa`})));
-  $('#tRank').innerHTML=listaRank(itens,'turnoF',x=>`${nf1.format(x.valor)}<em>${nf.format(x.aus)} ausências · ${pc.format(x.ele?x.aus/x.ele*100:0)}% de taxa</em>`);
-  miniEvolucao(dsT,'turno',$('#tMini'));
-  compTurnos(a.ds.filter(d=>!d.futuro&&!d.domingo&&!d.feriado&&d.quadroOk&&d.presencaOk&&(!state.turnoF||d.people.some(p=>p.turno===state.turnoF))),$('#tComp'));
-  const tx=turnos.map(t=>({label:'T'+t.code,valor:t.ele?t.aus/t.ele*100:0,txt:`Turno ${t.code} · ${nf.format(t.aus)} ausentes de ${nf.format(t.ele)} elegíveis`})).filter(t=>t.valor>0);
-  listaBarras(tx,$('#tTaxa'),x=>pc.format(x.valor)+'%');
-  const mp=new Map();
-  for(const d of a.ds){if(d.futuro||d.domingo||d.feriado||!d.quadroOk||!d.presencaOk)continue;
-    for(const[k,v]of Object.entries(d.porSetor)){const o=mp.get(k)||{aus:0,ele:0};o.aus+=v;o.ele+=d.elegivel;mp.set(k,o)}}
-  const ss=[...mp.entries()].map(([k,v])=>({code:k,label:k,valor:a.apurados?v.aus/a.apurados:0,aus:v.aus,ele:v.ele})).sort((x,y)=>y.valor-x.valor);
-  $('#tSetor').innerHTML=listaRank(ss.slice(0,15),'setor',x=>`${nf1.format(x.valor)}<em>${nf.format(x.aus)} ausências no período</em>`);
+  // Visao TURNOS: apenas a tabela pivo (renderTabela).
+  $('#viewBody').innerHTML='';
 }
 
 /* ---------- PESSOAS ---------- */
@@ -914,19 +840,19 @@ function valorCelula(people,m){
   const pre=alvo.filter(p=>state.present.has(kk(p.matricula,m.day))).length;
   const fer=alvo.filter(p=>state.ferias.has(kk(p.matricula,m.day))).length;
   const fora=m.presencaOk?0:alvo.filter(p=>{const k=kk(p.matricula,m.day);return!state.present.has(k)&&!state.ferias.has(k)&&!state.just.has(k)}).length;
-  const aus=alvo.filter(p=>statusDe(p,m).cls==='abs').length;
-  const tot=alvo.length;const ele=tot-fer-fora;
-  if(state.metric==='pre')return{c:nf.format(pre),s:ele?pc.format(pre/ele*100)+'%':'—',cls:''};
-  if(state.metric==='tot')return{c:nf.format(tot),s:'quadro',cls:''};
-  if(state.metric==='taxa')return{c:ele?pc.format(aus/ele*100):'—',s:`${aus}/${ele}`,cls:ele&&aus/ele>0.08?'cd':''};
-  return{c:nf.format(aus),s:ele?pc.format(aus/ele*100)+'%':'—',cls:ele&&aus/ele>0.08?'cd':''};
+  const den=tot-fer;
+  const ausF=alvo.filter(p=>{const st=statusDe(p,m);return st.cls==='abs'&&state.motivoFiltro.has(st.c)}).length;
+  if(state.metric==='pre')return{c:nf.format(pre),s:den?pc.format(pre/den*100)+'%':'—',cls:''};
+  if(state.metric==='tot')return{c:nf.format(tot),s:`quadro − ${nf.format(fer)} FE`,cls:''};
+  if(state.metric==='taxa')return{c:den?pc.format(ausF/den*100):'—',s:`${ausF}/${den}`,cls:den&&ausF/den>0.08?'cd':''};
+  return{c:nf.format(ausF),s:den?pc.format(ausF/den*100)+'%':'—',cls:den&&ausF/den>0.08?'cd':''};
 }
 const ROT_METRIC={abs:'AUSENTES (ABS)',pre:'PRESENTES',tot:'TOTAL',taxa:'TAXA DE ABSENTEÍSMO'};
-const ROT_METRIC_PESSOA={abs:'P = presença · F/AT/AF = ABS · FE = férias · FO/TR = justificado não-ABS',pre:'presenças',tot:'total',taxa:'taxa'};
+const ROT_METRIC_PESSOA={abs:'COLABORADOR · DIA A DIA',pre:'presenças',tot:'total',taxa:'taxa'};
 function renderTabela(a){
   const head=$('#thead'),body=$('#tbody');
   if(state.vista==='pessoas'){renderTabelaPessoas(body,head);return}
-  const rotDim=state.vista==='turnos'?'DIMENSÃO · TURNO › SETOR › CARGO':`DIMENSÃO · ${ROT_METRIC[state.metric]}`;
+  const rotDim=state.vista==='turnos'?'DIMENSÃO · TURNO':state.vista==='setores'?'DIMENSÃO · SETOR':`DIMENSÃO · ${ROT_METRIC[state.metric]}`;
   head.innerHTML=`<tr><th>${rotDim}</th>`+state.dias.map(d=>{const m=dia(d);const cls=[(m.domingo||m.feriado)?'off':'',d===state.dia?'hl':''].filter(Boolean).join(' ');
     return `<th class="${cls}" data-act="day" data-day="${d}" title="${esc(brData(d)+' · '+dowNome(d)+(m.feriado?' · feriado':m.domingo?' · domingo':m.presencaOk?'':' · sem carga de presença')+' · duplo clique justifica o dia')}"><b>${d.slice(8)}</b><small>${dowNome(d)}</small></th>`}).join('')+'</tr>';
   const people=pessoasBase();
@@ -937,14 +863,7 @@ function renderTabela(a){
   }else{
     rows.push({label:'TOTAL CD · todos os turnos',people,cls:'tot'});
     for(const t of [...new Set(people.map(p=>p.turno))].sort((x,y)=>x.localeCompare(y,'pt-BR',{numeric:true}))){
-      const tp=people.filter(p=>p.turno===t),tid='turno:'+t;
-      rows.push({label:'Turno '+t,people:tp,cls:'grp',group:tid});
-      if(state.expand.has(tid))for(const s of [...new Set(tp.map(p=>p.setor))].sort((x,y)=>x.localeCompare(y,'pt-BR'))){
-        const sp=tp.filter(p=>p.setor===s),sid=tid+'|sector:'+s;
-        rows.push({label:'　'+s,people:sp,cls:'grp',group:sid});
-        if(state.expand.has(sid))for(const c of [...new Set(sp.map(p=>p.cargo))].sort((x,y)=>x.localeCompare(y,'pt-BR')))
-          rows.push({label:'　　'+c,people:sp.filter(p=>p.cargo===c),cls:'sub'});
-      }
+      rows.push({label:'Turno '+t,people:people.filter(p=>p.turno===t),cls:'grp'});
     }
   }
   body.innerHTML=rows.map(r=>`<tr class="${r.cls}"><td>${r.group?`<button class="gbtn" type="button" data-act="grp" data-g="${esc(r.group)}">${state.expand.has(r.group)?'−':'+'} ${esc(r.label)}</button>`:esc(r.label)}</td>`+
@@ -1136,9 +1055,11 @@ function ligar(){
   $('#cargoFilter').onchange=e=>{state.cargoF=e.target.value;invalidar();render()};
   $('#motiveBtn').onclick=()=>{const m=$('#motiveMenu');m.hidden=!m.hidden;$('#motiveBtn').setAttribute('aria-expanded',String(!m.hidden))};
   $('#motiveMenu').onchange=()=>{state.ativos=new Set($$('#motiveMenu input:checked').map(x=>x.value));invalidar();render()};
+  $('#motivosBtn').onclick=()=>{const m=$('#motivosMenu');m.hidden=!m.hidden;$('#motivosBtn').setAttribute('aria-expanded',String(!m.hidden))};
+  $('#motivosMenu').onchange=()=>{state.motivoFiltro=new Set($$('#motivosMenu input:checked').map(x=>x.value));invalidar();render()};
   $('#metricSeg').onclick=e=>{const b=e.target.closest('[data-metric]');if(!b)return;state.metric=b.dataset.metric;$$('#metricSeg button').forEach(x=>x.classList.toggle('on',x===b));render()};
   $('#chartSeg').onclick=e=>{const b=e.target.closest('[data-cm]');if(!b)return;state.chartM=b.dataset.cm;$$('#chartSeg button').forEach(x=>x.classList.toggle('on',x===b));render()};
-  $('#clearBtn').onclick=()=>{state.dia='';state.setor='';state.turnoF='';state.cargoF='';$('#cargoFilter').value='';render()};
+  $('#clearBtn').onclick=()=>{state.dia='';state.setor='';state.turnoF='';state.cargoF='';state.motivoFiltro=new Set(['P','F','AT','AF','FE','FO','TR']);$('#cargoFilter').value='';$$('#motivosMenu input').forEach(i=>i.checked=true);$('#motivosBtn').textContent='Todos os motivos';render()};
   $('#copyBtn').onclick=copiar;
   $('#moreBtn').onclick=()=>{state.pagina++;render()};
   $('#tabs').onclick=e=>{const b=e.target.closest('.tab');if(!b)return;state.vista=b.dataset.view;state.pagina=1;
@@ -1181,7 +1102,7 @@ function ligar(){
     else if(e.key==='Escape')limparBusca()};
   $('#searchClear').onclick=limparBusca;
   $('#suggest').onmousedown=e=>{const i=e.target.closest('[data-i]');if(i)escolher(sgList[+i.dataset.i].p.matricula)};
-  document.addEventListener('click',e=>{if(!e.target.closest('.multi'))$('#motiveMenu').hidden=true;if(!e.target.closest('.search'))$('#suggest').hidden=true});
+  document.addEventListener('click',e=>{if(!e.target.closest('.multi')){$('#motiveMenu').hidden=true;$('#motivosMenu').hidden=true;}if(!e.target.closest('.search'))$('#suggest').hidden=true});
 }
 function status(kind,msg){$('#connDot').className='dot '+kind;$('#connText').textContent=msg}
 function ocupado(v){state.carregando=v;$('#reloadBtn').disabled=v;$('#monthInput').disabled=v;$('#reloadBtn').textContent=v?'◌ CARREGANDO':'↻ ATUALIZAR'}
@@ -1269,6 +1190,9 @@ function preencherFiltros(){
   $('#motiveMenu').innerHTML=MOTIVOS.map(c=>`<label class="check"><input type="checkbox" value="${c}" ${state.ativos.has(c)?'checked':''}> ${c} · ${MOTIVO_NOME[c]}</label>`).join('');
   const arr=MOTIVOS.filter(c=>state.ativos.has(c));
   $('#motiveBtn').textContent=arr.length===MOTIVOS.length?'Todos os motivos':arr.length?arr.join(', '):'Nenhum motivo';
+  $('#motivosMenu').innerHTML=['P','F','AT','AF','FE','FO','TR'].map(c=>`<label class="check"><input type="checkbox" value="${c}" ${state.motivoFiltro.has(c)?'checked':''}> ${c} · ${MOTIVO_NOME[c]||c}</label>`).join('');
+  const mf=[...state.motivoFiltro];
+  $('#motivosBtn').textContent=mf.length===7?'Todos os motivos':mf.length?mf.join(', '):'Nenhum motivo';
 }
 
 /* ---------- init ---------- */
@@ -1276,12 +1200,15 @@ const mesInicial=QS.get('month')||new Intl.DateTimeFormat('en-CA',{year:'numeric
 $('#monthInput').value=mesInicial;
 const mvIni=mesInicial.match(/^(\d{4})-(\d{2})$/);
 if(mvIni){state.ano=+mvIni[1];state.mes=+mvIni[2];state.dias=diasDoMes(state.ano,state.mes)}
+const qv=QS.get('view');
+if(qv&&['macro','setores','turnos','pessoas'].includes(qv)){state.vista=qv;$$('.tab').forEach(x=>x.classList.toggle('on',x.dataset.view===qv))}
 ligar();carga();
   // Atualização automática a cada 60 minutos, sem sobrepor uma carga em andamento.
   setInterval(()=>{if(!state.carregando)carga()},60*60*1000);
 })();
 </script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
 </body>
 </html>
