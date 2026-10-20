@@ -259,6 +259,45 @@ table.mx tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent2)}
 .crow .cv{font-weight:800;text-align:right;font-size:10px}
 .cbar{display:flex;height:16px;border-radius:5px;overflow:hidden;border:1px solid var(--line)}
 .cbar i{display:block}
+
+/* tooltip de justificativa · aparece após 3s de hover */
+.jtip{position:fixed;z-index:80;max-width:280px;padding:9px 11px;border:1px solid var(--chip-line);border-radius:10px;background:var(--panel2);color:var(--text);box-shadow:var(--shadow);font-size:11px;line-height:1.45;pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .15s,transform .15s}
+.jtip.show{opacity:1;transform:none}
+.jtip b{display:block;font-size:8.5px;letter-spacing:1.2px;color:var(--muted);margin-bottom:3px}
+.jtip .noobs{color:var(--quiet);font-style:italic}
+td.st.jc{cursor:context-menu;box-shadow:inset 0 -2px 0 0 rgba(251,191,36,.55)}
+/* modal de justificativa */
+.jm{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:16px;background:rgba(3,5,12,.72);backdrop-filter:blur(8px)}
+.jm[hidden]{display:none}
+.jm-card{width:min(540px,100%);max-height:92vh;overflow:auto;border:1px solid var(--line);border-radius:16px;background:var(--panel);box-shadow:var(--shadow)}
+.jm-h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:16px 18px 12px;border-bottom:1px solid var(--line2)}
+.jm-h h3{margin:0;font-size:14.5px;letter-spacing:-.2px}
+.jm-h small{color:var(--quiet);font-size:10px}
+.jm-x{background:none;border:0;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;padding:4px}
+.jm-x:hover{color:var(--text)}
+.jm-b{padding:14px 18px;display:grid;gap:12px}
+.jm-b label{display:block;font-size:9px;letter-spacing:1.2px;color:var(--muted);font-weight:800;margin-bottom:5px}
+.jm-b input,.jm-b select,.jm-b textarea{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:var(--panel3);color:var(--text);font:inherit;font-size:13px}
+.jm-b textarea{resize:vertical;min-height:56px}
+.jm-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.jm-seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.jm-seg button{flex:1;padding:8px;background:transparent;border:0;color:var(--muted);font-weight:800;font-size:10px;letter-spacing:1px;cursor:pointer}
+.jm-seg button.on{background:var(--chip);color:var(--text)}
+.jm-sg{border:1px solid var(--line);border-radius:9px;margin-top:4px;max-height:180px;overflow:auto;background:var(--panel3)}
+.jm-sg .sgi{padding:8px 10px;cursor:pointer;border-top:1px solid var(--line2)}
+.jm-sg .sgi:first-child{border-top:0}
+.jm-sg .sgi:hover,.jm-sg .sgi.on{background:var(--chip)}
+.jm-sg b{font-size:12.5px}
+.jm-sg small{display:block;color:var(--quiet);font-size:10.5px}
+.jm-gest{padding:8px 10px;border:1px dashed var(--line);border-radius:9px;font-size:11.5px;color:var(--muted)}
+.jm-count{font-size:10px;color:var(--quiet);text-align:right;margin-top:3px}
+.jm-f{display:flex;gap:10px;justify-content:flex-end;padding:12px 18px 16px;border-top:1px solid var(--line2)}
+.jm-msg{font-size:11.5px;border-radius:9px;padding:8px 10px}
+.jm-msg.ok{color:var(--green);background:rgba(52,211,153,.12)}
+.jm-msg.err{color:var(--red);background:rgba(248,113,113,.12)}
+.jm-loading{display:inline-block;width:13px;height:13px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:jmspin .7s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes jmspin{to{transform:rotate(360deg)}}
+@media(max-width:640px){.jm-row{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -299,6 +338,7 @@ table.mx tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent2)}
     <div class="toolbar">
       <div class="field"><label for="turnoFilter">TURNO</label><select id="turnoFilter"><option value="">Todos os turnos</option></select></div>
       <div class="field"><label for="cdFilter">CD</label><select id="cdFilter"><option value="">Todos os CDs</option></select></div>
+      <div class="field"><label for="cargoFilter">CARGO</label><select id="cargoFilter"><option value="">Todos os cargos</option></select></div>
       <div class="field multi">
         <label>MOTIVOS CONTABILIZADOS COMO ABS</label>
         <button id="motiveBtn" type="button" aria-expanded="false">F, AT, AF</button>
@@ -365,7 +405,7 @@ table.mx tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent2)}
         <p><b>TOTAL / QUADRO ELEGÍVEL</b> — colaboradores distintos no snapshot de <code>ABS_QUADRO</code> com DTA menor ou igual ao dia apurado (a atualização mais recente vale a partir da própria data), após os filtros de turno e CD.</p>
         <p><b>PRESENTES (P)</b> — existe registro de presença em <code>ABS_SURICATO</code> para a matrícula naquele dia. Registros repetidos no mesmo dia contam uma única vez.</p>
         <p><b>AUSENTES / ABS</b> — não há registro de presença no dia e: (a) existe justificativa em <code>ABS_JUSTIFICATIVAS</code> cujo MOTIVO está nos motivos ativos; ou (b) não existe justificativa e o dia possui carga de presença, gerando falta inferida (F). Nunca conta quem está de férias.</p>
-        <p><b>FÉRIAS (FE)</b> — matrícula presente em <code>ABS_FÉRIAS</code> na data. Sai do quadro elegível.</p>
+        <p><b>FÉRIAS (FE)</b> — matrícula presente em <code>ABS_FÉRIAS</code> na data (DTA pode estar gravada como texto DD/MM/AAAA <i>ou</i> como data ISO YYYY-MM-DD; o painel filtra pelo sufixo de mês/ano e valida a janela antes de aplicar). Sempre tem precedência sobre falta (<code>F</code>) e sobre justificativa (<code>FE</code> &gt; <code>F</code> &gt; <code>?</code>). Sai do quadro elegível.</p>
         <p><b>SEM DADOS (?)</b> — o dia não possui nenhuma carga em <code>ABS_SURICATO</code>. Não é possível inferir falta: a linha e o dia ficam fora do numerador e do denominador.</p>
         <p><b>DOMINGO / FERIADO</b> — sem falta para ninguém. Feriados vêm de <code>ABS_FERIADOS</code> (DTA em dd/mm/aaaa). Se houver justificativa registrada, ela é exibida, mas não entra no ABS.</p>
         <p><b>JUSTIFICADOS NÃO-ABS</b> — existe justificativa registrada cujo MOTIVO está fora dos motivos ativos (ex.: FO, TR). Aparecem na composição do dia, mas não entram no ABS. Por isso o invariante correto é: <b>presentes + ausentes + justificados não-ABS = quadro elegível</b>; somando férias e sem dados chega-se ao total do quadro do dia.</p>
@@ -376,6 +416,27 @@ table.mx tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent2)}
   </section>
 
   <footer class="foot"><span>ASSAÍ · ABS · PAINEL ANALÍTICO</span><span>CONSULTA DIRETA AO SUPABASE · SEM DADOS FICTÍCIOS</span></footer>
+
+  <div class="jm" id="jm" hidden role="dialog" aria-modal="true" aria-labelledby="jmTitle">
+    <div class="jm-card">
+      <div class="jm-h"><div><h3 id="jmTitle">Justificar ausência</h3><small>Grava em ABS_JUSTIFICATIVAS · um registro por dia do período</small></div><button class="jm-x" id="jmFecha" type="button" aria-label="Fechar">✕</button></div>
+      <div class="jm-b">
+        <div><label>DATA</label>
+          <div class="jm-seg"><button id="jmSegDia" type="button" class="on">DIA ESPECÍFICO</button><button id="jmSegPer" type="button">PERÍODO</button></div>
+          <div class="jm-row" style="margin-top:8px">
+            <div><label>DATA INICIAL</label><input id="jmIni" type="date"></div>
+            <div id="jmFimWrap"><label>DATA FINAL</label><input id="jmFim" type="date"></div>
+          </div>
+        </div>
+        <div><label>MATRÍCULA GESTOR (preenchida automaticamente)</label><div class="jm-gest" id="jmGestor">—</div></div>
+        <div><label>MATRÍCULA COLABORADOR</label><input id="jmMat" type="text" inputmode="numeric" autocomplete="off" placeholder="Digite a matrícula…"><div class="jm-sg" id="jmSug" hidden></div><div id="jmInfo" style="font-size:10.5px;color:var(--muted);margin-top:4px"></div></div>
+        <div><label>MOTIVO</label><select id="jmMotivo"><option value="">Selecione…</option></select></div>
+        <div><label>OBS</label><textarea id="jmObs" maxlength="100" placeholder="Observação (opcional)"></textarea><div class="jm-count" id="jmCount">0/100</div></div>
+        <div class="jm-msg" id="jmMsg" hidden></div>
+      </div>
+      <div class="jm-f"><button class="btn" id="jmCancel" type="button">Cancelar</button><button class="btn btn-primary" id="jmSalva" type="button">Gravar justificativa</button></div>
+    </div>
+  </div>
 </main>
 <script>'use strict';(()=>{
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -385,6 +446,9 @@ const JWT_SB='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 const T={quadro:'ABS_QUADRO',just:'ABS_JUSTIFICATIVAS',suricato:'ABS_SURICATO',ferias:'ABS_FÉRIAS',feriado:'ABS_FERIADOS'};
 const MOTIVOS=['P','FE','AT','AF','FO','TR','F'];
 const MOTIVO_NOME={P:'Presença',FE:'Férias',AT:'Atestado',AF:'Afastamento',FO:'Folga',TR:'Treinamento',F:'Falta'};
+// Motivos aceitos pelo cadastro de justificativa (ABS_JUSTIFICATIVAS.MOTIVO): somente estes sete.
+const MOTIVOS_JUST=['P','FA','AF','AT','FO','FE','TR'];
+const MOTIVO_NOME_JUST={P:'Presença',FA:'Falta abonada',AF:'Afastamento',AT:'Atestado',FO:'Folga',FE:'Férias',TR:'Treinamento'};
 // Início real dos turnos, no fuso America/Sao_Paulo.
 const INICIO_TURNO={'1':6*60,'2':13*60+40,'3':22*60,'4':8*60};
 const TURNO_4='4';
@@ -469,10 +533,11 @@ function consistente(d){ if(d.futuro||d.domingo||d.feriado||!d.quadroOk||!d.pres
 /* ===== MODEL_END ===== */
 
 /* ---------- estado ---------- */
-const state={ano:0,mes:0,dias:[],hoje:hoje(),snapshots:new Map(),just:new Map(),present:new Set(),presenceDays:new Set(),
+const state={ano:0,mes:0,dias:[],hoje:hoje(),snapshots:new Map(),just:new Map(),present:new Set(),presenceDays:new Set(),justObs:new Map(),
 ferias:new Set(),feriados:new Set(),ativos:new Set(ATIVOS_PADRAO),cargo:new Map(),presentHours:new Map(),turno:'',cd:'',vista:'macro',metric:'abs',chartM:'abs',
 dia:'',setor:'',turnoF:'',cargoF:'',pessoa:'',busca:'',pagina:1,expand:new Set(),cache:new Map(),base:null,
-carregando:false,fonteFeriado:'—',fonteCargo:'ABS_QUADRO.CARGO',erro:'',aviso:'',ultimaAtualizacao:null};
+carregando:false,fonteFeriado:'—',fonteCargo:'ABS_QUADRO.CARGO',erro:'',aviso:'',ultimaAtualizacao:null,
+gestor:'',justObs:new Map(),_lastDayClick:'',_lastDayTime:0};
 
 /* ---------- rede ---------- */
 const headers=()=>({apikey:KEY_SB,Authorization:'Bearer '+JWT_SB,Accept:'application/json'});
@@ -506,9 +571,12 @@ function snapshotPara(day){let best=null;for(const[d,s]of state.snapshots){if(d<
 function mapaPessoas(rows){const m=new Map();for(const r of rows){const mat=norm(r.MATRICULA);if(!mat)continue;const t=parseData(r.DTA)?.getTime()||0;const o=m.get(mat);
   if(!o||t>=o.time)m.set(mat,{matricula:mat,nome:norm(r.NOME)||mat,cd:norm(r.CD)||'—',setor:norm(r.SETOR)||'—',cargo:state.cargo.get(mat)||norm(r.CARGO)||'—',turno:norm(r.TURNO)||'—',time:t})}return[...m.values()]}
 function todasPessoas(){return mapaPessoas([...state.snapshots.values()].flatMap(s=>s.rows))}
-const filtroFixo=p=>(!state.turno||p.turno===state.turno)&&(!state.cd||p.cd===state.cd);
+const filtroFixo=p=>(!state.turno||p.turno===state.turno)&&(!state.cd||p.cd===state.cd)&&(!state.cargoF||p.cargo===state.cargoF);
+// Cargos derivados exclusivamente dos dados carregados (ABS_QUADRO.CARGO via snapshot),
+// respeitando turno e CD já selecionados — sem lista fixa no código.
+function cargosDisponiveis(){return[...new Set(todasPessoas().filter(p=>(!state.turno||p.turno===state.turno)&&(!state.cd||p.cd===state.cd)).map(p=>p.cargo))].filter(c=>c&&c!=='—').sort((x,y)=>x.localeCompare(y,'pt-BR'))}
 function pessoasBase(){if(!state.base)state.base=todasPessoas().filter(filtroFixo);return state.base}
-function chaveFiltro(){return state.turno+'|'+state.cd+'|'+[...state.ativos].sort().join(',')}
+function chaveFiltro(){return state.turno+'|'+state.cd+'|'+state.cargoF+'|'+[...state.ativos].sort().join(',')}
 function invalidar(){state.cache=new Map();state.base=null}
 function dia(day){const ck=chaveFiltro()+'|'+day;const h=state.cache.get(ck);if(h)return h;const m=modeloDia(day);state.cache.set(ck,m);return m}
 function todosDias(){return state.dias.map(dia)}
@@ -583,7 +651,7 @@ function renderKpis(a){
       kpi('info','TAXA DE ABSENTEÍSMO',d.taxa===null?'—':pc.format(d.taxa)+'%','ausentes ÷ quadro elegível do dia')+
       kpi('','QUADRO ELEGÍVEL DO DIA',d.elegivel?nf.format(d.elegivel):'—',`total ${nf.format(d.total)} − férias ${nf.format(d.ferias)} − sem dados ${nf.format(d.fora)} = elegível`)+
       kpi('warn','JUSTIFICADOS NÃO-ABS',nf.format(d.jn),'folga/treinamento e afins: fora do ABS')+
-      kpi('','STATUS DA DATA',`<span style="font-size:13px">${st}</span>`,(d.day===state.hoje?`turnos iniciados até agora · `:'')+(d.quadroAproximado?`quadro de referência ${brData(d.quadroData)} · `:'')+`sem dados: ${nf.format(d.fora)}`);
+      kpi('','STATUS DA DATA',`<span style="font-size:13px">${st}</span>`,(d.day===state.hoje?`turnos iniciados até agora · `:'')+(d.quadroAproximado?`quadro de referência ${brData(d.quadroData)} · `:'')+`sem dados: ${nf.format(d.fora)}${state.gestor?` · gestor ${state.gestor}`:''}`);
     return;
   }
   $('#kpis').innerHTML=
@@ -606,7 +674,7 @@ function renderFiltrosOn(){
   if(state.turnoF)it.push(['turnoF','Turno: '+state.turnoF]);
   if(state.cargoF)it.push(['cargoF','Cargo: '+state.cargoF]);
   if(state.pessoa){const p=pessoasBase().find(x=>x.matricula===state.pessoa);it.push(['pessoa','Colaborador: '+(p?p.nome+' · '+p.matricula:state.pessoa)])}
-  $('#filtersOn').innerHTML=it.length?it.map(([k,v])=>`<span class="chip">${esc(v)}<button type="button" data-act="unf" data-k="${k}" aria-label="Remover">✕</button></span>`).join(''):'<span style="font-size:10.5px;color:var(--quiet)">Nenhuma seleção ativa — clique em barras, colunas, setores ou nomes para filtrar.</span>';
+  $('#filtersOn').innerHTML=it.length?it.map(([k,v])=>`<span class="chip">${esc(v)}<button type="button" data-act="unf" data-k="${k}" aria-label="Remover">✕</button></span>`).join(''):'<span style="font-size:10.5px;color:var(--quiet)">Nenhuma seleção ativa — clique em barras, colunas, setores ou nomes para filtrar; duplo clique em um dia abre a justificativa de ausência.</span>';
 }
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -620,7 +688,6 @@ function graficoEvolucao(ds,alvo){
     const val=met==='taxa'?(d.taxa===null?null:d.taxa):d.ausentes;
     const h=util&&val!==null?Math.max(2,val/max*100):2;
     const rot=util&&val!==null?(met==='taxa'?pc.format(val)+'%':nf.format(val)):'—';
-    const sub=util?(met==='taxa'?nf.format(d.ausentes)+' abs':(d.taxa===null?'—':pc.format(d.taxa)+'%')):'';
     let motivo;
     if(!d.quadroOk)motivo='Sem quadro válido';
     else if(d.futuro)motivo='Dia futuro';
@@ -629,16 +696,14 @@ function graficoEvolucao(ds,alvo){
     else if(!d.presencaOk)motivo='Sem carga de presença no Suricato — fora da apuração';
     else motivo='';
     const tt=`${brData(d.day)} · ${dowNome(d.day)}${d.feriado?' · feriado':''}${d.domingo?' · domingo':''}${d.futuro?' · dia futuro':''}\n`+
-      (util?`Ausentes: ${d.ausentes}\nPresentes: ${d.presentes}\nQuadro elegível: ${d.elegivel}\nTaxa: ${d.taxa===null?'—':pc.format(d.taxa)+'%'}`:motivo);
+      (util?`Ausentes: ${d.ausentes}\nPresentes: ${d.presentes}\nQuadro elegível: ${d.elegivel}\nFérias: ${d.ferias}\nTaxa: ${d.taxa===null?'—':pc.format(d.taxa)+'%'}\nDuplo clique: justificar ausência`:motivo);
     return `<div class="ebar ${cls}" data-act="day" data-day="${d.day}" title="${esc(tt)}" style="--i:${i}">
       <span class="ebar-v">${rot}</span>
       <span class="ebar-t"><i style="height:${h}%"></i></span>
-      <span class="ebar-p">${sub}</span>
       <span class="ebar-l">${d.day.slice(8)}<em>${dowNome(d.day)}</em></span></div>`}).join('');
   alvo.innerHTML=`<div class="evol"><div class="evol-bars">${bars}</div>
     <div class="lgd"><span><i></i>${met==='taxa'?'Taxa de absenteísmo do dia':'Ausentes (ABS) do dia'}</span>
-    <span><i class="c"></i>Dia selecionado</span><span><i class="b"></i>Domingo / feriado — sem falta</span><span><i class="d"></i>Sem carga de presença — fora da apuração</span>
-    <span style="margin-left:auto">Rótulo acima da barra = ${met==='taxa'?'taxa':'ABS'}; abaixo = ${met==='taxa'?'ABS do dia':'taxa do dia'}.</span></div></div>`;
+    <span><i class="c"></i>Dia selecionado</span><span><i class="b"></i>Domingo / feriado — sem falta</span><span><i class="d"></i>Sem carga de presença</span></div></div>`;
 }
 function listaRank(itens,tipo,formata,max){
   if(!itens.length)return '<div class="empty">Sem ocorrências para os filtros atuais.</div>';
@@ -658,7 +723,7 @@ function heat(a,alvo,lg){
       const r=v/mx;const h=145-r*145;
       return `<div class="hc ${v?'':'e'}" style="${v?`background:hsl(${h} 72% ${r>0.7?52:60}%)`:''}" title="${esc(s+' · '+brData(d.day)+' · '+dowNome(d.day))} — ${v} ausente(s)${c&&c.ele?` · ${pc.format(v/c.ele*100)}% de ${c.ele}`:''}">${v||''}</div>`}).join('')}).join('');
   alvo.innerHTML=`<div class="hg" style="grid-template-columns:minmax(120px,190px) repeat(${ds.length||1},30px)">${head}${rows}</div>`;
-  lg.innerHTML=`<span>0 ausente</span><i style="background:hsl(145 72% 60%)"></i><i style="background:hsl(109 72% 60%)"></i><i style="background:hsl(72 72% 60%)"></i><i style="background:hsl(36 72% 60%)"></i><i style="background:hsl(0 72% 60%)"></i><span>${mx} ausentes</span><span style="margin-left:auto">Escala relativa por célula: quanto mais quente, maior o ABS do setor no dia.</span>`;
+  lg.innerHTML=`<span>0 ausente</span><i style="background:hsl(145 72% 60%)"></i><i style="background:hsl(109 72% 60%)"></i><i style="background:hsl(72 72% 60%)"></i><i style="background:hsl(36 72% 60%)"></i><i style="background:hsl(0 72% 60%)"></i><span>${mx} ausentes</span><span style="margin-left:auto">Quanto mais quente, maior o ABS do setor no dia.</span>`;
 }
 
 /* ---------- gráficos específicos por dimensão (não repetem o MACRO) ---------- */
@@ -712,9 +777,6 @@ function renderMacro(a){
   ins.push(['','CONCENTRAÇÃO TOP 10',pc.format(conc)+'% do ABS',`os 10 colaboradores com mais ausências somam ${nf.format(top10.reduce((s,p)=>s+p.aus,0))} de ${nf.format(a.ausentes)}`]);
   if(melhor)ins.push(['good','MELHOR DESEMPENHO',melhor.label,`${nf1.format(melhor.valor)} ausentes/dia entre os setores com ocorrência`]);
   ins.push(['',`COBERTURA DA APURAÇÃO`,nf.format(a.apurados)+' dia(s)',`${nf.format(a.semDados)} dia(s) sem carga de presença ficaram fora do cálculo`]);
-  const lista=[...a.heat.entries()].flatMap(([k,cells])=>cells.filter(c=>c.aus>0).map(c=>({setor:k,dow:dowDe(c.day),aus:c.aus,ele:c.ele,day:c.day})));
-  const agg=new Map();for(const f of lista){const k=f.setor+'|'+f.dow;const o=agg.get(k)||{setor:f.setor,dow:f.dow,aus:0,dias:0,ele:0};o.aus+=f.aus;o.dias++;o.ele+=f.ele;agg.set(k,o)}
-  const foco=[...agg.values()].map(o=>({...o,media:o.dias?o.aus/o.dias:0})).sort((x,y)=>y.media-x.media).slice(0,8);
 
   $('#viewBody').innerHTML=`
   <div class="grid">
@@ -724,8 +786,7 @@ function renderMacro(a){
     <div class="card c4"><h3>POR TURNO <em>participação no ABS</em></h3><div class="scroll" id="rTurno"></div></div>
     <div class="card c7"><h3>MAPA DE CALOR · SETOR × DIA <em>quem concentra o ABS em quais dias</em></h3><div class="heat" id="heat"></div><div class="hlg" id="heatLg"></div></div>
     <div class="card c5"><h3>TOP 10 · COLABORADORES COM MAIS ABS</h3><div class="scroll" id="rPes"></div></div>
-    <div class="card c12"><h3>LEITURA EXECUTIVA · ONDE AGIR PRIMEIRO</h3><div class="ins" id="ins"></div>
-      <div style="margin-top:10px" id="foco"></div></div>
+    <div class="card c12"><h3>LEITURA EXECUTIVA · ONDE AGIR PRIMEIRO</h3><div class="ins" id="ins"></div></div>
   </div>`;
   graficoEvolucao(a.ds,$('#evol'));
   $('#rSetor').innerHTML=listaRank(setores.slice(0,12),'setor',x=>`${nf1.format(x.valor)}<em>${pc.format(a.ausentes?x.aus/a.ausentes*100:0)}% do ABS</em>`);
@@ -735,9 +796,6 @@ function renderMacro(a){
   heat(a,$('#heat'),$('#heatLg'));
   $('#rPes').innerHTML=listaRank(top10.map(p=>({code:p.matricula,label:p.nome,sub:p.setor+' · '+p.matricula,valor:p.aus})),'pessoaTop',x=>`${nf.format(x.valor)}<em>dia(s) de ABS</em>`);
   $('#ins').innerHTML=ins.map(x=>`<div class="${x[0]}"><span>${esc(x[1])}</span><b>${esc(x[2])}</b><small>${esc(x[3])}</small></div>`).join('');
-  const mxF=Math.max(1,...foco.map(f=>f.media));
-  $('#foco').innerHTML=`<div style="font-size:9.5px;letter-spacing:1.4px;color:var(--muted);font-weight:800;padding:0 0 6px">FOCO PRIORITÁRIO · SETOR × DIA DA SEMANA</div>`+
-    (foco.length?listaRank(foco.map(f=>({code:f.setor+'|'+f.dow,label:f.setor+' · '+DOW[f.dow],sub:`${nf.format(f.aus)} ausentes em ${nf.format(f.dias)} dia(s)`,valor:f.media,setor:f.setor})),'focoSel',x=>`${nf1.format(x.valor)}<em>média/dia</em>`,mxF):'<div class="empty">Sem ocorrências no período.</div>');
 }
 
 /* ---------- CD · SETORES ---------- */
@@ -870,7 +928,7 @@ function renderTabela(a){
   if(state.vista==='pessoas'){renderTabelaPessoas(body,head);return}
   const rotDim=state.vista==='turnos'?'DIMENSÃO · TURNO › SETOR › CARGO':`DIMENSÃO · ${ROT_METRIC[state.metric]}`;
   head.innerHTML=`<tr><th>${rotDim}</th>`+state.dias.map(d=>{const m=dia(d);const cls=[(m.domingo||m.feriado)?'off':'',d===state.dia?'hl':''].filter(Boolean).join(' ');
-    return `<th class="${cls}" data-act="day" data-day="${d}" title="${esc(brData(d)+' · '+dowNome(d)+(m.feriado?' · feriado':m.domingo?' · domingo':m.presencaOk?'':' · sem carga de presença'))}"><b>${d.slice(8)}</b><small>${dowNome(d)}</small></th>`}).join('')+'</tr>';
+    return `<th class="${cls}" data-act="day" data-day="${d}" title="${esc(brData(d)+' · '+dowNome(d)+(m.feriado?' · feriado':m.domingo?' · domingo':m.presencaOk?'':' · sem carga de presença')+' · duplo clique justifica o dia')}"><b>${d.slice(8)}</b><small>${dowNome(d)}</small></th>`}).join('')+'</tr>';
   const people=pessoasBase();
   const rows=[];
   if(state.vista==='setores'){
@@ -894,19 +952,19 @@ function renderTabela(a){
       return `<td class="${cls}"><span class="cv">${v.c}</span><span class="cs">${v.s}</span></td>`}).join('')+'</tr>').join('');
 }
 function renderTabelaPessoas(body,head){
-  head.innerHTML='<tr><th>COLABORADOR · DIA A DIA (${ROT_METRIC_PESSOA})</th>'+state.dias.map(d=>{const m=dia(d);const cls=[(m.domingo||m.feriado)?'off':'',d===state.dia?'hl':''].filter(Boolean).join(' ');
-    return `<th class="${cls}" data-act="day" data-day="${d}" title="${esc(brData(d)+' · '+dowNome(d)+' · clique para destacar a coluna')}"><b>${d.slice(8)}</b><small>${dowNome(d)}</small></th>`}).join('')+'</tr>';
+  head.innerHTML=`<tr><th>COLABORADOR · DIA A DIA · ${ROT_METRIC_PESSOA.abs}</th>`+state.dias.map(d=>{const m=dia(d);const cls=[(m.domingo||m.feriado)?'off':'',d===state.dia?'hl':''].filter(Boolean).join(' ');
+    return `<th class="${cls}" data-act="day" data-day="${d}" title="${esc(brData(d)+' · '+dowNome(d)+' · clique para destacar a coluna · duplo clique justifica o dia')}"><b>${d.slice(8)}</b><small>${dowNome(d)}</small></th>`}).join('')+'</tr>';
   const l=listaPessoas().slice(0,state.pagina*PAGE);
   body.innerHTML=l.map(p=>{
     const ds=state.dias.map(dia).filter(d=>!d.futuro&&!d.domingo&&!d.feriado&&d.quadroOk&&d.presencaOk);
     const aus=ds.filter(d=>statusDe(p,d).cls==='abs').length,pre=ds.filter(d=>statusDe(p,d).c==='P').length;
     return `<tr data-mat="${esc(p.matricula)}" class="${state.pessoa===p.matricula?'sel':''}"><td>
       <button class="pbtn" type="button" data-act="pes" data-m="${esc(p.matricula)}">${esc(p.nome)}</button>
-      <small style="display:block;color:var(--quiet);font-size:9.5px;margin-top:2px">${esc(p.matricula)} · ${esc(p.setor)} · turno ${esc(p.turno)}</small>
+      <small style="display:block;color:var(--quiet);font-size:9.5px;margin-top:2px">${esc(p.matricula)} · ${esc(p.setor)} · turno ${esc(p.turno)} · ${esc(p.cargo)}</small>
       <small style="display:block;color:var(--muted);font-size:9.5px">${nf.format(aus)} ausência(s) · ${nf.format(pre)} presença(s)</small></td>`+
-      state.dias.map(d=>{const m=dia(d),st=statusDe(p,m);const cls=[st.cls,(m.domingo||m.feriado)?'off':'',d===state.dia?'hl':''].filter(Boolean).join(' ');
+      state.dias.map(d=>{const m=dia(d),st=statusDe(p,m);const cls=[st.cls,(m.domingo||m.feriado)?'off':'',d===state.dia?'hl':'',state.just.has(kk(p.matricula,d))?'jc':''].filter(Boolean).join(' ');
         const horas=state.present.has(kk(p.matricula,d))?presentTooltip(p.matricula,d):'';
-        return `<td class="st ${cls}" title="${esc(brData(d)+' · '+dowNome(d)+' · '+st.txt+(horas?'\n'+horas:''))}">${st.c}</td>`}).join('')+'</tr>'}).join('')||'<tr><td class="empty" colspan="40">Nenhum colaborador encontrado.</td></tr>';
+        return `<td class="st ${cls}" title="${esc(brData(d)+' · '+dowNome(d)+' · '+st.txt+(horas?'\n'+horas:'')+(state.just.has(kk(p.matricula,d))?'\nDuplo clique: editar justificativa':''))}" data-dbl="just" data-jday="${d}" data-jmat="${esc(p.matricula)}">${st.c}</td>`}).join('')+'</tr>'}).join('')||'<tr><td class="empty" colspan="40">Nenhum colaborador encontrado.</td></tr>';
   $('#moreInfo').textContent=`${nf.format(l.length)} de ${nf.format(listaPessoas().length)} colaborador(es)`;
   $('#moreBtn').hidden=l.length>=listaPessoas().length;
 }
@@ -922,7 +980,7 @@ function pontua(q,t){if(!q)return 0;if(t===q)return 1000;if(t.startsWith(q))retu
   let qi=0,st=0,sc=0;for(let j=0;j<t.length&&qi<q.length;j++){if(t[j]===q[qi]){qi++;st++;sc+=st*3}else st=0}
   if(qi===q.length)return 420+sc;const d=lev(t,q),sim=1-d/Math.max(t.length,q.length);return sim>=0.62?Math.round(sim*300):0}
 function sugestoes(q){const nq=semAcento(q);if(!nq)return[];
-  return pessoasBase().map(p=>{const s=Math.max(pontua(nq,semAcento(p.nome)),pontua(nq,semAcento(p.matricula))*0.98);return{p,s}}).filter(x=>x.s>0)
+  return pessoasBase().filter(p=>!state.cargoF||p.cargo===state.cargoF).map(p=>{const s=Math.max(pontua(nq,semAcento(p.nome)),pontua(nq,semAcento(p.matricula))*0.98);return{p,s}}).filter(x=>x.s>0)
     .sort((x,y)=>y.s-x.s||x.p.nome.localeCompare(y.p.nome,'pt-BR')).slice(0,8)}
 function marcar(txt,q){const t=semAcento(txt),n=semAcento(q);const i=n?t.indexOf(n):-1;if(i<0)return esc(txt);
   return esc(txt.slice(0,i))+'<mark>'+esc(txt.slice(i,i+q.length))+'</mark>'+esc(txt.slice(i+q.length))}
@@ -941,21 +999,146 @@ function limparBusca(){state.pessoa='';state.busca='';state.pagina=1;$('#peopleS
 let tBusca;function aoDigitar(){clearTimeout(tBusca);tBusca=setTimeout(()=>{state.busca=$('#peopleSearch').value;state.pessoa='';state.pagina=1;
   $('#searchClear').hidden=!state.busca;if(!state.busca){$('#suggest').hidden=true;render();return}renderSug();render()},140)}
 
+/* ---------- justificativa de ausência (duplo clique) ---------- */
+let jmModo='dia',jmSugSeq=0,jmT=null;
+function setModoJust(m){jmModo=m;$('#jmSegDia').classList.toggle('on',m==='dia');$('#jmSegPer').classList.toggle('on',m==='per');
+  $('#jmFimWrap').style.display=m==='per'?'':'none'}
+function fecharJust(){$('#jm').hidden=true}
+function abrirJustModal(day,mat){
+  const d=diaLocal(day)||day;
+  $('#jmIni').value=d;$('#jmFim').value=d;
+  $('#jmObs').value='';$('#jmCount').textContent='0/100';
+  $('#jmMat').value=mat||'';$('#jmInfo').textContent='';$('#jmSug').hidden=true;$('#jmSug').innerHTML='';
+  $('#jmMotivo').value='';$('#jmMsg').hidden=true;
+  $('#jmSalva').disabled=false;$('#jmSalva').innerHTML='Gravar justificativa';
+  setModoJust('dia');
+  $('#jmGestor').textContent=state.gestor?`Matrícula ${state.gestor} (identificada do quadro vigente)`:'Não identificada nesta sessão — a gravação fica bloqueada até a origem do dado ser definida';
+  $('#jm').hidden=false;
+  if(mat)carregaInfoMat(mat);else $('#jmInfo').textContent='';
+  setTimeout(()=>$('#jmMat').focus(),30);
+}
+async function carregaInfoMat(mat){
+  $('#jmInfo').textContent='Consultando ABS_QUADRO…';
+  try{const u=new URL(`${URL_SB}/rest/v1/${encodeURIComponent(T.quadro)}`);
+    u.searchParams.set('select','MATRICULA,NOME,SETOR,CARGO');u.searchParams.set('MATRICULA','eq.'+mat);u.searchParams.set('limit','1');
+    const r=await fetch(u,{headers:headers(),cache:'no-store'});
+    if(!r.ok)throw Error('HTTP '+r.status);
+    const j=await r.json();
+    $('#jmInfo').textContent=(Array.isArray(j)&&j[0])?`${norm(j[0].NOME)||mat} · ${norm(j[0].SETOR)} · ${norm(j[0].CARGO)}`:`Matrícula ${mat} não encontrada no quadro.`;
+  }catch(e){$('#jmInfo').textContent='Não foi possível consultar o quadro ('+(e.message||e)+').'}
+}
+let jmCache=null;
+function jmDigita(){const q=norm($('#jmMat').value);jmCache=null;$('#jmSug').hidden=true;$('#jmSug').innerHTML='';
+  clearTimeout(jmT);if(!q)return;jmT=setTimeout(()=>buscaQuadro(q),300)}
+async function buscaQuadro(q){
+  const seq=++jmSugSeq;$('#jmSug').innerHTML='<div class="sgi">Buscando no ABS_QUADRO…</div>';$('#jmSug').hidden=false;
+  try{const u=new URL(`${URL_SB}/rest/v1/${encodeURIComponent(T.quadro)}`);
+    u.searchParams.set('select','MATRICULA,NOME');u.searchParams.set('MATRICULA','ilike.'+q+'*');u.searchParams.set('order','MATRICULA.asc');u.searchParams.set('limit','8');
+    const r=await fetch(u,{headers:headers(),cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);
+    const j=await r.json();if(seq!==jmSugSeq)return;
+    const lista=unicoPor(Array.isArray(j)?j:[],x=>norm(x.MATRICULA));jmCache=lista;
+    $('#jmSug').innerHTML=lista.length?lista.map(x=>`<div class="sgi" data-jmat="${esc(norm(x.MATRICULA))}" data-jnome="${esc(norm(x.NOME))}"><b>${esc(norm(x.MATRICULA))}</b><small>${esc(norm(x.NOME)||'sem nome no quadro')}</small></div>`).join(''):'<div class="sgi">Nenhuma matrícula encontrada para "'+esc(q)+'".</div>';
+  }catch(e){if(seq===jmSugSeq){$('#jmSug').innerHTML='<div class="sgi">Falha na consulta ('+esc(String(e.message||e))+').</div>'}}
+}
+function diasEntre(a,b){const out=[];const c=new Date(a+'T12:00:00Z'),f=new Date(b+'T12:00:00Z');
+  while(c<=f&&out.length<400){out.push(c.toISOString().slice(0,10));c.setUTCDate(c.getUTCDate()+1)}return out}
+async function gravarJust(){
+  const btn=$('#jmSalva');if(btn.disabled)return;
+  const msg=$('#jmMsg');msg.hidden=true;
+  const ini=$('#jmIni').value,fim=jmModo==='per'?$('#jmFim').value:$('#jmIni').value;
+  const mat=norm($('#jmMat').value),mot=$('#jmMotivo').value,obs=norm($('#jmObs').value).slice(0,100);
+  const erros=[];
+  if(!state.gestor)erros.push('a matrícula do gestor não pôde ser identificada nesta sessão (nenhuma coluna GESTOR no ABS_QUADRO)');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(ini))erros.push('data inicial inválida');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(fim))erros.push('data final inválida');
+  if(/^\d{4}-\d{2}-\d{2}$/.test(ini)&&/^\d{4}-\d{2}-\d{2}$/.test(fim)&&fim<ini)erros.push('a data final deve ser igual ou posterior à inicial');
+  if(!mat)erros.push('selecione ou digite a matrícula do colaborador');
+  if(!mot)erros.push('selecione o motivo');
+  if(erros.length){msg.className='jm-msg err';msg.hidden=false;msg.textContent='Corrija antes de gravar: '+erros.join('; ')+'.';return}
+  const dias=diasEntre(ini,fim);
+  if(!dias.length){msg.className='jm-msg err';msg.hidden=false;msg.textContent='O período informado não gerou datas.';return}
+  const payload=dias.map(dta=>({DTA:dta,'MATRICULA GESTOR':state.gestor,'MATRICULA COLABORADOR':mat,MOTIVO:mot,OBS:obs}));
+  btn.disabled=true;btn.innerHTML='<span class="jm-loading"></span>Gravando…';
+  try{
+    const r=await fetch(`${URL_SB}/rest/v1/${encodeURIComponent(T.just)}`,{method:'POST',
+      headers:{...headers(),Prefer:'return=minimal','Content-Type':'application/json'},body:JSON.stringify(payload),cache:'no-store'});
+    if(!r.ok)throw Error(await detalhe(r));
+    msg.className='jm-msg ok';msg.hidden=false;msg.textContent=`Gravado com sucesso: ${payload.length} registro(s) na tabela ABS_JUSTIFICATIVAS.`;
+    await recarregarJustMes();
+    invalidar();render();
+    setTimeout(fecharJust,900);
+  }catch(e){
+    msg.className='jm-msg err';msg.hidden=false;msg.textContent='Falha na gravação: '+(e.message||e)+'. Os dados do formulário foram preservados — verifique e tente novamente.';
+    btn.disabled=false;btn.innerHTML='Gravar justificativa';
+  }
+}
+async function recarregarJustMes(){
+  try{
+    const just=await pega(T.just,'id,DTA,"MATRICULA GESTOR","MATRICULA COLABORADOR",MOTIVO,OBS',
+      {or:`(DTA.ilike.*/${state.mes}/${state.ano}*,DTA.ilike.*/${String(state.mes).padStart(2,'0')}/${state.ano}*)`},'DTA.asc,id.asc');
+    aplicarJustRows(just);
+    status('ok','Dados atualizados · justificativa gravada e refletida na tela');
+  }catch(e){status('error','Recarga das justificativas falhou: '+(e.message||e))}
+}
+function aplicarJustRows(rows){
+  state.just=new Map();state.justObs=new Map();
+  for(const r of rows){const m=norm(r['MATRICULA COLABORADOR']),d=diaLocal(r.DTA),c=semAcento(r.MOTIVO);
+    if(m&&d&&MOTIVOS.includes(c)){if(!state.just.has(kk(m,d)))state.just.set(kk(m,d),c);if(!state.justObs.has(kk(m,d)))state.justObs.set(kk(m,d),norm(r.OBS))}}
+}
+/* tooltip de observação após 3 segundos de hover contínuo */
+let jtipTimer=null,jtipEl=null,jtipTarget=null;
+function jtipShow(t){
+  const day=t.dataset.jday,mat=t.dataset.jmat||state.pessoa;
+  if(!day||!mat)return;
+  const k=kk(mat,day);if(!state.just.has(k))return;
+  const obs=norm(state.justObs.get(k));
+  jtipEl.innerHTML=`<b>JUSTIFICATIVA · ${brData(day)}</b>${esc(MOTIVO_NOME[state.just.get(k)]||state.just.get(k))}${obs?'<br>'+esc(obs):'<br><span class="noobs">Sem observação registrada.</span>'}`;
+  const r=t.getBoundingClientRect();
+  jtipEl.style.left=Math.min(window.innerWidth-292,Math.max(8,r.left))+'px';
+  jtipEl.style.top=(r.bottom+110<window.innerHeight?r.bottom+8:Math.max(8,r.top-76))+'px';
+  jtipEl.classList.add('show');
+}
+document.addEventListener('mouseover',e=>{
+  const t=e.target.closest('td.st.jc');
+  if(!t||t===jtipTarget)return;
+  jtipTarget=t;clearTimeout(jtipTimer);jtipEl&&jtipEl.classList.remove('show');
+  jtipTimer=setTimeout(()=>jtipShow(t),3000);
+});
+document.addEventListener('mouseout',e=>{
+  const t=e.target.closest('td.st.jc');
+  if(t&&t===jtipTarget&&!(e.relatedTarget&&t.contains(e.relatedTarget))){clearTimeout(jtipTimer);jtipEl&&jtipEl.classList.remove('show');jtipTarget=null}
+});
+document.addEventListener('click',e=>{if(e.target.id==='jm')fecharJust()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&jtipEl)jtipEl.classList.remove('show')});
+$('#jmFecha').onclick=fecharJust;$('#jmCancel').onclick=fecharJust;
+$('#jmSegDia').onclick=()=>setModoJust('dia');$('#jmSegPer').onclick=()=>setModoJust('per');
+$('#jmMat').addEventListener('input',jmDigita);
+$('#jmMat').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const f=$('#jmSug .sgi[data-jmat]');
+  if(f){$('#jmMat').value=f.dataset.jmat;$('#jmInfo').textContent=f.dataset.jnome;$('#jmSug').hidden=true;carregaInfoMat($('#jmMat').value)}}});
+$('#jmSug').onmousedown=e=>{const el=e.target.closest('[data-jmat]');if(!el)return;
+  $('#jmMat').value=el.dataset.jmat;$('#jmInfo').textContent=el.dataset.jnome;$('#jmSug').hidden=true;carregaInfoMat($('#jmMat').value)};
+$('#jmObs').addEventListener('input',()=>{if($('#jmObs').value.length>100)$('#jmObs').value=$('#jmObs').value.slice(0,100);
+  $('#jmCount').textContent=$('#jmObs').value.length+'/100'});
+$('#jmSalva').onclick=gravarJust;
+$('#jmMotivo').innerHTML=MOTIVOS_JUST.map(c=>`<option value="${c}">${c} · ${MOTIVO_NOME_JUST[c]}</option>`).join('');
+jtipEl=document.createElement('div');jtipEl.className='jtip';jtipEl.hidden=false;document.body.append(jtipEl);
+
 /* ---------- eventos ---------- */
 function ligar(){
   let claro=QS.get('theme')==='light';try{const s=localStorage.getItem('abs-theme');if(s)claro=s==='light'}catch{}
-  const tema=()=>{document.documentElement.dataset.theme=claro?'light':'dark';$('#themeBtn').textContent=claro?'🌙 Modo escuro':'☀️ Modo claro';
+  const tema=()=>{document.documentElement.dataset.theme=claro?'light':'dark';$('#themeBtn').textContent=claro?'☀️ Modo claro':'🌙 Modo escuro';
     try{localStorage.setItem('abs-theme',claro?'light':'dark')}catch{};render()};
   tema();$('#themeBtn').onclick=()=>{claro=!claro;tema()};
   $('#monthForm').onsubmit=e=>{e.preventDefault();state.turno='';state.cd='';state.dia='';state.setor='';state.turnoF='';state.cargoF='';state.pessoa='';state.busca='';state.expand=new Set();state.pagina=1;
     $('#peopleSearch').value='';$('#searchClear').hidden=true;invalidar();carga()};
   $('#turnoFilter').onchange=e=>{state.turno=e.target.value;state.expand=new Set();invalidar();render()};
   $('#cdFilter').onchange=e=>{state.cd=e.target.value;invalidar();render()};
+  $('#cargoFilter').onchange=e=>{state.cargoF=e.target.value;invalidar();render()};
   $('#motiveBtn').onclick=()=>{const m=$('#motiveMenu');m.hidden=!m.hidden;$('#motiveBtn').setAttribute('aria-expanded',String(!m.hidden))};
   $('#motiveMenu').onchange=()=>{state.ativos=new Set($$('#motiveMenu input:checked').map(x=>x.value));invalidar();render()};
   $('#metricSeg').onclick=e=>{const b=e.target.closest('[data-metric]');if(!b)return;state.metric=b.dataset.metric;$$('#metricSeg button').forEach(x=>x.classList.toggle('on',x===b));render()};
   $('#chartSeg').onclick=e=>{const b=e.target.closest('[data-cm]');if(!b)return;state.chartM=b.dataset.cm;$$('#chartSeg button').forEach(x=>x.classList.toggle('on',x===b));render()};
-  $('#clearBtn').onclick=()=>{state.dia='';state.setor='';state.turnoF='';state.cargoF='';render()};
+  $('#clearBtn').onclick=()=>{state.dia='';state.setor='';state.turnoF='';state.cargoF='';$('#cargoFilter').value='';render()};
   $('#copyBtn').onclick=copiar;
   $('#moreBtn').onclick=()=>{state.pagina++;render()};
   $('#tabs').onclick=e=>{const b=e.target.closest('.tab');if(!b)return;state.vista=b.dataset.view;state.pagina=1;
@@ -968,7 +1151,11 @@ function ligar(){
   const aoClicar=e=>{
     const g=e.target.closest('[data-act="grp"]');if(g){const k=g.dataset.g;state.expand.has(k)?state.expand.delete(k):state.expand.add(k);render();return}
     const p=e.target.closest('[data-act="pes"]');if(p){const m=p.dataset.m;state.pessoa=state.pessoa===m?'':m;render();return}
-    const d=e.target.closest('[data-act="day"]');if(d){const dd=d.dataset.day;state.dia=state.dia===dd?'':dd;if(state.dia&&state.vista==='macro'){state.vista='setores';$$('.tab').forEach(x=>x.classList.toggle('on',x.dataset.view==='setores'));
+    const d=e.target.closest('[data-act="day"]');if(d){const dd=d.dataset.day;
+      const agora=Date.now();
+      if(state._lastDayClick===dd&&agora-state._lastDayTime<400){state._lastDayClick='';abrirJustModal(dd,state.pessoa||'');return}
+      state._lastDayClick=dd;state._lastDayTime=agora;
+      state.dia=state.dia===dd?'':dd;if(state.dia&&state.vista==='macro'){state.vista='setores';$$('.tab').forEach(x=>x.classList.toggle('on',x.dataset.view==='setores'));
       $('#viewTitle').textContent='CD · setores';$('#viewSub').textContent='Indicadores do contexto, gráficos do setor e tabela detalhada com métrica explícita.'}render();return}
     const f=e.target.closest('[data-act="flt"]');if(f){const t=f.dataset.t,v=f.dataset.v;
       if(t==='pessoaTop'){state.pessoa=state.pessoa===v?'':v;state.vista='pessoas';$$('.tab').forEach(x=>x.classList.toggle('on',x.dataset.view==='pessoas'))}
@@ -979,6 +1166,11 @@ function ligar(){
   };
   $('#viewBody').onclick=aoClicar;
   $('#tableWrap').onclick=aoClicar;
+  // Duplo clique em célula da tabela de pessoas abre a justificativa do dia.
+  const abreJust=e=>{const t=e.target.closest('[data-dbl="just"]');if(!t)return;e.preventDefault();
+    abrirJustModal(t.dataset.jday||state.dia||state.hoje,t.dataset.jmat||state.pessoa||'')};
+  $('#viewBody').addEventListener('dblclick',abreJust);
+  $('#tableWrap').addEventListener('dblclick',abreJust);
   const si=$('#peopleSearch');
   si.oninput=aoDigitar;
   si.onfocus=()=>{if(si.value)renderSug()};
@@ -1012,17 +1204,44 @@ async function carga(){
     status('busy','Lendo feriados, justificativas e férias…');
     const[feriados,just,ferias]=await Promise.all([
       pega(T.feriado,'id,DTA,FERIADO',{},'id.asc').catch(()=>[]),
-      pega(T.just,'id,DTA,"MATRICULA COLABORADOR",MOTIVO',{or:`(DTA.ilike.*/${state.mes}/${state.ano}*,DTA.ilike.*/${String(state.mes).padStart(2,'0')}/${state.ano}*)`},'DTA.asc,id.asc').catch(()=>[]),
+      pega(T.just,'id,DTA,"MATRICULA GESTOR","MATRICULA COLABORADOR",MOTIVO,OBS',{or:`(DTA.ilike.*/${state.mes}/${state.ano}*,DTA.ilike.*/${String(state.mes).padStart(2,'0')}/${state.ano}*)`},'DTA.asc,id.asc').catch(()=>[]),
       // ABS_FERIAS possui somente DTA e MATRICULA; não solicitar coluna id.
       // As datas são comparadas como date (YYYY-MM-DD), evitando falha silenciosa.
-      pega(T.ferias,'DTA,MATRICULA',{DTA:'gte.'+L.ini.slice(0,10),DTA_2:'lt.'+L.fim.slice(0,10)},'DTA.asc').catch(()=>[])
+      // ABS_FÉRIAS.DTA pode estar gravado como DD/MM/AAAA OU YYYY-MM-DD;
+      // usar gte/lt lexicográfico quebra para DD/MM/AAAA. ilike em /MM/AAAA
+      // cobre AMBOS os formatos (o '/10/2026' é o sufixo do ano+mês).
+      pega(T.ferias,'DTA,MATRICULA',{DTA:`ilike.*/${state.mes}/${state.ano}`},'DTA.asc').catch(()=>[])
     ]);
     state.snapshots=snapshots([...prev,...mes]);
     state.feriados=new Set(feriados.map(r=>diaLocal(r.DTA)).filter(Boolean));
-    state.just=new Map();
-    for(const r of just){const m=norm(r['MATRICULA COLABORADOR']),d=diaLocal(r.DTA),c=semAcento(r.MOTIVO);
-      if(m&&d&&MOTIVOS.includes(c)&&!state.just.has(kk(m,d)))state.just.set(kk(m,d),c)}
-    state.ferias=new Set(ferias.map(r=>{const m=norm(r.MATRICULA),d=diaLocal(r.DTA);return m&&d?kk(m,d):''}).filter(Boolean));
+    aplicarJustRows(just);
+    // Matrícula do gestor: buscada apenas de uma coluna GESTOR real do ABS_QUADRO.
+    // Não há login/usuário autenticado neste painel e auth.uid NÃO é matrícula funcional;
+    // se a coluna não existir, o dado fica ausente (nada é inventado).
+    if(!state.gestor){try{
+      const uG=new URL(`${URL_SB}/rest/v1/${encodeURIComponent(T.quadro)}`);
+      uG.searchParams.set('select','MATRICULA');uG.searchParams.set('GESTOR','not.is.null');uG.searchParams.set('limit','1');
+      const rG=await fetch(uG,{headers:headers(),cache:'no-store'});
+      if(rG.ok){const g=await rG.json();if(Array.isArray(g)&&g[0])state.gestor=norm(g[0].MATRICULA)}
+    }catch{}}
+    // Janela alvo do mês corrente, em America/Sao_Paulo. Defesa em profundidade:
+    // o filtro ilike do servidor pega qualquer DTA terminada em /MM/AAAA do mês,
+    // mas se o banco tiver registros que casem parcialmente (e.g., DTA gravada
+    // como YYYY-MM-DD do ano anterior e da virada), este filtro descarta clientes
+    // que não estejam de fato dentro do mês solicitado.
+    const ymKey=`${state.mes}|${state.ano}`;
+    state.ferias=new Set(
+      ferias.map(r=>{const m=norm(r.MATRICULA),d=diaLocal(r.DTA);
+        if(!m||!d)return null;
+        const[y,mo]=d.split('-').map(Number);
+        return(y===state.ano&&mo===state.mes)?kk(m,d):null;
+      }).filter(Boolean)
+    );
+    // Diagnóstico silencioso: se o backend trouxe muitas linhas cuja janela
+    // não bate, mostra contagem no console para investigação sem quebrar a UI.
+    try{const totBruto=ferias.length,totAceito=state.ferias.size;
+      if(totBruto&&totAceito<totBruto*0.9)console.warn('[ABS_FÉRIAS] filtro mês',ymKey,'aceitou',totAceito,'de',totBruto,'linha(s) — vale conferir DTA no banco (mix de formatos?)');
+    }catch{}
     const validos=state.dias.filter(d=>d<=state.hoje&&dowDe(d)!==0&&!state.feriados.has(d));
     status('busy',`Lendo presenças (Suricato) · 0/${validos.length} dias…`);
     state.present=new Set();state.presenceDays=new Set();state.presentHours=new Map();
@@ -1042,9 +1261,11 @@ function preencherFiltros(){
   const ps=todasPessoas();
   const turnos=[...new Set(ps.map(p=>p.turno))].sort((a,b)=>a.localeCompare(b,'pt-BR',{numeric:true}));
   const cds=[...new Set(ps.map(p=>p.cd))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  const cargos=cargosDisponiveis();
   const fill=(sel,vals,cur,todos)=>{const el=$(sel);el.innerHTML=`<option value="">${todos}</option>`+vals.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');el.value=cur};
   fill('#turnoFilter',turnos,state.turno,'Todos os turnos');
   fill('#cdFilter',cds,state.cd,'Todos os CDs');
+  fill('#cargoFilter',cargos,state.cargoF,'Todos os cargos');
   $('#motiveMenu').innerHTML=MOTIVOS.map(c=>`<label class="check"><input type="checkbox" value="${c}" ${state.ativos.has(c)?'checked':''}> ${c} · ${MOTIVO_NOME[c]}</label>`).join('');
   const arr=MOTIVOS.filter(c=>state.ativos.has(c));
   $('#motiveBtn').textContent=arr.length===MOTIVOS.length?'Todos os motivos':arr.length?arr.join(', '):'Nenhum motivo';
@@ -1061,5 +1282,6 @@ ligar();carga();
 })();
 </script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
 </body>
 </html>
