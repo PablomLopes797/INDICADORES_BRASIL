@@ -417,10 +417,10 @@ td.nd{color:var(--quiet)}
       <summary>Definições dos indicadores (sem ambiguidade)</summary>
       <div>
         <p><b>TOTAL / QUADRO ELEGÍVEL</b> — colaboradores distintos no snapshot de <code>ABS_QUADRO</code> com DTA menor ou igual ao dia apurado (a atualização mais recente vale a partir da própria data), após os filtros de turno e CD.</p>
-        <p><b>PRESENTES (P)</b> — existe registro de presença em <code>ABS_SURICATO</code> para a matrícula naquele dia. Registros repetidos no mesmo dia contam uma única vez.</p>
+        <p><b>PRESENTES (P)</b> — existe registro de presença em <code>ABS_SURICATO</code> para a matrícula naquele dia. A coluna <code>DTA</code> pode vir em <b>dois formatos</b> — ISO (<code>2026-10-10T20:02:00-03:00</code>) <i>ou</i> brasileiro (<code>15/10/2026 13:36</code>): o painel lê os dois com o mesmo interpretador e usa o <b>dia local de São Paulo</b> do registro. Para o <b>3º turno</b>, que começa às 22:00 do dia anterior, as punções de madrugada (até 06:00) também contam como presença no dia operacional anterior. Registros repetidos no mesmo dia contam uma única vez.</p>
         <p><b>AUSENTES / ABS</b> — não há registro de presença no dia e: (a) existe justificativa em <code>ABS_JUSTIFICATIVAS</code> cujo MOTIVO está nos motivos ativos; ou (b) não existe justificativa e o dia possui carga de presença, gerando falta inferida (F). Nunca conta quem está de férias.</p>
         <p><b>FÉRIAS (FE)</b> — matrícula presente em <code>ABS_FÉRIAS</code> na data (DTA pode estar gravada como texto DD/MM/AAAA <i>ou</i> como data ISO YYYY-MM-DD; o painel filtra pelo sufixo de mês/ano e valida a janela antes de aplicar). Sempre tem precedência sobre falta (<code>F</code>) e sobre justificativa (<code>FE</code> &gt; <code>F</code> &gt; <code>?</code>). Sai do quadro elegível.</p>
-        <p><b>SEM DADOS (?)</b> — o dia não possui nenhuma carga em <code>ABS_SURICATO</code>. Não é possível inferir falta: a linha e o dia ficam fora do numerador e do denominador.</p>
+        <p><b>SEM DADOS (?)</b> — em vez de falta, o painel mostra <code>?</code> quando o problema é o dado, não a pessoa. Três situações: (a) o dia não tem carga em <code>ABS_SURICATO</code>; (b) a carga do dia é <i>parcial</i> — cobertura abaixo de 60% da mediana do mês, típico de importação interrompida no meio do dia (o dia cuja carga para às 13h acusaria falta para todo mundo que entra depois); (c) o colaborador não tem nenhum registro no mês. — e, por fim, (d) quando o <b>turno do colaborador naquele dia</b> teve cobertura inferior a 40% da mediana do próprio turno no mês: é o caso de uma extração que deixou de trazer um turno inteiro (o 2º turno, por exemplo, ficou com 7 de 221 pessoas em 20/10). Quando o que falta é o turno, ninguém daquele turno leva falta</p>
         <p><b>DOMINGO / FERIADO</b> — sem falta para ninguém. Feriados vêm de <code>ABS_FERIADOS</code> (DTA em dd/mm/aaaa). Se houver justificativa registrada, ela é exibida, mas não entra no ABS.</p>
         <p><b>JUSTIFICADOS NÃO-ABS</b> — existe justificativa registrada cujo MOTIVO está fora dos motivos ativos (ex.: FO, TR). Aparecem na composição do dia, mas não entram no ABS. Por isso o invariante correto é: <b>presentes + ausentes + justificados não-ABS = quadro elegível</b>; somando férias e sem dados chega-se ao total do quadro do dia.</p>
         <p><b>TAXA DE ABSENTEÍSMO</b> — ausentes ÷ quadro elegível (no mês, soma dos dias apurados). No dia atual, entram apenas os turnos cujo início já ocorreu: 1º 06:00, 2º 13:40, 3º 22:00 do dia anterior e 4º 08:00; o 4º turno não opera aos sábados. <b>ABS MÉDIO/DIA</b> — ausentes ÷ dias apurados (média, não soma do período).</p>
@@ -479,8 +479,55 @@ const pc=new Intl.NumberFormat('pt-BR',{minimumFractionDigits:2,maximumFractionD
 const norm=v=>String(v??'').trim();
 const semAcento=v=>norm(v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
 const kk=(m,d)=>m+'|'+d;
-function parseData(v){const s=norm(v);if(!s)return null;let m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?/);if(m)return new Date(Date.UTC(+m[3],+m[2]-1,+m[1],(+m[4]||0)+3,+m[5]||0,+m[6]||0));m=s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/);if(m&&!/[zZ]|[+-]\d\d:?\d\d$/.test(s))return new Date(Date.UTC(+m[1],+m[2]-1,+m[3],(+m[4]||0)+3,+m[5]||0,+m[6]||0));const d=new Date(s);return Number.isNaN(d.getTime())?null:d}
-function diaLocal(v){const d=parseData(v);if(!d)return null;const p=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(d).reduce((a,x)=>(a[x.type]=x.value,a),{});return `${p.year}-${p.month}-${p.day}`}
+/* ===== DATAS — um único interpretador para TODOS os formatos do banco =====
+   ABS_SURICATO.DTA (e outras tabelas) chegam em mais de um formato, porque a
+   forma de gravação mudou ao longo do tempo:
+     1) ISO com fuso ....... "2026-10-10T20:02:00-03:00"
+     2) ISO sem fuso ....... "2026-10-10T20:02:00" · "2026-10-10 20:02" · "2026-10-10"
+     3) BR com hora ........ "15/10/2026 13:36" · "15/10/2026" · "5/1/2026 9:05"
+   Regra de ouro: NUNCA chamar new Date("15/10/2026") — o motor JS lê mês/dia
+   (ou devolve Invalid Date). TODO valor de DTA passa por parseDTA(), que é a
+   única fonte de verdade de data do painel. */
+function dataValida(y,m,d){
+  if(!(m>=1&&m<=12)||!(d>=1)||!(y>=1900&&y<=2999))return false;
+  const bis=(y%4===0&&y%100!==0)||y%400===0;
+  return d<=[31,bis?29:28,31,30,31,30,31,31,30,31,30,31][m-1]
+}
+function parseDTA(v){
+  const s=norm(v);if(!s)return null;
+  /* (1) ISO 8601 — AAAA-MM-DD, com hora/fração/fuso opcionais */
+  let m=s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{1,2}):(\d{2})(?::(\d{2}))?(?:[.,](\d{1,9}))?)?\s*(Z|[+-]\d{2}:?\d{2})?$/i);
+  if(m){
+    const y=+m[1],mo=+m[2],d=+m[3];
+    if(!dataValida(y,mo,d))return null;
+    const h=+(m[4]||0),mi=+(m[5]||0),se=+(m[6]||0);
+    const ms=m[7]?Math.round(+('0.'+m[7])*1000):0;
+    const tz=m[8];
+    if(tz){
+      let off=0;
+      if(!/^z$/i.test(tz)){const sg=tz[0]==='-'?-1:1,raw=tz.slice(1).replace(':','');off=sg*(+raw.slice(0,2)*60+ +raw.slice(2,4))}
+      return new Date(Date.UTC(y,mo-1,d,h,mi,se,ms)-off*60000);
+    }
+    /* sem fuso declarado → hora de São Paulo (UTC-3), como foi digitado */
+    return new Date(Date.UTC(y,mo-1,d,h+3,mi,se,ms));
+  }
+  /* (2) BR — DD/MM/AAAA com hora opcional (aceita / - . como separador) */
+  m=s.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})(?:[T ](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+  if(m){
+    const d=+m[1],mo=+m[2],y=+m[3];
+    if(!dataValida(y,mo,d))return null;
+    return new Date(Date.UTC(y,mo-1,d,(+m[4]||0)+3,+m[5]||0,+m[6]||0));
+  }
+  /* (3) último recurso — nunca inventa data, devolve null se não der para ler */
+  const d2=new Date(s.replace(/([+-]\d{2})(\d{2})$/,'$1:$2'));
+  return Number.isNaN(d2.getTime())?null:d2;
+}
+/* compatibilidade: todo o código antigo continua chamando parseData */
+const parseData=parseDTA;
+/* rótulo do formato original — usado no diagnóstico */
+function formatoDTA(v){const s=norm(v);if(!s)return '?';if(/^\d{4}-\d{2}-\d{2}/.test(s))return 'ISO';if(/^\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{4}/.test(s))return 'BR';return '?'}
+function diaLocal(v){const d=parseDTA(v);if(!d)return null;const p=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(d).reduce((a,x)=>(a[x.type]=x.value,a),{});return p.year+'-'+p.month+'-'+p.day}
+function horaLocal(v){const d=parseDTA(v);if(!d)return null;return new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit'}).format(d)}
 function hoje(){const p=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).reduce((a,x)=>(a[x.type]=x.value,a),{});return `${p.year}-${p.month}-${p.day}`}
 const dowDe=d=>new Date(d+'T12:00:00Z').getUTCDay();
 const dowNome=d=>DOW[dowDe(d)];
@@ -532,6 +579,10 @@ function modeloDia(day){
     else if(state.ferias.has(k)){code='FE';ferias++}
     else{const j=state.just.get(k);
       if(j){code=j;isAbs=state.ativos.has(j);if(!isAbs){jn++;jnLista.push(p.matricula)}}
+      /* Falta inferida só quando o dia tem carga confiável. Pessoa sem
+         nenhum registro no mês → dado ausente, mostra '?' e não acusa. */
+      else if(pa&&state.semRegistroMes.has(p.matricula)){code='?';fora++}
+      else if(pa&&state.turnoSemDado.has(p.turno+'|'+day)){code='?';fora++}
       else if(pa){code='F';isAbs=state.ativos.has('F')}
       else{code='?';fora++}}
     porCodigo[code]=(porCodigo[code]||0)+1;
@@ -555,7 +606,7 @@ const state={ano:0,mes:0,dias:[],hoje:hoje(),snapshots:new Map(),just:new Map(),
 ferias:new Set(),feriados:new Set(),ativos:new Set(ATIVOS_PADRAO),cargo:new Map(),presentHours:new Map(),turno:'',cd:'',vista:'macro',metric:'abs',chartM:'abs',
 dia:'',setor:'',turnoF:'',cargoF:'',pessoa:'',busca:'',pagina:1,expand:new Set(),cache:new Map(),base:null,
 carregando:false,fonteFeriado:'—',fonteCargo:'ABS_QUADRO.CARGO',erro:'',aviso:'',ultimaAtualizacao:null,
-gestor:'',justObs:new Map(),_lastDayClick:'',_lastDayTime:0,motivoFiltro:new Set(MOTIVOS)};
+gestor:'',justObs:new Map(),_lastDayClick:'',_lastDayTime:0,motivoFiltro:new Set(MOTIVOS),diasParciais:new Set(),semRegistroMes:new Set(),cobertura:[],turnoSemDado:new Set(),turnoDiag:[]};
 
 /* ---------- rede ---------- */
 const headers=()=>({apikey:KEY_SB,Authorization:'Bearer '+JWT_SB,Accept:'application/json'});
@@ -578,6 +629,51 @@ async function conta(tabela,filtros={}){const u=new URL(`${URL_SB}/rest/v1/${enc
 async function mapaLimite(itens,n,fn,prog){const out=new Array(itens.length);let i=0,feitos=0;
   await Promise.all(Array.from({length:Math.min(n,itens.length)},async()=>{for(;;){const j=i++;if(j>=itens.length)return;out[j]=await fn(itens[j],j);feitos++;if(prog)prog(feitos,itens.length)}}));
   return out}
+
+/* ---------- filtros de DTA no PostgREST, à prova de formato ----------
+   O PostgREST compara DTA como TEXTO. Um filtro `gte.2026-10-01T00:00:00-03:00`
+   NÃO encontra linhas gravadas como "15/10/2026 13:36" ('1' < '2'), e a presença
+   do dia / a justificativa / as férias simplesmente desapareciam. Aqui cada
+   filtro é montado por PREFIXO de texto (seguro para os dois formatos) e o
+   recorte fino de dia/mês é feito no cliente, por diaLocal(). */
+const JUST_SEL='id,DTA,"MATRICULA GESTOR","MATRICULA COLABORADOR",MOTIVO,OBS';
+const pad2=n=>String(n).padStart(2,'0');
+const numSemZero=n=>String(+n);
+/* padrões que casam um único dia nos dois formatos: AAAA-MM-DD… e DD/MM/AAAA…  */
+function patsDia(iso){
+  const [y,m,d]=iso.split('-'),out=[];
+  out.push(`DTA.ilike.${y}-${m}-${d}*`);
+  for(const dd of new Set([d,numSemZero(d)]))for(const mm of new Set([m,numSemZero(m)]))
+    out.push(`DTA.ilike.${dd}/${mm}/${y}*`);
+  return out;
+}
+/* janela de 3 dias: absorve registros gravados com fuso diferente do -03:00 */
+function orDTAdia(iso){
+  const pats=[];
+  for(const d of [somaDia(iso,-1),iso,somaDia(iso,1)])pats.push(...patsDia(d));
+  return `(${[...new Set(pats)].join(',')})`;
+}
+/* mês inteiro nos dois formatos */
+function orDTAMes(ano,mes){
+  const mm=pad2(mes),pats=[`DTA.ilike.${ano}-${mm}*`];
+  for(const m of new Set([mm,numSemZero(mes)]))pats.push(`DTA.ilike.*/${m}/${ano}*`);
+  return `(${pats.join(',')})`;
+}
+async function pegaMes(tabela,select,ano,mes,order){
+  try{return await pega(tabela,select,{or:orDTAMes(ano,mes)},order)}
+  catch(e){
+    console.warn('[DTA] filtro de mês misto recusado em '+tabela+' — usando janela ISO:',e.message||e);
+    const ini=`${ano}-${pad2(mes)}-01`,fim=mes===12?`${ano+1}-01-01`:`${ano}-${pad2(mes+1)}-01`;
+    return await pega(tabela,select,{DTA:'gte.'+ini,DTA_2:'lt.'+fim},order)
+  }
+}
+async function pegaDia(tabela,select,iso,order='DTA.asc',limite=1000,maxLinhas=40000){
+  try{return await pega(tabela,select,{or:orDTAdia(iso)},order,limite,maxLinhas)}
+  catch(e){
+    console.warn('[DTA] filtro de dia misto recusado em '+tabela+' ('+iso+') — usando janela ISO:',e.message||e);
+    return await pega(tabela,select,{DTA:'gte.'+iso+'T00:00:00-03:00',DTA_2:'lt.'+somaDia(iso,1)+'T00:00:00-03:00'},order,limite,maxLinhas)
+  }
+}
 
 /* ---------- modelos de apoio ---------- */
 function unicoPor(a,f){const m=new Map();for(const x of a){const k=f(x);if(k&&!m.has(k))m.set(k,x)}return[...m.values()]}
@@ -1019,8 +1115,7 @@ async function gravarJust(){
 }
 async function recarregarJustMes(){
   try{
-    const just=await pega(T.just,'id,DTA,"MATRICULA GESTOR","MATRICULA COLABORADOR",MOTIVO,OBS',
-      {or:`(DTA.ilike.*/${state.mes}/${state.ano}*,DTA.ilike.*/${String(state.mes).padStart(2,'0')}/${state.ano}*)`},'DTA.asc,id.asc');
+    const just=await pegaMes(T.just,JUST_SEL,state.ano,state.mes,'DTA.asc,id.asc');
     aplicarJustRows(just);
     status('ok','Dados atualizados · justificativa gravada e refletida na tela');
   }catch(e){status('error','Recarga das justificativas falhou: '+(e.message||e))}
@@ -1137,14 +1232,6 @@ function rotulos(){const a=MOTIVOS.filter(c=>state.ativos.has(c));$('#motiveBtn'
 function status(kind,msg){const lt=$('#ldTxt');if(lt&&state.carregando)lt.textContent=msg;$('#connDot').className='dot '+kind;$('#connText').textContent=msg}
 function ocupado(v){state.carregando=v;ldToggle(v);$('#reloadBtn').disabled=v;$('#monthInput').disabled=v;$('#reloadBtn').textContent=v?'◌ CARREGANDO':'↻ ATUALIZAR'}
 
-  /* DTA do ABS_SURICATO tem 2 formatos: ISO (2026-10-10T20:02:00-03:00) e BR (15/10/2026 13:36).
-   Busca o dia nos dois, inclusive BR sem zero à esquerda (5/10/2026). */
-function filtroDiaSuricato(d){
-  const [y,m,dd]=d.split('-');
-  const dias=[...new Set([dd,String(+dd)])],meses=[...new Set([m,String(+m)])];
-  const br=[];for(const a of dias)for(const b of meses)br.push(`DTA.like.${a}/${b}/${y}*`);
-  return `(and(DTA.gte.${d},DTA.lt.${somaDia(d,1)}),${br.join(',')})`;
-}
 /* ---------- carga ---------- */
 async function carga(){
   if(state.carregando)return;
@@ -1163,13 +1250,13 @@ async function carga(){
     status('busy','Lendo feriados, justificativas e férias…');
     const[feriados,just,ferias]=await Promise.all([
       pega(T.feriado,'id,DTA,FERIADO',{},'id.asc').catch(()=>[]),
-      pega(T.just,'id,DTA,"MATRICULA GESTOR","MATRICULA COLABORADOR",MOTIVO,OBS',{or:`(DTA.ilike.*/${state.mes}/${state.ano}*,DTA.ilike.*/${String(state.mes).padStart(2,'0')}/${state.ano}*)`},'DTA.asc,id.asc').catch(()=>[]),
+      pegaMes(T.just,JUST_SEL,state.ano,state.mes,'DTA.asc,id.asc').catch(()=>[]),
       // ABS_FERIAS possui somente DTA e MATRICULA; não solicitar coluna id.
       // As datas são comparadas como date (YYYY-MM-DD), evitando falha silenciosa.
       // ABS_FÉRIAS.DTA pode estar gravado como DD/MM/AAAA OU YYYY-MM-DD;
       // usar gte/lt lexicográfico quebra para DD/MM/AAAA. ilike em /MM/AAAA
       // cobre AMBOS os formatos (o '/10/2026' é o sufixo do ano+mês).
-      pega(T.ferias,'DTA,MATRICULA',{DTA:`ilike.*/${state.mes}/${state.ano}`},'DTA.asc').catch(()=>[])
+      pegaMes(T.ferias,'DTA,MATRICULA',state.ano,state.mes,'DTA.asc').catch(()=>[])
     ]);
     state.snapshots=snapshots([...prev,...mes]);
     state.feriados=new Set(feriados.map(r=>diaLocal(r.DTA)).filter(Boolean));
@@ -1204,15 +1291,139 @@ async function carga(){
     const validos=state.dias.filter(d=>d<=state.hoje&&dowDe(d)!==0&&!state.feriados.has(d));
     status('busy',`Lendo presenças (Suricato) · 0/${validos.length} dias…`);
     state.present=new Set();state.presenceDays=new Set();state.presentHours=new Map();
-const res=await mapaLimite(validos,6,async d=>pega(T.suricato,'MATRICULA,DTA',{or:filtroDiaSuricato(d)},'DTA.asc',1000,40000).then(rs=>rs.filter(r=>diaLocal(r.DTA)===d)).catch(()=>[]),
+    /* -------- ABS_SURICATO: DTA em formatos mistos --------
+       A consulta vai por PREFIXO (ISO + dd/mm/aaaa, janela de 3 dias) e cada
+       linha é classificada pelo DIA REAL devolvido por diaLocal(), nunca pela
+       posição da string. Assim "2026-10-10T20:02:00-03:00" e "10/10/2026 20:02"
+       caem no mesmo dia 2026-10-10, e o mesmo colaborador pode ter os dois. */
+    /* -------- ABS_SURICATO: formato misto + turno que vira o dia + carga parcial --------
+       (1) A consulta vai por PREFIXO textual (ISO AAAA-MM-DD… e BR DD/MM/AAAA…),
+           então os dois formatos entram; a precisão fica no cliente, por parseDTA().
+       (2) O 3º turno entra às 22:00 do dia ANTERIOR: as punções de madrugada
+           (00:00-06:00) pertencem ao dia operacional anterior. Sem essa ponte,
+           quem trabalhou a noite toda aparecia como falta no dia.
+       (3) Dia com carga parcial (importação interrompida no meio do dia) não
+           gera falta: vira "sem dados". Antes, um dia cuja carga parava às 13h
+           acusava falta para todo mundo que entra depois das 13h.
+       (4) Cada linha é classificada pelo dia REAL devolvido por diaLocal() —
+           nunca pela posição da string da data. */
+    const fmtSuri={ISO:0,BR:0,outros:0,ilegiveis:0,ponte:0};
+    const turnoMap=new Map(todasPessoas().map(p=>[p.matricula,semAcento(p.turno).replace(/[^0-9]/g,'')]));
+    const horaSP=dt=>+new Intl.DateTimeFormat('en-GB',{timeZone:'America/Sao_Paulo',hour:'2-digit',hour12:false}).format(dt);
+    state.present=new Set();state.presenceDays=new Set();state.presentHours=new Map();
+    const vistos=new Set(),diasDe=new Map();
+    const marcar=(m,dia,raw)=>{
+      if(!state.dias.includes(dia))return;
+      const k=kk(m,dia);state.present.add(k);
+      if(!state.presentHours.has(k))state.presentHours.set(k,[]);
+      const h=state.presentHours.get(k);if(h.length<6)h.push(raw);
+    };
+    const res=await mapaLimite(validos,6,async d=>pegaDia(T.suricato,'MATRICULA,DTA',d).catch(()=>[]),
       (f,t)=>{status('busy',`Lendo presenças (Suricato) · ${f}/${t} dias…`);ldProg(t?f/t:null)});
-    res.forEach((rows,i)=>{const d=validos[i];if(!rows.length)return;state.presenceDays.add(d);for(const r of rows){const m=norm(r.MATRICULA);if(!m)continue;state.present.add(kk(m,d));
-      const k=kk(m,d);if(!state.presentHours.has(k))state.presentHours.set(k,[]);const h=state.presentHours.get(k);if(h.length<6)h.push(r.DTA)}});
+    for(const rows of res){
+      for(const r of rows){
+        const g=formatoDTA(r.DTA);if(g==='ISO')fmtSuri.ISO++;else if(g==='BR')fmtSuri.BR++;else fmtSuri.outros++;
+        const dt=parseDTA(r.DTA);
+        if(!dt){fmtSuri.ilegiveis++;console.warn('[ABS_SURICATO] DTA ilegível ignorada:',r.DTA);continue}
+        const chave=(r.id!=null?r.id+'|'+r.DTA:null);
+        if(chave){if(vistos.has(chave))continue;vistos.add(chave)}
+        const m=norm(r.MATRICULA);if(!m)continue;
+        const dia=diaLocal(r.DTA);
+        if(!dia)continue;
+        if(!diasDe.has(m))diasDe.set(m,new Set());diasDe.get(m).add(dia);
+        marcar(m,dia,r.DTA);
+        /* PONTE DO TURNO DA NOITE (3º turno, 22:00 → 06:00).
+           O turno atravessa dois dias de calendário: quem entra às 22:00 de
+           segunda e sai às 06:00 de terça tem punção nos dois dias. O painel já
+           considera o 3º turno no quadro do dia desde 00:00, então a presença
+           vale para AMBOS os dias — marcamos também o dia vizinho.
+           É operação ADITIVA: só acrescenta presença, nunca remove. Sem ela,
+           quem bate o ponto só depois da meia-noite aparecia como falta. */
+        const t3=turnoMap.get(m)==='3';
+        if(t3){
+          const h=horaSP(dt);
+          if(h<6){fmtSuri.ponte++;marcar(m,somaDia(dia,-1),r.DTA)}
+          if(h>=18){fmtSuri.ponte++;marcar(m,somaDia(dia,1),r.DTA)}
+        }
+      }
+    }
+    /* Carga parcial: cobertura do dia muito abaixo do padrão do mês → sem falta */
+    const cobDia=[];
+    for(const d of validos){
+      const snap=snapshotPara(d);if(!snap)continue;
+      const pessoas=mapaPessoas(snap.rows).filter(filtroFixo);if(!pessoas.length)continue;
+      let n=0;for(const p of pessoas)if(state.present.has(kk(p.matricula,d)))n++;
+      cobDia.push({d,total:pessoas.length,n,cob:n/pessoas.length});
+    }
+    /* Referência de cobertura: percentil 80, NÃO mediana. Quando a maioria dos
+       dias está com carga quebrada, a mediana desaba junto com o problema e
+       deixa de servir de régua — o p80 continua apontando o padrão saudável. */
+    const perc=(arr,p)=>{const v=[...arr].sort((a,b)=>a-b);return v.length?v[Math.min(v.length-1,Math.floor(v.length*p/100))]:0};
+    const medianaCob=perc(cobDia.filter(x=>x.cob>=0.10).map(x=>x.cob),80);
+    state.diasParciais=new Set();
+    for(const x of cobDia){
+      if(!x.n)continue;                                  /* dia sem nenhuma presença: tratado abaixo */
+      state.presenceDays.add(x.d);
+      if(x.d!==state.hoje&&medianaCob>0&&x.cob<medianaCob*0.60){
+        state.diasParciais.add(x.d);state.presenceDays.delete(x.d);
+      }
+    }
+    /* ---- GUARDA POR TURNO (a causa real das "faltas" que não existem) ----
+       Na base real, a importação do Suricato deixou de trazer o 2º turno:
+       13/10 tinha 2.194 punções entre 13h e 22h; em 16/10, 9; em 20/10, 0.
+       Dos 221 colaboradores do 2º turno, só 7 tinham registro em 20/10 — e os
+       outros 214 eram acusados de falta sem nunca terem faltado.
+       Aqui cada TURNO|DIA é comparado com a mediana do PRÓPRIO turno: se a
+       cobertura do turno no dia cai abaixo de 40% da mediana do turno, aquele
+       turno entra em "sem dado" e ninguém dele leva falta. */
+    const cobTurno=new Map();
+    for(const d of validos){
+      const snap=snapshotPara(d);if(!snap)continue;
+      for(const p of mapaPessoas(snap.rows).filter(filtroFixo)){
+        const key=p.turno+'|'+d;
+        const o=cobTurno.get(key)||{n:0,q:0};
+        o.q++;if(state.present.has(kk(p.matricula,d)))o.n++;
+        cobTurno.set(key,o);
+      }
+    }
+    const porTurno=new Map();
+    for(const [key,o] of cobTurno){
+      const t=key.slice(0,key.lastIndexOf('|'));
+      if(!porTurno.has(t))porTurno.set(t,[]);
+      porTurno.get(t).push(o.q?o.n/o.q:0);
+    }
+    const refTurno=new Map();
+    for(const [t,arr] of porTurno){
+      refTurno.set(t,perc(arr.filter(x=>x>0),80));   /* p80: imune a maioria quebrada */
+    }
+    state.turnoSemDado=new Set();state.turnoDiag=[];
+    for(const [key,o] of cobTurno){
+      const sep=key.lastIndexOf('|'),t=key.slice(0,sep),d=key.slice(sep+1);
+      const cob=o.q?o.n/o.q:0,ref=refTurno.get(t)||0;
+      if(d!==state.hoje&&ref>=0.25&&cob<ref*0.40){
+        state.turnoSemDado.add(key);
+        state.turnoDiag.push({dia:d,turno:t,cob:+cob.toFixed(3),ref:+ref.toFixed(3),pessoas:o.q});
+      }
+    }
+    if(state.turnoSemDado.size)console.warn('[ABS_SURICATO] turno/dia sem carga confiável (não geram falta):',state.turnoDiag);
+    /* Cobertura de referência exposta na tela (transparência do dado) */
+    state.cobertura=cobDia;
+    /* Quem não tem NENHUM registro no mês: dado ausente, não falta */
+    state.semRegistroMes=new Set();
+    for(const p of todasPessoas())if(!diasDe.has(p.matricula))state.semRegistroMes.add(p.matricula);
+    console.info('[ABS_SURICATO]',{formatos:fmtSuri,medianaCobertura:+(medianaCob*100).toFixed(1),
+      diasParciais:[...state.diasParciais],semRegistroMes:state.semRegistroMes.size});
     invalidar();preencherFiltros();render();
     state.ultimaAtualizacao=new Date();
     $('#lastUpdate').textContent='Última atualização: '+new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',dateStyle:'short',timeStyle:'medium'}).format(state.ultimaAtualizacao);
     const sd=state.dias.filter(d=>d<=state.hoje&&dowDe(d)!==0&&!state.feriados.has(d)&&!state.presenceDays.has(d)).length;
-    status('ok',`Dados carregados · ${nf.format(state.present.size)} presenças · ${sd} dia(s) sem carga de presença · ${state.feriados.size} feriado(s)`);
+    const extra=[];
+    if(fmtSuri.BR)extra.push(`${nf.format(fmtSuri.BR)} DTA em dd/mm/aaaa`);
+    if(fmtSuri.ponte)extra.push(`${nf.format(fmtSuri.ponte)} punção(ões) de madrugada do 3º turno`);
+    if(state.diasParciais.size)extra.push(`${state.diasParciais.size} dia(s) com carga parcial (sem falta)`);
+    if(state.turnoSemDado.size)extra.push(`${state.turnoSemDado.size} turno/dia sem carga confiável (sem falta)`);
+    if(state.semRegistroMes.size)extra.push(`${state.semRegistroMes.size} sem registro no mês`);
+    status('ok',`Dados carregados · ${nf.format(state.present.size)} presenças · ${sd} dia(s) sem carga de presença · ${state.feriados.size} feriado(s)`+(extra.length?' · '+extra.join(' · '):''))
   }catch(e){state.erro=String(e.message||e);status('error','Falha na consulta');$('#viewBody').innerHTML=`<div class="err"><b>Não foi possível carregar os dados.</b><br>${esc(state.erro)}<br><br>Verifique a conexão com o Supabase (a chave anônima está embutida no arquivo) e se o mês selecionado possui dados.</div>`}
   finally{ocupado(false)}
 }
@@ -1246,6 +1457,7 @@ ligar();carga();
 })();
 </script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
 </body>
