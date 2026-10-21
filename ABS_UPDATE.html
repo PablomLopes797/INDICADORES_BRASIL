@@ -59,7 +59,15 @@
         <p class="helper" id="fileHint">Aceita separador vírgula ou ponto e vírgula. A prévia mostra os registros válidos e os erros antes de qualquer envio.</p>
         <details class="advanced"><summary>Autorização opcional (JWT anon deste mesmo projeto)</summary><div class="field"><label for="anonJwt">JWT anon de sessão</label><input id="anonJwt" type="password" autocomplete="off" placeholder="Deixe vazio para usar somente a chave publicável"><span class="helper">Não cole chave secret/service_role. O JWT fica apenas na memória desta página e não é salvo. A chave `sb_publishable` será enviada no cabeçalho `apikey`; não é um JWT e não é usada como Bearer.</span></div></details>
         <div class="warning"><span class="warn-icon">!</span><span>Envio em modo <b>inserção</b>: sem UPSERT, exclusão ou deduplicação automática. Matrícula sozinha não é tratada como chave única. Confirme que a prévia corresponde ao arquivo correto.</span></div>
-        <div class="progress-wrap" id="progressWrap" hidden><div class="progress-line"><span id="progressLabel">Preparando…</span><span id="progressPercent">0%</span></div><div class="progress-track"><div class="progress-bar" id="progressBar"></div></div></div>
+        <div class="advanced" id="suricatoAuth" hidden style="padding:12px">
+<p>SURICATO seguro: exige instalação do SQL e usuário autorizado. Nenhuma carga parcial será aceita. Limite: 50.000 registros por transação; limites de rede/servidor podem ser menores.</p>
+<div class="field"><label>E-MAIL DO SUPABASE AUTH</label><input id="safeEmail" type="email" autocomplete="username"></div>
+<div class="field"><label>SENHA</label><input id="safePassword" type="password" autocomplete="current-password"></div>
+<button class="btn" id="safeLogin" type="button">Entrar para importar</button>
+<button class="btn" id="safeLogout" type="button">Sair</button>
+<p id="safeAuthStatus" role="status">Não autenticado. Sessão mantida somente na memória.</p>
+<p>São enviados somente A → DTA e G → MATRICULA. Repetições dentro do arquivo são preservadas. O mesmo conteúdo, na mesma ordem, não é inserido novamente.</p>
+</div><div class="progress-wrap" id="progressWrap" hidden><div class="progress-line"><span id="progressLabel">Preparando…</span><span id="progressPercent">0%</span></div><div class="progress-track"><div class="progress-bar" id="progressBar"></div></div></div>
         <div id="previewArea" aria-live="polite"></div>
         <div class="modal-actions"><button class="btn" type="button" data-back id="backButton">Cancelar</button><button class="btn btn-primary" id="confirmImport" type="button" disabled>Confirmar importação</button></div>
       </section>
@@ -145,7 +153,7 @@
     busy = value;
     ui.load.disabled = value || !ui.file.files?.length;
     ui.file.disabled = value;
-    ui.confirm.disabled = value || !pending || !pending.valid.length;
+    ui.confirm.disabled = value || !pending || !pending.valid.length || (selectedModule === 'suricato' && pending.errors.length > 0);
     ui.feriasLoad.disabled = value || !ui.feriasFile.files?.length;
     ui.feriasFile.disabled = value;
     ui.feriasConfirm.disabled = value || !feriasPending || !feriasPending.valid?.length;
@@ -164,6 +172,9 @@
       return;
     }
     selectedModule = module;
+    $('#suricatoAuth').hidden = module !== 'suricato';
+    ui.importer.querySelector('.warning').hidden = module === 'suricato';
+    ui.jwt.closest('details').hidden = module === 'suricato';
     pending = null;
     ui.file.value = '';
     ui.load.disabled = true;
@@ -342,7 +353,7 @@
     }
     if (c.length < 7) return { error: `linha ${row.line}: esperadas pelo menos 7 colunas (A–G), recebidas ${c.length}` };
     const matricula = c[6];
-    const date = parseDateValue(c[0]);
+    const date = /^\d+(\.\d+)?$/.test(c[0]) ? {ok:false,reason:'data numérica ambígua; exporte como DD/MM/AAAA ou ISO'} : parseDateValue(c[0]);
     const problems = [];
     if (!matricula) problems.push('matrícula vazia (coluna G)');
     if (!c[0]) problems.push('DTA vazia (coluna A)');
@@ -354,6 +365,13 @@
   function parseFileText(text, module, delimiterMode) {
     const delimiter = delimiterMode === 'semicolon' ? ';' : delimiterMode === 'comma' ? ',' : detectDelimiter(text);
     const parsed = parseCsv(text, delimiter);
+    if (module === 'suricato') {
+      const meaningful = parsed.filter(r => !isBlankRow(r.values));
+      const head = meaningful[0];
+      if (!head || !detectHeader(module, head)) throw new Error('SURICATO: cabeçalho obrigatório com DATA/DTA em A e MATRICULA em G. Confira o separador e o layout. Nenhum dado foi enviado.');
+      const width = head.values.length;
+      if (meaningful.some(r => r.values.length !== width)) throw new Error('SURICATO: há linhas com quantidade de colunas diferente do cabeçalho. Corrija o arquivo; nenhum dado foi enviado.');
+    }
     let ignored = 0;
     const nonblank = parsed.filter((row) => {
       if (isBlankRow(row.values)) { ignored += 1; return false; }
@@ -404,7 +422,7 @@
       wrap.append(errors);
     }
     ui.preview.replaceChildren(wrap);
-    ui.confirm.disabled = !result.valid.length || busy;
+    ui.confirm.disabled = !result.valid.length || busy || (selectedModule === 'suricato' && result.errors.length > 0);
   }
   async function loadSelectedFile() {
     const file = ui.file.files?.[0];
@@ -412,7 +430,7 @@
     pending = null; ui.confirm.disabled = true;
     ui.progress.hidden = false; updateProgress('Lendo e validando o CSV…', 8);
     try {
-      const text = await file.text();
+      const text = new TextDecoder('utf-8', {fatal:true}).decode(await file.arrayBuffer());
       if (!text.trim()) throw new Error('O arquivo está vazio. Selecione um CSV com linhas de dados.');
       const result = parseFileText(text, selectedModule, $('#delimiterMode').value);
       if (!result.fileRows) throw new Error('Não foi possível identificar linhas no arquivo CSV.');
@@ -475,7 +493,7 @@
     }
     showView('result');
   }
-  async function submitImport() {
+  async function submitImportLegado() {
     if (!pending?.valid.length || busy) return;
     const confirmed = window.confirm(`Confirmar a inserção de ${pending.valid.length} registro(s) válidos em ${pending.table}? ${pending.errors.length} registro(s) com erro serão ignorados.\n\nNenhum registro existente será excluído ou atualizado. A operação pode gerar duplicidades e depende das permissões RLS configuradas no Supabase.`);
     if (!confirmed) return;
@@ -692,6 +710,65 @@
         ? `A API confirmou a inserção de ${saved} registro(s) dia a dia (um por data do período de cada colaborador). Nenhuma exclusão ou atualização foi executada.`
         : `${saved} de ${records.length} registro(s) dia a dia tiveram gravação confirmada. Os demais não foram confirmados; leia os detalhes antes de decidir se deve repetir. Não houve tentativa automática de reenvio.`,
     });
+  }
+
+
+  let safeSession = null;
+  $('#safeLogin').addEventListener('click', async () => {
+    if (busy) return;
+    const email = $('#safeEmail').value.trim();
+    const password = $('#safePassword').value;
+    if (!email || !password) return notify('Informe e-mail e senha.');
+    $('#safeLogin').disabled = true;
+    try {
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+        method:'POST',headers:{apikey:SUPABASE_PUBLISHABLE_KEY,'Content-Type':'application/json'},
+        body:JSON.stringify({email,password})
+      });
+      const data = await res.json();
+      if (!res.ok || !data.access_token) throw new Error(data.msg || data.error_description || data.message || 'Falha de autenticação');
+      safeSession = {token:data.access_token,expires:Date.now() + data.expires_in*1000};
+      $('#safeAuthStatus').textContent = `Autenticado: ${data.user.email}. A autorização de importação será verificada pelo banco.`;
+    } catch(e) { safeSession=null; $('#safeAuthStatus').textContent='Não autenticado.'; notify(e.message); }
+    finally { $('#safePassword').value=''; $('#safeLogin').disabled=false; }
+  });
+  $('#safeLogout').addEventListener('click', () => {
+    if (busy) return;
+    safeSession=null; $('#safePassword').value=''; $('#safeAuthStatus').textContent='Sessão local removida.';
+  });
+  async function submitImport() {
+    if (selectedModule !== 'suricato') return submitImportLegado();
+    if (busy || !pending?.valid.length) return;
+    if (pending.errors.length) return notify('Carga bloqueada: corrija todas as linhas com erro.');
+    if (pending.valid.length > 50000) return notify('Carga bloqueada: limite de 50.000 registros. Não há divisão automática.');
+    if (!safeSession || Date.now() >= safeSession.expires - 30000) return notify('Entre novamente: sessão ausente ou próxima de expirar.');
+    if (!window.confirm(`Gravar integralmente ${pending.valid.length} registros SURICATO?\n\nApenas DTA e MATRICULA serão enviados. O banco valida a quantidade e o conteúdo retornado pela inserção, na mesma transação. Se o mesmo conteúdo já estiver confirmado, não será reinserido. Arquivos diferentes ou reordenados não são deduplicados entre si.`)) return;
+    setBusy(true); $('#safeLogout').disabled=true; $('#safeLogin').disabled=true;
+    ui.progress.hidden=false;
+    updateProgress('Transação em andamento. Aguarde; não feche esta página.', 20);
+    const expected = pending.valid.length;
+    let result;
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/abs_importar_suricato_seguro`, {
+        method:'POST',headers:{apikey:SUPABASE_PUBLISHABLE_KEY,Authorization:`Bearer ${safeSession.token}`,'Content-Type':'application/json'},
+        body:JSON.stringify({p_arquivo:pending.name,p_registros:pending.valid.map(v=>v.record)}),cache:'no-store'
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${await responseMessage(res)}`);
+      const data = await res.json();
+      if (!['confirmada','ja_confirmada'].includes(data.status) || data.esperados !== expected || data.gravados !== expected || !data.carga)
+        throw new Error('Resposta de integridade inválida. Não foi possível confirmar o resultado.');
+      updateProgress('Carga integral confirmada pelo banco.',100);
+      result = {title:data.status==='ja_confirmada'?'Carga já confirmada — sem reinserção':'Carga integral confirmada',
+        subtitle:`ABS_SURICATO · carga ${data.carga}`,found:pending.found,valid:expected,saved:expected,
+        ignored:pending.ignored,failed:0,notStarted:0,errors:[],
+        message:`${expected} registros confirmados na transação original. Identificador: ${data.carga}. ${data.status==='ja_confirmada'?'Esta tentativa não inseriu novos registros.':''} A confirmação não garante que outros usuários ou rotinas não alterem os dados posteriormente.`};
+    } catch(e) {
+      updateProgress('Resultado não confirmado. Não conclua que houve perda ou sucesso.',0);
+      result = {title:'Carga não confirmada',subtitle:'Sem confirmação de integridade',found:pending.found,valid:expected,
+        saved:0,ignored:pending.ignored,failed:expected,notStarted:0,errors:[e.message],
+        message:'Não há confirmação de gravação. Zero confirmado não significa zero gravado. Corrija a causa e carregue novamente o MESMO arquivo sem reordenar ou editar. Se a transação anterior concluiu, o banco reconhecerá o conteúdo e não o reinserirá. Não use a versão antiga do importador para repetir esta carga.'};
+    } finally {setBusy(false); $('#safeLogout').disabled=false; $('#safeLogin').disabled=false;}
+    showImportResult(result);
   }
 
   ui.open.addEventListener('click', openModal);
