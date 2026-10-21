@@ -1137,6 +1137,14 @@ function rotulos(){const a=MOTIVOS.filter(c=>state.ativos.has(c));$('#motiveBtn'
 function status(kind,msg){const lt=$('#ldTxt');if(lt&&state.carregando)lt.textContent=msg;$('#connDot').className='dot '+kind;$('#connText').textContent=msg}
 function ocupado(v){state.carregando=v;ldToggle(v);$('#reloadBtn').disabled=v;$('#monthInput').disabled=v;$('#reloadBtn').textContent=v?'◌ CARREGANDO':'↻ ATUALIZAR'}
 
+  /* DTA do ABS_SURICATO tem 2 formatos: ISO (2026-10-10T20:02:00-03:00) e BR (15/10/2026 13:36).
+   Busca o dia nos dois, inclusive BR sem zero à esquerda (5/10/2026). */
+function filtroDiaSuricato(d){
+  const [y,m,dd]=d.split('-');
+  const dias=[...new Set([dd,String(+dd)])],meses=[...new Set([m,String(+m)])];
+  const br=[];for(const a of dias)for(const b of meses)br.push(`DTA.like.${a}/${b}/${y}*`);
+  return `(and(DTA.gte.${d},DTA.lt.${somaDia(d,1)}),${br.join(',')})`;
+}
 /* ---------- carga ---------- */
 async function carga(){
   if(state.carregando)return;
@@ -1196,7 +1204,7 @@ async function carga(){
     const validos=state.dias.filter(d=>d<=state.hoje&&dowDe(d)!==0&&!state.feriados.has(d));
     status('busy',`Lendo presenças (Suricato) · 0/${validos.length} dias…`);
     state.present=new Set();state.presenceDays=new Set();state.presentHours=new Map();
-    const res=await mapaLimite(validos,6,async d=>pega(T.suricato,'MATRICULA,DTA',{DTA:'gte.'+d+'T00:00:00-03:00',DTA_2:'lt.'+somaDia(d,1)+'T00:00:00-03:00'},'DTA.asc',1000,40000).catch(()=>[]),
+const res=await mapaLimite(validos,6,async d=>pega(T.suricato,'MATRICULA,DTA',{or:filtroDiaSuricato(d)},'DTA.asc',1000,40000).then(rs=>rs.filter(r=>diaLocal(r.DTA)===d)).catch(()=>[]),
       (f,t)=>{status('busy',`Lendo presenças (Suricato) · ${f}/${t} dias…`);ldProg(t?f/t:null)});
     res.forEach((rows,i)=>{const d=validos[i];if(!rows.length)return;state.presenceDays.add(d);for(const r of rows){const m=norm(r.MATRICULA);if(!m)continue;state.present.add(kk(m,d));
       const k=kk(m,d);if(!state.presentHours.has(k))state.presentHours.set(k,[]);const h=state.presentHours.get(k);if(h.length<6)h.push(r.DTA)}});
