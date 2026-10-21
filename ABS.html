@@ -417,13 +417,13 @@ td.nd{color:var(--quiet)}
       <summary>Definições dos indicadores (sem ambiguidade)</summary>
       <div>
         <p><b>TOTAL / QUADRO ELEGÍVEL</b> — colaboradores distintos no snapshot de <code>ABS_QUADRO</code> com DTA menor ou igual ao dia apurado (a atualização mais recente vale a partir da própria data), após os filtros de turno e CD.</p>
-        <p><b>PRESENTES (P)</b> — existe registro de presença em <code>ABS_SURICATO</code> para a matrícula naquele dia. A coluna <code>DTA</code> pode vir em <b>dois formatos</b> — ISO (<code>2026-10-10T20:02:00-03:00</code>) <i>ou</i> brasileiro (<code>15/10/2026 13:36</code>): o painel lê os dois com o mesmo interpretador e usa o <b>dia local de São Paulo</b> do registro. Para o <b>3º turno</b>, que começa às 22:00 do dia anterior, as punções de madrugada (até 06:00) também contam como presença no dia operacional anterior. Registros repetidos no mesmo dia contam uma única vez.</p>
+        <p><b>PRESENTES (P)</b> — existe registro de presença em <code>ABS_SURICATO</code> para a matrícula naquele dia. A coluna <code>DTA</code> pode vir em <b>dois formatos</b> — ISO (<code>2026-10-10T20:02:00-03:00</code>) <i>ou</i> brasileiro (<code>15/10/2026 13:36</code>): o painel lê os dois com o mesmo interpretador e usa o <b>dia local de São Paulo</b> do registro. <b>Dia operacional:</b> registros de 00:00 a 21:59 pertencem ao próprio dia; a partir de 22:00 pertencem ao dia seguinte (vale para os dois formatos e para todos os turnos). Qualquer registro da matrícula no dia operacional conta como presença, mesmo fora da janela do turno. Os dados do Suricato são carregados com paginação completa; se alguma página falhar, a apuração é interrompida em vez de gerar faltas. Registros repetidos no mesmo dia contam uma única vez.</p>
         <p><b>AUSENTES / ABS</b> — não há registro de presença no dia e: (a) existe justificativa em <code>ABS_JUSTIFICATIVAS</code> cujo MOTIVO está nos motivos ativos; ou (b) não existe justificativa e o dia possui carga de presença, gerando falta inferida (F). Nunca conta quem está de férias.</p>
         <p><b>FÉRIAS (FE)</b> — matrícula presente em <code>ABS_FÉRIAS</code> na data (DTA pode estar gravada como texto DD/MM/AAAA <i>ou</i> como data ISO YYYY-MM-DD; o painel filtra pelo sufixo de mês/ano e valida a janela antes de aplicar). Sempre tem precedência sobre falta (<code>F</code>) e sobre justificativa (<code>FE</code> &gt; <code>F</code> &gt; <code>?</code>). Sai do quadro elegível.</p>
         <p><b>SEM DADOS (?)</b> — em vez de falta, o painel mostra <code>?</code> quando o problema é o dado, não a pessoa. Três situações: (a) o dia não tem carga em <code>ABS_SURICATO</code>; (b) a carga do dia é <i>parcial</i> — cobertura abaixo de 60% da mediana do mês, típico de importação interrompida no meio do dia (o dia cuja carga para às 13h acusaria falta para todo mundo que entra depois); (c) o colaborador não tem nenhum registro no mês. — e, por fim, (d) quando o <b>turno do colaborador naquele dia</b> teve cobertura inferior a 40% da mediana do próprio turno no mês: é o caso de uma extração que deixou de trazer um turno inteiro (o 2º turno, por exemplo, ficou com 7 de 221 pessoas em 20/10). Quando o que falta é o turno, ninguém daquele turno leva falta</p>
         <p><b>DOMINGO / FERIADO</b> — sem falta para ninguém. Feriados vêm de <code>ABS_FERIADOS</code> (DTA em dd/mm/aaaa). Se houver justificativa registrada, ela é exibida, mas não entra no ABS.</p>
         <p><b>JUSTIFICADOS NÃO-ABS</b> — existe justificativa registrada cujo MOTIVO está fora dos motivos ativos (ex.: FO, TR). Aparecem na composição do dia, mas não entram no ABS. Por isso o invariante correto é: <b>presentes + ausentes + justificados não-ABS = quadro elegível</b>; somando férias e sem dados chega-se ao total do quadro do dia.</p>
-        <p><b>TAXA DE ABSENTEÍSMO</b> — ausentes ÷ quadro elegível (no mês, soma dos dias apurados). No dia atual, entram apenas os turnos cujo início já ocorreu: 1º 06:00, 2º 13:40, 3º 22:00 do dia anterior e 4º 08:00; o 4º turno não opera aos sábados. <b>ABS MÉDIO/DIA</b> — ausentes ÷ dias apurados (média, não soma do período).</p>
+        <p><b>TAXA DE ABSENTEÍSMO</b> — ausentes ÷ quadro elegível (no mês, soma dos dias apurados). No dia atual, entram apenas os turnos cujo início já ocorreu: 1º 06:00, 2º 13:40, 3º 22:00 do dia anterior e 4º 08:00; aos sábados, somente o <b>4º turno</b> sem registro fica como <code>-</code> (sem falta); se tiver registro, conta presença. Os 1º, 2º e 3º turnos seguem a regra normal no sábado. <b>ABS MÉDIO/DIA</b> — ausentes ÷ dias apurados (média, não soma do período).</p>
         <p><b>QUADRO DE REFERÊNCIA</b> — quando o mês não possui nenhuma atualização de ABS_QUADRO anterior ao dia apurado, o painel usa a atualização mais antiga disponível e marca a data explicitamente. Nenhum número é estimado ou inventado.</p>
       </div>
     </details>
@@ -479,6 +479,19 @@ const pc=new Intl.NumberFormat('pt-BR',{minimumFractionDigits:2,maximumFractionD
 const norm=v=>String(v??'').trim();
 const semAcento=v=>norm(v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
 const kk=(m,d)=>m+'|'+d;
+/* MATRÍCULA — chave única de comparação entre todas as bases.
+   ABS_QUADRO/ABS_SURICATO/ABS_FÉRIAS/ABS_JUSTIFICATIVAS podem entregar a mesma
+   matrícula como número (5460751), texto ("5460751"), com espaços, ou como
+   número serializado com decimal ("5460751.0"). Para identificadores
+   puramente numéricos, zeros à esquerda não são significativos (uma coluna
+   numérica já os descarta), então são removidos SOMENTE para comparar.
+   Identificadores alfanuméricos ficam exatamente como vieram (só trim). */
+function normMat(v){
+  let s=String(v??'').trim().replace(/\s+/g,'');
+  if(!s)return '';
+  if(/^\d+(?:\.0+)?$/.test(s))s=s.replace(/\.0+$/,'').replace(/^0+(?=\d)/,'');
+  return s;
+}
 /* ===== DATAS — um único interpretador para TODOS os formatos do banco =====
    ABS_SURICATO.DTA (e outras tabelas) chegam em mais de um formato, porque a
    forma de gravação mudou ao longo do tempo:
@@ -527,7 +540,17 @@ const parseData=parseDTA;
 /* rótulo do formato original — usado no diagnóstico */
 function formatoDTA(v){const s=norm(v);if(!s)return '?';if(/^\d{4}-\d{2}-\d{2}/.test(s))return 'ISO';if(/^\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{4}/.test(s))return 'BR';return '?'}
 function diaLocal(v){const d=parseDTA(v);if(!d)return null;const p=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(d).reduce((a,x)=>(a[x.type]=x.value,a),{});return p.year+'-'+p.month+'-'+p.day}
-function horaLocal(v){const d=parseDTA(v);if(!d)return null;return new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit'}).format(d)}
+function horaLocal(v){const d=parseDTA(v);if(!d)return null;return new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(d)}
+/* Ciclo operacional por evento: antes das 22:00 fica no dia civil local;
+   a partir de 22:00 (inclusive), pertence ao próximo dia operacional.
+   Não depende do turno cadastrado nem do horário atual da máquina. */
+function cicloOperacional(v){
+  const dt=parseDTA(v);if(!dt)return null;
+  const p=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'})
+    .formatToParts(dt).reduce((a,x)=>(a[x.type]=x.value,a),{});
+  const dia=`${p.year}-${p.month}-${p.day}`;
+  return (+p.hour>=22)?somaDia(dia,1):dia;
+}
 function hoje(){const p=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).reduce((a,x)=>(a[x.type]=x.value,a),{});return `${p.year}-${p.month}-${p.day}`}
 const dowDe=d=>new Date(d+'T12:00:00Z').getUTCDay();
 const dowNome=d=>DOW[dowDe(d)];
@@ -538,21 +561,46 @@ function limites(y,m){return{ini:new Date(Date.UTC(y,m-1,1,3)).toISOString(),fim
 
 /* Regra operacional: no dia atual, entram apenas os turnos que já iniciaram.
    O 3º turno começa às 22:00 do dia anterior e, por isso, já compõe o quadro
-   desde a madrugada. O 4º turno não opera aos sábados. */
+   desde a madrugada. O 4º turno não opera aos sábados; a exceção de ausência de carga aos sábados vale somente para ele, não para os demais turnos. */
 function minutosAgora(){
   const p=new Intl.DateTimeFormat('en-GB',{timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(new Date()).reduce((a,x)=>(a[x.type]=x.value,a),{});
   return (+p.hour||0)*60+(+p.minute||0);
 }
 function turnoConsiderado(turno,day){
   const t=semAcento(turno).replace(/[^0-9]/g,'')||norm(turno);
-  if(dowDe(day)===6 && t===TURNO_4)return false;
+  /* 4º turno aos sábados continua no quadro: se tiver registro, é presença;
+     se não tiver, classificar() aplica a exceção exclusiva ('-', sem falta). */
   if(day!==state.hoje)return true;
   const agora=minutosAgora();
   if(t==='3')return true; // começou às 22:00 do dia anterior
+  if(t===TURNO_4&&dowDe(day)===6)return true; // exceção de sábado tratada em classificar()
   return INICIO_TURNO[t]!==undefined && agora>=INICIO_TURNO[t];
 }
 function pessoasConsideradas(people,day){
   return people.filter(p=>turnoConsiderado(p.turno,day));
+}
+const turnoNum=t=>semAcento(t).replace(/[^0-9]/g,'');
+/* CLASSIFICAÇÃO ÚNICA de uma pessoa num dia apurável (não futuro, não
+   domingo/feriado, com quadro). É usada pelo modelo do dia E pela grade de
+   pessoas, para que as duas telas nunca discordem. Ordem de precedência:
+     1) P  — presença no Suricato (nunca sobrescrita por regra de cobertura)
+     2) FE — férias
+     3) justificativa registrada
+     4) '-' — 4º turno aos sábados sem registro (exceção EXCLUSIVA do 4º turno)
+     5) '?' — dado não confiável: dia sem carga/carga parcial, turno sem carga
+              no dia, ou colaborador sem nenhum registro no mês
+     6) F  — falta inferida (dados completos e nenhum registro)
+   Retorna {code, regra} — `regra` explica a decisão (diagnóstico). */
+function classificar(p,d){
+  const k=kk(p.matricula,d.day);
+  if(state.present.has(k))return{code:'P',regra:'presença no Suricato (matrícula + dia operacional)'};
+  if(state.ferias.has(k))return{code:'FE',regra:'férias (ABS_FÉRIAS)'};
+  const j=state.just.get(k);if(j)return{code:j,regra:'justificativa (ABS_JUSTIFICATIVAS)'};
+  if(d.dow===6&&turnoNum(p.turno)===TURNO_4)return{code:'-',regra:'4º turno · sábado sem registro · exceção sem falta'};
+  if(!d.presencaOk)return{code:'?',regra:state.diasParciais.has(d.day)?'dia com carga parcial no Suricato':'dia sem carga no Suricato'};
+  if(state.turnoSemDado.has(p.turno+'|'+d.day))return{code:'?',regra:'turno sem carga confiável no dia'};
+  if(state.semRegistroMes.has(p.matricula))return{code:'?',regra:'sem nenhum registro no Suricato no mês'};
+  return{code:'F',regra:'falta inferida · dados completos e nenhum registro no dia operacional'};
 }
 /* modelo do dia — usa state.present / state.presenceDays / state.ferias / state.just / state.feriados */
 function modeloDia(day){
@@ -567,33 +615,29 @@ function modeloDia(day){
   const people=pessoasConsideradas(mapaPessoas(snap.rows).filter(filtroFixo),day);
   base.people=people;base.total=people.length;base.quadroOk=true;base.quadroData=snap.date;base.quadroAproximado=snap.date>day;
   const naoUtil=base.domingo||base.feriado;
+  // Sábado segue a regra NORMAL para 1º/2º/3º turnos; só o 4º turno tem exceção.
   base.presencaOk=state.presenceDays.has(day);
   if(base.futuro||naoUtil)return base;
-  const pa=base.presencaOk;
-  let presentes=0,ausentes=0,ferias=0,fora=0,jn=0;
+  let presentes=0,ausentes=0,ferias=0,fora=0,jn=0,sab4=0;
   const porMotivo={},porCodigo={},porSetor={},porTurno={},ausentesLista=[],presentesLista=[],jnLista=[];
   for(const p of people){
-    const k=kk(p.matricula,day);
-    let code,isAbs=false;
-    if(state.present.has(k)){code='P';presentes++;presentesLista.push(p.matricula)}
-    else if(state.ferias.has(k)){code='FE';ferias++}
-    else{const j=state.just.get(k);
-      if(j){code=j;isAbs=state.ativos.has(j);if(!isAbs){jn++;jnLista.push(p.matricula)}}
-      /* Falta inferida só quando o dia tem carga confiável. Pessoa sem
-         nenhum registro no mês → dado ausente, mostra '?' e não acusa. */
-      else if(pa&&state.semRegistroMes.has(p.matricula)){code='?';fora++}
-      else if(pa&&state.turnoSemDado.has(p.turno+'|'+day)){code='?';fora++}
-      else if(pa){code='F';isAbs=state.ativos.has('F')}
-      else{code='?';fora++}}
+    const {code}=classificar(p,base);let isAbs=false;
+    if(code==='P'){presentes++;presentesLista.push(p.matricula)}
+    else if(code==='FE'){ferias++}
+    else if(code==='-'){sab4++}
+    else if(code==='?'){fora++}
+    else if(code==='F'){isAbs=state.ativos.has('F')}
+    else{isAbs=state.ativos.has(code);if(!isAbs){jn++;jnLista.push(p.matricula)}}
     porCodigo[code]=(porCodigo[code]||0)+1;
     if(isAbs&&!state.motivoFiltro.has(code)){isAbs=false;jn++;jnLista.push(p.matricula)}
     if(isAbs){ausentes++;ausentesLista.push(p.matricula);porMotivo[code]=(porMotivo[code]||0)+1;porSetor[p.setor]=(porSetor[p.setor]||0)+1;porTurno[p.turno]=(porTurno[p.turno]||0)+1}
   }
   base.presentes=presentes;base.ausentes=ausentes;base.ferias=ferias;base.fora=fora;base.jn=jn;base.jnLista=jnLista;
-  base.elegivel=people.length-ferias-fora;
+  base.sab4=sab4;
+  base.elegivel=people.length-ferias-fora-sab4;
   base.porCodigo=porCodigo;base.porMotivo=porMotivo;base.porSetor=porSetor;base.porTurno=porTurno;
   base.ausentesLista=ausentesLista;base.presentesLista=presentesLista;
-  base.denominador=base.total-(state.motivoFiltro.has('FE')?ferias:0);
+  base.denominador=base.total-sab4-(state.motivoFiltro.has('FE')?ferias:0);
   base.taxa=base.denominador>0?ausentes/base.denominador*100:null;
   return base;
 }
@@ -611,18 +655,53 @@ gestor:'',justObs:new Map(),_lastDayClick:'',_lastDayTime:0,motivoFiltro:new Set
 /* ---------- rede ---------- */
 const headers=()=>({apikey:KEY_SB,Authorization:'Bearer '+JWT_SB,Accept:'application/json'});
 async function detalhe(r){const t=await r.text();try{const j=JSON.parse(t);return[j.message,j.details,j.hint].filter(Boolean).join(' · ')||t.slice(0,200)}catch{return t.slice(0,200)}}
-async function pega(tabela,select,filtros={},order='id.asc',limite=1000,maxLinhas=60000){
-  const out=[];let off=0;
-  for(;;){
-    const u=new URL(`${URL_SB}/rest/v1/${encodeURIComponent(tabela)}`);
-    u.searchParams.set('select',select);u.searchParams.set('order',order);u.searchParams.set('limit',limite);u.searchParams.set('offset',off);
-    for(const[k,v]of Object.entries(filtros)){if(k.endsWith('_2'))u.searchParams.append(k.slice(0,-2),v);else u.searchParams.set(k,v)}
-    const r=await fetch(u,{headers:headers(),cache:'no-store'});
-    if(!r.ok)throw Error(`${tabela} · HTTP ${r.status} · ${await detalhe(r)}`);
-    const b=await r.json();if(!Array.isArray(b))throw Error(`${tabela}: resposta inválida`);
-    out.push(...b);
-    if(b.length<limite||out.length>=maxLinhas)break;off+=limite;
+/* PAGINAÇÃO REAL do PostgREST.
+   - 1ª página pede `Prefer: count=exact` → total exato no Content-Range.
+   - Páginas por cabeçalho Range; o deslocamento avança pelo número de linhas
+     REALMENTE recebidas (o servidor pode limitar a página a menos que
+     `limite`, ex. max-rows=1000) — página curta NÃO é tratada como fim.
+   - Fim só quando: recebidas === total (com contagem) ou página vazia (sem).
+   - Página vazia antes do total, HTTP de erro, JSON inválido ou excesso de
+     páginas → ERRO explícito (nunca vira "sem presença").
+   - Ordenação determinística obrigatória (ex.: DTA,MATRICULA) para não haver
+     lacuna/duplicação entre páginas.
+   - Sem teto fixo de linhas: o critério de completude é o total do servidor. */
+const PAG={tentativas:3,maxPaginas:20000,fetch:(...a)=>fetch(...a)};
+async function pegaPagina(u,ini,fim,contar,tabela){
+  let ult;
+  for(let t=1;t<=PAG.tentativas;t++){
+    try{
+      const h={...headers(),'Range-Unit':'items',Range:`${ini}-${fim}`};if(contar)h.Prefer='count=exact';
+      const r=await PAG.fetch(u.toString(),{headers:h,cache:'no-store'});
+      if(r.status===416)return{rows:[],total:null,status:416};
+      if(!r.ok){const msg=`${tabela} · HTTP ${r.status} · ${await detalhe(r)}`;
+        if(r.status>=500||r.status===429){ult=Error(msg);await new Promise(z=>setTimeout(z,400*t));continue}
+        throw Object.assign(Error(msg),{definitivo:true});}
+      const b=await r.json();if(!Array.isArray(b))throw Object.assign(Error(`${tabela}: resposta inválida (não é lista)`),{definitivo:true});
+      const cr=(r.headers.get('content-range')||'').match(/\/(\d+|\*)$/);
+      return{rows:b,total:cr&&cr[1]!=='*'?+cr[1]:null,status:r.status};
+    }catch(e){if(e.definitivo)throw e;ult=e;await new Promise(z=>setTimeout(z,400*t))}
   }
+  throw Error(`${tabela}: página ${ini}-${fim} falhou após ${PAG.tentativas} tentativas · ${ult&&ult.message||ult}`);
+}
+async function pega(tabela,select,filtros={},order='id.asc',limite=1000){
+  const u=new URL(`${URL_SB}/rest/v1/${encodeURIComponent(tabela)}`);
+  u.searchParams.set('select',select);if(order)u.searchParams.set('order',order);
+  for(const[k,v]of Object.entries(filtros)){if(k.endsWith('_2'))u.searchParams.append(k.slice(0,-2),v);else u.searchParams.set(k,v)}
+  const out=[];let off=0,total=null,paginas=0;
+  for(;;){
+    if(++paginas>PAG.maxPaginas)throw Error(`${tabela}: paginação excedeu ${PAG.maxPaginas} páginas — interrompida para evitar ciclo infinito.`);
+    const pg=await pegaPagina(u,off,off+limite-1,paginas===1,tabela);
+    if(paginas===1)total=pg.total;
+    if(!pg.rows.length){
+      if(total!=null&&off<total)throw Error(`${tabela}: paginação incompleta — ${off} de ${total} linhas recebidas (página vazia inesperada). Apuração interrompida para evitar faltas indevidas.`);
+      break;
+    }
+    out.push(...pg.rows);off+=pg.rows.length;
+    if(total!=null&&off>=total)break;
+  }
+  if(total!=null&&out.length<total)throw Error(`${tabela}: consulta incompleta — ${out.length} de ${total} linhas.`);
+  Object.defineProperty(out,'_total',{value:total});Object.defineProperty(out,'_paginas',{value:paginas});
   return out;
 }
 async function conta(tabela,filtros={}){const u=new URL(`${URL_SB}/rest/v1/${encodeURIComponent(tabela)}`);u.searchParams.set('select','id');for(const[k,v]of Object.entries(filtros)){if(k.endsWith('_2'))u.searchParams.append(k.slice(0,-2),v);else u.searchParams.set(k,v)}const r=await fetch(u,{headers:{...headers(),Prefer:'count=exact',Range:'0-0'},cache:'no-store'});if(!r.ok)return null;const cr=r.headers.get('content-range')||'';const m=cr.match(/\/(\d+)$/);return m?+m[1]:null}
@@ -668,11 +747,61 @@ async function pegaMes(tabela,select,ano,mes,order){
   }
 }
 async function pegaDia(tabela,select,iso,order='DTA.asc',limite=1000,maxLinhas=40000){
-  try{return await pega(tabela,select,{or:orDTAdia(iso)},order,limite,maxLinhas)}
+  try{return await pega(tabela,select,{or:orDTAdia(iso)},order,limite)}
   catch(e){
-    console.warn('[DTA] filtro de dia misto recusado em '+tabela+' ('+iso+') — usando janela ISO:',e.message||e);
-    return await pega(tabela,select,{DTA:'gte.'+iso+'T00:00:00-03:00',DTA_2:'lt.'+somaDia(iso,1)+'T00:00:00-03:00'},order,limite,maxLinhas)
+    /* NÃO cair para gte/lt ISO: DTA é texto e isso descartava silenciosamente
+       todas as linhas DD/MM/AAAA justamente quando a consulta OR falhava. */
+    console.warn('[DTA] filtro OR recusado em '+tabela+' ('+iso+'). Tentando cada prefixo ISO/BR separadamente:',e.message||e);
+    const datas=[somaDia(iso,-1),iso,somaDia(iso,1)], pats=[];
+    for(const dia of datas)pats.push(...patsDia(dia));
+    const unicos=[...new Set(pats)], achados=new Map();
+    for(const pat of unicos){
+      const rows=await pega(tabela,select,{DTA:'ilike.'+pat},order,limite);
+      for(const r of rows)achados.set(normMat(r.MATRICULA)+'|'+norm(r.DTA),r);
+    }
+    return [...achados.values()];
   }
+}
+/* Carrega o Suricato por mês usando consultas independentes por formato.
+   Não usa OR gigante nem comparação lexicográfica gte/lt sobre DTA textual.
+   Inclui o dia anterior para punções às 22h que pertencem ao primeiro dia do mês. */
+/* Padrões textuais (ilike, ancorados no início) que cobrem UM dia civil nos
+   dois formatos: ISO "AAAA-MM-DD…" e BR "DD/MM/AAAA…" (com/sem zero). */
+function padroesSuricatoDia(iso){
+  const [y,m,d]=iso.split('-'),out=new Set([`${y}-${m}-${d}*`]);
+  for(const dd of new Set([d,numSemZero(d)]))for(const mm of new Set([m,numSemZero(m)]))out.add(`${dd}/${mm}/${y}*`);
+  return [...out];
+}
+/* Dias civis a buscar: véspera do 1º dia (punções ≥22h pertencem ao dia 1)
+   + todos os dias do mês até hoje. O último dia civil do mês ≥22h pertence ao
+   mês seguinte e é descartado depois, pelo dia operacional. */
+function diasCivisSuricato(ano,mes,hojeIso){
+  const dias=diasDoMes(ano,mes).filter(d=>d<=hojeIso);
+  if(!dias.length)return [];
+  const ult=diasDoMes(ano,mes).slice(-1)[0],out=[somaDia(dias[0],-1),...dias];
+  /* margem do dia seguinte ao fim do mês: cobre registros gravados em UTC ("…Z")
+     cujo texto já está no dia seguinte mas que localmente ainda são do mês */
+  if(ult<hojeIso)out.push(somaDia(ult,1));
+  return out;
+}
+/* Carrega ABS_SURICATO do mês: uma consulta paginada por (dia civil × formato).
+   Cada consulta é pequena (milhares de linhas), totalmente paginada e
+   conferida contra o total do servidor. Qualquer falha ABORTA a apuração. */
+async function pegaSuricatoMes(ano,mes,prog){
+  const consultas=[];
+  for(const d of diasCivisSuricato(ano,mes,state.hoje))for(const pat of padroesSuricatoDia(d))consultas.push({d,pat});
+  const diag={consultas:consultas.length,linhasBrutas:0,paginas:0,porConsulta:[]};
+  const res=await mapaLimite(consultas,6,async c=>{
+    const rows=await pega(T.suricato,'MATRICULA,DTA',{DTA:'ilike.'+c.pat},'DTA.asc,MATRICULA.asc',1000);
+    diag.porConsulta.push({dia:c.d,padrao:c.pat,linhas:rows.length,total:rows._total,paginas:rows._paginas});
+    diag.linhasBrutas+=rows.length;diag.paginas+=rows._paginas||0;
+    return rows;
+  },prog);
+  /* une sem perder nada: chave = matrícula normalizada + DTA original */
+  const unique=new Map();
+  for(const rows of res)for(const r of rows){const k=normMat(r.MATRICULA)+'|'+norm(r.DTA);if(!unique.has(k))unique.set(k,r)}
+  const out=[...unique.values()];Object.defineProperty(out,'_diag',{value:diag});
+  return out;
 }
 
 /* ---------- modelos de apoio ---------- */
@@ -682,7 +811,7 @@ function snapshots(rows){const m=new Map();for(const r of rows){const d=diaLocal
 function snapshotPara(day){let best=null;for(const[d,s]of state.snapshots){if(d<=day&&(!best||d>best.date))best={date:d,rows:s.rows}}
   if(!best){let first=null;for(const[d,s]of state.snapshots){if(!first||d<first.date)first={date:d,rows:s.rows}}best=first}
   return best}
-function mapaPessoas(rows){const m=new Map();for(const r of rows){const mat=norm(r.MATRICULA);if(!mat)continue;const t=parseData(r.DTA)?.getTime()||0;const o=m.get(mat);
+function mapaPessoas(rows){const m=new Map();for(const r of rows){const mat=normMat(r.MATRICULA);if(!mat)continue;const t=parseData(r.DTA)?.getTime()||0;const o=m.get(mat);
   if(!o||t>=o.time)m.set(mat,{matricula:mat,nome:norm(r.NOME)||mat,cd:norm(r.CD)||'—',setor:norm(r.SETOR)||'—',cargo:state.cargo.get(mat)||norm(r.CARGO)||'—',turno:norm(r.TURNO)||'—',time:t})}return[...m.values()]}
 function todasPessoas(){return mapaPessoas([...state.snapshots.values()].flatMap(s=>s.rows))}
 const filtroFixo=p=>(!state.turno||p.turno===state.turno)&&(!state.cd||p.cd===state.cd)&&(!state.cargoF||p.cargo===state.cargoF)&&(!state.setor||p.setor===state.setor)&&(!state.turnoF||p.turno===state.turnoF);
@@ -728,14 +857,13 @@ function statusDe(p,d){
   const k=kk(p.matricula,d.day);
   if(d.futuro)return{c:'-',cls:'fut',txt:'dia futuro'};
   if(d.domingo||d.feriado)return{c:'-',cls:'nw',txt:(d.feriado?'feriado':'domingo')+' · sem falta'};
-  if(state.present.has(k))return{c:'P',cls:'pre',txt:'presença registrada no Suricato'};
-  const turnoPessoa=semAcento(p.turno).replace(/[^0-9]/g,'');
-  if(d.dow===6&&turnoPessoa===TURNO_4)return{c:'-',cls:'nw',txt:'4º turno · não trabalha aos sábados'};
-  if(state.ferias.has(k))return{c:'FE',cls:'fer',txt:'férias'};
-  const j=state.just.get(k);
-  if(j)return{c:j,cls:state.ativos.has(j)?'abs':'jus',txt:(MOTIVO_NOME[j]||j)+(state.ativos.has(j)?' · contabilizado como ABS':' · não contabilizado como ABS')};
-  if(d.presencaOk)return{c:'F',cls:'abs',txt:'falta inferida · sem presença e sem justificativa'};
-  return{c:'?',cls:'nd',txt:'sem carga de presença no Suricato · não é possível inferir falta'};
+  const {code,regra}=classificar(p,d);
+  if(code==='P')return{c:'P',cls:'pre',txt:'presença registrada no Suricato'};
+  if(code==='FE')return{c:'FE',cls:'fer',txt:'férias'};
+  if(code==='-')return{c:'-',cls:'nw',txt:'4º turno · sábado sem registro · sem falta'};
+  if(code==='?')return{c:'?',cls:'nd',txt:regra+' · não é possível inferir falta'};
+  if(code==='F')return{c:'F',cls:'abs',txt:'falta inferida · sem presença e sem justificativa'};
+  return{c:code,cls:state.ativos.has(code)?'abs':'jus',txt:(MOTIVO_NOME[code]||code)+(state.ativos.has(code)?' · contabilizado como ABS':' · não contabilizado como ABS')};
 }
 
 /* ---------- render base ---------- */
@@ -1122,7 +1250,7 @@ async function recarregarJustMes(){
 }
 function aplicarJustRows(rows){
   state.just=new Map();state.justObs=new Map();
-  for(const r of rows){const m=norm(r['MATRICULA COLABORADOR']),d=diaLocal(r.DTA),c=semAcento(r.MOTIVO);
+  for(const r of rows){const m=normMat(r['MATRICULA COLABORADOR']),d=diaLocal(r.DTA),c=semAcento(r.MOTIVO);
     if(m&&d&&c){if(!MOTIVOS.includes(c)){MOTIVOS.push(c);state.motivoFiltro.add(c)}if(!state.just.has(kk(m,d)))state.just.set(kk(m,d),c);if(!state.justObs.has(kk(m,d)))state.justObs.set(kk(m,d),norm(r.OBS))}}
 }
 /* tooltip de observação após 3 segundos de hover contínuo */
@@ -1277,7 +1405,7 @@ async function carga(){
     // que não estejam de fato dentro do mês solicitado.
     const ymKey=`${state.mes}|${state.ano}`;
     state.ferias=new Set(
-      ferias.map(r=>{const m=norm(r.MATRICULA),d=diaLocal(r.DTA);
+      ferias.map(r=>{const m=normMat(r.MATRICULA),d=diaLocal(r.DTA);
         if(!m||!d)return null;
         const[y,mo]=d.split('-').map(Number);
         return(y===state.ano&&mo===state.mes)?kk(m,d):null;
@@ -1290,7 +1418,7 @@ async function carga(){
     }catch{}
     const validos=state.dias.filter(d=>d<=state.hoje&&dowDe(d)!==0&&!state.feriados.has(d));
     status('busy',`Lendo presenças (Suricato) · 0/${validos.length} dias…`);
-    state.present=new Set();state.presenceDays=new Set();state.presentHours=new Map();
+    state.present=new Set();state.presenceDays=new Set();state.presentHours=new Map();state.suricatoDiag=null;
     /* -------- ABS_SURICATO: DTA em formatos mistos --------
        A consulta vai por PREFIXO (ISO + dd/mm/aaaa, janela de 3 dias) e cada
        linha é classificada pelo DIA REAL devolvido por diaLocal(), nunca pela
@@ -1307,53 +1435,42 @@ async function carga(){
            acusava falta para todo mundo que entra depois das 13h.
        (4) Cada linha é classificada pelo dia REAL devolvido por diaLocal() —
            nunca pela posição da string da data. */
-    const fmtSuri={ISO:0,BR:0,outros:0,ilegiveis:0,ponte:0};
-    const turnoMap=new Map(todasPessoas().map(p=>[p.matricula,semAcento(p.turno).replace(/[^0-9]/g,'')]));
-    const horaSP=dt=>+new Intl.DateTimeFormat('en-GB',{timeZone:'America/Sao_Paulo',hour:'2-digit',hour12:false}).format(dt);
+    const fmtSuri={ISO:0,BR:0,outros:0,ilegiveis:0,duplicados:0};
     state.present=new Set();state.presenceDays=new Set();state.presentHours=new Map();
     const vistos=new Set(),diasDe=new Map();
     const marcar=(m,dia,raw)=>{
       if(!state.dias.includes(dia))return;
       const k=kk(m,dia);state.present.add(k);
       if(!state.presentHours.has(k))state.presentHours.set(k,[]);
-      const h=state.presentHours.get(k);if(h.length<6)h.push(raw);
+      const h=state.presentHours.get(k);if(h.length<6&&!h.includes(raw))h.push(raw);
     };
-    const res=await mapaLimite(validos,6,async d=>pegaDia(T.suricato,'MATRICULA,DTA',d).catch(()=>[]),
-      (f,t)=>{status('busy',`Lendo presenças (Suricato) · ${f}/${t} dias…`);ldProg(t?f/t:null)});
-    for(const rows of res){
-      for(const r of rows){
+    /* A consulta é por janelas textuais sobrepostas para cobrir ISO e BR.
+       Falhas de consulta NÃO podem virar [] silenciosamente: isso transforma
+       erro de rede/filtro em ausência aparente. */
+    status('busy','Lendo presenças do Suricato (ISO + brasileiro)…');ldProg(null);
+    const res=await pegaSuricatoMes(state.ano,state.mes,(f,t)=>{ldProg(f/t);status('busy',`Lendo presenças do Suricato (ISO + brasileiro) · ${f}/${t} consultas…`)});
+    state.suricatoDiag=res._diag;
+    for(const r of res){
         const g=formatoDTA(r.DTA);if(g==='ISO')fmtSuri.ISO++;else if(g==='BR')fmtSuri.BR++;else fmtSuri.outros++;
         const dt=parseDTA(r.DTA);
         if(!dt){fmtSuri.ilegiveis++;console.warn('[ABS_SURICATO] DTA ilegível ignorada:',r.DTA);continue}
-        const chave=(r.id!=null?r.id+'|'+r.DTA:null);
-        if(chave){if(vistos.has(chave))continue;vistos.add(chave)}
-        const m=norm(r.MATRICULA);if(!m)continue;
-        const dia=diaLocal(r.DTA);
-        if(!dia)continue;
+        const m=normMat(r.MATRICULA);if(!m)continue;
+        const chave=m+'|'+norm(r.DTA);
+        if(vistos.has(chave)){fmtSuri.duplicados++;continue}vistos.add(chave);
+        const dia=cicloOperacional(r.DTA);
+        if(!dia){fmtSuri.ilegiveis++;continue}
         if(!diasDe.has(m))diasDe.set(m,new Set());diasDe.get(m).add(dia);
         marcar(m,dia,r.DTA);
-        /* PONTE DO TURNO DA NOITE (3º turno, 22:00 → 06:00).
-           O turno atravessa dois dias de calendário: quem entra às 22:00 de
-           segunda e sai às 06:00 de terça tem punção nos dois dias. O painel já
-           considera o 3º turno no quadro do dia desde 00:00, então a presença
-           vale para AMBOS os dias — marcamos também o dia vizinho.
-           É operação ADITIVA: só acrescenta presença, nunca remove. Sem ela,
-           quem bate o ponto só depois da meia-noite aparecia como falta. */
-        const t3=turnoMap.get(m)==='3';
-        if(t3){
-          const h=horaSP(dt);
-          if(h<6){fmtSuri.ponte++;marcar(m,somaDia(dia,-1),r.DTA)}
-          if(h>=18){fmtSuri.ponte++;marcar(m,somaDia(dia,1),r.DTA)}
-        }
-      }
     }
+
     /* Carga parcial: cobertura do dia muito abaixo do padrão do mês → sem falta */
     const cobDia=[];
     for(const d of validos){
       const snap=snapshotPara(d);if(!snap)continue;
       const pessoas=mapaPessoas(snap.rows).filter(filtroFixo);if(!pessoas.length)continue;
-      let n=0;for(const p of pessoas)if(state.present.has(kk(p.matricula,d)))n++;
-      cobDia.push({d,total:pessoas.length,n,cob:n/pessoas.length});
+      const alvoCob=dowDe(d)===6?pessoas.filter(p=>turnoNum(p.turno)!==TURNO_4):pessoas;if(!alvoCob.length)continue;
+      let n=0;for(const p of alvoCob)if(state.present.has(kk(p.matricula,d)))n++;
+      cobDia.push({d,total:alvoCob.length,n,cob:n/alvoCob.length});
     }
     /* Referência de cobertura: percentil 80, NÃO mediana. Quando a maioria dos
        dias está com carga quebrada, a mediana desaba junto com o problema e
@@ -1380,6 +1497,7 @@ async function carga(){
     for(const d of validos){
       const snap=snapshotPara(d);if(!snap)continue;
       for(const p of mapaPessoas(snap.rows).filter(filtroFixo)){
+        if(dowDe(d)===6&&turnoNum(p.turno)===TURNO_4)continue;
         const key=p.turno+'|'+d;
         const o=cobTurno.get(key)||{n:0,q:0};
         o.q++;if(state.present.has(kk(p.matricula,d)))o.n++;
@@ -1413,7 +1531,12 @@ async function carga(){
     for(const p of todasPessoas())if(!diasDe.has(p.matricula))state.semRegistroMes.add(p.matricula);
     console.info('[ABS_SURICATO]',{formatos:fmtSuri,medianaCobertura:+(medianaCob*100).toFixed(1),
       diasParciais:[...state.diasParciais],semRegistroMes:state.semRegistroMes.size});
+    state.vistosSuricato=vistos;
+    console.info('[ABS_SURICATO] paginação concluída',{consultas:state.suricatoDiag.consultas,paginas:state.suricatoDiag.paginas,linhasBrutas:state.suricatoDiag.linhasBrutas,linhasUnicas:res.length,formatos:fmtSuri});
     invalidar();preencherFiltros();render();
+    /* Diagnóstico: ?diag=MATRICULA na URL (padrão: 5460751) ou, no console,
+       ABS_DIAG.matricula('1234567'). Sem chaves/tokens nos logs. */
+    try{const alvo=QS.get('diag')||'5460751';const r=diagMatricula(alvo);console.info('[DIAGNOSTICO '+alvo+']',r.resumo);console.table(r.registros);console.table(r.dias)}catch(e){console.warn('[DIAGNOSTICO] falhou',e)}
     state.ultimaAtualizacao=new Date();
     $('#lastUpdate').textContent='Última atualização: '+new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',dateStyle:'short',timeStyle:'medium'}).format(state.ultimaAtualizacao);
     const sd=state.dias.filter(d=>d<=state.hoje&&dowDe(d)!==0&&!state.feriados.has(d)&&!state.presenceDays.has(d)).length;
@@ -1427,6 +1550,23 @@ async function carga(){
   }catch(e){state.erro=String(e.message||e);status('error','Falha na consulta');$('#viewBody').innerHTML=`<div class="err"><b>Não foi possível carregar os dados.</b><br>${esc(state.erro)}<br><br>Verifique a conexão com o Supabase (a chave anônima está embutida no arquivo) e se o mês selecionado possui dados.</div>`}
   finally{ocupado(false)}
 }
+function diagMatricula(matRaw){
+  const mat=normMat(matRaw);
+  const pessoa=todasPessoas().find(p=>p.matricula===mat)||null;
+  const registros=[...(state.vistosSuricato||[])].filter(k=>k.slice(0,k.indexOf('|'))===mat).map(k=>{
+    const raw=k.slice(k.indexOf('|')+1),dt=parseDTA(raw),op=cicloOperacional(raw);
+    return{DTA:raw,formato:formatoDTA(raw),valida:!!dt,dataLocal:dt?diaLocal(raw):null,horaLocal:dt?horaLocal(raw):null,diaOperacional:op,noMes:!!op&&state.dias.includes(op),marcadoP:!!op&&state.present.has(kk(mat,op))};
+  });
+  const dias=state.dias.filter(d=>d<=state.hoje).map(d=>{const m=dia(d);const p=pessoa&&m.people.find(x=>x.matricula===mat);
+    if(m.domingo||m.feriado)return{dia:d,dow:dowNome(d),resultado:'-',regra:m.feriado?'feriado':'domingo'};
+    if(!p)return{dia:d,dow:dowNome(d),resultado:'(fora do quadro/filtro)',regra:''};
+    const c=classificar(p,m);return{dia:d,dow:dowNome(d),turno:p.turno,resultado:c.code,regra:c.regra,temRegistro:state.present.has(kk(mat,d)),diaComCarga:m.presencaOk}});
+  const sobrescritas=dias.filter(x=>x.temRegistro&&x.resultado!=='P');
+  return{resumo:{matricula:mat,noQuadro:!!pessoa,turno:pessoa&&pessoa.turno,registrosSuricato:registros.length,ilegiveis:registros.filter(r=>!r.valida).length,
+    consultaCompleta:!!state.suricatoDiag,consultas:state.suricatoDiag&&state.suricatoDiag.consultas,paginas:state.suricatoDiag&&state.suricatoDiag.paginas,
+    presencasSobrescritas:sobrescritas.length},registros,dias};
+}
+window.ABS_DIAG={matricula:m=>{const r=diagMatricula(m);console.info(r.resumo);console.table(r.registros);console.table(r.dias);return r},suricato:()=>state.suricatoDiag};
 function preencherFiltros(){
   const ps=todasPessoas();
   const turnos=[...new Set(ps.map(p=>p.turno))].sort((a,b)=>a.localeCompare(b,'pt-BR',{numeric:true}));
@@ -1451,7 +1591,8 @@ const mvIni=mesInicial.match(/^(\d{4})-(\d{2})$/);
 if(mvIni){state.ano=+mvIni[1];state.mes=+mvIni[2];state.dias=diasDoMes(state.ano,state.mes)}
 const qv=QS.get('view');
 if(qv&&['macro','setores','turnos','pessoas'].includes(qv)){state.vista=qv;$$('.tab').forEach(x=>x.classList.toggle('on',x.dataset.view===qv))}
-ligar();carga();
+if(window.__ABS_TEST__){window.__ABS_TEST__({parseDTA,cicloOperacional,diaLocal,horaLocal,normMat,classificar,padroesSuricatoDia,diasCivisSuricato,turnoConsiderado,pega,PAG,pegaSuricatoMes,modeloDia,statusDe,state});}
+else{ligar();carga();}
   // Atualização automática a cada 60 minutos, sem sobrepor uma carga em andamento.
   setInterval(()=>{if(!state.carregando)carga()},60*60*1000);
 })();
