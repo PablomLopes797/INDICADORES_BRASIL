@@ -226,6 +226,9 @@ body.light .nav-btn{background:rgba(255,255,255,.9)}
 .btn-theme{background:var(--card-head-1);width:40px;height:40px;justify-content:center;padding:0;border-radius:12px}
 .btn-theme:hover{border-color:rgba(139,92,246,.5)}
 
+.dev-credit-top{display:inline-flex;align-items:center;gap:6px;padding:8px 13px;border-radius:12px;background:rgba(139,92,246,.14);border:1px solid rgba(139,92,246,.38);color:var(--txt-2);font-size:11px;font-weight:700;letter-spacing:.4px;white-space:nowrap}
+.dev-credit-top b{color:var(--pct-txt)}
+
 /* ---------- KPIs ---------- */
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:14px;margin-bottom:18px}
 .kpi{position:relative;overflow:hidden;background:linear-gradient(160deg,var(--card-1),var(--card-2));border:1px solid var(--line);border-radius:18px;padding:18px 18px 16px;box-shadow:var(--shadow);transition:transform .35s var(--ease),border-color .3s;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
@@ -522,6 +525,7 @@ table.grid td.rowlabel,table.grid td.total-cell,table.grid td.avg-cell{box-shado
       <div class="brand-logo"><svg viewBox="0 0 24 24"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 12l9 4 9-4"/><path d="M3 17l9 4 9-4"/></svg></div>
       <div class="brand-text"><h1>Rec Vision · Painel Executivo</h1><p>Diretoria · Operações Logísticas</p></div>
     </div>
+    <div class="dev-credit-top">Desenvolvido Por <b>Pablo M. Lopes</b></div>
 
     <!-- ==================== NAVEGAÇÃO ==================== -->
     <nav class="top-nav">
@@ -776,6 +780,7 @@ table.grid td.rowlabel,table.grid td.total-cell,table.grid td.avg-cell{box-shado
     <div class="modal-body" style="display:flex;flex-direction:column;gap:16px;max-height:70vh;overflow:auto">
       <div><label for="cargasPasteArea" style="display:block;margin:0 0 7px;font-size:11px;font-weight:800;letter-spacing:.8px">ATUALIZAR CARGAS · CARGA / TERMO</label><textarea id="cargasPasteArea" style="width:100%;min-height:110px;resize:vertical;background:var(--input-bg);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.6;outline:none" placeholder="CARGA&#9;TERMO"></textarea><div id="cargasPastePreview" style="display:none;margin-top:8px;padding:10px;border-radius:10px;background:var(--card-2);border:1px solid var(--line);font-size:12px;color:var(--txt-2)"></div></div>
       <div><label for="agendaPasteArea" style="display:block;margin:0 0 7px;font-size:11px;font-weight:800;letter-spacing:.8px">ATUALIZAR AGENDA · AGENDA / SENHA / CARGA / STATUS / FORNECEDOR / CHEGADA / DTA_BASE</label><textarea id="agendaPasteArea" style="width:100%;min-height:130px;resize:vertical;background:var(--input-bg);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.6;outline:none" placeholder="AGENDA&#9;SENHA&#9;CARGA&#9;STATUS&#9;FORNECEDOR&#9;CHEGADA&#9;DTA_BASE"></textarea><div id="agendaPastePreview" style="display:none;margin-top:8px;padding:10px;border-radius:10px;background:var(--card-2);border:1px solid var(--line);font-size:12px;color:var(--txt-2)"></div></div>
+      <div><label for="recusaPasteArea" style="display:block;margin:0 0 7px;font-size:11px;font-weight:800;letter-spacing:.8px">RECUSA · DTA_RECUSA / SENHA</label><textarea id="recusaPasteArea" style="width:100%;min-height:110px;resize:vertical;background:var(--input-bg);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.6;outline:none" placeholder="DTA_RECUSA&#9;SENHA&#10;23/10/2026 12:00&#9;123"></textarea><div id="recusaPastePreview" style="display:none;margin-top:8px;padding:10px;border-radius:10px;background:var(--card-2);border:1px solid var(--line);font-size:12px;color:var(--txt-2)"></div></div>
       <div><label for="sobrepostosPasteArea" style="display:block;margin:0 0 7px;font-size:11px;font-weight:800;letter-spacing:.8px">SOBREPOSTOS · CARGA / QTD_PLTS / STATUS / TERMO</label><textarea id="sobrepostosPasteArea" style="width:100%;min-height:110px;resize:vertical;background:var(--input-bg);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.6;outline:none" placeholder="CARGA&#9;QTD_PLTS&#9;STATUS&#9;TERMO"></textarea><div id="sobrepostosPastePreview" style="display:none;margin-top:8px;padding:10px;border-radius:10px;background:var(--card-2);border:1px solid var(--line);font-size:12px;color:var(--txt-2)"></div></div>
     </div>
     <div class="modal-foot"><button class="btn" id="cancelAtualizarCargas">Cancelar</button><button class="btn btn-primary" id="processarAtualizarCargas">SALVAR</button></div>
@@ -809,6 +814,7 @@ const TABLE_CARGAS = "CARGAS_RECEBIDAS";    // Base de cargas recebidas
 const TABLE_OBS    = "OBS_REC";
 const TABLE_RESULTADOS = "BD_RESULTADOS";
 const TABLE_SOBREPOSTOS = "SOBREPOSTOS";
+const TABLE_RECUSA = "RECUSA";
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -829,6 +835,11 @@ const COL_AG = {  // AGENDA
   chegada:    'CHEGADA',      // dd/mm/aaaa hh:mm
   status:     'STATUS',
   dtaBase:    'DTA_BASE'      // dd/mm/aaaa
+};
+
+const COL_RE = {
+  dtaRecusa:'DTA_RECUSA',
+  senha:'SENHA'
 };
 
 const COL_CR = {  // CARGAS_RECEBIDAS
@@ -852,7 +863,9 @@ const ROWS = [
   { key:'backlog_pendente', label:'BACKLOG PENDENTE',  color:'#eab308' },
   { key:'no_prazo',         label:'NO PRAZO',          color:'#22c55e' },
   { key:'abaixo_4hrs',      label:'< 4 HRS',           color:'#facc15' },
-  { key:'recusado',         label:'RECUSADAS',          color:'#f43f5e' },
+  { key:'recusado',         label:'RECUSADO DIA',      color:'#f43f5e' },
+  { key:'recusa_no_prazo',  label:'RECUSA NO PRAZO',   color:'#fb7185' },
+  { key:'recusa_backlog',   label:'RECUSA BACKLOG',    color:'#e11d48' },
   { key:'sobrepostas',      label:'SOBREPOSTAS',       color:'#a78bfa' },
 ];
 
@@ -877,6 +890,7 @@ const state = {
   rawAgenda: [],       // Dados da tabela AGENDA
   rawCargas: [],       // Dados da tabela CARGAS_RECEBIDAS
   rawSobrepostos: [],  // Dados da tabela SOBREPOSTOS
+  rawRecusa: [],       // Dados da tabela RECUSA
   registros: [],       // Registros unificados
   missingCargas: [],   // Cargas em CARGAS_RECEBIDAS sem entrada em AGENDA
   cds: [],
@@ -919,7 +933,8 @@ function hexA(hex,a){
 function emptyBucket(){
   return {
     agenda:0, agenda_noshow:0, recebido:0, backlog_recebido:0, backlog_pendente:0,
-    no_prazo:0, abaixo_4hrs:0, no_show:0, recusado:0, sobrepostas:0
+    no_prazo:0, abaixo_4hrs:0, no_show:0, recusado:0, sobrepostas:0,
+    recusa_no_prazo:0, recusa_backlog:0
   };
 }
 function toISODate(dt){
@@ -1003,8 +1018,8 @@ function turnoDaMetrica(registro,chave){
 /* ============================================================================
    EDIÇÃO MANUAL — persistência e permissão
    ============================================================================ */
-const RC={agenda:'AGENDA',no_show:'NO SHOW',agenda_noshow:'AGENDA - NOSHOW',recebido:'RECEBIDO',backlog_recebido:'BACKLOG RECEBIDO',backlog_pendente:'BACKLOG PENDENTE',no_prazo:'NO PRAZO',abaixo_4hrs:'< 4 HRS',recusado:'RECUSADO',sobrepostas:'SOBREPOSTAS',pct_no_prazo:'% NO PRAZO',pct_recebido:'% RECEBIDO'};
-const RK=['no_show','recebido','backlog_recebido','backlog_pendente','no_prazo','abaixo_4hrs','recusado'];
+const RC={agenda:'AGENDA',no_show:'NO SHOW',agenda_noshow:'AGENDA - NOSHOW',recebido:'RECEBIDO',backlog_recebido:'BACKLOG RECEBIDO',backlog_pendente:'BACKLOG PENDENTE',no_prazo:'NO PRAZO',abaixo_4hrs:'< 4 HRS',recusado:'RECUSADO DIA',recusa_no_prazo:'RECUSA NO PRAZO',recusa_backlog:'RECUSA BACKLOG',sobrepostas:'SOBREPOSTAS',pct_no_prazo:'% NO PRAZO',pct_recebido:'% RECEBIDO'};
+const RK=['no_show','recebido','backlog_recebido','backlog_pendente','no_prazo','abaixo_4hrs','recusado','recusa_no_prazo','recusa_backlog'];
 function canEdit(){return String(state.user?.USER||'')===EDIT_USER;}
 function podeAtualizarCargas(){return String(state.user?.USER||'')===EDIT_USER;}
 function mostrarBotoesAtualizacao(){
@@ -1022,12 +1037,45 @@ async function atualizarTudo(){
 }
 function normalizarTextoImportado(v){return String(v??'').trim().replace(/^["']|["']$/g,'').trim();}
 function dividirLinhaImportada(linha){if(linha.includes('\t'))return linha.split('\t');if(linha.includes(';'))return linha.split(';');if(linha.includes('|'))return linha.split('|');return linha.split(/\s{2,}/);}
-function abrirModalAtualizarCargas(foco='cargasPasteArea'){if(!podeAtualizarCargas()){toast('Acesso negado','Somente o usuário autorizado pode atualizar os dados.','warn');return;}['cargasPasteArea','agendaPasteArea','sobrepostosPasteArea'].forEach(id=>document.getElementById(id).value='');['cargasPastePreview','agendaPastePreview','sobrepostosPastePreview'].forEach(id=>{const e=document.getElementById(id);e.style.display='none';e.innerHTML='';});document.getElementById('modalAtualizarCargas').classList.add('show');setTimeout(()=>document.getElementById(foco)?.focus(),120);}
+function abrirModalAtualizarCargas(foco='cargasPasteArea'){if(!podeAtualizarCargas()){toast('Acesso negado','Somente o usuário autorizado pode atualizar os dados.','warn');return;}['cargasPasteArea','agendaPasteArea','sobrepostosPasteArea','recusaPasteArea'].forEach(id=>document.getElementById(id).value='');['cargasPastePreview','agendaPastePreview','sobrepostosPastePreview','recusaPastePreview'].forEach(id=>{const e=document.getElementById(id);e.style.display='none';e.innerHTML='';});document.getElementById('modalAtualizarCargas').classList.add('show');setTimeout(()=>document.getElementById(foco)?.focus(),120);}
 function fecharModalAtualizarCargas(){document.getElementById('modalAtualizarCargas')?.classList.remove('show');}
 function linhaPareceCabecalho(c,t){const cc=normUpper(c),tt=normUpper(t);return cc==='CARGA'||cc==='CARGAS'||tt==='TERMO'||cc.includes('CARGA')||tt.includes('TERMO');}
 function interpretarCargasColadas(texto){const linhas=String(texto||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean),registros=[],erros=[];linhas.forEach((linha,i)=>{const partes=dividirLinhaImportada(linha).map(normalizarTextoImportado);const carga=partes[0]||'',termo=partes.slice(1).join(' ').trim();if(i===0&&linhaPareceCabecalho(carga,termo))return;if(!carga||!termo){erros.push({linha:i+1,motivo:'A linha precisa conter CARGA e TERMO.'});return;}registros.push({carga,termo,linha:i+1});});return {registros,erros};}
 function exibirPreviewCargasImportadas(){const r=interpretarCargasColadas(document.getElementById('cargasPasteArea').value),p=document.getElementById('cargasPastePreview');p.style.display='block';p.innerHTML=`<div style="display:flex;gap:16px;flex-wrap:wrap"><span>Registros válidos: <b style="color:var(--green)">${r.registros.length}</b></span><span>Linhas com erro: <b style="color:${r.erros.length?'var(--red)':'var(--green)'}">${r.erros.length}</b></span></div>${r.erros.length?`<div style="margin-top:10px;color:#fca5a5;font-size:11px">${r.erros.slice(0,10).map(e=>`<div>Linha ${e.linha}: ${escapeHTML(e.motivo)}</div>`).join('')}</div>`:''}`;}
-function interpretarSobrepostosColados(texto){const linhas=String(texto||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean),registros=[],erros=[];linhas.forEach((linha,i)=>{const partes=dividirLinhaImportada(linha).map(normalizarTextoImportado);if(i===0&&partes.some(p=>['CARGA','QTD_PLTS','STATUS','TERMO'].includes(normUpper(p))))return;if(partes.length<4){erros.push({linha:i+1,motivo:'São necessárias as 4 colunas: CARGA, QTD_PLTS, STATUS e TERMO.'});return;}const [carga,qtd,status,termo]=partes;if(!carga){erros.push({linha:i+1,motivo:'CARGA obrigatória.'});return;}registros.push({carga,qtd,status,termo,linha:i+1});});return {registros,erros};}
+function interpretarSobrepostosColados(texto){
+ const linhas=String(texto||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean),registros=[],erros=[];
+ linhas.forEach((linha,i)=>{
+  if(i===0 && /CARGA/i.test(linha) && /QTD/i.test(linha)) return;
+  const dt=linha.match(/(\d{1,2}\/\d{1,2}\/\d{4})(?:\s+(\d{1,2}:\d{2}))?\s*$/);
+  if(!dt){erros.push({linha:i+1,motivo:'TERMO não identificado no final da linha.'});return;}
+  const termo=dt[1]+(dt[2]?' '+dt[2]:'');
+  const restante=linha.slice(0,dt.index).trim();
+  const partes=(restante.includes('\t')?restante.split('\t'):restante.split(/\s+/)).map(normalizarTextoImportado).filter(Boolean);
+  if(partes.length<2){erros.push({linha:i+1,motivo:'Informe CARGA, QTD_PLTS e STATUS.'});return;}
+  const carga=partes[0];
+  let qtd='',status='';
+  for(let j=1;j<partes.length;j++){
+    if(qtd==='' && /^\d+([.,]\d+)?$/.test(partes[j])){qtd=partes[j];continue;}
+    status=(status?status+' ':'')+partes[j];
+  }
+  if(!carga){erros.push({linha:i+1,motivo:'CARGA obrigatória.'});return;}
+  registros.push({carga,qtd,status,termo,linha:i+1});
+ });
+ return {registros,erros};
+}
+function interpretarRecusaColada(texto){
+ const linhas=String(texto||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean),registros=[],erros=[];
+ linhas.forEach((linha,i)=>{
+  const partes=dividirLinhaImportada(linha).map(normalizarTextoImportado);
+  const cab=partes.map(p=>normUpper(p).replace(/[\s_]/g,''));
+  if(i===0&&cab.some(p=>['DTARECUSA','SENHA'].includes(p)))return;
+  if(partes.length<2){erros.push({linha:i+1,motivo:'Informe DTA_RECUSA e SENHA.'});return;}
+  const [dtaRecusa,senha]=partes;
+  if(!dtaRecusa||!senha){erros.push({linha:i+1,motivo:'DTA_RECUSA e SENHA são obrigatórios.'});return;}
+  registros.push({dtaRecusa,senha,linha:i+1});
+ });
+ return {registros,erros};
+}
 function mostrarPreviewImportacao(resultado,elemento){elemento.style.display='block';elemento.innerHTML=`<div>Registros válidos: <b style="color:var(--green)">${resultado.registros.length}</b> · Linhas com erro: <b style="color:${resultado.erros.length?'var(--red)':'var(--green)'}">${resultado.erros.length}</b></div>${resultado.erros.length?`<div style="margin-top:8px;color:#fca5a5;font-size:11px">${resultado.erros.slice(0,8).map(e=>`<div>Linha ${e.linha}: ${escapeHTML(e.motivo)}</div>`).join('')}</div>`:''}`;}
 function interpretarAgendaColada(texto){
  const linhas=String(texto||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean),registros=[],erros=[];
@@ -1045,6 +1093,7 @@ function interpretarAgendaColada(texto){
 function exibirPreviewCargasImportadas(){mostrarPreviewImportacao(interpretarCargasColadas(document.getElementById('cargasPasteArea').value),document.getElementById('cargasPastePreview'));}
 function exibirPreviewAgendaImportada(){mostrarPreviewImportacao(interpretarAgendaColada(document.getElementById('agendaPasteArea').value),document.getElementById('agendaPastePreview'));}
 function exibirPreviewSobrepostosImportados(){mostrarPreviewImportacao(interpretarSobrepostosColados(document.getElementById('sobrepostosPasteArea').value),document.getElementById('sobrepostosPastePreview'));}
+function exibirPreviewRecusaImportada(){mostrarPreviewImportacao(interpretarRecusaColada(document.getElementById('recusaPasteArea').value),document.getElementById('recusaPastePreview'));}
 async function salvarConjuntoImportado(nome,registros,salvarUm){const resumo={ok:0,erros:[]};let prox=0;const workers=Array.from({length:Math.min(6,registros.length)},async()=>{while(true){const i=prox++;if(i>=registros.length)return;const r=registros[i];try{await salvarUm(r);resumo.ok++;}catch(e){console.error(`Erro ao gravar ${nome}:`,r,e);resumo.erros.push(`${r.carga||''}: ${e.message||String(e)}`);}}});await Promise.all(workers);return resumo;}
 async function processarAtualizacaoCargas(){
  if(!podeAtualizarCargas()){toast('Acesso negado','Somente o usuário autorizado pode executar esta operação.','warn');return;}
@@ -1058,7 +1107,8 @@ async function processarAtualizacaoCargas(){
  try{
  const jobs=[];
  if(dados.cargas)jobs.push((async()=>{const porCarga=new Map();dados.cargas.registros.forEach(r=>porCarga.set(r.carga,r.termo));const resumo=await salvarConjuntoImportado('CARGAS_RECEBIDAS',[...porCarga.entries()].map(([carga,termo])=>({carga,termo})),async r=>{const {data,error}=await sb.from(TABLE_CARGAS).select('CARGA,TERMO').eq('CARGA',r.carga).limit(1);if(error)throw error;const existente=data?.[0];if(!existente){const x=await sb.from(TABLE_CARGAS).insert({CARGA:r.carga,TERMO:r.termo});if(x.error)throw x.error;}else if(normalizarTextoImportado(existente.TERMO)!==r.termo){const x=await sb.from(TABLE_CARGAS).update({TERMO:r.termo}).eq('CARGA',r.carga);if(x.error)throw x.error;}});return ['ATUALIZAR CARGAS',resumo];})());
- if(dados.agenda)jobs.push((async()=>{const porCarga=new Map();dados.agenda.registros.forEach(r=>porCarga.set(r.carga,r));return ['ATUALIZAR AGENDA',await salvarConjuntoImportado('AGENDA',[...porCarga.values()],async r=>{const payload={[COL_AG.agenda]:r.agenda,[COL_AG.senha]:r.senha||null,[COL_AG.carga]:r.carga,[COL_AG.status]:r.status||null,[COL_AG.fornecedor]:r.fornecedor||null,[COL_AG.chegada]:r.chegada||null,[COL_AG.dtaBase]:r.dtaBase||null};const ex=await sb.from(TABLE_AGENDA).select(COL_AG.carga).eq(COL_AG.carga,r.carga).limit(1);if(ex.error)throw ex.error;const q=ex.data?.length?await sb.from(TABLE_AGENDA).update(payload).eq(COL_AG.carga,r.carga):await sb.from(TABLE_AGENDA).insert(payload);if(q.error)throw q.error;})];})());
+ if(dados.agenda)jobs.push((async()=>{const registros=dados.agenda.registros.filter(r=>r.agenda&&r.senha);return ['ATUALIZAR AGENDA',await salvarConjuntoImportado('AGENDA',registros,async r=>{const payload={[COL_AG.agenda]:r.agenda,[COL_AG.senha]:r.senha||null,[COL_AG.carga]:r.carga||null,[COL_AG.status]:r.status||null,[COL_AG.fornecedor]:r.fornecedor||null,[COL_AG.chegada]:r.chegada||null,[COL_AG.dtaBase]:r.dtaBase||null};if(r.carga){const ex=await sb.from(TABLE_AGENDA).select(COL_AG.carga).eq(COL_AG.carga,r.carga).limit(1);if(ex.error)throw ex.error;const q=ex.data?.length?await sb.from(TABLE_AGENDA).update(payload).eq(COL_AG.carga,r.carga):await sb.from(TABLE_AGENDA).insert(payload);if(q.error)throw q.error;}else{const q=await sb.from(TABLE_AGENDA).insert(payload);if(q.error)throw q.error;}})];})());
+ if(dados.recusa)jobs.push((async()=>{const registros=dados.recusa.registros.map(r=>({dtaRecusa:r.dtaRecusa,senha:r.senha}));return ['RECUSA',await salvarConjuntoImportado('RECUSA',registros,async r=>{const q=await sb.from(TABLE_RECUSA).insert({[COL_RE.dtaRecusa]:r.dtaRecusa,[COL_RE.senha]:r.senha});if(q.error)throw q.error;})];})());
  if(dados.sobrepostos)jobs.push((async()=>{const porCarga=new Map();dados.sobrepostos.registros.forEach(r=>porCarga.set(r.carga,r));return ['SOBREPOSTOS',await salvarConjuntoImportado('SOBREPOSTOS',[...porCarga.values()],async r=>{const payload={CARGA:r.carga,QTD_PLTS:r.qtd===''?null:r.qtd,STATUS:r.status||null,TERMO:r.termo||null};const ex=await sb.from(TABLE_SOBREPOSTOS).select('CARGA').eq('CARGA',r.carga).limit(1);if(ex.error)throw ex.error;const q=ex.data?.length?await sb.from(TABLE_SOBREPOSTOS).update(payload).eq('CARGA',r.carga):await sb.from(TABLE_SOBREPOSTOS).insert(payload);if(q.error)throw q.error;})];})());
  const resultados=await Promise.all(jobs);resultados.forEach(([nome,r])=>toast(r.erros.length?`${nome}: concluído parcialmente`:`${nome}: salvo`,`${r.ok} registro(s) gravado(s)${r.erros.length?` · ${r.erros.length} erro(s): ${r.erros.slice(0,3).join(' | ')}`:''}`,r.erros.length?'warn':'ok'));
  const falhou=resultados.some(([,r])=>r.erros.length);if(!falhou){fecharModalAtualizarCargas();state.dataLoaded=false;toast('Atualização gravada','Clique em Atualizar para recarregar as bases e recalcular os resultados.','warn');}else toast('Gravação parcial','Os conjuntos sem erro foram processados. Corrija as linhas indicadas antes de reenviar os conjuntos que falharam.','warn');
@@ -1369,6 +1419,51 @@ function buildRegistros(){
     });
   });
 
+  /* --- Registros RECUSA --- */
+  const agendaBySenha = new Map();
+  state.rawAgenda.forEach(a => {
+    const senha = String(a[COL_AG.senha] ?? '').trim();
+    const ag = parseDateTimeBR(a[COL_AG.agenda]);
+    if(!senha || !ag) return;
+    const atual = agendaBySenha.get(senha);
+    if(!atual || ag < atual) agendaBySenha.set(senha, ag);
+  });
+
+  (state.rawRecusa||[]).forEach(r => {
+    const senha = String(r[COL_RE.senha] ?? '').trim();
+    const dtaRecusa = parseDateTimeBR(r[COL_RE.dtaRecusa]);
+    if(!senha || !dtaRecusa) return;
+
+    const dataRecusa = toISODate(applyCycle(dtaRecusa));
+    const menorAgenda = agendaBySenha.get(senha);
+    const isNoPrazo = !!menorAgenda && toISODate(applyCycle(menorAgenda)) === dataRecusa;
+
+    records.push({
+      type:'recusa',
+      carga:'',
+      senha,
+      fornecedor:'RECUSA',
+      dataAgenda:null,
+      dataBase:null,
+      dataTermo:dataRecusa,
+      agenda:0,
+      recebido:0,
+      sobrepostas:0,
+      no_prazo:0,
+      backlog_recebido:0,
+      backlog_pendente:0,
+      abaixo_4hrs:0,
+      no_show:0,
+      recusado:0,
+      recusa_no_prazo:isNoPrazo?1:0,
+      recusa_backlog:isNoPrazo?0:1,
+      agenda_noshow:0,
+      turnoAgenda:'',
+      turnoTermo:turnoPorHorario(dtaRecusa),
+      turnoRecusado:turnoPorHorario(dtaRecusa)
+    });
+  });
+
   state.registros = records;
 }
 
@@ -1524,7 +1619,9 @@ function rowValue(bucket, key, mode){
     case 'no_prazo':        return agendaSemNoShow>0 ? ((bucket.no_prazo||0)/agendaSemNoShow)*100 : 0;
     case 'abaixo_4hrs':     return recebido>0 ? ((bucket.abaixo_4hrs||0)/recebido)*100 : null;
     case 'no_show':         return agenda>0 ? ((bucket.no_show||0)/agenda)*100 : null;
-    case 'recusado':        return agendaSemNoShow>0 ? ((bucket.recusado||0)/agendaSemNoShow)*100 : null;
+    case 'recusado':        return agenda>0 ? ((bucket.recusado||0)/agenda)*100 : null;
+    case 'recusa_no_prazo': return agenda>0 ? ((bucket.recusa_no_prazo||0)/agenda)*100 : null;
+    case 'recusa_backlog':  return agenda>0 ? ((bucket.recusa_backlog||0)/agenda)*100 : null;
     default:                return agenda>0 ? (v/agenda)*100 : null;
   }
 }
@@ -1550,20 +1647,22 @@ function renderKPIs(agg){
   const pctNoPrazo = agendaNoShow > 0 ? noPrazo / agendaNoShow * 100 : 0;
   const pctRecebido = agendaNoShow > 0 ? recebido / agendaNoShow * 100 : 0;
 
-  // Mantém exatamente a sequência das linhas da tabela (incluindo as duas percentuais).
+  // Mantém exatamente a sequência das linhas da tabela (incluindo as percentuais).
   const cards = [
     { label:'AGENDA',            value:intFmt(agenda),         color:'#60a5fa', sub:'Agendados no período' },
     { label:'NO SHOW',           value:intFmt(noShow),         color:'#ef4444', sub:`${agenda>0?pctFmt(pctNoShow):'–'} da agenda` },
-    { label:'AGENDA - NOSHOW',   value:intFmt(agendaNoShow),   color:'#38bdf8', sub:'Agenda menos no show' },
-    { label:'RECEBIDAS',         value:intFmt(recebido),       color:'#22d3ee', sub:'Cargas recebidas' },
-    { label:'BACKLOG RECEBIDO',  value:intFmt(backlogR),       color:'#0ea5e9', sub:'Recebido fora do ciclo' },
-    { label:'BACKLOG PENDENTE',  value:intFmt(backlogP),       color:'#eab308', sub:'Passou do ciclo sem receber' },
-    { label:'NO PRAZO',          value:intFmt(noPrazo),        color:'#22c55e', sub:'Recebidas dentro do prazo' },
-    { label:'< 4 HRS',           value:intFmt(abaixo4),        color:'#facc15', sub:'Recebidas em menos de 4 horas' },
-    { label:'RECUSADAS',         value:intFmt(recusado),       color:'#f43f5e', sub:'Cargas recusadas' },
-    { label:'SOBREPOSTAS',       value:intFmt(sobrepostas),    color:'#a78bfa', sub:'Cargas sobrepostas' },
+    { label:'AGENDA - NOSHOW',   value:intFmt(agendaNoShow),   color:'#38bdf8', sub:`${agenda>0?pctFmt(agendaNoShow/agenda*100):'–'} da agenda` },
+    { label:'RECEBIDAS',         value:intFmt(recebido),       color:'#22d3ee', sub:`${agenda>0?pctFmt(recebido/agenda*100):'–'} da agenda` },
+    { label:'BACKLOG RECEBIDO',  value:intFmt(backlogR),       color:'#0ea5e9', sub:`${recebido>0?pctFmt(backlogR/recebido*100):'–'} das recebidas` },
+    { label:'BACKLOG PENDENTE',  value:intFmt(backlogP),       color:'#eab308', sub:`${agenda>0?pctFmt(backlogP/agenda*100):'–'} da agenda` },
+    { label:'NO PRAZO',          value:intFmt(noPrazo),        color:'#22c55e', sub:`${agenda>0?pctFmt(noPrazo/agenda*100):'–'} da agenda` },
+    { label:'< 4 HRS',           value:intFmt(abaixo4),        color:'#facc15', sub:`${recebido>0?pctFmt(abaixo4/recebido*100):'–'} das recebidas` },
+    { label:'RECUSADO DIA',      value:intFmt(recusado),       color:'#f43f5e', sub:`${agenda>0?pctFmt(recusado/agenda*100):'–'} da agenda` },
+    { label:'RECUSA NO PRAZO',   value:intFmt(t.recusa_no_prazo||0), color:'#fb7185', sub:`${agenda>0?pctFmt((t.recusa_no_prazo||0)/agenda*100):'–'} da agenda` },
+    { label:'RECUSA BACKLOG',    value:intFmt(t.recusa_backlog||0),  color:'#e11d48', sub:`${agenda>0?pctFmt((t.recusa_backlog||0)/agenda*100):'–'} da agenda` },
+    { label:'SOBREPOSTAS',       value:intFmt(sobrepostas),    color:'#a78bfa', sub:`${recebido>0?pctFmt(sobrepostas/recebido*100):'–'} das recebidas` },
     { label:'% NO PRAZO',        value:pctFmt(pctNoPrazo),     color:'#a855f7', sub:'NO PRAZO / AGENDA - NOSHOW' },
-    { label:'% RECEBIDO',        value:pctFmt(pctRecebido),    color:'#ec4899', sub:'RECEBIDAS / AGENDA - NOSHOW' },
+    { label:'% RECEBIDO',        value:pctFmt(pctRecebido),    color:'#22d3ee', sub:'RECEBIDAS / AGENDA - NOSHOW' }
   ];
 
   document.getElementById('kpis').innerHTML = cards.map(c => `
@@ -2180,7 +2279,7 @@ function renderMissingModal(){
     <td><input type="text" data-field="senha" value="${escapeHTML(m.senha||'')}" placeholder="Nº senha"></td>
     <td><input type="text" data-field="agenda" value="${escapeHTML(m.agenda||'')}" placeholder="dd/mm/aaaa hh:mm"></td></tr>`).join(''):'<tr><td colspan="4" style="text-align:center;padding:26px;color:var(--muted)">Nenhuma carga encontrada.</td></tr>';
 }
-function openMissingModal(){renderMissingModal();document.getElementById('modalMissing').classList.add('show');}
+function openMissingModal(){document.getElementById('missingMes').value=todayISO().slice(0,7);renderMissingModal();document.getElementById('modalMissing').classList.add('show');}
 function closeMissingModal(){document.getElementById('modalMissing').classList.remove('show');}
 
 async function saveMissingCargas(){
@@ -2234,10 +2333,8 @@ async function saveMissingCargas(){
     if (ok) toast('Cargas salvas', `${nfInt.format(ok)} carga(s) registradas em AGENDA.`, 'ok');
     if (fail) toast('Algumas falharam', `${nfInt.format(fail)} carga(s) não foram salvas.`, 'warn');
     closeMissingModal();
-    state.rawAgenda = [];
-    state.rawCargas = [];
-    state.dataLoaded=false;
-    toast('Atualização gravada','Clique em Atualizar para recarregar as bases e recalcular os resultados.','warn');
+    await loadData(true,false);
+    toast('Atualização gravada','Indicadores recalculados automaticamente.','ok');
   } catch(e){
     console.error(e);
     toast('Erro ao salvar', e.message || String(e), 'err');
@@ -2453,15 +2550,17 @@ async function loadData(force=false, syncSources=false){
   if(!force&&state.dataLoaded){render();return true;}
   showLoader(true,'Carregando bases, calculando turnos e gravando BD_RESULTADOS…');
   try{
-    const [agendaRows,cargasRows,sobrepostosRows]=await Promise.all([
+    const [agendaRows,cargasRows,sobrepostosRows,recusaRows]=await Promise.all([
       fetchAllFromTable(TABLE_AGENDA),
       fetchAllFromTable(TABLE_CARGAS),
       fetchAllFromTable(TABLE_SOBREPOSTOS),
+      fetchAllFromTable(TABLE_RECUSA),
       Object.keys(state.weather).length?Promise.resolve():loadWeather()
     ]);
     state.rawAgenda=agendaRows;
     state.rawCargas=cargasRows;
     state.rawSobrepostos=sobrepostosRows||[];
+    state.rawRecusa=recusaRows||[];
     if(syncSources){
       const {ok,fail}=await syncCargasComAgenda();
       if(ok){state.rawCargas=await fetchAllFromTable(TABLE_CARGAS);toast('Sincronização',`${ok} registro(s) atualizado(s).`,'ok');}
@@ -2471,7 +2570,7 @@ async function loadData(force=false, syncSources=false){
     detectMissingCargas();
     updateMissingAlert();
     document.getElementById('footerConexao').textContent=
-      `AGENDA: ${nfInt.format(state.rawAgenda.length)} · CARGAS_RECEBIDAS: ${nfInt.format(state.rawCargas.length)} · SOBREPOSTOS: ${nfInt.format(state.rawSobrepostos.length)}`;
+      `AGENDA: ${nfInt.format(state.rawAgenda.length)} · CARGAS_RECEBIDAS: ${nfInt.format(state.rawCargas.length)} · SOBREPOSTOS: ${nfInt.format(state.rawSobrepostos.length)} · RECUSA: ${nfInt.format((state.rawRecusa||[]).length)}`;
 
     const computed=calcularResultados();
     await gravarResultados(computed);
@@ -2745,6 +2844,7 @@ function bindEvents(){
   document.getElementById('processarAtualizarCargas')?.addEventListener('click',processarAtualizacaoCargas);
   document.getElementById('cargasPasteArea')?.addEventListener('input',exibirPreviewCargasImportadas);
   document.getElementById('agendaPasteArea')?.addEventListener('input',exibirPreviewAgendaImportada);
+  document.getElementById('recusaPasteArea')?.addEventListener('input',exibirPreviewRecusaImportada);
   document.getElementById('sobrepostosPasteArea')?.addEventListener('input',exibirPreviewSobrepostosImportados);
   document.getElementById('modalAtualizarCargas')?.addEventListener('click',e=>{if(e.target.id==='modalAtualizarCargas')fecharModalAtualizarCargas();});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){fecharModalAtualizacao();fecharModalAtualizarCargas();}});
