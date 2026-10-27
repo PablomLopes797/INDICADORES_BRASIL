@@ -250,8 +250,8 @@ body.light .nav-btn{background:rgba(255,255,255,.9)}
 /* ---------- TABELA GRID ---------- */
 .table-card{margin-bottom:18px}
 .table-scroll{overflow:auto;max-height:min(62vh,720px);border-top:1px solid var(--line-soft)}
-table.grid{border-collapse:separate;border-spacing:0;font-size:12px;width:100%}
-table.grid thead th{position:sticky;top:0;z-index:4;background:var(--card-head-1);border-bottom:1px solid var(--line);padding:9px 5px;font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--txt-2);text-align:center;min-width:52px;letter-spacing:.3px;transition:background .15s,box-shadow .15s;user-select:none}
+table.grid{border-collapse:separate;border-spacing:0;font-size:12px;width:100%;min-width:max-content}
+table.grid thead th{position:sticky;top:0;z-index:4;background:var(--card-head-1);border-bottom:1px solid var(--line);padding:9px 6px;font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--txt-2);text-align:center;min-width:80px;letter-spacing:.3px;transition:background .15s,box-shadow .15s;user-select:none}
 table.grid thead th b{display:block;font-size:12px;color:var(--txt);font-weight:800}
 table.grid thead th i{display:block;font-style:normal;font-size:8px;color:var(--muted-2);font-weight:700;letter-spacing:.5px;margin-top:1px}
 table.grid thead th .wicon{display:block;font-size:14px;margin-top:2px;line-height:1;filter:drop-shadow(0 0 6px rgba(34,211,238,.35))}
@@ -269,7 +269,7 @@ table.grid thead th .obs-dot{position:absolute;top:4px;right:4px;width:6px;heigh
 table.grid th.corner{position:sticky;left:0;z-index:6;background:var(--card-head-1);text-align:left;padding-left:16px;min-width:190px;width:190px;font-family:var(--sans);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);box-shadow:1px 0 0 var(--line),8px 0 14px -10px rgba(0,0,0,.5)}
 table.grid th.total-col{position:sticky;right:96px;z-index:6;background:var(--total-cell);box-shadow:-1px 0 0 var(--line),-8px 0 14px -10px rgba(0,0,0,.5);min-width:88px;width:88px;font-size:11px;color:var(--txt)}
 table.grid th.avg-col{position:sticky;right:0;z-index:6;background:var(--derived-total);box-shadow:-1px 0 0 var(--line);min-width:96px;width:96px;font-size:11px;color:var(--txt)}
-table.grid td{padding:8px 5px;text-align:right;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--txt);border-bottom:1px solid var(--line-soft);white-space:nowrap;transition:background .12s}
+table.grid td{padding:8px 11px;text-align:right;font-family:var(--mono);font-size:clamp(10.5px,.72vw,12px);font-weight:600;color:var(--txt);border-bottom:1px solid var(--line-soft);white-space:nowrap;font-variant-numeric:tabular-nums;letter-spacing:.2px;box-shadow:inset 1px 0 0 var(--line-soft);transition:background .12s}
 table.grid td.zero{color:var(--muted-2) !important;background:transparent !important}
 table.grid td.empty{color:var(--muted-2) !important;background:transparent !important}
 table.grid td.rowlabel{position:sticky;left:0;z-index:3;background:var(--row-label);text-align:left;padding-left:16px;font-family:var(--sans);font-size:11.5px;font-weight:700;letter-spacing:.3px;color:var(--txt-2);display:flex;align-items:center;gap:9px;height:100%;min-height:36px;box-shadow:1px 0 0 var(--line),8px 0 14px -10px rgba(0,0,0,.5);border-bottom:1px solid var(--line-soft)}
@@ -750,18 +750,19 @@ async function fetchAll(t){
 }
 
 const CR='EXP_CRONOGRAMA',PR='EXP_CXS_PROD',FT='EXP_CXS_FAT',RG='EXP_RGC_FAT',US='EXP_SEP_USERS';
+const FTB='CARGAS FATURADAS';
 const PEND={STATUS:'PENDENCIA'},PROG={STATUS:'PROGRAMADO',TIPO:'CARGA REGULAR'};
 const ROWS=[
 ['CARGAS SOLIC.',null],
 ['CARGAS CAD.',{t:CR,d:'DTA_CRONO',f:PEND,cnt:'CARGA'}],
 ['CARGAS PROG.',{t:CR,d:'DTA PROG',f:PROG,cnt:'CARGA',tn:'TURNO PROG'}],
 ['CARGAS FAT.',{t:RG,d:'DTA',cnt:'CARGA',tn:'TURNO_FAT'}],
-['CARGAS FAT PRAZO',null],['CARGAS FAT FORA PRAZO',null],
+['CARGAS FAT PRAZO',{pz:1}],['CARGAS FAT FORA PRAZO',{pz:1,fora:1}],
 ['CXS SEP CAD.',{t:CR,d:'DTA_CRONO',f:PEND,sum:'CAIXAS SEP'}],
 ['CXS SEP PROG.',{t:CR,d:'DTA PROG',f:PROG,sum:'CAIXAS SEP',tn:'TURNO PROG'}],
 ['CXS SEP PROD.',{t:PR,d:'DTA',f:{TIPO:'FRACIONADO'},sum:'QTD_CXS',tn:'TURNO_SEP'}],
 ['CXS SEP FAT.',{t:FT,d:'DTA',f:{TIPO:'FRACIONADO'},sum:'QTD_CXS',tn:'TURNO_SEP'}],
-['CXS FAT PRAZO.',null],['CXS FAT FORA PRAZO.',null],
+['CXS FAT PRAZO.',{pz:1,cxs:1}],['CXS FAT FORA PRAZO.',{pz:1,cxs:1,fora:1}],
 ['CXS FECH CAD.',{t:CR,d:'DTA_CRONO',f:{...PEND,TIPO:'CARGA REGULAR'},sum:'CXS FECHADO'}],
 ['CXS FECH PROG.',null],
 ['CXS FECH PROD.',{t:PR,d:'DTA',f:{TIPO:'FECHADO'},sum:'QTD_CXS',tn:'TURNO_SEP'}],
@@ -771,17 +772,55 @@ const ROWS=[
 ['VISITAS PROG.',{t:CR,d:'DTA PROG',f:{STATUS:'PROGRAMADO'},sum:'ITENS ROTEIRIZADOS',tn:'TURNO PROG'}],
 ['VISITAS PROD.',{t:PR,d:'DTA',f:{TIPO:'FRACIONADO'},sum:'QTD_VISITAS',tn:'TURNO_SEP'}],
 ['VISITAS FAT.',{t:FT,d:'DTA',f:{TIPO:'FRACIONADO'},sum:'QTD_VISITAS',tn:'TURNO_SEP'}],
-['VISITAS FAT PRAZO',null],['VISITAS FAT FORA PRAZO',null],
+['VISITAS FAT PRAZO',{pz:1,cxs:1,sum:'QTD_VISITAS'}],['VISITAS FAT FORA PRAZO',{pz:1,cxs:1,sum:'QTD_VISITAS',fora:1}],
 ['SEPARADORES',{t:US,d:'DTA',sum:'USERS',tn:'TURNO_SEP'}]];
 const GRP=new Set(['CARGAS SOLIC.','CXS SEP CAD.','CXS FECH CAD.','VISITAS CAD.','SEPARADORES']);
 
 let y,m,days,src={},saved={},calc={},solic=[],editing=false,turnos=new Set();
 const key=i=>`${y}-${String(m).padStart(2,'0')}-${String(i+1).padStart(2,'0')}`;
 
+/* ===== Lógica de PRAZO (ciclo das 22:00) =====
+   Referência: DTA_FAT (dd/mm/aaaa hh:mm) em CARGAS FATURADAS e DTA em EXP_CXS_FAT.
+   Ciclo: hora >= 22:00 pertence ao dia seguinte; < 22:00 pertence ao próprio dia.
+   No prazo = ciclo do faturamento == menor DTA_PROG (ciclo) da carga no EXP_CRONOGRAMA.
+   Carga sem cronograma → tratada como FORA do prazo. */const dtFull=v=>{if(!v)return null;const s=String(v).trim();let m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ T](\d{1,2}):(\d{2}))?/);if(m)return{y:+m[3],mo:+m[2],d:+m[1],h:m[4]!=null?+m[4]:0};m=s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{1,2}):(\d{2}))?/);if(m)return{y:+m[1],mo:+m[2],d:+m[3],h:m[4]!=null?+m[4]:0};return null};
+const ciclo=v=>{const p=dtFull(v);if(!p)return null;const d=new Date(p.y,p.mo-1,p.d);if(p.h>=22)d.setDate(d.getDate()+1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+const nkNum=v=>String(v??'').trim();
+let minProg=null,minCrono=null;
+function buildPrazo(){
+  const cur=$('#turno').value;
+  minProg={};minCrono={};
+  for(const row of src[CR]||[]){
+    if(cur&&nk(G(row,'TURNO PROG'))!==nk(cur))continue;
+    const c=nkNum(G(row,'CARGA'));if(!c)continue;
+    const dp=ciclo(G(row,'DTA PROG')),dc=dt(G(row,'DTA_CRONO'));
+    if(dp&&(minProg[c]==null||dp<minProg[c]))minProg[c]=dp;
+    if(dc&&(minCrono[c]==null||dc<minCrono[c]))minCrono[c]=dc;
+  }
+}
+function calcPrazo(r){
+  const tur=$('#turno').value,arr=Array(days).fill(0);
+  for(const row of src[r.cxs?FT:FTB]||[]){
+    if(r.cxs){
+      if(nk(G(row,'TIPO'))!=='FRACIONADO')continue;
+      if(tur&&nk(G(row,'TURNO_SEP'))!==nk(tur))continue;
+    }
+    const carga=nkNum(r.cxs?G(row,'NROCARGA'):G(row,'CARGA'));
+    const prog=minProg[carga];
+    const c=ciclo(G(row,r.cxs?'DTA':'DTA_FAT'));
+    if(!c||c.slice(0,7)!==key(0).slice(0,7))continue;
+    if(!prog){if(r.fora)arr[+c.slice(8)-1]+=r.cxs?num(G(row,r.sum||'QTD_CXS')):1;continue}
+    if((c===prog)===!r.fora)arr[+c.slice(8)-1]+=r.cxs?num(G(row,r.sum||'QTD_CXS')):1;
+  }
+  return arr;
+}
+
 function compute(){
   const tur=$('#turno').value;calc={};
+  buildPrazo();
   for(const [name,r] of ROWS){
     if(!r)continue;
+    if(r.pz){calc[name]=calcPrazo(r);continue}
     const arr=Array(days).fill(0),sets=Array.from({length:days},()=>new Set());
     for(const row of src[r.t]||[]){
       const d=dt(G(row,r.d));
@@ -807,7 +846,7 @@ function render(){
       const we=[0,6].includes(new Date(y,m-1,i+1).getDay())?' we':'';
       if(r){
         const v=calc[name][i];tot+=v;
-        cells+=`<td class="${we}">${v?fmt(v):'·'}</td>`;
+        cells+=`<td class="${we}" title="${name} · dia ${i+1}: ${fmt(v)}">${v?fmt(v):'·'}</td>`;
       }else{
         const sv=saved[key(i)]?.[name],v=name==='CARGAS SOLIC.'?solic[i]:(sv==null?null:num(sv));
         if(name==='CARGAS SOLIC.'&&editing)cells+=`<td class="${we}"><input class="cell" type="number" min="0" step="1" value="${solic[i]??''}" data-i="${i}"></td>`;
@@ -844,7 +883,7 @@ async function load(){
   [y,m]=$('#month').value.split('-').map(Number);
   days=new Date(y,m,0).getDate();
   try{
-    const names=[CR,PR,FT,RG,US,'RESULTADOS_EXPEDICAO'];
+    const names=[CR,PR,FT,FTB,RG,US,'RESULTADOS_EXPEDICAO'];
     const res=await Promise.all(names.map(fetchAll));
     names.forEach((n,i)=>src[n]=res[i]);
     turnos=new Set();
@@ -931,5 +970,6 @@ $('#turno').onchange=()=>{loadSaved(src.RESULTADOS_EXPEDICAO||[]);compute();rend
   }
 })();
 </script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
 </body>
 </html>
