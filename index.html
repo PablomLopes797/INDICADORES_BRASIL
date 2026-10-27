@@ -13,15 +13,9 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
 <style>
-/* ==================================================================
-   Rec Vision · PAINEL EXECUTIVO — mesma linguagem visual da Recepção
-   (mantém todos os seletores originais usados pelo JS)
-   ================================================================== */
 :root{
   --ease:cubic-bezier(.2,.8,.2,1);
   --grad:linear-gradient(120deg,#22d3ee,#8b5cf6 55%,#ec4899);
-
-  /* ---- tema escuro (padrão) ---- */
   --bg-1:#04050c;--bg-2:#0a0e1f;
   --card-1:rgba(255,255,255,.075);--card-2:rgba(255,255,255,.035);
   --card-head-1:rgba(255,255,255,.09);--card-head-2:rgba(255,255,255,.05);
@@ -76,7 +70,6 @@ body.locked{overflow:hidden}
 ::-webkit-scrollbar-thumb{background:var(--scroll);border-radius:100px}
 ::-webkit-scrollbar-thumb:hover{background:var(--scroll-h)}
 
-/* ---------- fundo animado (grid + orbs) ---------- */
 .grid-bg{
   position:fixed;inset:-20% -20% 0 -20%;z-index:0;pointer-events:none;
   background-image:linear-gradient(var(--grid-1) 1px,transparent 1px),linear-gradient(90deg,var(--grid-2) 1px,transparent 1px);
@@ -98,7 +91,6 @@ body.locked{overflow:hidden}
 @keyframes shine{to{background-position:200% center}}
 @keyframes rise{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
 
-/* ---------- LOGIN ---------- */
 .login-screen{position:fixed;inset:0;z-index:1000;overflow:hidden;display:flex;align-items:center;justify-content:center;transition:opacity .55s ease,visibility .55s ease}
 .login-screen.hide{opacity:0;visibility:hidden;pointer-events:none}
 .login-bg-fallback{position:absolute;inset:0;z-index:0;background:
@@ -151,7 +143,6 @@ body.locked{overflow:hidden}
 .login-foot{margin-top:26px;padding-top:18px;border-top:1px solid rgba(255,255,255,.12);text-align:center;font-size:10.5px;color:#6b7699;letter-spacing:.6px;font-weight:600}
 .login-foot b{color:#a9b3d1;font-weight:800}
 
-/* ---------- APP ---------- */
 .wrap{max-width:1920px;margin:0 auto;padding:20px 24px 20px;display:none;position:relative;z-index:2}
 .wrap.show{display:block}
 
@@ -177,7 +168,6 @@ body.locked{overflow:hidden}
 .user-info span{font-size:9px;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;font-weight:700}
 .topbar-spacer{flex:1;min-width:10px}
 
-/* ---------- navegação central (padrão Rec Vision) ---------- */
 .top-nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1 1 auto;justify-content:center}
 .nav-btn{
   display:inline-flex;align-items:center;gap:8px;
@@ -229,7 +219,6 @@ body.light .nav-btn{background:rgba(255,255,255,.9)}
 .dev-credit-top{display:inline-flex;align-items:center;gap:6px;padding:8px 13px;border-radius:12px;background:rgba(139,92,246,.14);border:1px solid rgba(139,92,246,.38);color:var(--txt-2);font-size:11px;font-weight:700;letter-spacing:.4px;white-space:nowrap}
 .dev-credit-top b{color:var(--pct-txt)}
 
-/* ---------- KPIs ---------- */
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:14px;margin-bottom:18px}
 .kpi{position:relative;overflow:hidden;background:linear-gradient(160deg,var(--card-1),var(--card-2));border:1px solid var(--line);border-radius:18px;padding:18px 18px 16px;box-shadow:var(--shadow);transition:transform .35s var(--ease),border-color .3s;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
 .kpi:hover{transform:translateY(-5px) scale(1.02);border-color:rgba(139,92,246,.45)}
@@ -242,7 +231,6 @@ body.light .nav-btn{background:rgba(255,255,255,.9)}
 .kpi-sub{margin-top:8px;font-size:10.5px;color:var(--muted);display:flex;align-items:center;gap:5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kpi-sub b{color:var(--txt-2);font-family:var(--mono);font-weight:700}
 
-/* ---------- CARDS / GRÁFICOS ---------- */
 .charts{display:grid;grid-template-columns:1fr 340px;gap:14px;margin-bottom:18px}
 @media(max-width:1100px){.charts{grid-template-columns:1fr}}
 .card{background:linear-gradient(160deg,var(--card-1),var(--card-2));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px)}
@@ -253,7 +241,6 @@ body.light .nav-btn{background:rgba(255,255,255,.9)}
 .chart-box{height:250px;position:relative}
 .chart-box canvas{max-width:100%}
 
-/* ---------- TABELA GRID ---------- */
 .table-card{margin-bottom:18px}
 .table-scroll{overflow:auto;max-height:min(62vh,720px);border-top:1px solid var(--line-soft)}
 table.grid{border-collapse:separate;border-spacing:0;font-size:12px;width:100%}
@@ -359,7 +346,6 @@ body.light table.grid tr.pct:hover td.rowlabel{color:#fff !important}
 .hover-tip .obs-item .txt{font-size:11px;color:var(--txt-2);line-height:1.45;margin-top:2px;white-space:pre-wrap;word-break:break-word}
 .hover-tip .hint{font-size:10px;color:var(--muted);font-weight:600;padding-top:8px;margin-top:6px;border-top:1px solid rgba(255,255,255,.08);text-align:center}
 
-/* ---------- MODAIS ---------- */
 .overlay{position:fixed;inset:0;background:var(--overlay);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);display:none;align-items:center;justify-content:center;z-index:200;padding:24px}
 .overlay.show{display:flex}
 .modal{background:linear-gradient(165deg,rgba(255,255,255,.12),rgba(255,255,255,.045));border:1px solid rgba(255,255,255,.2);border-radius:26px;width:min(660px,100%);max-height:88vh;display:flex;flex-direction:column;backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);box-shadow:0 40px 100px -20px rgba(0,0,0,.75),0 0 80px -30px rgba(139,92,246,.5);animation:pop .28s cubic-bezier(.2,.9,.3,1.2);overflow:hidden}
@@ -402,7 +388,6 @@ body.light .modal{background:linear-gradient(165deg,rgba(255,255,255,.98),rgba(2
 .preview td{padding:8px 11px;border-bottom:1px solid var(--line-soft);color:var(--txt-2);white-space:nowrap}
 .preview tr:last-child td{border-bottom:0}
 
-/* ---------- TOASTS / LOADER ---------- */
 .toasts{position:fixed;right:22px;bottom:22px;display:flex;flex-direction:column;gap:10px;z-index:400}
 .toast{display:flex;align-items:center;gap:11px;background:linear-gradient(160deg,rgba(255,255,255,.12),rgba(255,255,255,.05));border:1px solid rgba(255,255,255,.2);border-left:3px solid var(--cyan);border-radius:14px;padding:14px 18px;min-width:270px;max-width:400px;backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);box-shadow:0 20px 44px -16px rgba(0,0,0,.75);font-size:12.5px;font-weight:600;animation:slideIn .3s cubic-bezier(.2,.9,.3,1.2)}
 body.light .toast{background:linear-gradient(160deg,rgba(255,255,255,.98),rgba(248,250,252,.95));border-color:rgba(15,23,42,.12)}
@@ -438,12 +423,10 @@ table.missing input{width:100%;background:var(--input-bg);color:var(--txt);borde
 table.missing input:focus{border-color:var(--cyan);box-shadow:0 0 0 4px rgba(34,211,238,.14)}
 table.missing input.filled{border-color:rgba(16,185,129,.6)}
 
-
 table.grid th.corner,table.grid th.total-col,table.grid th.avg-col,table.grid td.rowlabel,table.grid td.total-cell,table.grid td.avg-cell{background:color-mix(in srgb,var(--bg-2) 94%,var(--blue)) !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;}
 table.grid tbody tr:hover td.rowlabel,table.grid tbody tr:hover td.total-cell,table.grid tbody tr:hover td.avg-cell,table.grid tr.derived:hover td.rowlabel,table.grid tr.pct:hover td.rowlabel{background:color-mix(in srgb,var(--bg-2) 86%,var(--blue)) !important;}
 table.grid td.rowlabel,table.grid td.total-cell,table.grid td.avg-cell{box-shadow:none !important;}
 
-/* Resumo de agendamentos por dia e hora/ciclo */
 .agenda-hour-card{margin-top:18px;overflow:hidden}
 .agenda-hour-note{font-size:10.5px;color:var(--muted);font-weight:600}
 .agenda-hour-scroll{max-height:68vh;overflow:auto;overscroll-behavior:contain}
@@ -527,7 +510,6 @@ table.grid td.rowlabel,table.grid td.total-cell,table.grid td.avg-cell{box-shado
     </div>
     <div class="dev-credit-top">Desenvolvido Por <b>Pablo M. Lopes</b></div>
 
-    <!-- ==================== NAVEGAÇÃO ==================== -->
     <nav class="top-nav">
       <a class="nav-btn" href="index.html" title="Página inicial"><span class="ico">🏠</span><span class="lbl">HOME</span></a>
       <a class="nav-btn" href="Recepção.html" title="Recepção"><span class="ico">🚚</span><span class="lbl">Recepção</span></a>
@@ -773,7 +755,6 @@ table.grid td.rowlabel,table.grid td.total-cell,table.grid td.avg-cell{box-shado
   </div>
 </div>
 
-
 <div class="overlay" id="modalAtualizarCargas">
   <div class="modal wide">
     <div class="modal-head"><div><h2>Atualizar dados</h2><p>Preencha um ou mais conjuntos; campos vazios serão ignorados.</p></div><button class="x-btn" id="closeAtualizarCargas" aria-label="Fechar">×</button></div>
@@ -809,8 +790,8 @@ const SUPABASE_URL      = "https://iykukdzmdxbluehylkse.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_AOnZKBKy9NpHheU_VN-bcQ_y5Ldcgce";
 
 const TABLE_USERS  = "USERS";
-const TABLE_AGENDA = "AGENDA";              // Base de agendamento
-const TABLE_CARGAS = "CARGAS_RECEBIDAS";    // Base de cargas recebidas
+const TABLE_AGENDA = "AGENDA";
+const TABLE_CARGAS = "CARGAS_RECEBIDAS";
 const TABLE_OBS    = "OBS_REC";
 const TABLE_RESULTADOS = "BD_RESULTADOS";
 const TABLE_SOBREPOSTOS = "SOBREPOSTOS";
@@ -826,15 +807,14 @@ const EDIT_USER = '5520967';
 const TURNOS = ['TODOS', '1º TURNO', '2º TURNO', '3º TURNO'];
 const TURNOS_OPERACIONAIS = TURNOS.slice(1);
 
-/* Colunas das tabelas */
-const COL_AG = {  // AGENDA
-  agenda:     'AGENDA',       // dd/mm/aaaa hh:mm
+const COL_AG = {
+  agenda:     'AGENDA',
   senha:      'SENHA',
   carga:      'CARGA',
   fornecedor: 'FORNECEDOR',
-  chegada:    'CHEGADA',      // dd/mm/aaaa hh:mm
+  chegada:    'CHEGADA',
   status:     'STATUS',
-  dtaBase:    'DTA_BASE'      // dd/mm/aaaa
+  dtaBase:    'DTA_BASE'
 };
 
 const COL_RE = {
@@ -842,11 +822,11 @@ const COL_RE = {
   senha:'SENHA'
 };
 
-const COL_CR = {  // CARGAS_RECEBIDAS
+const COL_CR = {
   carga:  'CARGA',
-  termo:  'TERMO',            // dd/mm/aaaa hh:mm
+  termo:  'TERMO',
   senha:  'SENHA',
-  agenda: 'AGENDA'            // dd/mm/aaaa hh:mm
+  agenda: 'AGENDA'
 };
 
 const S = {
@@ -863,7 +843,7 @@ const ROWS = [
   { key:'backlog_pendente', label:'BACKLOG PENDENTE',  color:'#eab308' },
   { key:'no_prazo',         label:'NO PRAZO',          color:'#22c55e' },
   { key:'abaixo_4hrs',      label:'< 4 HRS',           color:'#facc15' },
-  { key:'recusado',         label:'RECUSADO DIA',      color:'#f43f5e' },
+  { key:'recusado',         label:'RECUSA NO DIA',     color:'#f43f5e' },
   { key:'recusa_no_prazo',  label:'RECUSA NO PRAZO',   color:'#fb7185' },
   { key:'recusa_backlog',   label:'RECUSA BACKLOG',    color:'#e11d48' },
   { key:'sobrepostas',      label:'SOBREPOSTAS',       color:'#a78bfa' },
@@ -887,12 +867,12 @@ const state = {
   lastClickedDate: null,
   statusFilter: null,
   drill: null,
-  rawAgenda: [],       // Dados da tabela AGENDA
-  rawCargas: [],       // Dados da tabela CARGAS_RECEBIDAS
-  rawSobrepostos: [],  // Dados da tabela SOBREPOSTOS
-  rawRecusa: [],       // Dados da tabela RECUSA
-  registros: [],       // Registros unificados
-  missingCargas: [],   // Cargas em CARGAS_RECEBIDAS sem entrada em AGENDA
+  rawAgenda: [],
+  rawCargas: [],
+  rawSobrepostos: [],
+  rawRecusa: [],
+  registros: [],
+  missingCargas: [],
   cds: [],
   user: null,
   comments: {},
@@ -955,7 +935,6 @@ function escapeHTML(s){
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-/* Parser para datas no formato dd/mm/aaaa hh:mm */
 function parseDateTimeBR(str){
   if (!str) return null;
   if (str instanceof Date) return isNaN(str.getTime()) ? null : str;
@@ -975,7 +954,6 @@ function parseDateTimeBR(str){
   return isNaN(d.getTime()) ? null : d;
 }
 
-/* Aplica regra de ciclo: hora >= 22:00 → D+1 */
 function applyCycle(dateTime){
   if (!dateTime) return null;
   const d = new Date(dateTime);
@@ -984,29 +962,24 @@ function applyCycle(dateTime){
   }
   return d;
 }
-
-/* Retorna a data de referência ISO (aaaa-mm-dd) após aplicar a regra de ciclo */
 function refDateISO(str){
   const dt = parseDateTimeBR(str);
   if (!dt) return null;
   return toISODate(applyCycle(dt));
 }
-
-/* Retorna o Date de referência (com ciclo aplicado) */
 function refDateObj(str){
   const dt = parseDateTimeBR(str);
   if (!dt) return null;
   return applyCycle(dt);
 }
 
-// O turno é sempre identificado pelo horário original da coluna indicada para a métrica.
 function turnoPorHorario(valor){
   const dt=parseDateTimeBR(valor);
   if(!dt)return null;
   const minutos=dt.getHours()*60+dt.getMinutes();
-  if(minutos>=360&&minutos<860)return '1º TURNO';       // 06:00–14:19
-  if(minutos>=860&&minutos<1320)return '2º TURNO';     // 14:20–21:59
-  return '3º TURNO';                                   // 22:00–05:59
+  if(minutos>=360&&minutos<860)return '1º TURNO';
+  if(minutos>=860&&minutos<1320)return '2º TURNO';
+  return '3º TURNO';
 }
 function chaveResultado(data,turno){return `${data}::${turno}`;}
 function turnoDaMetrica(registro,chave){
@@ -1041,7 +1014,6 @@ function abrirModalAtualizarCargas(foco='cargasPasteArea'){if(!podeAtualizarCarg
 function fecharModalAtualizarCargas(){document.getElementById('modalAtualizarCargas')?.classList.remove('show');}
 function linhaPareceCabecalho(c,t){const cc=normUpper(c),tt=normUpper(t);return cc==='CARGA'||cc==='CARGAS'||tt==='TERMO'||cc.includes('CARGA')||tt.includes('TERMO');}
 function interpretarCargasColadas(texto){const linhas=String(texto||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean),registros=[],erros=[];linhas.forEach((linha,i)=>{const partes=dividirLinhaImportada(linha).map(normalizarTextoImportado);const carga=partes[0]||'',termo=partes.slice(1).join(' ').trim();if(i===0&&linhaPareceCabecalho(carga,termo))return;if(!carga||!termo){erros.push({linha:i+1,motivo:'A linha precisa conter CARGA e TERMO.'});return;}registros.push({carga,termo,linha:i+1});});return {registros,erros};}
-function exibirPreviewCargasImportadas(){const r=interpretarCargasColadas(document.getElementById('cargasPasteArea').value),p=document.getElementById('cargasPastePreview');p.style.display='block';p.innerHTML=`<div style="display:flex;gap:16px;flex-wrap:wrap"><span>Registros válidos: <b style="color:var(--green)">${r.registros.length}</b></span><span>Linhas com erro: <b style="color:${r.erros.length?'var(--red)':'var(--green)'}">${r.erros.length}</b></span></div>${r.erros.length?`<div style="margin-top:10px;color:#fca5a5;font-size:11px">${r.erros.slice(0,10).map(e=>`<div>Linha ${e.linha}: ${escapeHTML(e.motivo)}</div>`).join('')}</div>`:''}`;}
 function interpretarSobrepostosColados(texto){
  const linhas=String(texto||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean),registros=[],erros=[];
  linhas.forEach((linha,i)=>{
@@ -1117,7 +1089,7 @@ async function processarAtualizacaoCargas(){
 
 function storedNum(row,key){const col=RC[key];const v=col?row?.[col]:null;if(v===null||v===undefined||v==='')return null;const n=Number(v);return Number.isFinite(n)?n:null;}
 function getManualValue(key,date){
-  if(state.gran!=='dia'||key==='agenda'||key==='agenda_noshow')return null;
+  if(state.gran!=='dia'||key==='agenda'||key==='agenda_noshow'||key==='recusado')return null;
   return storedNum(state.resultadosPorTurno[chaveResultado(date,state.turno)],key);
 }
 function payloadResultado(data,b,turno){
@@ -1132,7 +1104,6 @@ function payloadResultado(data,b,turno){
   row[RC.pct_recebido]=d?(Number(b.recebido||0)/d)*100:0;
   return row;
 }
-// Grava apenas colunas já usadas pelo esquema existente; AGENDA e SOBREPOSTAS permanecem no cache local.
 function payloadBancoResultado(row){
   const colunasPersistidas=['DATA','TURNO','NO SHOW','AGENDA - NOSHOW','RECEBIDO','BACKLOG RECEBIDO','BACKLOG PENDENTE','NO PRAZO','< 4 HRS','RECUSADO','% NO PRAZO','% RECEBIDO'];
   const payload={};
@@ -1146,8 +1117,6 @@ function calcularResultados(){
     if(!porDataTurno.has(k))porDataTurno.set(k,{DATA:data,TURNO:turno,...emptyBucket()});
     return porDataTurno.get(k);
   };
-  // AGENDA conta SENHA distinta pela data operacional de AGENDA (22:00–21:59);
-  // DTA_BASE continua sendo usado somente para o indicador NO SHOW.
   for(const a of state.rawAgenda){
     const data=refDateISO(a[COL_AG.agenda]);
     const senha=String(a[COL_AG.senha]??'').trim();
@@ -1168,7 +1137,7 @@ function calcularResultados(){
   for(const r of state.registros){
     for(const def of ROWS){
       const k=def.key;
-      if(k==='agenda'||k==='agenda_noshow'||!r[k])continue;
+      if(k==='agenda'||k==='agenda_noshow'||k==='recusado'||!r[k])continue;
       const data=dateForRow(r,k);
       if(!data)continue;
       obter(data,'TODOS')[k]++;
@@ -1182,6 +1151,8 @@ function calcularResultados(){
     for(const turno of TURNOS){
       const b=obter(data,turno);
       b.agenda_noshow=Math.max(0,(b.agenda||0)-(b.no_show||0));
+      // RECUSA NO DIA = RECUSA NO PRAZO + RECUSA BACKLOG
+      b.recusado=(b.recusa_no_prazo||0)+(b.recusa_backlog||0);
       rows.push(payloadResultado(data,b,turno));
     }
   }
@@ -1199,11 +1170,9 @@ async function gravarResultados(rows){
     const turnos=new Set(grupo.map(r=>r.TURNO));
     if(grupo.length!==TURNOS.length||TURNOS.some(t=>!turnos.has(t)))throw new Error(`A data ${data} precisa ter exatamente uma linha para TODOS e uma para cada turno.`);
   }
-  // Linhas antigas sem TURNO passam a TODOS; datas recalculadas abaixo são substituídas pelas quatro linhas novas.
   const legado=await sb.from(TABLE_RESULTADOS).update({TURNO:'TODOS'}).is('TURNO',null);
   if(legado.error)throw new Error(`Falha ao normalizar TURNO antigo: ${legado.error.message||legado.error}`);
   const datas=[...porData.keys()];
-  // Sem ON CONFLICT/índice UNIQUE: remove apenas as datas recalculadas e reinsere seus quatro resultados.
   for(let i=0;i<datas.length;i+=50){
     const loteDatas=datas.slice(i,i+50);
     const removidos=await sb.from(TABLE_RESULTADOS).delete().in('DATA',loteDatas);
@@ -1271,25 +1240,15 @@ function weatherIcon(iso){
 /* ============================================================================
    CONSTRUÇÃO DOS REGISTROS
    ============================================================================ */
-/*
-   REGRAS:
-   - AGENDA → tabela AGENDA (coluna AGENDA) com regra de ciclo aplicada
-   - RECEBIDO → tabela CARGAS_RECEBIDAS (coluna TERMO) com regra de ciclo
-   - NO PRAZO → RECEBIDO onde refDate(TERMO) === refDate(AGENDA da mesma linha CARGAS)
-   - BACKLOG RECEBIDO → RECEBIDO onde refDate(TERMO) ≠ refDate(AGENDA)
-   - BACKLOG PENDENTE → AGENDA sem correspondência em CARGAS e que já passou do ciclo
-*/
 function buildRegistros(){
   const records = [];
 
-  // Mapa de AGENDA por CARGA
   const agendaByCarga = new Map();
   state.rawAgenda.forEach(a => {
     const carga = String(a[COL_AG.carga] ?? '').trim();
     if (carga) agendaByCarga.set(carga, a);
   });
 
-  // Conjunto e referência de CARGAS_RECEBIDAS por CARGA (a primeira linha preserva a regra original).
   const cargasSet = new Set();
   const cargaByCarga = new Map();
   state.rawCargas.forEach(c => {
@@ -1298,6 +1257,16 @@ function buildRegistros(){
   });
 
   const sobrepostasVistas = new Set();
+
+  // Menor AGENDA (tabela AGENDA) de cada CARGA — usada no indicador < 4 HRS
+  const minAgendaByCarga = new Map();
+  state.rawAgenda.forEach(a => {
+    const carga = String(a[COL_AG.carga] ?? '').trim();
+    const dt = parseDateTimeBR(a[COL_AG.agenda]);
+    if (!carga || !dt) return;
+    const atual = minAgendaByCarga.get(carga);
+    if (!atual || dt < atual) minAgendaByCarga.set(carga, dt);
+  });
 
   const now = new Date();
 
@@ -1311,7 +1280,6 @@ function buildRegistros(){
     if (!dataAgenda && !noShow) return;
 
     const recebido = cargasSet.has(carga);
-    // Backlog pendente: não foi recebido E o ciclo já passou
     let backlogPendente = 0;
     if (carga && dataAgenda && !recebido) {
       const refObj = refDateObj(a[COL_AG.agenda]);
@@ -1337,7 +1305,7 @@ function buildRegistros(){
       backlog_pendente: backlogPendente,
       abaixo_4hrs: 0,
       no_show: noShow ? 1 : 0,
-      recusado: normUpper(a[COL_AG.status]) === 'RECUSADO' ? 1 : 0,
+      recusado: 0,
       agenda_noshow: 0,
       turnoAgenda: turnoPorHorario(a[COL_AG.agenda]),
       turnoTermo: null,
@@ -1357,6 +1325,14 @@ function buildRegistros(){
     if (!dataTermo) return;
 
     const isNoPrazo = !!(dataTermo && dataAgendaCR && dataTermo === dataAgendaCR);
+
+    // < 4 HRS: TERMO - menor AGENDA da carga <= 04:00
+    const termoDt = parseDateTimeBR(c[COL_CR.termo]);
+    let menorAgenda = minAgendaByCarga.get(carga) || null;
+    const agendaCRDt = parseDateTimeBR(c[COL_CR.agenda]);
+    if (agendaCRDt && (!menorAgenda || agendaCRDt < menorAgenda)) menorAgenda = agendaCRDt;
+    const isAbaixo4 = !!(termoDt && menorAgenda && (termoDt.getTime() - menorAgenda.getTime()) <= 4*60*60*1000);
+
     const fornecedor = agRow
       ? (String(agRow[COL_AG.fornecedor] ?? '').trim() || 'SEM FORNECEDOR')
       : 'SEM FORNECEDOR';
@@ -1366,14 +1342,14 @@ function buildRegistros(){
       carga,
       senha: c[COL_CR.senha] || '',
       fornecedor,
-      dataAgenda: dataAgendaCR,   // AGENDA da própria linha CARGAS
+      dataAgenda: dataAgendaCR,
       dataTermo,
       agenda: 0,
       recebido: 1,
       no_prazo: isNoPrazo ? 1 : 0,
       backlog_recebido: isNoPrazo ? 0 : 1,
       backlog_pendente: 0,
-      abaixo_4hrs: 0,
+      abaixo_4hrs: isAbaixo4 ? 1 : 0,
       no_show: 0,
       recusado: 0,
       agenda_noshow: 0,
@@ -1383,7 +1359,7 @@ function buildRegistros(){
     });
   });
 
-    /* --- Registros SOBREPOSTOS --- */
+  /* --- Registros SOBREPOSTOS --- */
   state.rawSobrepostos.forEach(s => {
     const carga = String(s?.CARGA ?? '').trim();
     const status = normUpper(s?.STATUS ?? '');
@@ -1549,12 +1525,12 @@ function colForDate(cols, ds){
 }
 
 function dateForRow(r, key){
-  if (key === 'no_show') return r.dataBase; // data de referência exclusiva: AGENDA.DTA_BASE
-  // AGENDA e derivados usam dataAgenda (da tabela AGENDA)
-  if (key === 'agenda' || key === 'agenda_noshow' || key === 'no_show' || key === 'recusado' || key === 'backlog_pendente'){
+  if (key === 'no_show') return r.dataBase;
+  // RECUSA NO DIA: soma de RECUSA NO PRAZO + RECUSA BACKLOG (registros da tabela RECUSA)
+  if (key === 'recusado') return r.type === 'recusa' ? r.dataTermo : null;
+  if (key === 'agenda' || key === 'agenda_noshow' || key === 'backlog_pendente'){
     return r.dataAgenda;
   }
-  // RECEBIDO, NO PRAZO, BACKLOG RECEBIDO, < 4 HRS usam dataTermo
   return r.dataTermo || r.dataAgenda;
 }
 
@@ -1647,7 +1623,6 @@ function renderKPIs(agg){
   const pctNoPrazo = agendaNoShow > 0 ? noPrazo / agendaNoShow * 100 : 0;
   const pctRecebido = agendaNoShow > 0 ? recebido / agendaNoShow * 100 : 0;
 
-  // Mantém exatamente a sequência das linhas da tabela (incluindo as percentuais).
   const cards = [
     { label:'AGENDA',            value:intFmt(agenda),         color:'#60a5fa', sub:'Agendados no período' },
     { label:'NO SHOW',           value:intFmt(noShow),         color:'#ef4444', sub:`${agenda>0?pctFmt(pctNoShow):'–'} da agenda` },
@@ -1657,7 +1632,7 @@ function renderKPIs(agg){
     { label:'BACKLOG PENDENTE',  value:intFmt(backlogP),       color:'#eab308', sub:`${agenda>0?pctFmt(backlogP/agenda*100):'–'} da agenda` },
     { label:'NO PRAZO',          value:intFmt(noPrazo),        color:'#22c55e', sub:`${agenda>0?pctFmt(noPrazo/agenda*100):'–'} da agenda` },
     { label:'< 4 HRS',           value:intFmt(abaixo4),        color:'#facc15', sub:`${recebido>0?pctFmt(abaixo4/recebido*100):'–'} das recebidas` },
-    { label:'RECUSADO DIA',      value:intFmt(recusado),       color:'#f43f5e', sub:`${agenda>0?pctFmt(recusado/agenda*100):'–'} da agenda` },
+    { label:'RECUSA NO DIA',     value:intFmt(recusado),       color:'#f43f5e', sub:`${agenda>0?pctFmt(recusado/agenda*100):'–'} da agenda` },
     { label:'RECUSA NO PRAZO',   value:intFmt(t.recusa_no_prazo||0), color:'#fb7185', sub:`${agenda>0?pctFmt((t.recusa_no_prazo||0)/agenda*100):'–'} da agenda` },
     { label:'RECUSA BACKLOG',    value:intFmt(t.recusa_backlog||0),  color:'#e11d48', sub:`${agenda>0?pctFmt((t.recusa_backlog||0)/agenda*100):'–'} da agenda` },
     { label:'SOBREPOSTAS',       value:intFmt(sobrepostas),    color:'#a78bfa', sub:`${recebido>0?pctFmt(sobrepostas/recebido*100):'–'} das recebidas` },
@@ -1712,7 +1687,6 @@ function renderTable(agg){
   let body = '<tbody>';
   ROWS.forEach(r => {
     const vals = cols.map(c => {
-      const manual = getManualValue(r.key, c.key);
       return rowValue(c.bucket, r.key, state.view);
     });
     const max = vals.reduce((mx,v) => isEmpty(v) ? mx : Math.max(mx,Math.abs(v)), 0);
@@ -1941,17 +1915,14 @@ function renderAgendaHourSummary(){
   if(!host)return;
   const [year,month]=state.mes.split('-').map(Number);
   const daysInMonth=new Date(year,month,0).getDate();
-  // Usa a data e hora reais gravadas em AGENDA, sem deslocamento entre dias.
   const hours=[22,23,...Array.from({length:22},(_,i)=>i)];
   const counts=Array.from({length:24},()=>Array(daysInMonth).fill(0));
   const cargasContadas=new Set();
   for(const row of state.rawAgenda||[]){
     const dt=parseDateTimeBR(row?.[COL_AG.agenda]);
     if(!dt||dt.getFullYear()!==year||dt.getMonth()+1!==month)continue;
-    // Mantém o critério do painel: uma agenda válida precisa ter carga e data/hora.
     const carga=String(row?.[COL_AG.carga]??'').trim();
     if(!carga)continue;
-    // Evita somar duas vezes a mesma carga caso a consulta retorne duplicatas.
     if(cargasContadas.has(carga))continue;
     cargasContadas.add(carga);
     counts[dt.getHours()][dt.getDate()-1]++;
@@ -2048,7 +2019,9 @@ function rowFilterFor(key, r){
     case 'no_prazo':         return r.no_prazo === 1;
     case 'abaixo_4hrs':      return r.abaixo_4hrs === 1;
     case 'no_show':          return r.no_show === 1;
-    case 'recusado':         return r.recusado === 1;
+    case 'recusado':         return r.recusa_no_prazo === 1 || r.recusa_backlog === 1;
+    case 'recusa_no_prazo':  return r.recusa_no_prazo === 1;
+    case 'recusa_backlog':   return r.recusa_backlog === 1;
     case 'sobrepostas':      return r.sobrepostas === 1;
     default:                 return false;
   }
@@ -2072,7 +2045,7 @@ function openDrill(rowKey, colKey, colIdx){
   const byForn = {}, byCarga = {};
   regs.forEach(r => {
     byForn[r.fornecedor] = (byForn[r.fornecedor]||0) + 1;
-    byCarga[r.carga] = (byCarga[r.carga]||0) + 1;
+    byCarga[r.carga || ('SENHA ' + (r.senha||'–'))] = (byCarga[r.carga || ('SENHA ' + (r.senha||'–'))]||0) + 1;
   });
   const topForn = Object.entries(byForn).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const topCarga = Object.entries(byCarga).sort((a,b)=>b[1]-a[1]).slice(0,10);
@@ -2240,8 +2213,8 @@ async function saveEditModal(){
   if(!canEdit()){toast('Ação restrita','Somente o usuário 5520967 pode editar valores manualmente.','warn');return;}
   if(!editCtx)return;
   const {rowKey,colKey:date}=editCtx;
-  if(state.gran!=='dia'||rowKey==='agenda'||rowKey==='agenda_noshow'){
-    toast('Indicador derivado','AGENDA vem da origem; para AGENDA - NOSHOW, edite NO SHOW.','warn');return;
+  if(state.gran!=='dia'||rowKey==='agenda'||rowKey==='agenda_noshow'||rowKey==='recusado'){
+    toast('Indicador derivado','AGENDA vem da origem; AGENDA - NOSHOW deriva de NO SHOW; RECUSA NO DIA = RECUSA NO PRAZO + RECUSA BACKLOG.','warn');return;
   }
   const raw=document.getElementById('editValue').value.trim(),value=Number(raw);
   if(!raw||!Number.isFinite(value)||value<0){toast('Valor inválido','Informe um número maior ou igual a zero.','err');return;}
@@ -2249,16 +2222,22 @@ async function saveEditModal(){
   const d=Math.max(0,b.agenda-b.no_show);
   const patch={[RC[rowKey]]:value,[RC.agenda_noshow]:d,
     [RC.pct_no_prazo]:d?b.no_prazo/d*100:0,[RC.pct_recebido]:d?b.recebido/d*100:0};
+  if(rowKey==='recusa_no_prazo'||rowKey==='recusa_backlog'){
+    patch[RC.recusado]=(b.recusa_no_prazo||0)+(b.recusa_backlog||0);
+  }
   try{await updateResultado(date,patch);toast('Valor gravado','BD_RESULTADOS atualizado.','ok');closeEditModal();render();}
   catch(e){console.error(e);toast('Falha ao gravar',e.message||String(e),'err');}
 }
 async function clearEditModal(){
   if(!canEdit()){toast('Ação restrita','Somente o usuário 5520967 pode alterar valores manualmente.','warn');return;}
-  if(!editCtx||state.gran!=='dia'||!RK.includes(editCtx.rowKey))return;
+  if(!editCtx||state.gran!=='dia'||!RK.includes(editCtx.rowKey)||editCtx.rowKey==='recusado')return;
   const {rowKey,colKey:date}=editCtx;
   const b={...(aggregate().daily.get(date)||emptyBucket()),[rowKey]:(aggregate(false).daily.get(date)||emptyBucket())[rowKey]||0};
   const d=Math.max(0,b.agenda-b.no_show);
   const patch={[RC[rowKey]]:b[rowKey],[RC.agenda_noshow]:d,[RC.pct_no_prazo]:d?b.no_prazo/d*100:0,[RC.pct_recebido]:d?b.recebido/d*100:0};
+  if(rowKey==='recusa_no_prazo'||rowKey==='recusa_backlog'){
+    patch[RC.recusado]=(b.recusa_no_prazo||0)+(b.recusa_backlog||0);
+  }
   try{await updateResultado(date,patch);toast('Valor restaurado','BD_RESULTADOS atualizado.','ok');closeEditModal();render();}
   catch(e){console.error(e);toast('Falha ao gravar',e.message||String(e),'err');}
 }
@@ -2291,7 +2270,7 @@ async function saveMissingCargas(){
     if (!m) return;
     const senha = tr.querySelector('input[data-field="senha"]').value.trim();
     const agenda = tr.querySelector('input[data-field="agenda"]').value.trim();
-    if (!senha && !agenda) return; // ignora vazios
+    if (!senha && !agenda) return;
     if (!senha || !agenda){
       updates.push({ __invalid: true, carga: m.carga, senha, agenda });
       return;
@@ -2320,10 +2299,8 @@ async function saveMissingCargas(){
         [COL_AG.fornecedor]: u.fornecedor || null,
         [COL_AG.dtaBase]: u.agenda.split(' ')[0] || null
       };
-      // Upsert por CARGA (requer constraint UNIQUE em AGENDA.CARGA)
       const { error } = await sb.from(TABLE_AGENDA).upsert(payload, { onConflict: COL_AG.carga });
       if (error){
-        // fallback: tenta insert simples
         const ins = await sb.from(TABLE_AGENDA).insert([payload]);
         if (ins.error){ console.error(ins.error); fail++; } else ok++;
       } else ok++;
@@ -2463,10 +2440,7 @@ function exportData(){
   const head = ['INDICADOR', ...cols.map(c => `${c.label}${c.sub?' ('+c.sub+')':''}`), 'TOTAL', 'MÉDIA'];
   const linhas = [];
   ROWS.forEach(r => {
-    const vals = cols.map(c => {
-      const manual = getManualValue(r.key, c.key);
-      return c.bucket[r.key]||0;
-    });
+    const vals = cols.map(c => c.bucket[r.key]||0);
     const tot = vals.reduce((s,v)=>s+v,0);
     const avg = cols.length ? tot/cols.length : 0;
     linhas.push([r.label, ...vals, tot, +avg.toFixed(2)]);
@@ -2628,7 +2602,7 @@ function loadSession(){
 }
 function clearSession(){ try { sessionStorage.removeItem(SESSION_KEY); localStorage.removeItem(REMEMBER_KEY); } catch(e){} }
 function limparCacheSessao(){
-  state.rawAgenda=[];state.rawCargas=[];state.rawSobrepostos=[];state.registros=[];state.missingCargas=[];
+  state.rawAgenda=[];state.rawCargas=[];state.rawSobrepostos=[];state.rawRecusa=[];state.registros=[];state.missingCargas=[];
   state.comments={};state.weather={};state.resultadosPorTurno={};state.computedResultadosPorTurno={};state.dataLoaded=false;
   state.selectedDates.clear();state.lastClickedDate=null;state.drill=null;state.statusFilter=null;
 }
@@ -2852,7 +2826,6 @@ function bindEvents(){
   document.getElementById('modalMissing').addEventListener('click', e => {
     if (e.target.id === 'modalMissing') closeMissingModal();
   });
-  // Marca inputs preenchidos com classe visual
   document.getElementById('missingTbody')?.addEventListener('input', e => {
     const inp = e.target.closest('input'); if (!inp) return;
     inp.classList.toggle('filled', inp.value.trim().length > 0);
