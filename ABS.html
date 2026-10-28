@@ -300,6 +300,8 @@ td.nd{color:var(--quiet)}
       <div class="field"><label for="turnoFilter">TURNO</label><select id="turnoFilter"><option value="">Todos os turnos</option></select></div>
       <div class="field"><label for="cdFilter">CD</label><select id="cdFilter"><option value="">Todos os CDs</option></select></div>
       <div class="field"><label for="cargoFilter">CARGO</label><select id="cargoFilter"><option value="">Todos os cargos</option></select></div>
+      <div class="field"><label for="gestorFilter">GESTOR</label><select id="gestorFilter"><option value="">Todos os gestores</option></select></div>
+      <button class="btn btn-primary" id="gestBtn" type="button">＋ CADASTRAR GESTOR</button>
       <div class="field multi">
         <label>MOTIVOS CONTABILIZADOS COMO ABS</label>
         <button id="motiveBtn" type="button" aria-expanded="false">F, AT, AF</button>
@@ -400,13 +402,24 @@ td.nd{color:var(--quiet)}
       <div class="jm-f"><button class="btn" id="jmCancel" type="button">Cancelar</button><button class="btn btn-primary" id="jmSalva" type="button">Gravar justificativa</button></div>
     </div>
   </div>
+  <div class="jm" id="gm" hidden role="dialog" aria-modal="true" aria-labelledby="gmTitle">
+    <div class="jm-card">
+      <div class="jm-h"><div><h3 id="gmTitle">Cadastrar gestor</h3><small>Grava em ABS_GESTOR_COLAB · COLABORADOR, GESTOR e NOME GESTOR</small></div><button class="jm-x" id="gmFecha" type="button" aria-label="Fechar">✕</button></div>
+      <div class="jm-b">
+        <div><label>COLABORADOR (matrícula ou nome)</label><input id="gmColab" type="text" autocomplete="off" placeholder="Digite a matrícula ou o nome…"><div class="jm-sg" id="gmColabSug" hidden></div><div id="gmColabInfo" style="font-size:10.5px;color:var(--muted);margin-top:4px;min-height:14px"></div></div>
+        <div><label>GESTOR (matrícula ou nome)</label><input id="gmGest" type="text" autocomplete="off" placeholder="Digite a matrícula do gestor…"><div class="jm-sg" id="gmGestSug" hidden></div><div id="gmGestInfo" style="font-size:10.5px;color:var(--muted);margin-top:4px;min-height:14px"></div></div>
+        <div class="jm-msg" id="gmMsg" hidden></div>
+      </div>
+      <div class="jm-f"><button class="btn" id="gmCancel" type="button">Fechar</button><button class="btn btn-primary" id="gmSalva" type="button">Salvar</button></div>
+    </div>
+  </div>
 </main>
 <script>'use strict';(()=>{
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const URL_SB='https://bebhhbimcaptgrioxxcw.supabase.co';
 const KEY_SB='sb_publishable_LUjptV9j-EiIuG2Bc7UrKg_can_vhn_';
 const JWT_SB='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJlYmhoYmltY2FwdGdyaW94eGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyODE2MjksImV4cCI6MjA5OTg1NzYyOX0.WIhrT6A8LAh5BtV1pVz9xnONewehes155OhpgE1lXmI';
-const T={quadro:'ABS_QUADRO',just:'ABS_JUSTIFICATIVAS',suricato:'ABS_SURICATO',ferias:'ABS_FÉRIAS',feriado:'ABS_FERIADOS'};
+const T={quadro:'ABS_QUADRO',just:'ABS_JUSTIFICATIVAS',suricato:'ABS_SURICATO',ferias:'ABS_FÉRIAS',feriado:'ABS_FERIADOS',gestor:'ABS_GESTOR_COLAB'};
 const MOTIVOS=['P','FE','AT','AF','FO','TR','F','FA'];
 const MOTIVO_NOME={P:'Presença',FE:'Férias',AT:'Atestado',AF:'Afastamento',FO:'Folga',TR:'Treinamento',F:'Falta',FA:'Falta abonada'};
 const MOTIVOS_JUST=['P','FA','AF','AT','FO','FE','TR'];
@@ -557,7 +570,7 @@ const state={ano:0,mes:0,dias:[],hoje:hoje(),snapshots:new Map(),just:new Map(),
 ferias:new Set(),feriados:new Set(),ativos:new Set(ATIVOS_PADRAO),cargo:new Map(),presentHours:new Map(),turno:'',cd:'',vista:'macro',metric:'abs',chartM:'abs',
 dia:'',setor:'',turnoF:'',cargoF:'',pessoa:'',busca:'',pagina:1,expand:new Set(),cache:new Map(),base:null,
 carregando:false,fonteFeriado:'—',fonteCargo:'ABS_QUADRO.CARGO',erro:'',aviso:'',ultimaAtualizacao:null,
-gestor:'',_lastDayClick:'',_lastDayTime:0,motivoFiltro:new Set(MOTIVOS),diasParciais:new Set(),semRegistroMes:new Set(),cobertura:[],turnoSemDado:new Set(),turnoDiag:[]};
+gestor:'',gestorF:'',gestorSet:null,gestorMap:new Map(),gestoresPorNome:new Map(),gestoresMat:new Map(),gestorErro:'',_lastDayClick:'',_lastDayTime:0,motivoFiltro:new Set(MOTIVOS),diasParciais:new Set(),semRegistroMes:new Set(),cobertura:[],turnoSemDado:new Set(),turnoDiag:[]};
 
 /* ---------- rede ---------- */
 const headers=()=>({apikey:KEY_SB,Authorization:'Bearer '+JWT_SB,Accept:'application/json'});
@@ -734,10 +747,10 @@ function snapshotPara(day){let best=null;for(const[d,s]of state.snapshots){if(d<
 function mapaPessoas(rows){const m=new Map();for(const r of rows){const mat=normMat(r.MATRICULA);if(!mat)continue;const t=parseData(r.DTA)?.getTime()||0;const o=m.get(mat);
   if(!o||t>=o.time)m.set(mat,{matricula:mat,nome:norm(r.NOME)||mat,cd:norm(r.CD)||'—',setor:norm(r.SETOR)||'—',cargo:state.cargo.get(mat)||norm(r.CARGO)||'—',turno:norm(r.TURNO)||'—',time:t})}return[...m.values()]}
 function todasPessoas(){return mapaPessoas([...state.snapshots.values()].flatMap(s=>s.rows))}
-const filtroFixo=p=>(!state.turno||p.turno===state.turno)&&(!state.cd||p.cd===state.cd)&&(!state.cargoF||p.cargo===state.cargoF)&&(!state.setor||p.setor===state.setor)&&(!state.turnoF||p.turno===state.turnoF);
+const filtroFixo=p=>(!state.turno||p.turno===state.turno)&&(!state.cd||p.cd===state.cd)&&(!state.cargoF||p.cargo===state.cargoF)&&(!state.setor||p.setor===state.setor)&&(!state.turnoF||p.turno===state.turnoF)&&(!state.gestorF||(state.gestorSet!==null&&state.gestorSet.has(p.matricula)));
 function cargosDisponiveis(){return[...new Set(todasPessoas().filter(p=>(!state.turno||p.turno===state.turno)&&(!state.cd||p.cd===state.cd)).map(p=>p.cargo))].filter(c=>c&&c!=='—').sort((x,y)=>x.localeCompare(y,'pt-BR'))}
 function pessoasBase(){if(!state.base)state.base=todasPessoas().filter(filtroFixo);return state.base}
-function chaveFiltro(){return [state.turno,state.cd,state.cargoF,state.setor,state.turnoF,[...state.ativos].sort().join(','),[...state.motivoFiltro].sort().join(',')].join('|')}
+function chaveFiltro(){return [state.turno,state.cd,state.cargoF,state.gestorF,state.setor,state.turnoF,[...state.ativos].sort().join(','),[...state.motivoFiltro].sort().join(',')].join('|')}
 function invalidar(){state.cache=new Map();state.base=null}
 function dia(day){const ck=chaveFiltro()+'|'+day;const h=state.cache.get(ck);if(h)return h;const m=modeloDia(day);state.cache.set(ck,m);return m}
 function todosDias(){return state.dias.map(dia)}
@@ -839,6 +852,8 @@ function renderFiltrosOn(){
   if(state.setor)it.push(['setor','Setor: '+state.setor]);
   if(state.turnoF)it.push(['turnoF','Turno: '+state.turnoF]);
   if(state.cargoF)it.push(['cargoF','Cargo: '+state.cargoF]);
+  if(state.gestorF)it.push(['gestorF','Gestor: '+state.gestorF]);
+  const gsel=$('#gestorFilter');if(gsel&&gsel.value!==state.gestorF)gsel.value=state.gestorF;
   if(state.pessoa){const p=pessoasBase().find(x=>x.matricula===state.pessoa);it.push(['pessoa','Colaborador: '+(p?p.nome+' · '+p.matricula:state.pessoa)])}
   $('#filtersOn').innerHTML=it.length?it.map(([k,v])=>`<span class="chip">${esc(v)}<button type="button" data-act="unf" data-k="${k}" aria-label="Remover">✕</button></span>`).join(''):'<span style="font-size:10.5px;color:var(--quiet)">Nenhuma seleção ativa — clique em barras, colunas, setores ou nomes para filtrar; duplo clique em um dia abre a justificativa de ausência.</span>';
 }
@@ -1186,26 +1201,153 @@ $('#jmSalva').onclick=gravarJust;
 $('#jmMotivo').innerHTML=MOTIVOS_JUST.map(c=>`<option value="${c}">${c} · ${MOTIVO_NOME_JUST[c]}</option>`).join('');
 jtipEl=document.createElement('div');jtipEl.className='jtip';jtipEl.hidden=false;document.body.append(jtipEl);
 
+/* ---------- GESTOR · filtro e cadastro (ABS_GESTOR_COLAB) ---------- */
+const GEST_SEL='COLABORADOR,GESTOR,"NOME GESTOR"';
+async function pegaGestorColab(){return pega(T.gestor,GEST_SEL,{},'COLABORADOR.asc,GESTOR.asc')}
+function aplicarGestorRows(rows){
+  state.gestorMap=new Map();state.gestoresPorNome=new Map();state.gestoresMat=new Map();
+  for(const r of rows){
+    const c=normMat(r.COLABORADOR),g=normMat(r.GESTOR),n=norm(r['NOME GESTOR']);
+    if(!c||!n)continue;
+    if(!state.gestorMap.has(c))state.gestorMap.set(c,{g,n});
+    if(!state.gestoresPorNome.has(n))state.gestoresPorNome.set(n,new Set());
+    state.gestoresPorNome.get(n).add(c);
+    if(g)state.gestoresMat.set(g,n);
+  }
+  if(state.gestorF&&!state.gestoresPorNome.has(state.gestorF))state.gestorF='';
+  recalcGestor();
+}
+function recalcGestor(){state.gestorSet=state.gestorF?(state.gestoresPorNome.get(state.gestorF)||new Set()):null}
+function preencherGestores(){
+  const el=$('#gestorFilter');
+  const nomes=[...state.gestoresPorNome.keys()].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  el.innerHTML='<option value="">Todos os gestores</option>'+nomes.map(n=>`<option value="${esc(n)}">${esc(n)} (${state.gestoresPorNome.get(n).size})</option>`).join('');
+  el.value=state.gestorF;
+}
+const gm={colab:null,gest:null,pessoas:[]};
+function candidatosLocais(q,comGestores){
+  const nq=semAcento(q);if(!nq)return[];
+  const mapa=new Map();
+  for(const p of gm.pessoas)mapa.set(p.matricula,{mat:p.matricula,nome:p.nome,sub:p.setor+' · turno '+p.turno});
+  if(comGestores)for(const[g,n]of state.gestoresMat)if(!mapa.has(g))mapa.set(g,{mat:g,nome:n,sub:'gestor já cadastrado'});
+  return [...mapa.values()].map(x=>({x,s:Math.max(pontua(nq,semAcento(x.nome)),pontua(nq,semAcento(x.mat))*0.98)})).filter(o=>o.s>0)
+    .sort((a,b)=>b.s-a.s||a.x.nome.localeCompare(b.x.nome,'pt-BR')).slice(0,8).map(o=>o.x);
+}
+async function candidatosServidor(q){
+  const s=q.replace(/[(),*%\\"]/g,'');if(!s)return[];
+  const u=new URL(`${URL_SB}/rest/v1/${encodeURIComponent(T.quadro)}`);
+  u.searchParams.set('select','MATRICULA,NOME');
+  u.searchParams.set('or',`(MATRICULA.ilike.${s}*,NOME.ilike.*${s}*)`);
+  u.searchParams.set('limit','8');
+  const r=await fetch(u,{headers:headers(),cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);
+  const j=await r.json();
+  return unicoPor(Array.isArray(j)?j:[],x=>normMat(x.MATRICULA)).map(x=>({mat:normMat(x.MATRICULA),nome:norm(x.NOME)||normMat(x.MATRICULA),sub:'ABS_QUADRO'}));
+}
+function gmInfo(){
+  const c=gm.colab,g=gm.gest,v=c&&state.gestorMap.get(c.mat);
+  $('#gmColabInfo').textContent=c?`✔ ${c.nome} · ${c.mat}`+(v?` · já vinculado a ${v.n}`:''):'';
+  const nome=g&&(state.gestoresMat.get(g.mat)||g.nome),n=g?(state.gestoresPorNome.get(nome)||new Set()).size:0;
+  $('#gmGestInfo').textContent=g?`✔ ${g.nome} · ${g.mat} · ${n} colaborador(es) já vinculado(s)`:'';
+}
+/* Campo de busca com sugestões instantâneas (quadro já carregado) + complemento do ABS_QUADRO no servidor */
+function campoBusca(key,inp,box,comGestores){
+  const el=$(inp),bx=$(box);let seq=0,timer=null,lista=[],idx=0;
+  const desenha=()=>{
+    if(!lista.length){bx.hidden=true;return}
+    bx.innerHTML=lista.map((x,i)=>`<div class="sgi ${i===idx?'on':''}" data-i="${i}"><span><b>${esc(x.nome)}</b><small>${esc(x.mat)} · ${esc(x.sub||'')}</small></span></div>`).join('');
+    bx.hidden=false;
+  };
+  const escolher=x=>{gm[key]=x;el.value=x.mat+' · '+x.nome;bx.hidden=true;lista=[];gmInfo()};
+  el.addEventListener('input',()=>{
+    gm[key]=null;gmInfo();
+    const q=norm(el.value);clearTimeout(timer);const my=++seq;
+    if(!q){lista=[];bx.hidden=true;return}
+    lista=candidatosLocais(q,comGestores);idx=0;desenha();
+    if(q.length>=3&&lista.length<6)timer=setTimeout(async()=>{
+      try{const s=await candidatosServidor(q);if(my!==seq||gm[key])return;
+        const ja=new Set(lista.map(x=>x.mat));for(const x of s)if(!ja.has(x.mat))lista.push(x);
+        lista=lista.slice(0,8);desenha()}catch{}
+    },250);
+  });
+  el.addEventListener('keydown',e=>{
+    if(e.key==='ArrowDown'&&lista.length){e.preventDefault();idx=(idx+1)%lista.length;desenha()}
+    else if(e.key==='ArrowUp'&&lista.length){e.preventDefault();idx=(idx-1+lista.length)%lista.length;desenha()}
+    else if(e.key==='Enter'){e.preventDefault();if(lista.length&&!gm[key])escolher(lista[idx])}
+  });
+  bx.onmousedown=e=>{const i=e.target.closest('[data-i]');if(i){e.preventDefault();escolher(lista[+i.dataset.i])}};
+  el.addEventListener('blur',()=>setTimeout(()=>{bx.hidden=true},150));
+  return{limpar(){el.value='';gm[key]=null;lista=[];bx.hidden=true;gmInfo()},foco(){el.focus()},set(x){escolher(x)}};
+}
+const campoColab=campoBusca('colab','#gmColab','#gmColabSug',false);
+const campoGest=campoBusca('gest','#gmGest','#gmGestSug',true);
+function gmMsg(tipo,txt){const m=$('#gmMsg');m.className='jm-msg '+tipo;m.textContent=txt;m.hidden=false}
+function fecharGest(){$('#gm').hidden=true}
+function abrirGestModal(){
+  gm.pessoas=todasPessoas();
+  campoColab.limpar();campoGest.limpar();$('#gmMsg').hidden=true;
+  $('#gmSalva').disabled=false;$('#gmSalva').textContent='Salvar';
+  /* se já há um gestor filtrado na tela, ele vem pré-selecionado */
+  if(state.gestorF){for(const[g,n]of state.gestoresMat)if(n===state.gestorF){campoGest.set({mat:g,nome:n});break}}
+  $('#gm').hidden=false;
+  setTimeout(()=>campoColab.foco(),30);
+}
+async function salvarGestor(){
+  const btn=$('#gmSalva');if(btn.disabled)return;
+  const c=gm.colab,g=gm.gest;
+  if(!c||!g){gmMsg('err','Selecione o colaborador e o gestor nas listas de sugestões.');return}
+  if(c.mat===g.mat){gmMsg('err','Colaborador e gestor não podem ser a mesma pessoa.');return}
+  const ex=state.gestorMap.get(c.mat);
+  if(ex&&ex.g===g.mat){gmMsg('err',`${c.nome} já está vinculado a ${g.nome}.`);return}
+  if(ex&&!confirm(`${c.nome} já está vinculado a ${ex.n}.\nTransferir para ${g.nome}?`))return;
+  btn.disabled=true;btn.innerHTML='<span class="jm-loading"></span>Salvando…';
+  const nomeGest=state.gestoresMat.get(g.mat)||g.nome;
+  try{
+    const base=`${URL_SB}/rest/v1/${encodeURIComponent(T.gestor)}`;
+    if(ex){
+      const r=await fetch(`${base}?COLABORADOR=eq.${encodeURIComponent(c.mat)}`,{method:'PATCH',
+        headers:{...headers(),Prefer:'return=representation','Content-Type':'application/json'},
+        body:JSON.stringify({GESTOR:g.mat,'NOME GESTOR':nomeGest}),cache:'no-store'});
+      if(!r.ok)throw Error(await detalhe(r));
+      const j=await r.json();if(!Array.isArray(j)||!j.length)throw Error('nenhuma linha foi atualizada (verifique as permissões da tabela)');
+    }else{
+      const r=await fetch(base,{method:'POST',headers:{...headers(),Prefer:'return=minimal','Content-Type':'application/json'},
+        body:JSON.stringify([{COLABORADOR:c.mat,GESTOR:g.mat,'NOME GESTOR':nomeGest}]),cache:'no-store'});
+      if(!r.ok)throw Error(await detalhe(r));
+    }
+    aplicarGestorRows(await pegaGestorColab());
+    preencherGestores();invalidar();render();
+    gmMsg('ok',`✔ ${c.nome} (${c.mat}) vinculado a ${nomeGest}. Pode lançar o próximo colaborador.`);
+    campoColab.limpar();          /* colaborador zera; gestor continua selecionado */
+    gmInfo();campoColab.foco();
+  }catch(e){gmMsg('err','Falha ao salvar: '+(e.message||e)+'. Os campos foram preservados.')}
+  finally{btn.disabled=false;btn.textContent='Salvar'}
+}
+$('#gmFecha').onclick=fecharGest;$('#gmCancel').onclick=fecharGest;$('#gmSalva').onclick=salvarGestor;
+document.addEventListener('click',e=>{if(e.target.id==='gm')fecharGest()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#gm').hidden)fecharGest()});
+
 /* ---------- eventos ---------- */
 function ligar(){
   let claro=QS.get('theme')==='light';try{const s=localStorage.getItem('abs-theme');if(s)claro=s==='light'}catch{}
   const tema=()=>{document.documentElement.dataset.theme=claro?'light':'dark';$('#themeBtn').textContent=claro?'☀️ Modo claro':'🌙 Modo escuro';
     try{localStorage.setItem('abs-theme',claro?'light':'dark')}catch{};render()};
   tema();$('#themeBtn').onclick=()=>{claro=!claro;tema()};
-  $('#monthForm').onsubmit=e=>{e.preventDefault();state.turno='';state.cd='';state.dia='';state.setor='';state.turnoF='';state.cargoF='';state.pessoa='';state.busca='';state.expand=new Set();state.pagina=1;
+  $('#monthForm').onsubmit=e=>{e.preventDefault();state.gestorF='';state.gestorSet=null;state.turno='';state.cd='';state.dia='';state.setor='';state.turnoF='';state.cargoF='';state.pessoa='';state.busca='';state.expand=new Set();state.pagina=1;
     $('#peopleSearch').value='';$('#searchClear').hidden=true;
     CACHE_PRES.clear();   /* "Atualizar dados" sempre busca de novo */
     invalidar();carga()};
   $('#turnoFilter').onchange=e=>{state.turno=e.target.value;state.expand=new Set();invalidar();render()};
   $('#cdFilter').onchange=e=>{state.cd=e.target.value;invalidar();render()};
   $('#cargoFilter').onchange=e=>{state.cargoF=e.target.value;invalidar();render()};
+  $('#gestorFilter').onchange=e=>{state.gestorF=e.target.value;recalcGestor();state.pagina=1;invalidar();render()};
+  $('#gestBtn').onclick=abrirGestModal;
   $('#motiveBtn').onclick=()=>{const m=$('#motiveMenu');m.hidden=!m.hidden;$('#motiveBtn').setAttribute('aria-expanded',String(!m.hidden))};
   $('#motiveMenu').onchange=()=>{state.ativos=new Set($$('#motiveMenu input:checked').map(x=>x.value));invalidar();rotulos();render()};
   $('#motivosBtn').onclick=()=>{const m=$('#motivosMenu');m.hidden=!m.hidden;$('#motivosBtn').setAttribute('aria-expanded',String(!m.hidden))};
   $('#motivosMenu').onchange=()=>{state.motivoFiltro=new Set($$('#motivosMenu input:checked').map(x=>x.value));invalidar();rotulos();render()};
   $('#metricSeg').onclick=e=>{const b=e.target.closest('[data-metric]');if(!b)return;state.metric=b.dataset.metric;$$('#metricSeg button').forEach(x=>x.classList.toggle('on',x===b));render()};
   $('#chartSeg').onclick=e=>{const b=e.target.closest('[data-cm]');if(!b)return;state.chartM=b.dataset.cm;$$('#chartSeg button').forEach(x=>x.classList.toggle('on',x===b));render()};
-  $('#clearBtn').onclick=()=>{state.dia='';state.setor='';state.turnoF='';state.cargoF='';state.motivoFiltro=new Set(MOTIVOS);state.turno='';state.cd='';invalidar();$('#turnoFilter').value='';$('#cdFilter').value='';$('#cargoFilter').value='';$$('#motivosMenu input').forEach(i=>i.checked=true);$('#motivosBtn').textContent='Todos os motivos';render()};
+  $('#clearBtn').onclick=()=>{state.dia='';state.setor='';state.turnoF='';state.cargoF='';state.motivoFiltro=new Set(MOTIVOS);state.turno='';state.cd='';state.gestorF='';state.gestorSet=null;invalidar();$('#gestorFilter').value='';$('#turnoFilter').value='';$('#cdFilter').value='';$('#cargoFilter').value='';$$('#motivosMenu input').forEach(i=>i.checked=true);$('#motivosBtn').textContent='Todos os motivos';render()};
   $('#copyBtn').onclick=copiar;
   $('#moreBtn').onclick=()=>{state.pagina++;render()};
   $('#tabs').onclick=e=>{const b=e.target.closest('.tab');if(!b)return;state.vista=b.dataset.view;state.pagina=1;state.setor='';state.turnoF='';invalidar();
@@ -1229,7 +1371,7 @@ function ligar(){
       else if(t==='focoSel'){const s=v.split('|')[0];state.setor=state.setor===s?'':s;state.vista='setores';$$('.tab').forEach(x=>x.classList.toggle('on',x.dataset.view==='setores'))}
       else state[t]=state[t]===v?'':v;invalidar();
       render();return}
-    const u=e.target.closest('[data-act="unf"]');if(u){const k=u.dataset.k;if(k==='pessoa')limparBusca();else{state[k]='';invalidar();render()}}
+    const u=e.target.closest('[data-act="unf"]');if(u){const k=u.dataset.k;if(k==='pessoa')limparBusca();else{state[k]='';if(k==='gestorF')recalcGestor();invalidar();render()}}
   };
   $('#viewBody').onclick=aoClicar;
   $('#tableWrap').onclick=aoClicar;
@@ -1274,7 +1416,8 @@ async function carga(){
     const outrosP=Promise.all([
       pega(T.feriado,'id,DTA,FERIADO',{},'id.asc').catch(()=>[]),
       pegaMes(T.just,JUST_SEL,state.ano,state.mes,'DTA.asc,id.asc').catch(()=>[]),
-      pegaMes(T.ferias,'DTA,MATRICULA',state.ano,state.mes,'DTA.asc').catch(()=>[])
+      pegaMes(T.ferias,'DTA,MATRICULA',state.ano,state.mes,'DTA.asc').catch(()=>[]),
+      pegaGestorColab().then(r=>{state.gestorErro='';return r}).catch(e=>{state.gestorErro=String(e.message||e);return[]})
     ]);
     suriP.catch(()=>{});mesP.catch(()=>{});outrosP.catch(()=>{});
     const uAnt=new URL(`${URL_SB}/rest/v1/${encodeURIComponent(T.quadro)}`);uAnt.searchParams.set('select','DTA');uAnt.searchParams.set('DTA','lt.'+L.ini);uAnt.searchParams.set('order','DTA.desc');uAnt.searchParams.set('limit','1');
@@ -1282,7 +1425,8 @@ async function carga(){
     const ant=(await rAnt.json())[0]?.DTA||null;
     const prev=ant?await pega(T.quadro,SEL,{DTA:'eq.'+ant},'DTA.asc,id.asc'):[];
     const mes=await mesP;
-    const[feriados,just,ferias]=await outrosP;
+    const[feriados,just,ferias,gestRows]=await outrosP;
+    aplicarGestorRows(gestRows);
     state.snapshots=snapshots([...prev,...mes]);
     state.feriados=new Set(feriados.map(r=>diaLocal(r.DTA)).filter(Boolean));
     aplicarJustRows(just);
@@ -1395,6 +1539,7 @@ async function carga(){
     if(state.diasParciais.size)extra.push(`${state.diasParciais.size} dia(s) com carga parcial (sem falta)`);
     if(state.turnoSemDado.size)extra.push(`${state.turnoSemDado.size} turno/dia sem carga confiável (sem falta)`);
     if(state.semRegistroMes.size)extra.push(`${state.semRegistroMes.size} sem registro no mês`);
+    if(state.gestorErro)extra.push('ABS_GESTOR_COLAB indisponível: '+state.gestorErro);
     status('ok',`Dados carregados em ${((performance.now()-t0)/1000).toFixed(1)}s · ${nf.format(state.present.size)} presenças · ${sd} dia(s) sem carga de presença · ${state.feriados.size} feriado(s)`+(extra.length?' · '+extra.join(' · '):''))
   }catch(e){state.erro=String(e.message||e);status('error','Falha na consulta');$('#viewBody').innerHTML=`<div class="err"><b>Não foi possível carregar os dados.</b><br>${esc(state.erro)}<br><br>Verifique a conexão com o Supabase (a chave anônima está embutida no arquivo) e se o mês selecionado possui dados.</div>`}
   finally{ocupado(false)}
@@ -1425,6 +1570,7 @@ function preencherFiltros(){
   fill('#turnoFilter',turnos,state.turno,'Todos os turnos');
   fill('#cdFilter',cds,state.cd,'Todos os CDs');
   fill('#cargoFilter',cargos,state.cargoF,'Todos os cargos');
+  preencherGestores();
   $('#motiveMenu').innerHTML=MOTIVOS.map(c=>`<label class="check"><input type="checkbox" value="${c}" ${state.ativos.has(c)?'checked':''}> ${c} · ${MOTIVO_NOME[c]||c}</label>`).join('');
   const arr=MOTIVOS.filter(c=>state.ativos.has(c));
   $('#motiveBtn').textContent=arr.length===MOTIVOS.length?'Todos os motivos':arr.length?arr.join(', '):'Nenhum motivo';
@@ -1440,7 +1586,7 @@ const mvIni=mesInicial.match(/^(\d{4})-(\d{2})$/);
 if(mvIni){state.ano=+mvIni[1];state.mes=+mvIni[2];state.dias=diasDoMes(state.ano,state.mes)}
 const qv=QS.get('view');
 if(qv&&['macro','setores','turnos','pessoas'].includes(qv)){state.vista=qv;$$('.tab').forEach(x=>x.classList.toggle('on',x.dataset.view===qv))}
-if(window.__ABS_TEST__){window.__ABS_TEST__({parseDTA,cicloOperacional,diaLocal,horaLocal,normMat,classificar,padroesSuricatoDia,diasCivisSuricato,turnoConsiderado,pega,pegaKeyset,PAG,pegaSuricatoMes,modeloDia,statusDe,state});}
+if(window.__ABS_TEST__){window.__ABS_TEST__({parseDTA,cicloOperacional,diaLocal,horaLocal,normMat,classificar,padroesSuricatoDia,diasCivisSuricato,turnoConsiderado,pega,pegaKeyset,PAG,pegaSuricatoMes,modeloDia,statusDe,state,aplicarGestorRows,recalcGestor,filtroFixo});}
 else{ligar();carga();
   /* Atualização automática a cada 60 min, sem sobrepor uma carga em andamento. */
   setInterval(()=>{if(!state.carregando)carga()},60*60*1000);}
