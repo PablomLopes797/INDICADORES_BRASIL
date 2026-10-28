@@ -2027,7 +2027,7 @@ function rowFilterFor(key, r){
   }
 }
 
-function openDrill(rowKey, colKey, colIdx){
+function openDrill(rowKey, colKey, colIdx, noScroll=false){
   const rowDef = ROWS.find(r => r.key === rowKey) || { label: rowKey, color: '#60a5fa' };
   const agg = aggregate();
   const col = agg.cols[colIdx];
@@ -2059,7 +2059,7 @@ function openDrill(rowKey, colKey, colIdx){
 
   renderDrillList('drillListFornecedor', topForn);
   renderDrillList('drillListCarga', topCarga);
-  document.getElementById('drillCard').scrollIntoView({ behavior:'smooth', block:'nearest' });
+  if(!noScroll) document.getElementById('drillCard').scrollIntoView({ behavior:'smooth', block:'nearest' });
 }
 
 function renderDrillList(hostId, list){
@@ -2089,7 +2089,7 @@ function renderDrill(agg){
   const { rowKey, colKey } = state.drill;
   const colIdx = agg.cols.findIndex(c => c.key === colKey);
   if (colIdx < 0) return;
-  openDrill(rowKey, colKey, colIdx);
+  openDrill(rowKey, colKey, colIdx, true);
 }
 
 /* ============================================================================
@@ -2520,9 +2520,13 @@ async function fetchAllFromTable(tableName){
   return all;
 }
 
-async function loadData(force=false, syncSources=false){
+let carregandoDados = false;
+
+async function loadData(force=false, syncSources=false, silent=false){
   if(!force&&state.dataLoaded){render();return true;}
-  showLoader(true,'Carregando bases, calculando turnos e gravando BD_RESULTADOS…');
+  if(carregandoDados)return false;          // evita duas cargas ao mesmo tempo
+  carregandoDados = true;
+  if(!silent)showLoader(true,'Carregando bases, calculando turnos e gravando BD_RESULTADOS…');
   try{
     const [agendaRows,cargasRows,sobrepostosRows,recusaRows]=await Promise.all([
       fetchAllFromTable(TABLE_AGENDA),
@@ -2535,7 +2539,7 @@ async function loadData(force=false, syncSources=false){
     state.rawCargas=cargasRows;
     state.rawSobrepostos=sobrepostosRows||[];
     state.rawRecusa=recusaRows||[];
-    if(syncSources){
+    if(syncSources&&!silent){
       const {ok,fail}=await syncCargasComAgenda();
       if(ok){state.rawCargas=await fetchAllFromTable(TABLE_CARGAS);toast('Sincronização',`${ok} registro(s) atualizado(s).`,'ok');}
       if(fail)toast('Sincronização parcial',`${fail} atualização(ões) falharam.`,'warn');
@@ -2547,23 +2551,32 @@ async function loadData(force=false, syncSources=false){
       `AGENDA: ${nfInt.format(state.rawAgenda.length)} · CARGAS_RECEBIDAS: ${nfInt.format(state.rawCargas.length)} · SOBREPOSTOS: ${nfInt.format(state.rawSobrepostos.length)} · RECUSA: ${nfInt.format((state.rawRecusa||[]).length)}`;
 
     const computed=calcularResultados();
-    await gravarResultados(computed);
+    if(!silent)await gravarResultados(computed);   // auto-refresh NÃO grava no banco
     const cache={};
     computed.forEach(row=>cache[chaveResultado(row.DATA,row.TURNO)]=row);
     state.computedResultadosPorTurno={...cache};
     state.resultadosPorTurno={...cache};
     await loadComments();
     state.dataLoaded=true;
-    updatePeriodHints();
-    updateEditHint();
+    if(!silent){updatePeriodHints();updateEditHint();}
+
+    // na atualização silenciosa, desliga a animação dos gráficos para não "piscar"
+    const animAntes=Chart.defaults.animation;
+    if(silent)Chart.defaults.animation=false;
     render();
+    if(silent)Chart.defaults.animation=animAntes;
     return true;
   }catch(e){
     console.error(e);
-    state.dataLoaded=false;
-    toast('Erro ao carregar/gravar',e.message||String(e),'err');
+    if(!silent){
+      state.dataLoaded=false;
+      toast('Erro ao carregar/gravar',e.message||String(e),'err');
+    }
     return false;
-  }finally{showLoader(false);}
+  }finally{
+    carregandoDados=false;
+    if(!silent)showLoader(false);
+  }
 }
 
 /* ============================================================================
@@ -2782,6 +2795,7 @@ function bindEvents(){
   document.getElementById('btnLogout').addEventListener('click', () => {
     if (!confirm('Deseja sair do painel?')) return;
     clearSession();
+    stopAutoRefresh();
     limparCacheSessao();
     appBooted=false;
     state.user = null;
@@ -2844,6 +2858,37 @@ function bindEvents(){
 }
 
 /* ============================================================================
+   AUTO-REFRESH (1 min, silencioso)
+   ============================================================================ */
+const AUTO_REFRESH_MS = 60 * 1000;
+let autoRefreshTimer = null;
+let ultimaAtualizacao = Date.now();
+
+function algumModalAberto(){
+  return !!document.querySelector('.overlay.show') ||
+         document.getElementById('loader').classList.contains('show');
+}
+async function autoRefresh(){
+  if(!state.user || !appBooted) return;   // não logado
+  if(document.hidden) return;             // aba em segundo plano
+  if(algumModalAberto()) return;          // usuário digitando/editando
+  if(carregandoDados) return;
+  const ok = await loadData(true,false,true);
+  if(ok) ultimaAtualizacao = Date.now();
+}
+function startAutoRefresh(){
+  stopAutoRefresh();
+  autoRefreshTimer = setInterval(autoRefresh, AUTO_REFRESH_MS);
+}
+function stopAutoRefresh(){
+  if(autoRefreshTimer){clearInterval(autoRefreshTimer);autoRefreshTimer=null;}
+}
+document.addEventListener('visibilitychange',()=>{
+  // ao voltar para a aba, atualiza na hora se já passou 1 min
+  if(!document.hidden && Date.now()-ultimaAtualizacao >= AUTO_REFRESH_MS) autoRefresh();
+});
+
+/* ============================================================================
    BOOTSTRAP
    ============================================================================ */
 let appBooted = false;
@@ -2857,6 +2902,8 @@ async function bootstrapApp(){
   mesInput.max = todayISO().slice(0,7);
   await loadData(true,false);
   mostrarBotoesAtualizacao();
+  ultimaAtualizacao = Date.now();
+  startAutoRefresh();
 }
 
 (async function init(){
