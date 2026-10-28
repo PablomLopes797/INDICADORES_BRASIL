@@ -34,11 +34,11 @@
     }
 
     body.correto {
-      background: #087b39; /* Neon Green */
+      background: #087b39;
     }
 
     body.incorreto {
-      background: #ac1825; /* Neon Red */
+      background: #ac1825;
     }
 
     .aplicacao {
@@ -63,7 +63,6 @@
     h1 {
       margin: 0 0 6px;
       font-size: 23px;
-      text-shadow: 0 0 8px #38bdf8, 0 0 15px #38bdf8; /* Neon Blue Glow */
     }
 
     header p {
@@ -77,15 +76,13 @@
       border: 1px solid #ffffff26;
       border-radius: 18px;
       background: #02061755;
-      box-shadow: 0 0 10px rgba(56, 189, 248, 0.5); /* Neon Blue Accent */
     }
 
     label {
       display: block;
       margin-bottom: 10px;
       font-weight: 700;
-      color: #38bdf8; /* Neon Blue */
-      text-shadow: 0 0 5px #38bdf8;
+      color: #38bdf8;
     }
 
     input,
@@ -104,12 +101,10 @@
       color: #0f172a;
       border: 3px solid transparent;
       outline: none;
-      box-shadow: 0 0 8px rgba(56, 189, 248, 0.7); /* Neon Blue Inset */
     }
 
     input:focus {
       border-color: #38bdf8;
-      box-shadow: 0 0 15px #38bdf8, 0 0 25px #38bdf8; /* Intense Neon Blue Focus */
     }
 
     input:disabled {
@@ -124,12 +119,11 @@
       color: #082f49;
       font-weight: 800;
       cursor: pointer;
-      box-shadow: 0 0 8px rgba(56, 189, 248, 0.7); /* Neon Blue Button Glow */
       transition: box-shadow 0.3s ease;
     }
 
     button:hover {
-      box-shadow: 0 0 15px #38bdf8, 0 0 25px #38bdf8; /* Enhanced Neon Glow on Hover */
+      box-shadow: 0 0 15px #38bdf8, 0 0 25px #38bdf8;
     }
 
     button:disabled {
@@ -158,7 +152,6 @@
       font-size: 13px;
       color: #cbd5e1;
       letter-spacing: 2px;
-      text-shadow: 0 0 5px #fff; /* Subtle White Glow */
     }
 
     .doca {
@@ -167,8 +160,7 @@
       line-height: 1;
       font-weight: 900;
       overflow-wrap: anywhere;
-      color: #fde047; /* Neon Yellow */
-      text-shadow: 0 0 10px #fde047, 0 0 20px #fde047;
+      color: #fde047;
     }
 
     .carga {
@@ -176,8 +168,7 @@
       font-size: clamp(25px, 8vw, 36px);
       font-weight: 800;
       overflow-wrap: anywhere;
-      color: #fde047; /* Neon Yellow */
-      text-shadow: 0 0 8px #fde047, 0 0 15px #fde047;
+      color: #fde047;
     }
 
     .estado {
@@ -187,7 +178,6 @@
       font-weight: 700;
       line-height: 1.4;
       color: #fff;
-      text-shadow: 0 0 5px #fff;
     }
 
     .ajuda {
@@ -213,11 +203,9 @@
       text-align: center;
       font-size: 24px;
       font-weight: 800;
-      color: #38bdf8; /* Neon Blue */
-      text-shadow: 0 0 8px #38bdf8;
+      color: #38bdf8;
     }
 
-    /* Em dispositivos tácteis, exige a utilização na vertical. */
     @media (orientation: landscape) and (hover: none) and (pointer: coarse) {
       .rodar {
         display: flex;
@@ -227,6 +215,56 @@
         visibility: hidden;
       }
     }
+
+    /* Estilos para o formulário de login */
+    .login-container {
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: max(18px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom));
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+      text-align: center;
+    }
+
+    .login-container h2 {
+      margin-bottom: 20px;
+      color: #38bdf8;
+    }
+
+    .login-container input {
+      margin-bottom: 10px;
+    }
+
+    .login-container .login-button {
+      background: #38bdf8;
+      color: #082f49;
+      font-weight: 800;
+    }
+
+    .criar-usuario-container {
+      margin-top: 30px;
+      padding: 20px;
+      border: 1px solid #ffffff26;
+      border-radius: 18px;
+      background: #02061755;
+    }
+
+    .criar-usuario-container h3 {
+      margin-bottom: 15px;
+      color: #fde047;
+    }
+
+    .criar-usuario-container input {
+      margin-bottom: 10px;
+    }
+
+    .criar-usuario-container button {
+      background: #fde047;
+      color: #082f49;
+    }
   </style>
 </head>
 
@@ -235,7 +273,55 @@
     Roda o dispositivo para a posição vertical.
   </div>
 
-  <main class="aplicacao">
+  <div id="loginScreen" class="login-container">
+    <h2>Login</h2>
+    <form id="loginForm">
+      <input
+        id="matricula"
+        type="text"
+        placeholder="Matrícula"
+        required
+        autofocus
+      >
+      <input
+        id="senha"
+        type="password"
+        placeholder="Senha"
+        required
+      >
+      <button type="submit" class="login-button">Entrar</button>
+    </form>
+    <p id="loginError" style="color: red;"></p>
+
+    <div id="criarUsuarioSection" class="criar-usuario-container" hidden>
+      <h3>Criar Novo Usuário</h3>
+      <form id="criarUsuarioForm">
+        <input
+          id="novoUser"
+          type="text"
+          placeholder="Usuário (ex: 12345678)"
+          required
+        >
+        <input
+          id="novaSenha"
+          type="password"
+          placeholder="Nova Senha"
+          required
+        >
+        <input
+          id="novoNome"
+          type="text"
+          placeholder="Nome Completo"
+          required
+        >
+        <button type="submit">Salvar Usuário</button>
+      </form>
+      <p id="criarUsuarioError" style="color: red;"></p>
+      <p id="criarUsuarioSuccess" style="color: green;"></p>
+    </div>
+  </div>
+
+  <main id="aplicacao" class="aplicacao" hidden>
     <header>
       <h1>Validação de docas</h1>
       <p>Lê a etiqueta da carga e confirma a doca.</p>
@@ -325,10 +411,25 @@
     const SUPABASE_URL = "https://jgtisruauiajjfoesvol.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpndGlzcnVhdWlhampmb2Vzdm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1OTY3NjYsImV4cCI6MjEwMzE3Mjc2Nn0.yiAsD6c06UEauyAUCFYs0KQnuWBVfLAeP_oYE8yGOwQ"; // Chave anónima
     const TABELA = "EXP_DOCAS_CARGAS";
+    const TABELA_USUARIOS = "USER_SEP"; // Tabela para usuários
 
     const $ = (id) => document.getElementById(id);
 
     const elementos = {
+      loginScreen: $("loginScreen"),
+      loginForm: $("loginForm"),
+      matriculaInput: $("matricula"),
+      senhaInput: $("senha"),
+      loginError: $("loginError"),
+      criarUsuarioSection: $("criarUsuarioSection"),
+      criarUsuarioForm: $("criarUsuarioForm"),
+      novoUser: $("novoUser"),
+      novaSenha: $("novaSenha"),
+      novoNome: $("novoNome"),
+      criarUsuarioError: $("criarUsuarioError"),
+      criarUsuarioSuccess: $("criarUsuarioSuccess"),
+      aplicacao: $("aplicacao"),
+
       formCarga: $("formCarga"),
       etiqueta: $("etiqueta"),
       consultar: $("consultar"),
@@ -343,6 +444,7 @@
       reiniciar: $("reiniciar")
     };
 
+    let usuarioLogado = null; // Para armazenar a matrícula do usuário logado
     let cargaAtual = null;
     let aConsultar = false;
     let confirmado = false;
@@ -365,7 +467,6 @@
 
       if (!texto) return "";
 
-      // Remove apenas os zeros à esquerda.
       return texto.replace(/^0+/, "") || "0";
     }
 
@@ -373,14 +474,6 @@
       if (!/^\d{13}$/.test(etiqueta)) {
         throw new Error("A etiqueta deve conter exatamente 13 algarismos.");
       }
-
-      /*
-        Exemplo: 0 | 12882365 | 00 | 24
-                 ↓      ↓       ↓    ↓
-              ignorar carga ignorar lote
-
-        Apenas os oito algarismos da carga são utilizados.
-      */
       return etiqueta.slice(1, 9);
     }
 
@@ -459,8 +552,6 @@
           Accept: "application/json"
         };
 
-        // As chaves anon tradicionais são JWT.
-        // As novas publishable usam apenas o cabeçalho apikey.
         if (SUPABASE_KEY.startsWith("eyJ")) {
           cabecalhos.Authorization = `Bearer ${SUPABASE_KEY}`;
         }
@@ -572,7 +663,6 @@
           "correto"
         );
 
-        // Mantém o ecrã verde durante cinco segundos.
         temporizadorReinicio = setTimeout(reiniciar, 5000);
         return;
       }
@@ -583,10 +673,137 @@
         "incorreto"
       );
 
-      // O ecrã permanece vermelho e o campo continua disponível.
       elementos.leituraDoca.value = "";
       elementos.leituraDoca.focus();
     }
+
+    async function fazerLogin() {
+      const matricula = elementos.matriculaInput.value.trim();
+      const senha = elementos.senhaInput.value.trim();
+      elementos.loginError.textContent = "";
+
+      if (!matricula || !senha) {
+        elementos.loginError.textContent = "Por favor, preencha todos os campos.";
+        return;
+      }
+
+      try {
+        const url = new URL(`${SUPABASE_URL}/rest/v1/${TABELA_USUARIOS}`);
+        url.searchParams.set("select", "USER,PASS,NAME");
+        url.searchParams.set("USER", `eq.${matricula}`);
+
+        const cabecalhos = {
+          apikey: SUPABASE_KEY,
+          Accept: "application/json"
+        };
+        if (SUPABASE_KEY.startsWith("eyJ")) {
+          cabecalhos.Authorization = `Bearer ${SUPABASE_KEY}`;
+        }
+
+        const resposta = await fetch(url, {
+          method: "GET",
+          headers: cabecalhos,
+          cache: "no-store"
+        });
+
+        if (!resposta.ok) {
+          throw new Error(`Erro ao consultar usuários: ${resposta.status}`);
+        }
+
+        const usuarios = await resposta.json();
+
+        if (usuarios.length === 0) {
+          elementos.loginError.textContent = "Matrícula não encontrada.";
+          return;
+        }
+
+        const usuario = usuarios[0];
+        if (usuario.PASS === senha) {
+          usuarioLogado = usuario.USER; // Guarda a matrícula do usuário logado
+          elementos.loginScreen.hidden = true;
+          elementos.aplicacao.hidden = false;
+          definirEstado("Login bem-sucedido. Aguardando etiqueta da carga.");
+          elementos.etiqueta.focus();
+
+          // Verifica se o usuário logado tem permissão para criar outros usuários
+          if (usuarioLogado === "5520967") {
+            elementos.criarUsuarioSection.hidden = false;
+          }
+        } else {
+          elementos.loginError.textContent = "Senha incorreta.";
+        }
+      } catch (error) {
+        console.error("Erro no login:", error);
+        elementos.loginError.textContent = "Ocorreu um erro. Tente novamente.";
+      }
+    }
+
+    async function criarUsuario() {
+      const newUser = elementos.novoUser.value.trim();
+      const newPass = elementos.novaSenha.value.trim();
+      const newName = elementos.novoNome.value.trim();
+      elementos.criarUsuarioError.textContent = "";
+      elementos.criarUsuarioSuccess.textContent = "";
+
+      if (!newUser || !newPass || !newName) {
+        elementos.criarUsuarioError.textContent = "Por favor, preencha todos os campos para criar o usuário.";
+        return;
+      }
+
+      // Validação básica para USER (apenas números, e deve ter o tamanho correto se for o caso)
+      if (!/^\d+$/.test(newUser)) {
+        elementos.criarUsuarioError.textContent = "O campo 'Usuário' deve conter apenas números.";
+        return;
+      }
+      // Adicionar mais validações se necessário (ex: tamanho da matrícula)
+
+      try {
+        const url = new URL(`${SUPABASE_URL}/rest/v1/${TABELA_USUARIOS}`);
+        const cabecalhos = {
+          apikey: SUPABASE_KEY,
+          "Content-Type": "application/json",
+          Accept: "application/json"
+        };
+        if (SUPABASE_KEY.startsWith("eyJ")) {
+          cabecalhos.Authorization = `Bearer ${SUPABASE_KEY}`;
+        }
+
+        const novoUsuarioData = {
+          USER: newUser,
+          PASS: newPass,
+          NAME: newName
+        };
+
+        const resposta = await fetch(url, {
+          method: "POST",
+          headers: cabecalhos,
+          body: JSON.stringify(novoUsuarioData),
+          cache: "no-store"
+        });
+
+        if (!resposta.ok) {
+          const errorData = await resposta.json();
+          throw new Error(`Erro ao criar usuário: ${errorData.message || resposta.status}`);
+        }
+
+        elementos.criarUsuarioSuccess.textContent = `Usuário '${newUser}' criado com sucesso!`;
+        elementos.criarUsuarioForm.reset(); // Limpa o formulário
+      } catch (error) {
+        console.error("Erro ao criar usuário:", error);
+        elementos.criarUsuarioError.textContent = error.message;
+      }
+    }
+
+
+    elementos.loginForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      fazerLogin();
+    });
+
+    elementos.criarUsuarioForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      criarUsuario();
+    });
 
     elementos.formCarga.addEventListener("submit", consultarCarga);
     elementos.formDoca.addEventListener("submit", validarDoca);
