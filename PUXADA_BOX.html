@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  >
+  <meta name="theme-color" content="#0f172a">
+  <title>Validação de docas</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      color-scheme: dark;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      background: #0f172a;
+      color: #f8fafc;
+      transition: background-color 180ms ease;
+    }
+
+    body.correto {
+      background: #087b39;
+    }
+
+    body.incorreto {
+      background: #ac1825;
+    }
+
+    .aplicacao {
+      width: 100%;
+      max-width: 480px;
+      height: 100dvh;
+      margin: 0 auto;
+      padding:
+        max(18px, env(safe-area-inset-top))
+        18px
+        max(18px, env(safe-area-inset-bottom));
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+    }
+
+    header {
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 23px;
+    }
+
+    header p {
+      margin: 0;
+      color: #cbd5e1;
+      font-size: 14px;
+    }
+
+    .painel {
+      padding: 18px;
+      border: 1px solid #ffffff26;
+      border-radius: 18px;
+      background: #02061755;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    input,
+    button {
+      width: 100%;
+      min-height: 54px;
+      border-radius: 12px;
+      font: inherit;
+      font-size: 18px;
+    }
+
+    input {
+      min-width: 0;
+      padding: 12px;
+      background: #fff;
+      color: #0f172a;
+      border: 3px solid transparent;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #38bdf8;
+    }
+
+    input:disabled {
+      opacity: 0.55;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 10px;
+      border: 0;
+      background: #38bdf8;
+      color: #082f49;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .secundario {
+      background: transparent;
+      color: #fff;
+      border: 1px solid #ffffff66;
+    }
+
+    .resultado {
+      text-align: center;
+    }
+
+    .legenda {
+      margin: 0;
+      font-size: 13px;
+      color: #cbd5e1;
+      letter-spacing: 2px;
+    }
+
+    .doca {
+      margin: 4px 0 20px;
+      font-size: clamp(52px, 15vw, 82px);
+      line-height: 1;
+      font-weight: 900;
+      overflow-wrap: anywhere;
+    }
+
+    .carga {
+      margin: 5px 0 0;
+      font-size: clamp(25px, 8vw, 36px);
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .estado {
+      min-height: 48px;
+      margin: 0;
+      text-align: center;
+      font-weight: 700;
+      line-height: 1.4;
+    }
+
+    .ajuda {
+      margin: 10px 0 0;
+      color: #cbd5e1;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    .rodar {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      padding: 30px;
+      background: #0f172a;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    /* Em dispositivos tácteis, exige a utilização na vertical. */
+    @media (orientation: landscape) and (hover: none) and (pointer: coarse) {
+      .rodar {
+        display: flex;
+      }
+
+      .aplicacao {
+        visibility: hidden;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="rodar" role="alert">
+    Roda o dispositivo para a posição vertical.
+  </div>
+
+  <main class="aplicacao">
+    <header>
+      <h1>Validação de docas</h1>
+      <p>Lê a etiqueta da carga e confirma a doca.</p>
+    </header>
+
+    <section class="painel">
+      <form id="formCarga" autocomplete="off">
+        <label for="etiqueta">1. Ler etiqueta da carga</label>
+
+        <input
+          id="etiqueta"
+          type="text"
+          inputmode="numeric"
+          placeholder="0128823650024"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          enterkeyhint="search"
+          autofocus
+          required
+        >
+
+        <button id="consultar" type="submit">
+          Consultar carga
+        </button>
+
+        <p class="ajuda">
+          A leitura é automática ao receber os 13 algarismos.
+          Também podes premir Enter.
+        </p>
+      </form>
+    </section>
+
+    <section id="resultado" class="painel resultado" hidden>
+      <p class="legenda">DOCA</p>
+      <div id="numeroDoca" class="doca">—</div>
+
+      <p class="legenda">CARGA</p>
+      <div id="numeroCarga" class="carga">—</div>
+    </section>
+
+    <section id="painelDoca" class="painel" hidden>
+      <form id="formDoca" autocomplete="off">
+        <label for="leituraDoca">2. Ler etiqueta da doca</label>
+
+        <input
+          id="leituraDoca"
+          type="text"
+          placeholder="Lê a doca aqui"
+          autocomplete="off"
+          autocapitalize="characters"
+          spellcheck="false"
+          enterkeyhint="done"
+          required
+        >
+
+        <button id="validar" type="submit">
+          Validar doca
+        </button>
+
+        <p class="ajuda">
+          Aceita a doca completa, como 000000070A, ou sem os
+          zeros iniciais, como 70A. Configura o leitor para
+          terminar a leitura com Enter.
+        </p>
+      </form>
+    </section>
+
+    <p
+      id="estado"
+      class="estado"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      Aguardando etiqueta da carga.
+    </p>
+
+    <button id="reiniciar" class="secundario" type="button" hidden>
+      Cancelar e ler outra carga
+    </button>
+  </main>
+
+  <script>
+    "use strict";
+
+    const SUPABASE_URL = "https://jgtisruauiajjfoesvol.supabase.co";
+    const SUPABASE_KEY = "COLOQUE_AQUI_A_CHAVE_PUBLICA";
+    const TABELA = "EXP_DOCAS_CARGAS";
+
+    const $ = (id) => document.getElementById(id);
+
+    const elementos = {
+      formCarga: $("formCarga"),
+      etiqueta: $("etiqueta"),
+      consultar: $("consultar"),
+      resultado: $("resultado"),
+      numeroDoca: $("numeroDoca"),
+      numeroCarga: $("numeroCarga"),
+      painelDoca: $("painelDoca"),
+      formDoca: $("formDoca"),
+      leituraDoca: $("leituraDoca"),
+      validar: $("validar"),
+      estado: $("estado"),
+      reiniciar: $("reiniciar")
+    };
+
+    let cargaAtual = null;
+    let aConsultar = false;
+    let confirmado = false;
+    let pedidoAtual = null;
+    let temporizadorLeitura = null;
+    let temporizadorReinicio = null;
+
+    function definirEstado(mensagem, tipo = "") {
+      document.body.classList.remove("correto", "incorreto");
+
+      if (tipo) {
+        document.body.classList.add(tipo);
+      }
+
+      elementos.estado.textContent = mensagem;
+    }
+
+    function normalizarDoca(valor) {
+      const texto = String(valor ?? "").trim().toUpperCase();
+
+      if (!texto) return "";
+
+      // Remove apenas os zeros à esquerda.
+      return texto.replace(/^0+/, "") || "0";
+    }
+
+    function extrairCarga(etiqueta) {
+      if (!/^\d{13}$/.test(etiqueta)) {
+        throw new Error("A etiqueta deve conter exatamente 13 algarismos.");
+      }
+
+      /*
+        Exemplo: 0 | 12882365 | 00 | 24
+                 ↓      ↓       ↓    ↓
+              ignorar carga ignorar lote
+
+        Apenas os oito algarismos da carga são utilizados.
+      */
+      return etiqueta.slice(1, 9);
+    }
+
+    function reiniciar() {
+      clearTimeout(temporizadorLeitura);
+      clearTimeout(temporizadorReinicio);
+
+      if (pedidoAtual) {
+        pedidoAtual.abort();
+        pedidoAtual = null;
+      }
+
+      cargaAtual = null;
+      aConsultar = false;
+      confirmado = false;
+
+      elementos.etiqueta.value = "";
+      elementos.etiqueta.disabled = false;
+      elementos.consultar.disabled = false;
+      elementos.leituraDoca.value = "";
+      elementos.leituraDoca.disabled = false;
+      elementos.validar.disabled = false;
+
+      elementos.resultado.hidden = true;
+      elementos.painelDoca.hidden = true;
+      elementos.reiniciar.hidden = true;
+
+      elementos.numeroDoca.textContent = "—";
+      elementos.numeroCarga.textContent = "—";
+
+      definirEstado("Aguardando etiqueta da carga.");
+      elementos.etiqueta.focus();
+    }
+
+    async function consultarCarga(evento) {
+      evento?.preventDefault();
+      clearTimeout(temporizadorLeitura);
+
+      if (aConsultar || cargaAtual) return;
+
+      let numeroCarga;
+
+      try {
+        numeroCarga = extrairCarga(elementos.etiqueta.value.trim());
+
+        if (SUPABASE_KEY === "COLOQUE_AQUI_A_CHAVE_PUBLICA") {
+          throw new Error("Configura a chave pública do Supabase no HTML.");
+        }
+      } catch (erro) {
+        definirEstado(erro.message, "incorreto");
+        elementos.etiqueta.focus();
+        elementos.etiqueta.select();
+        return;
+      }
+
+      aConsultar = true;
+      elementos.etiqueta.disabled = true;
+      elementos.consultar.disabled = true;
+      definirEstado("A consultar a carga…");
+
+      const controlador = new AbortController();
+      pedidoAtual = controlador;
+
+      const limiteTempo = setTimeout(() => controlador.abort(), 15000);
+
+      try {
+        const url = new URL(
+          `${SUPABASE_URL}/rest/v1/${TABELA}`
+        );
+
+        url.searchParams.set("select", "CARGA,DOCA");
+        url.searchParams.set("CARGA", `eq.${numeroCarga}`);
+
+        const cabecalhos = {
+          apikey: SUPABASE_KEY,
+          Accept: "application/json"
+        };
+
+        // As chaves anon tradicionais são JWT.
+        // As novas publishable usam apenas o cabeçalho apikey.
+        if (SUPABASE_KEY.startsWith("eyJ")) {
+          cabecalhos.Authorization = `Bearer ${SUPABASE_KEY}`;
+        }
+
+        const resposta = await fetch(url, {
+          method: "GET",
+          headers: cabecalhos,
+          signal: controlador.signal,
+          cache: "no-store"
+        });
+
+        if (!resposta.ok) {
+          throw new Error(
+            `Não foi possível consultar o Supabase (HTTP ${resposta.status}). ` +
+            "Verifica a chave e as permissões da tabela."
+          );
+        }
+
+        const registos = await resposta.json();
+
+        if (!Array.isArray(registos) || registos.length === 0) {
+          throw new Error(`Carga ${numeroCarga} não encontrada.`);
+        }
+
+        if (
+          registos.some(
+            (registo) => !String(registo.DOCA ?? "").trim()
+          )
+        ) {
+          throw new Error("Existe um registo desta carga sem doca definida.");
+        }
+
+        const docas = [
+          ...new Set(
+            registos.map((registo) => normalizarDoca(registo.DOCA))
+          )
+        ];
+
+        if (docas.length !== 1) {
+          throw new Error(
+            "Esta carga tem várias docas no sistema. " +
+            "Confirma os dados antes de continuar."
+          );
+        }
+
+        cargaAtual = {
+          numero: numeroCarga,
+          doca: docas[0]
+        };
+
+        elementos.numeroCarga.textContent = cargaAtual.numero;
+        elementos.numeroDoca.textContent = cargaAtual.doca;
+
+        elementos.resultado.hidden = false;
+        elementos.painelDoca.hidden = false;
+        elementos.reiniciar.hidden = false;
+
+        definirEstado("Carga encontrada. Lê agora a etiqueta da doca.");
+        elementos.leituraDoca.focus();
+      } catch (erro) {
+        definirEstado(
+          erro.name === "AbortError"
+            ? "A consulta excedeu o tempo de espera. Tenta novamente."
+            : erro.message,
+          "incorreto"
+        );
+      } finally {
+        clearTimeout(limiteTempo);
+
+        if (pedidoAtual === controlador) {
+          pedidoAtual = null;
+        }
+
+        aConsultar = false;
+
+        if (!cargaAtual) {
+          elementos.etiqueta.disabled = false;
+          elementos.consultar.disabled = false;
+          elementos.etiqueta.focus();
+          elementos.etiqueta.select();
+        }
+      }
+    }
+
+    function validarDoca(evento) {
+      evento.preventDefault();
+
+      if (!cargaAtual || confirmado) return;
+
+      const docaLida = normalizarDoca(
+        elementos.leituraDoca.value
+      );
+
+      if (!docaLida) {
+        elementos.leituraDoca.focus();
+        return;
+      }
+
+      if (docaLida === cargaAtual.doca) {
+        confirmado = true;
+
+        elementos.leituraDoca.disabled = true;
+        elementos.validar.disabled = true;
+        elementos.reiniciar.hidden = true;
+
+        definirEstado(
+          `DOCA CORRETA! Carga ${cargaAtual.numero} confirmada ` +
+          `na doca ${cargaAtual.doca}.`,
+          "correto"
+        );
+
+        // Mantém o ecrã verde durante cinco segundos.
+        temporizadorReinicio = setTimeout(reiniciar, 5000);
+        return;
+      }
+
+      definirEstado(
+        `DOCA INCORRETA! Leste ${docaLida}. ` +
+        `A doca correta é ${cargaAtual.doca}. Lê novamente.`,
+        "incorreto"
+      );
+
+      // O ecrã permanece vermelho e o campo continua disponível.
+      elementos.leituraDoca.value = "";
+      elementos.leituraDoca.focus();
+    }
+
+    elementos.formCarga.addEventListener("submit", consultarCarga);
+    elementos.formDoca.addEventListener("submit", validarDoca);
+    elementos.reiniciar.addEventListener("click", reiniciar);
+
+    elementos.etiqueta.addEventListener("input", () => {
+      clearTimeout(temporizadorLeitura);
+
+      if (/^\d{13}$/.test(elementos.etiqueta.value.trim())) {
+        temporizadorLeitura = setTimeout(consultarCarga, 180);
+      }
+    });
+  </script>
+</body>
+</html>
