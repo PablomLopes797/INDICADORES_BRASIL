@@ -57,7 +57,6 @@
         <div class="import-summary"><div><h3 id="importTitle">Importar CSV</h3><p id="importSubtitle">Selecione o arquivo para iniciar a validação.</p></div><span class="pill" id="tablePill">TABELA</span></div>
         <div class="file-row"><div class="field"><label for="csvFile">ARQUIVO CSV (UTF-8)</label><input id="csvFile" type="file" accept=".csv,text/csv,.txt,text/plain"></div><div class="field"><label for="delimiterMode">SEPARADOR</label><select id="delimiterMode"><option value="auto">Detectar</option><option value="semicolon">Ponto e vírgula (;)</option><option value="comma">Vírgula (,)</option></select></div><button class="btn btn-primary" id="loadFile" type="button" disabled>CARREGAR</button></div>
         <p class="helper" id="fileHint">Aceita separador vírgula ou ponto e vírgula. A prévia mostra os registros válidos e os erros antes de qualquer envio.</p>
-        <details class="advanced"><summary>Autorização opcional (JWT anon deste mesmo projeto)</summary><div class="field"><label for="anonJwt">JWT anon de sessão</label><input id="anonJwt" type="password" autocomplete="off" placeholder="Deixe vazio para usar somente a chave publicável"><span class="helper">Não cole chave secret/service_role. O JWT fica apenas na memória desta página e não é salvo. A chave `sb_publishable` será enviada no cabeçalho `apikey`; não é um JWT e não é usada como Bearer.</span></div></details>
         <div class="warning"><span class="warn-icon">!</span><span>Envio em modo <b>inserção</b>: sem UPSERT, exclusão ou deduplicação automática. Matrícula sozinha não é tratada como chave única. Confirme que a prévia corresponde ao arquivo correto.</span></div>
         <div id="suricatoDedupePanel" class="dedupe-panel" hidden>
           <p class="helper"><b>Chave de duplicidade:</b> DTA + MATRICULA. A limpeza mantém um registro por chave e remove os demais. É necessário que ABS_SURICATO tenha uma coluna única <code>id</code> para excluir somente as cópias.</p>
@@ -88,7 +87,7 @@
     feriasView: $('#feriasView'), importer: $('#importView'), result: $('#resultView'),
     file: $('#csvFile'), load: $('#loadFile'), preview: $('#previewArea'), confirm: $('#confirmImport'),
     title: $('#importTitle'), subtitle: $('#importSubtitle'), table: $('#tablePill'),
-    jwt: $('#anonJwt'), dedupePanel: $('#suricatoDedupePanel'), dedupeButton: $('#dedupeSuricato'), progress: $('#progressWrap'), progressLabel: $('#progressLabel'),
+    dedupePanel: $('#suricatoDedupePanel'), dedupeButton: $('#dedupeSuricato'), progress: $('#progressWrap'), progressLabel: $('#progressLabel'),
     progressPercent: $('#progressPercent'), progressBar: $('#progressBar'), toast: $('#toast'),
     feriasFile: $('#xlsxFile'), feriasLoad: $('#loadXlsx'), feriasConfirm: $('#confirmFerias'),
     feriasPreview: $('#feriasPreviewArea'), feriasProgress: $('#feriasProgressWrap'),
@@ -136,7 +135,6 @@
     ui.confirm.disabled = true;
     ui.preview.replaceChildren();
     ui.progress.hidden = true;
-    ui.jwt.value = '';
     ui.dedupePanel.hidden = true;
     feriasPending = null;
     ui.feriasFile.value = '';
@@ -171,7 +169,6 @@
     selectedModule = module;
     ui.importer.querySelector('.warning').hidden = false;
     ui.dedupePanel.hidden = module !== 'suricato';
-    ui.jwt.closest('details').hidden = module === 'suricato';
     pending = null;
     ui.file.value = '';
     ui.load.disabled = true;
@@ -485,8 +482,7 @@
   }
   function apiHeaders(includeJson = false) {
     const headers = { apikey: SUPABASE_PUBLISHABLE_KEY, Accept: 'application/json' };
-    const jwt = ui.jwt.value.trim() || SUPABASE_ANON_JWT;
-    if (jwt) headers.Authorization = `Bearer ${jwt}`;
+    headers.Authorization = `Bearer ${SUPABASE_ANON_JWT}`;
     if (includeJson) {
       headers['Content-Type'] = 'application/json';
       headers.Prefer = 'return=minimal';
