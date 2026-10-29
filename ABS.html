@@ -281,7 +281,7 @@ td.nd{color:var(--quiet)}
     <div>
       <div class="eyebrow">GESTÃO · QUADRO VIGENTE POR DATA · DADOS REAIS DO SUPABASE</div>
       <h1>Mapa de <span>absenteísmo</span></h1>
-      <p>ABS = ausência apurada (falta sem registro de presença no Suricato ou justificativa contabilizada). Presentes = registro de presença no Suricato. Domingos e feriados não geram falta. Dias sem carga de presença ficam fora da apuração — nunca aparecem como 100% de absenteísmo. Toda a tela (cards, gráficos, TOTAL CD, CD SETORES e tabela) lê a mesma agregação.</p>
+      <p>ABS = ausência apurada (falta sem registro de presença no Suricato ou justificativa contabilizada). Presentes = registro de presença no Suricato. Domingos e feriados não geram falta. A ausência de registro de presença é contabilizada como falta, mesmo sem carga no período, exceto domingos, feriados, férias, justificativas e a regra do 4º turno aos sábados. Toda a tela (cards, gráficos, TOTAL CD, CD SETORES e tabela) lê a mesma agregação.</p>
     </div>
     <form id="monthForm">
       <div class="field"><label for="monthInput">MÊS DE REFERÊNCIA</label><input id="monthInput" type="month" required></div>
@@ -344,7 +344,7 @@ td.nd{color:var(--quiet)}
           <button class="sclr" id="searchClear" type="button" hidden aria-label="Limpar">✕</button>
         </div>
         <div class="sg" id="suggest" hidden></div>
-        <div class="lgd" id="legendaPess" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:9.5px;color:var(--muted);padding:2px 0 8px"><b style="color:var(--text);font-size:10px;letter-spacing:.6px">LEGENDA</b><span><i style="background:rgba(248,113,113,.7);width:8px;height:8px;display:inline-block;border-radius:2px;margin-right:4px;vertical-align:middle"></i>F/AT/AF · ABS</span><span><i style="background:rgba(52,211,153,.7);width:8px;height:8px;display:inline-block;border-radius:2px;margin-right:4px;vertical-align:middle"></i>P · presença</span><span><i style="background:rgba(96,165,250,.7);width:8px;height:8px;display:inline-block;border-radius:2px;margin-right:4px;vertical-align:middle"></i>FE · férias</span><span><i style="background:rgba(251,191,36,.7);width:8px;height:8px;display:inline-block;border-radius:2px;margin-right:4px;vertical-align:middle"></i>FO/TR · não ABS</span><span style="color:var(--quiet)">DOM/FER · sem falta · ? · sem carga · duplo clique justifica</span></div><div class="shint" id="searchHint">Digite para ver sugestões (nome ou matrícula). Enter filtra só o colaborador escolhido; ↑ ↓ navegam.</div>
+        <div class="lgd" id="legendaPess" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:9.5px;color:var(--muted);padding:2px 0 8px"><b style="color:var(--text);font-size:10px;letter-spacing:.6px">LEGENDA</b><span><i style="background:rgba(248,113,113,.7);width:8px;height:8px;display:inline-block;border-radius:2px;margin-right:4px;vertical-align:middle"></i>F/AT/AF · ABS</span><span><i style="background:rgba(52,211,153,.7);width:8px;height:8px;display:inline-block;border-radius:2px;margin-right:4px;vertical-align:middle"></i>P · presença</span><span><i style="background:rgba(96,165,250,.7);width:8px;height:8px;display:inline-block;border-radius:2px;margin-right:4px;vertical-align:middle"></i>FE · férias</span><span><i style="background:rgba(251,191,36,.7);width:8px;height:8px;display:inline-block;border-radius:2px;margin-right:4px;vertical-align:middle"></i>FO/TR · não ABS</span><span style="color:var(--quiet)">DOM/FER · sem falta · ausência sem validação = F · duplo clique justifica</span></div><div class="shint" id="searchHint">Digite para ver sugestões (nome ou matrícula). Enter filtra só o colaborador escolhido; ↑ ↓ navegam.</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
         <button class="btn" id="copyBtn" type="button">Copiar tabela</button>
@@ -354,7 +354,7 @@ td.nd{color:var(--quiet)}
           <span><i style="background:rgba(96,165,250,.7)"></i>FE · férias</span>
           <span><i style="background:rgba(251,191,36,.7)"></i>FO/TR · não ABS</span>
           <span><i style="background:var(--track)"></i>DOM/FER · sem falta</span>
-          <span><i style="background:var(--track)"></i>? · sem dados</span>
+          <span><i style="background:var(--track)"></i>Sem validação de presença · F</span>
         </div>
       </div>
     </div>
@@ -369,7 +369,7 @@ td.nd{color:var(--quiet)}
         <p><b>PRESENTES (P)</b> — existe registro de presença em <code>ABS_SURICATO</code> para a matrícula naquele dia. A coluna <code>DTA</code> pode vir em <b>dois formatos</b> — ISO (<code>2026-10-10T20:02:00-03:00</code>) <i>ou</i> brasileiro (<code>15/10/2026 13:36</code>): o painel lê os dois com o mesmo interpretador e usa o <b>dia local de São Paulo</b> do registro. <b>Dia operacional:</b> registros de 00:00 a 21:59 pertencem ao próprio dia; a partir de 22:00 pertencem ao dia seguinte (vale para os dois formatos e para todos os turnos). Qualquer registro da matrícula no dia operacional conta como presença, mesmo fora da janela do turno. Os dados do Suricato são carregados com paginação completa; se alguma página falhar, a apuração é interrompida em vez de gerar faltas. Registros repetidos no mesmo dia contam uma única vez.</p>
         <p><b>AUSENTES / ABS</b> — não há registro de presença no dia e: (a) existe justificativa em <code>ABS_JUSTIFICATIVAS</code> cujo MOTIVO está nos motivos ativos; ou (b) não existe justificativa e o dia possui carga de presença, gerando falta inferida (F). Nunca conta quem está de férias.</p>
         <p><b>FÉRIAS (FE)</b> — matrícula presente em <code>ABS_FÉRIAS</code> na data (DTA pode estar gravada como texto DD/MM/AAAA <i>ou</i> como data ISO YYYY-MM-DD; o painel filtra pelo sufixo de mês/ano e valida a janela antes de aplicar). Sempre tem precedência sobre falta (<code>F</code>) e sobre justificativa (<code>FE</code> &gt; <code>F</code> &gt; <code>?</code>). Sai do quadro elegível.</p>
-        <p><b>SEM DADOS (?)</b> — em vez de falta, o painel mostra <code>?</code> quando o problema é o dado, não a pessoa. Três situações: (a) o dia não tem carga em <code>ABS_SURICATO</code>; (b) a carga do dia é <i>parcial</i> — cobertura abaixo de 60% da referência do mês, típico de importação interrompida no meio do dia; (c) o colaborador não tem nenhum registro no mês. — e, por fim, (d) quando o <b>turno do colaborador naquele dia</b> teve cobertura inferior a 40% da referência do próprio turno no mês: é o caso de uma extração que deixou de trazer um turno inteiro. Quando o que falta é o turno, ninguém daquele turno leva falta.</p>
+        <p><b>FALTA POR AUSÊNCIA DE VALIDAÇÃO</b> — se não existir registro de presença no Suricato para a matrícula e dia operacional, o colaborador recebe <code>F</code>, mesmo que não tenha nenhum registro no período, o dia esteja sem carga, a carga seja parcial ou o turno esteja sem carga confiável. Permanecem as exceções: presença registrada (<code>P</code>), férias (<code>FE</code>), justificativas cadastradas e a regra do 4º turno aos sábados, além de domingos, feriados e dias futuros sem falta.</p>
         <p><b>DOMINGO / FERIADO</b> — sem falta para ninguém. Feriados vêm de <code>ABS_FERIADOS</code> (DTA em dd/mm/aaaa). Se houver justificativa registrada, ela é exibida, mas não entra no ABS.</p>
         <p><b>JUSTIFICADOS NÃO-ABS</b> — existe justificativa registrada cujo MOTIVO está fora dos motivos ativos (ex.: FO, TR). Aparecem na composição do dia, mas não entram no ABS. Por isso o invariante correto é: <b>presentes + ausentes + justificados não-ABS = quadro elegível</b>; somando férias e sem dados chega-se ao total do quadro do dia.</p>
         <p><b>TAXA DE ABSENTEÍSMO</b> — ausentes ÷ quadro elegível (no mês, soma dos dias apurados). No dia atual, entram apenas os turnos cujo início já ocorreu: 1º 06:00, 2º 13:40, 3º 22:00 do dia anterior e 4º 08:00; aos sábados, somente o <b>4º turno</b> sem registro fica como <code>-</code> (sem falta); se tiver registro, conta presença. Os 1º, 2º e 3º turnos seguem a regra normal no sábado. <b>ABS MÉDIO/DIA</b> — ausentes ÷ dias apurados (média, não soma do período).</p>
@@ -519,10 +519,7 @@ function classificar(p,d){
   if(state.ferias.has(k))return{code:'FE',regra:'férias (ABS_FÉRIAS)'};
   const j=state.just.get(k);if(j)return{code:j,regra:'justificativa (ABS_JUSTIFICATIVAS)'};
   if(d.dow===6&&turnoNum(p.turno)===TURNO_4)return{code:'-',regra:'4º turno · sábado sem registro · exceção sem falta'};
-  if(!d.presencaOk)return{code:'?',regra:state.diasParciais.has(d.day)?'dia com carga parcial no Suricato':'dia sem carga no Suricato'};
-  if(state.turnoSemDado.has(p.turno+'|'+d.day))return{code:'?',regra:'turno sem carga confiável no dia'};
-  if(state.semRegistroMes.has(p.matricula))return{code:'?',regra:'sem nenhum registro no Suricato no mês'};
-  return{code:'F',regra:'falta inferida · dados completos e nenhum registro no dia operacional'};
+  return{code:'F',regra:'falta · não passou na validação de presença, independentemente de haver registros no período'};
 }
 function modeloDia(day){
   const base={day,dow:dowDe(day),domingo:dowDe(day)===0,feriado:false,futuro:false,
@@ -561,7 +558,7 @@ function modeloDia(day){
   base.taxa=base.denominador>0?ausentes/base.denominador*100:null;
   return base;
 }
-function consistente(d){ if(d.futuro||d.domingo||d.feriado||!d.quadroOk||!d.presencaOk)return true;
+function consistente(d){ if(d.futuro||d.domingo||d.feriado||!d.quadroOk)return true;
   return (d.presentes+d.ausentes+d.jn+d.ferias)===d.total && d.fora===0 && d.elegivel===(d.presentes+d.ausentes+d.jn) }
 /* ===== MODEL_END ===== */
 
@@ -764,7 +761,6 @@ function agregar(ds){
     if(d.feriado){r.feriado++;continue}
     if(d.domingo){r.domingo++;continue}
     if(!d.quadroOk){r.semQuadro++;continue}
-    if(!d.presencaOk){r.semDados++;continue}
     if(d.dow!==6){r.diasU++;r.ausU+=d.ausentes}r.apurados++;r.denominador+=d.denominador||Math.max(0,d.total-d.ferias);r.ausentes+=d.ausentes;r.presentes+=d.presentes;r.elegivel+=d.elegivel;r.total+=d.total;r.ferias+=d.ferias;r.jn+=d.jn;r.fora+=d.fora;
     if(!consistente(d))r.inconsist++;
     const w=d.dow;r.dows[w].aus+=d.ausentes;r.dows[w].pre+=d.presentes;r.dows[w].ele+=d.elegivel;r.dows[w].dias++;
@@ -789,7 +785,7 @@ function statusDe(p,d){
   if(code==='P')return{c:'P',cls:'pre',txt:'presença registrada no Suricato'};
   if(code==='FE')return{c:'FE',cls:'fer',txt:'férias'};
   if(code==='-')return{c:'-',cls:'nw',txt:'4º turno · sábado sem registro · sem falta'};
-  if(code==='?')return{c:'?',cls:'nd',txt:regra+' · não é possível inferir falta'};
+  if(code==='?')return{c:'F',cls:'abs',txt:'falta · ausência de validação de presença'};
   if(code==='F')return{c:'F',cls:'abs',txt:'falta inferida · sem presença e sem justificativa'};
   return{c:code,cls:state.ativos.has(code)?'abs':'jus',txt:(MOTIVO_NOME[code]||code)+(state.ativos.has(code)?' · contabilizado como ABS':' · não contabilizado como ABS')};
 }
@@ -824,7 +820,7 @@ function renderKpis0(a){
     const d=dia(state.dia);
     const st=d.futuro?'Dia futuro':(d.feriado?'Feriado · sem falta':(d.domingo?'Domingo · sem falta':(!d.quadroOk?'Sem quadro válido':(!d.presencaOk?'Sem carga de presença · fora da apuração':'Dia apurado'))));
     $('#kpis').innerHTML=
-      kpi('bad','AUSENTES (ABS) · '+brData(d.day)+' '+dowNome(d.day),d.presencaOk&&!d.domingo&&!d.feriado&&!d.futuro?nf.format(d.ausentes):'—','ocorrências de ausência apuradas no dia')+
+      kpi('bad','AUSENTES (ABS) · '+brData(d.day)+' '+dowNome(d.day),!d.domingo&&!d.feriado&&!d.futuro&&d.quadroOk?nf.format(d.ausentes):'—','ocorrências de ausência apuradas no dia')+
       kpi('ok','PRESENTES · '+brData(d.day),d.presencaOk&&!d.domingo&&!d.feriado&&!d.futuro?nf.format(d.presentes):'—','com registro de presença no Suricato')+
       kpi('info','TAXA DE ABSENTEÍSMO',d.taxa===null?'—':pc.format(d.taxa)+'%','ausentes ÷ quadro elegível do dia')+
       kpi('','QUADRO ELEGÍVEL DO DIA',d.elegivel?nf.format(d.elegivel):'—',`total ${nf.format(d.total)} − férias ${nf.format(d.ferias)} − sem dados ${nf.format(d.fora)} = elegível`)+
@@ -838,7 +834,7 @@ function renderKpis0(a){
     kpi('info','TAXA DE ABSENTEÍSMO',pct,state.dias.includes(state.hoje)?'dia atual usa somente turnos já iniciados; histórico usa quadro completo':'ausentes ÷ soma do quadro elegível dos dias apurados')+
     kpi('','QUADRO ELEGÍVEL MÉDIO/DIA',nf1.format(a.mediaTotal),`${nf.format(a.elegivel)} elegíveis somados no mês`)+
     kpi('warn','JUSTIFICADOS NÃO-ABS',nf.format(a.jn),'folga/treinamento e afins: fora do ABS')+
-    kpi('','DIAS APURADOS',nf.format(a.apurados),`${nf.format(a.semDados)} sem dados · ${nf.format(a.domingo)} dom · ${nf.format(a.feriado)} feriado · ${nf.format(a.futuro)} futuro · ${nf.format(a.semQuadro)} sem quadro`);
+    kpi('','DIAS APURADOS',nf.format(a.apurados),`${nf.format(a.semDados)} sem carga identificada · faltas inferidas · ${nf.format(a.domingo)} dom · ${nf.format(a.feriado)} feriado · ${nf.format(a.futuro)} futuro · ${nf.format(a.semQuadro)} sem quadro`);
 }
 function renderConsistencia(a){
   const ok=a.inconsist===0;
@@ -862,7 +858,7 @@ function graficoEvolucao(ds,alvo){
   const met=state.chartM;
   const max=Math.max(1,...ds.map(d=>met==='taxa'?(d.taxa||0):d.ausentes));
   const bars=ds.map((d,i)=>{
-    const util=!d.futuro&&!d.domingo&&!d.feriado&&d.quadroOk&&d.presencaOk;
+    const util=!d.futuro&&!d.domingo&&!d.feriado&&d.quadroOk;
     const cls=[util?'':'nd',(d.domingo||d.feriado)?'nw':'',state.dia===d.day?'on':''].filter(Boolean).join(' ');
     const val=met==='taxa'?(d.taxa===null?null:d.taxa):d.ausentes;
     const h=util&&val!==null?Math.max(2,val/max*100):2;
@@ -872,7 +868,7 @@ function graficoEvolucao(ds,alvo){
     else if(d.futuro)motivo='Dia futuro';
     else if(d.feriado)motivo='Feriado — sem falta';
     else if(d.domingo)motivo='Domingo — sem falta';
-    else if(!d.presencaOk)motivo='Sem carga de presença no Suricato — fora da apuração';
+    else if(!d.presencaOk)motivo='Sem carga de presença no Suricato — ausência inferida pela regra solicitada';
     else motivo='';
     const tt=`${brData(d.day)} · ${dowNome(d.day)}${d.feriado?' · feriado':''}${d.domingo?' · domingo':''}${d.futuro?' · dia futuro':''}\n`+
       (util?`Ausentes: ${d.ausentes}\nPresentes: ${d.presentes}\nQuadro elegível: ${d.elegivel}\nFérias: ${d.ferias}\nTaxa: ${d.taxa===null?'—':pc.format(d.taxa)+'%'}\nDuplo clique: justificar ausência`:motivo);
@@ -894,7 +890,7 @@ function listaRank(itens,tipo,formata,max){
 }
 function heat(a,alvo,lg){
   const setores=[...a.setores.entries()].map(([k,v])=>({k,aus:v.aus})).sort((x,y)=>y.aus-x.aus).slice(0,14).map(x=>x.k);
-  const ds=a.ds.filter(d=>!d.futuro&&!d.domingo&&!d.feriado&&d.quadroOk&&d.presencaOk);
+  const ds=a.ds.filter(d=>!d.futuro&&!d.domingo&&!d.feriado&&d.quadroOk);
   let mx=1;for(const s of setores)for(const c of(a.heat.get(s)||[]))mx=Math.max(mx,c.aus);
   const head=`<div class="hr" style="position:sticky;left:0;background:var(--panel)">SETOR</div>`+ds.map(d=>`<div class="hh">${d.day.slice(8)}<br>${dowNome(d.day)}</div>`).join('');
   const rows=setores.map(s=>{const mp=new Map((a.heat.get(s)||[]).map(c=>[c.day,c]));
@@ -909,7 +905,7 @@ function listaBarras(itens,alvo,fmt){
   alvo.innerHTML=itens.length?`<div class="evol-bars" style="height:165px">`+itens.map((i,ix)=>`<div class="ebar" title="${esc(i.label+' · '+(i.txt||''))}" style="--i:${ix}"><span class="ebar-v">${fmt(i)}</span><span class="ebar-t"><i style="height:${Math.max(2,i.valor/mx*100)}%"></i></span><span class="ebar-l">${esc(i.label)}</span></div>`).join('')+`</div>`:'<div class="empty">Sem dados no período.</div>';
 }
 function miniEvolucao(ds,campo,alvo){
-  const dias=ds.filter(d=>!d.futuro&&!d.domingo&&!d.feriado&&d.quadroOk&&d.presencaOk);
+  const dias=ds.filter(d=>!d.futuro&&!d.domingo&&!d.feriado&&d.quadroOk);
   const vals=[...new Set(dias.flatMap(d=>d.people.map(p=>p[campo]).filter(v=>v!=null&&v!=='')))].sort((x,y)=>String(x).localeCompare(String(y),'pt-BR',{numeric:true}));
   alvo.innerHTML=vals.map(v=>{
     const serie=dias.map(d=>{const g=d.people.filter(p=>p[campo]===v);const fer=g.filter(p=>state.ferias.has(kk(p.matricula,d.day))).length;const aus=g.filter(p=>statusDe(p,d).cls==='abs').length;return{day:d.day,aus,ele:g.length-fer}});
@@ -993,7 +989,6 @@ function valorCelula(people,m){
   if(m.futuro)return{c:'-',s:'futuro',cls:'fut'};
   if(m.domingo||m.feriado)return{c:'—',s:m.feriado?'FER':'DOM',cls:'nw'};
   if(!m.quadroOk)return{c:'—',s:'sem quadro',cls:'cd'};
-  if(!m.presencaOk)return{c:'?',s:'sem carga',cls:'nd'};
   const set=new Set(people.map(p=>p.matricula));
   const alvo=m.people.filter(p=>set.has(p.matricula));
   const pre=alvo.filter(p=>state.present.has(kk(p.matricula,m.day))).length;
@@ -1012,7 +1007,7 @@ function renderTabela(a){
   if(state.vista==='pessoas'){renderTabelaPessoas(body,head);return}
   const rotDim=state.vista==='turnos'?'DIMENSÃO · TURNO':state.vista==='setores'?'DIMENSÃO · SETOR':`DIMENSÃO · ${ROT_METRIC[state.metric]}`;
   head.innerHTML=`<tr><th>${rotDim}</th>`+state.dias.map(d=>{const m=dia(d);const cls=[(m.domingo||m.feriado)?'off':'',d===state.dia?'hl':''].filter(Boolean).join(' ');
-    return `<th class="${cls}" data-act="day" data-day="${d}" title="${esc(brData(d)+' · '+dowNome(d)+(m.feriado?' · feriado':m.domingo?' · domingo':m.presencaOk?'':' · sem carga de presença')+' · duplo clique justifica o dia')}"><b>${d.slice(8)}</b><small>${dowNome(d)}</small></th>`}).join('')+'</tr>';
+    return `<th class="${cls}" data-act="day" data-day="${d}" title="${esc(brData(d)+' · '+dowNome(d)+(m.feriado?' · feriado':m.domingo?' · domingo':m.presencaOk?'':' · sem carga de presença; ausência inferida')+' · duplo clique justifica o dia')}"><b>${d.slice(8)}</b><small>${dowNome(d)}</small></th>`}).join('')+'</tr>';
   const people=pessoasBase();
   if(!people.length){body.innerHTML='<tr><td class="empty" colspan="40">Nenhum colaborador para a combinação de filtros atual.</td></tr>';return}
   const rows=[];
@@ -1032,7 +1027,7 @@ function renderTabelaPessoas(body,head){
     return `<th class="${cls}" data-act="day" data-day="${d}" title="${esc(brData(d)+' · '+dowNome(d)+' · clique para destacar a coluna · duplo clique justifica o dia')}"><b>${d.slice(8)}</b><small>${dowNome(d)}</small></th>`}).join('')+'</tr>';
   const todos=listaPessoas(),l=todos.slice(0,state.pagina*PAGE);
   const mods=state.dias.map(d=>dia(d));
-  const apur=mods.filter(d=>!d.futuro&&!d.domingo&&!d.feriado&&d.quadroOk&&d.presencaOk);
+  const apur=mods.filter(d=>!d.futuro&&!d.domingo&&!d.feriado&&d.quadroOk);
   body.innerHTML=l.map(p=>{
     /* status calculado UMA vez por pessoa/dia (antes: 3 chamadas por célula) */
     const sts=mods.map(m=>statusDe(p,m));
