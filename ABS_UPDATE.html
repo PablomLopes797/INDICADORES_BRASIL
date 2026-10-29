@@ -356,7 +356,10 @@
     if (!c[0]) problems.push('DTA vazia (coluna A)');
     else if (!date.ok) problems.push(`DTA ${date.reason}`);
     if (problems.length) return { error: `linha ${row.line}: ${problems.join('; ')}` };
-    const record = { DTA: date.value, MATRICULA: matricula };
+    const dateParts = date.display.match(/^(\d{4})-(\d{2})-/);
+    if (!dateParts) return { error: `linha ${row.line}: não foi possível determinar o mês/ano da DTA` };
+    const mmyy = `${dateParts[2]}/${dateParts[1]}`;
+    const record = { DTA: date.value, MATRICULA: matricula, MMYY: mmyy };
     return { valid: { row: row.line, record, preview: [date.display,matricula] } };
   }
   function parseFileText(text, module, delimiterMode) {
@@ -553,10 +556,19 @@
     }
     if (stoppedByNetwork) errors.push(`${notStarted} registro(s) dos lotes seguintes não foram enviados porque a conexão foi interrompida.`);
     setBusy(false);
-    const message = saved === records.length && errors.length === 0
-      ? 'A API confirmou a inserção de todos os registros válidos. Nenhuma exclusão ou atualização foi executada.'
+    const importSucceeded = saved === records.length && errors.length === 0;
+    let dedupeMessage = '';
+    if (selectedModule === 'suricato' && importSucceeded) {
+      updateProgress('Importação concluída · iniciando remoção automática de duplicatas...', 100);
+      await removeSuricatoDuplicates({ automatic: true });
+      dedupeMessage = ' A rotina automática de remoção de duplicatas por DTA + MATRICULA foi executada após a gravação.';
+    }
+    const message = importSucceeded
+      ? (selectedModule === 'suricato'
+          ? `A API confirmou a inserção de todos os registros válidos, incluindo MMYY no formato MM/AAAA.${dedupeMessage}`
+          : 'A API confirmou a inserção de todos os registros válidos. Nenhuma exclusão ou atualização foi executada.')
       : `${saved} registro(s) tiveram gravação confirmada. Os demais não foram confirmados; leia os detalhes antes de decidir se deve repetir. Não houve tentativa automática de reenvio.`;
-    showImportResult({ title:saved === records.length && errors.length === 0 ? 'Importação confirmada' : 'Importação parcial ou não confirmada', subtitle:`Destino: ${pending.table}`, found:pending.found, valid:pending.valid.length, saved, ignored:pending.ignored, failed, notStarted, errors, message });
+    showImportResult({ title:importSucceeded ? 'Importação confirmada' : 'Importação parcial ou não confirmada', subtitle:`Destino: ${pending.table}`, found:pending.found, valid:pending.valid.length, saved, ignored:pending.ignored, failed, notStarted, errors, message });
   }
 
   const FERIAS_MAX_DAYS = 366;
@@ -736,8 +748,9 @@
     return `${dta}\u001f${matricula}`;
   }
 
-  async function removeSuricatoDuplicates() {
+  async function removeSuricatoDuplicates(options = {}) {
     if (busy) return;
+    const automatic = options.automatic === true;
     setBusy(true);
     ui.dedupeButton.disabled = true;
     ui.progress.hidden = false;
@@ -809,10 +822,10 @@
       }
       updateProgress('Limpeza concluída.', 100);
       notify(`Limpeza concluída: ${deleted.toLocaleString('pt-BR')} duplicata(s) removida(s).`);
-      window.alert(`Limpeza concluída.\n\nRegistros analisados: ${rows.length.toLocaleString('pt-BR')}\nRegistros com DTA + MATRICULA: ${eligible.toLocaleString('pt-BR')}\nDuplicatas removidas: ${deleted.toLocaleString('pt-BR')}\nRegistros únicos mantidos: ${seen.size.toLocaleString('pt-BR')}`);
+      if (!automatic) window.alert(`Limpeza concluída.\n\nRegistros analisados: ${totalRows.toLocaleString('pt-BR')}\nRegistros com DTA + MATRICULA: ${eligible.toLocaleString('pt-BR')}\nDuplicatas removidas: ${deleted.toLocaleString('pt-BR')}\nRegistros únicos mantidos: ${seen.size.toLocaleString('pt-BR')}`);
     } catch (error) {
       notify(error?.message || 'Falha ao remover duplicatas.');
-      window.alert(error?.message || 'Falha ao remover duplicatas.');
+      if (!automatic) window.alert(error?.message || 'Falha ao remover duplicatas.');
     } finally {
       setBusy(false);
       ui.dedupeButton.disabled = false;
