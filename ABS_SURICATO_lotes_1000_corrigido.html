@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ABS Suricato | Normalizador de datas</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1020;--panel:#121a2e;--line:#293650;--text:#edf2ff;--muted:#9eacc8;--accent:#63e6be;--blue:#78a9ff;--danger:#ff7b86;--warn:#ffd166}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top right,#17294a 0,transparent 42%),var(--bg);color:var(--text);font:15px/1.5 Inter,Segoe UI,Arial,sans-serif}
+main{max-width:1120px;margin:0 auto;padding:28px 18px 60px}.hero{padding:28px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(135deg,#17233cdd,#101729ee);box-shadow:0 20px 70px #0003}
+.eyebrow{color:var(--accent);font-size:12px;font-weight:800;letter-spacing:.15em;text-transform:uppercase}h1{font-size:clamp(26px,4vw,40px);line-height:1.1;margin:10px 0}p{color:var(--muted)}.hero p{max-width:780px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:18px 0}.stat,.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:17px}.stat small{display:block;color:var(--muted);margin-bottom:8px}.stat strong{font-size:25px;display:block;overflow-wrap:anywhere}
+.panel{margin-top:16px}.panel h2{font-size:18px;margin:0 0 12px}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.row>*{flex:1}.field{display:flex;flex-direction:column;gap:6px;margin:10px 0}.field label{font-weight:700;font-size:13px}.field input{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:#0b1222;color:var(--text);font:inherit}
+button{border:0;border-radius:11px;padding:12px 16px;font-weight:800;font-size:14px;cursor:pointer;transition:transform .15s,opacity .15s}button:hover{transform:translateY(-1px)}button:disabled{opacity:.45;cursor:not-allowed;transform:none}.primary{background:var(--accent);color:#09251d}.secondary{background:#233453;color:var(--text);border:1px solid #3a4c6d}.danger{background:#4b202b;color:#ffdce0;border:1px solid #843844}.notice{padding:12px 14px;border-radius:10px;background:#192844;color:#c8d8f8;border:1px solid #2a4167}.warn{background:#332b17;color:#ffe4a0;border-color:#685322}.success{background:#12352c;color:#b8ffe7;border-color:#24644f}.error{background:#3b1b25;color:#ffd4d9;border-color:#713140}
+#log{white-space:pre-wrap;max-height:250px;overflow:auto;background:#080d18;border:1px solid var(--line);padding:12px;border-radius:10px;color:#c4d1e9;font:12px/1.55 ui-monospace,Consolas,monospace}
+table{border-collapse:collapse;width:100%;font-size:13px}th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}th{color:var(--muted);position:sticky;top:0;background:var(--panel)}.table-wrap{overflow:auto;max-height:330px;border:1px solid var(--line);border-radius:10px}.pill{display:inline-block;border-radius:999px;padding:3px 8px;font-size:11px;font-weight:800;background:#25324b;color:#d9e5ff}.footer{font-size:12px;color:var(--muted);margin-top:20px}
+@media(max-width:750px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hero{padding:20px}.row>*{flex-basis:100%}}
+</style>
+</head>
+<body>
+<main>
+<section class="hero">
+  <div class="eyebrow">Assaí • ABS Suricato</div>
+  <h1>Normalizador de datas do Suricato</h1>
+  <p>Padroniza a coluna <b>DTA</b> para <b>DD/MM/AAAA HH:MM</b> e preenche a coluna <b>MMYY</b> com <b>MM/AAAA</b>. Primeiro faz uma leitura e mostra uma prévia; a gravação só acontece quando você confirmar.</p>
+  <div class="notice warn"><b>Atenção:</b> faça um backup antes de gravar. A chave anon/publishable é pública por projeto; a segurança real depende das políticas RLS do Supabase. Esta página não ignora nem contorna RLS.</div>
+</section>
+
+<section class="grid">
+  <div class="stat"><small>Registros lidos</small><strong id="sRead">0</strong></div>
+  <div class="stat"><small>Datas ISO para converter</small><strong id="sIso">0</strong></div>
+  <div class="stat"><small>MMYY a preencher/corrigir</small><strong id="sMmyy">0</strong></div>
+  <div class="stat"><small>Atualizações previstas</small><strong id="sChanges">0</strong></div>
+</section>
+
+<section class="panel">
+<h2>1. Conexão</h2>
+<div class="row">
+  <div class="field"><label for="endpoint">Endpoint REST da tabela</label><input id="endpoint" value="https://bebhhbimcaptgrioxxcw.supabase.co/rest/v1/ABS_SURICATO"></div>
+  <div class="field"><label for="apiKey">Chave do Supabase (campo protegido)</label><input id="apiKey" type="password" autocomplete="new-password" spellcheck="false" autocapitalize="off" placeholder="Cole a chave do Supabase"></div>
+</div>
+<div class="row">
+  <button id="btnPreview" class="primary">Ler base e gerar prévia</button>
+  <button id="btnClear" class="secondary">Limpar resultados</button>
+</div>
+<p class="footer">O campo da chave fica mascarado na tela. Como este HTML acessa o Supabase diretamente, a chave usada na requisição ainda pode ser vista por alguém com acesso às ferramentas do navegador; para mantê-la realmente secreta é necessário um backend/Edge Function. A leitura é paginada em blocos de 1.000.</p>
+</section>
+
+<section class="panel">
+<h2>2. Prévia das alterações</h2>
+<div id="status" class="notice">Aguardando conexão. Nenhuma alteração será gravada antes da confirmação.</div>
+<div class="table-wrap" style="margin-top:12px">
+<table><thead><tr><th>DTA atual</th><th>DTA proposto</th><th>MATRICULA</th><th>MMYY atual</th><th>MMYY proposto</th><th>Ação</th></tr></thead><tbody id="previewBody"><tr><td colspan="6">Nenhuma prévia carregada.</td></tr></tbody></table>
+</div>
+<div class="row" style="margin-top:14px">
+  <button id="btnApply" class="primary" disabled>Confirmar e gravar alterações</button>
+  <button id="btnExport" class="secondary" disabled>Exportar prévia CSV</button>
+</div>
+</section>
+
+<section class="panel">
+<h2>3. Registro de execução</h2>
+<div id="log">Pronto.</div>
+</section>
+<p class="footer">Formato ISO tratado pelo HTML: <code>2026-10-01T00:00:00-03:00</code> → <code>01/10/2026 00:00</code>. O horário exibido é preservado como aparece no texto original, sem deslocamento de fuso. Valores que já estão em DD/MM/AAAA HH:MM não são reformatados, mas também terão MMYY preenchido/corrigido.</p>
+</main>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  let records = [];
+  let changes = [];
+  let busy = false;
+  const PAGE = 1000;
+
+  function log(msg) {
+    const el = $('log');
+    const stamp = new Date().toLocaleTimeString('pt-BR');
+    el.textContent += `\n[${stamp}] ${msg}`;
+    el.scrollTop = el.scrollHeight;
+  }
+  function status(msg, type='notice') {
+    $('status').className = `notice ${type}`;
+    $('status').textContent = msg;
+  }
+  function setBusy(v) {
+    busy = v;
+    $('btnPreview').disabled = v;
+    $('btnApply').disabled = v || changes.length === 0;
+    $('btnExport').disabled = v || changes.length === 0;
+  }
+  function headers() {
+    // Remove espaços externos e caracteres invisíveis que podem ser inseridos ao copiar a chave.
+    const raw = $('apiKey').value;
+    const key = raw.replace(/[\u200B-\u200D\u2060\uFEFF]/g, '').trim();
+    if (!key) throw new Error('A chave do Supabase não está configurada.');
+    // Chaves Supabase são ASCII. Não envia a credencial nem a inclui na mensagem de erro.
+    if (!/^[\x21-\x7E]+$/.test(key)) {
+      throw new Error('A chave contém caracteres inválidos. Cole novamente a chave original, sem aspas, espaços internos ou quebras de linha.');
+    }
+    return { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' };
+  }
+  function parseDate(value) {
+    if (value == null || String(value).trim() === '') return null;
+    const s = String(value).trim();
+    // ISO: preserva a data/hora literal, sem converter o offset para o fuso do navegador.
+    let m = s.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})?$/i);
+    if (m) {
+      const [, y, mo, d, h, mi] = m;
+      if (!validParts(+y,+mo,+d,+h,+mi)) return null;
+      return { formatted:`${d}/${mo}/${y} ${h}:${mi}`, mmyy:`${mo}/${y}`, iso:true };
+    }
+    // Formato já textual: DD/MM/AAAA HH:MM, com segundos opcionais.
+    m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2})(?::\d{2})?)?$/);
+    if (m) {
+      const [, d, mo, y, h='00', mi='00'] = m;
+      if (!validParts(+y,+mo,+d,+h,+mi)) return null;
+      return { formatted:`${d}/${mo}/${y} ${h}:${mi}`, mmyy:`${mo}/${y}`, iso:false };
+    }
+    return null;
+  }
+  function validParts(y,mo,d,h,mi) {
+    if (mo<1||mo>12||d<1||d>31||h<0||h>23||mi<0||mi>59) return false;
+    const date = new Date(Date.UTC(y,mo-1,d));
+    return date.getUTCFullYear()===y && date.getUTCMonth()===mo-1 && date.getUTCDate()===d;
+  }
+  function eq(a,b) { return String(a ?? '') === String(b ?? ''); }
+  function esc(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function makePreview() {
+    changes = [];
+    let isoCount=0, mmyyCount=0, invalid=0;
+    for (const r of records) {
+      const parsed = parseDate(r.DTA);
+      if (!parsed) { if (r.DTA != null && String(r.DTA).trim() !== '') invalid++; continue; }
+      const dtaChange = parsed.iso && !eq(r.DTA, parsed.formatted);
+      const monthChange = !eq(r.MMYY, parsed.mmyy);
+      if (dtaChange) isoCount++;
+      if (monthChange) mmyyCount++;
+      if (dtaChange || monthChange) {
+        changes.push({ oldDta:r.DTA, newDta:parsed.formatted, matricula:r.MATRICULA, oldMmyy:r.MMYY, newMmyy:parsed.mmyy, dtaChange, monthChange });
+      }
+    }
+    $('sRead').textContent = records.length.toLocaleString('pt-BR');
+    $('sIso').textContent = isoCount.toLocaleString('pt-BR');
+    $('sMmyy').textContent = mmyyCount.toLocaleString('pt-BR');
+    $('sChanges').textContent = changes.length.toLocaleString('pt-BR');
+    const body = $('previewBody');
+    body.innerHTML = '';
+    if (!changes.length) body.innerHTML = '<tr><td colspan="6">Tudo certo: nenhuma alteração necessária.</td></tr>';
+    else {
+      const cap = 500;
+      for (const c of changes.slice(0,cap)) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${esc(c.oldDta)}</td><td>${esc(c.newDta)}</td><td>${esc(c.matricula)}</td><td>${esc(c.oldMmyy)}</td><td>${esc(c.newMmyy)}</td><td><span class="pill">${c.dtaChange && c.monthChange?'DTA + MMYY':c.dtaChange?'DTA':'MMYY'}</span></td>`;
+        body.appendChild(tr);
+      }
+      if (changes.length > cap) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="6">Mostrando ${cap} de ${changes.length.toLocaleString('pt-BR')} alterações. A gravação considera todas.</td>`;
+        body.appendChild(tr);
+      }
+    }
+    $('btnApply').disabled = busy || changes.length === 0;
+    $('btnExport').disabled = busy || changes.length === 0;
+    if (invalid) log(`${invalid} registro(s) com DTA não reconhecida foram ignorados; confira o formato desses valores.`);
+    status(changes.length ? `Prévia pronta: ${changes.length.toLocaleString('pt-BR')} registros precisam de atualização. Revise e confirme para gravar.` : 'Prévia pronta: nenhuma alteração necessária.', changes.length ? 'warn' : 'success');
+  }
+  async function loadAll() {
+    const base = $('endpoint').value.trim().replace(/\/+$/,'');
+    if (!/^https:\/\/[a-z0-9-]+\.supabase\.co\/rest\/v1\/[a-zA-Z0-9_]+$/i.test(base)) throw new Error('Endpoint inválido. Use a URL REST da tabela ABS_SURICATO.');
+    const h = headers();
+    records = [];
+    let offset = 0;
+    while (true) {
+      const url = new URL(base);
+      url.searchParams.set('select','DTA,MATRICULA,MMYY');
+      url.searchParams.set('order','DTA.asc');
+      const response = await fetch(url.toString(), {headers:{...h, Range:`${offset}-${offset+PAGE-1}`, 'Range-Unit':'items'}});
+      if (!response.ok) throw new Error(`Falha na leitura (${response.status}): ${await response.text()}`);
+      const batch = await response.json();
+      if (!Array.isArray(batch)) throw new Error('Resposta inesperada do Supabase.');
+      records.push(...batch);
+      log(`Lidos ${records.length.toLocaleString('pt-BR')} registros...`);
+      if (batch.length < PAGE) break;
+      offset += PAGE;
+    }
+  }
+  async function preview() {
+    if (busy) return;
+    setBusy(true);
+    status('Conectando e lendo os registros...', 'notice');
+    $('log').textContent = 'Iniciando leitura...';
+    try {
+      await loadAll();
+      makePreview();
+      log(`Leitura concluída. Total: ${records.length.toLocaleString('pt-BR')}.`);
+    } catch(e) {
+      status(e.message || String(e), 'error');
+      log(`ERRO: ${e.message || String(e)}`);
+    } finally { setBusy(false); $('btnApply').disabled = changes.length===0; $('btnExport').disabled=changes.length===0; }
+  }
+  function filterValue(value) {
+    if (value === null || value === undefined) return 'is.null';
+    return 'eq.' + String(value);
+  }
+  async function applyChanges() {
+    if (busy || !changes.length) return;
+    const ok = confirm(`Você está prestes a atualizar ${changes.length} registros na tabela ABS_SURICATO.\n\nDTA será padronizada como DD/MM/AAAA HH:MM e MMYY como MM/AAAA.\n\nA gravação será feita em lotes de até 1.000 grupos, com até 50 requisições simultâneas para acelerar o processo.\n\nConfirma?`);
+    if (!ok) return;
+    setBusy(true);
+    let done=0, failed=0;
+    status('Preparando gravação em lotes...', 'warn');
+    try {
+      const base = $('endpoint').value.trim().replace(/\/+$/,'');
+      const h = headers();
+      // Agrupa linhas idênticas para evitar chamadas repetidas. Requer que DTA + MATRICULA identifiquem
+      // os registros a atualizar; se houver duplicatas, todas recebem os mesmos valores.
+      const groups = new Map();
+      for (const c of changes) {
+        const key = JSON.stringify([c.oldDta,c.matricula,c.newDta,c.newMmyy]);
+        if (!groups.has(key)) groups.set(key,c);
+      }
+      const unique = [...groups.values()];
+      const BATCH_SIZE = 1000;
+      const CONCURRENCY = 50;
+      let processed = 0;
+
+      for (let start = 0; start < unique.length; start += BATCH_SIZE) {
+        const batch = unique.slice(start, start + BATCH_SIZE);
+        let nextIndex = 0;
+
+        async function worker() {
+          while (true) {
+            const localIndex = nextIndex++;
+            if (localIndex >= batch.length) return;
+            const c = batch[localIndex];
+            try {
+              const url = new URL(base);
+              url.searchParams.set('DTA',filterValue(c.oldDta));
+              url.searchParams.set('MATRICULA',filterValue(c.matricula));
+              const patch = { MMYY:c.newMmyy };
+              if (c.dtaChange) patch.DTA = c.newDta;
+              const response = await fetch(url.toString(), {
+                method:'PATCH',
+                headers:{...h, Prefer:'return=minimal'},
+                body:JSON.stringify(patch)
+              });
+              if (!response.ok) {
+                failed++;
+                log(`Falha em DTA=${c.oldDta}, MATRICULA=${c.matricula}: HTTP ${response.status} — ${(await response.text()).slice(0,300)}`);
+              } else {
+                done++;
+              }
+            } catch (e) {
+              failed++;
+              log(`Erro em DTA=${c.oldDta}, MATRICULA=${c.matricula}: ${e.message || String(e)}`);
+            } finally {
+              processed++;
+            }
+          }
+        }
+
+        const workerCount = Math.min(CONCURRENCY, batch.length);
+        await Promise.all(Array.from({length: workerCount}, () => worker()));
+        status(
+          `Gravando lote ${Math.floor(start / BATCH_SIZE) + 1}: ${processed} de ${unique.length} grupos processados. Sucesso: ${done}; falhas: ${failed}.`,
+          failed ? 'error' : 'warn'
+        );
+        log(`Lote ${Math.floor(start / BATCH_SIZE) + 1} concluído: ${batch.length} grupos processados.`);
+      }
+
+      log(`Gravação encerrada. Grupos atualizados: ${done}; falhas: ${failed}.`);
+      if (failed) status(`Concluído com falhas: ${done} grupos atualizados e ${failed} falharam. Veja o registro de execução.`, 'error');
+      else {
+        status(`Concluído! ${done} grupos atualizados. Vou reler a base para conferir o resultado.`, 'success');
+        await loadAll();
+        makePreview();
+        log('Verificação final concluída.');
+      }
+    } catch(e) {
+      status(`Erro durante a gravação: ${e.message || String(e)}`, 'error');
+      log(`ERRO: ${e.message || String(e)}`);
+    } finally { setBusy(false); $('btnApply').disabled=changes.length===0; $('btnExport').disabled=changes.length===0; }
+  }
+  function exportCsv() {
+    const rows = [['DTA_ATUAL','DTA_NOVO','MATRICULA','MMYY_ATUAL','MMYY_NOVO','ALTERA_DTA','ALTERA_MMYY'], ...changes.map(c=>[c.oldDta,c.newDta,c.matricula,c.oldMmyy,c.newMmyy,c.dtaChange?'SIM':'NAO',c.monthChange?'SIM':'NAO'])];
+    const csv = '\uFEFF' + rows.map(row=>row.map(v=>`"${String(v ?? '').replace(/"/g,'""')}"`).join(';')).join('\r\n');
+    const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='previa_ABS_SURICATO.csv';a.click();URL.revokeObjectURL(a.href);
+  }
+  $('btnPreview').addEventListener('click',preview);
+  $('btnApply').addEventListener('click',applyChanges);
+  $('btnExport').addEventListener('click',exportCsv);
+  $('btnClear').addEventListener('click',()=>{if(busy)return;records=[];changes=[];$('sRead').textContent='0';$('sIso').textContent='0';$('sMmyy').textContent='0';$('sChanges').textContent='0';$('previewBody').innerHTML='<tr><td colspan="6">Nenhuma prévia carregada.</td></tr>';$('log').textContent='Resultados limpos.';status('Aguardando conexão. Nenhuma alteração será gravada antes da confirmação.');$('btnApply').disabled=true;$('btnExport').disabled=true;});
+})();
+</script>
+</body>
+</html>
