@@ -386,6 +386,18 @@
     } else if (nonblank.length && detectHeader(module, nonblank[0])) {
       nonblank.shift(); ignored += 1;
     }
+
+    // QUADRO: remove da base, antes da validação/prévia/gravação, todas as
+    // linhas cuja coluna U (índice 20) esteja marcada como "Rescisão" ou "Afastamento".
+    if (module === 'quadro') {
+      const beforeFilter = nonblank.length;
+      nonblank = nonblank.filter((row) => {
+        const situacao = normalize(row.values[20]);
+        return situacao !== 'rescisao' && situacao !== 'afastamento';
+      });
+      ignored += beforeFilter - nonblank.length;
+    }
+
     const valid = [], errors = [];
     const referenceDate = new Date();
     for (const row of nonblank) {
