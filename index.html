@@ -880,7 +880,8 @@ const state = {
   obsAvailable: true,
   resultadosPorTurno: {},
   computedResultadosPorTurno: {},
-  dataLoaded: false
+  dataLoaded: false,
+  drillDataLoaded: false
 };
 
 /* ============================================================================
@@ -991,7 +992,7 @@ function turnoDaMetrica(registro,chave){
 /* ============================================================================
    EDIÇÃO MANUAL — persistência e permissão
    ============================================================================ */
-const RC={agenda:'AGENDA',no_show:'NO SHOW',agenda_noshow:'AGENDA - NOSHOW',recebido:'RECEBIDO',backlog_recebido:'BACKLOG RECEBIDO',backlog_pendente:'BACKLOG PENDENTE',no_prazo:'NO PRAZO',abaixo_4hrs:'< 4 HRS',recusado:'RECUSADO DIA',recusa_no_prazo:'RECUSA NO PRAZO',recusa_backlog:'RECUSA BACKLOG',sobrepostas:'SOBREPOSTAS',pct_no_prazo:'% NO PRAZO',pct_recebido:'% RECEBIDO'};
+const RC={agenda:'AGENDA',no_show:'NO SHOW',agenda_noshow:'AGENDA - NOSHOW',recebido:'RECEBIDO',backlog_recebido:'BACKLOG RECEBIDO',backlog_pendente:'BACKLOG PENDENTE',no_prazo:'NO PRAZO',abaixo_4hrs:'< 4 HRS',recusado:'RECUSA NO DIA',recusa_no_prazo:'RECUSA NO PRAZO',recusa_backlog:'RECUSA BACKLOG',sobrepostas:'SOBREPOSTAS',pct_no_prazo:'% NO PRAZO',pct_recebido:'% RECEBIDO'};
 const RK=['no_show','recebido','backlog_recebido','backlog_pendente','no_prazo','abaixo_4hrs','recusado','recusa_no_prazo','recusa_backlog'];
 function canEdit(){return String(state.user?.USER||'')===EDIT_USER;}
 function podeAtualizarCargas(){return String(state.user?.USER||'')===EDIT_USER;}
@@ -1004,6 +1005,7 @@ function mostrarBotoesAtualizacao(){
 function abrirModalAtualizacao(){mostrarBotoesAtualizacao();document.getElementById('modalAtualizacao').classList.add('show');}
 function fecharModalAtualizacao(){document.getElementById('modalAtualizacao')?.classList.remove('show');}
 async function atualizarTudo(){
+  if(!canEdit()){toast('Acesso negado','Somente a matrícula 5520967 pode recalcular os resultados.','warn');return;}
   fecharModalAtualizacao();
   const ok=await loadData(true,true);
   if(ok)toast('Recalculo concluído','Todos os registros foram recalculados e gravados por data e turno.','ok');
@@ -1055,9 +1057,9 @@ function interpretarAgendaColada(texto){
   const partes=dividirLinhaImportada(linha).map(normalizarTextoImportado);
   const cabecalho=partes.map(p=>normUpper(p).replace(/[\s_-]/g,''));
   if(i===0&&cabecalho.some(p=>['AGENDA','SENHA','CARGA','STATUS','FORNECEDOR','CHEGADA','DTABASE'].includes(p)))return;
-  if(partes.length<3){erros.push({linha:i+1,motivo:'São necessárias AGENDA, SENHA e CARGA; use as 7 colunas na ordem indicada.'});return;}
-  const [agenda,senha,carga,status='',fornecedor='',chegada='',dtaBase='']=partes;
-  if(!agenda||!senha||!carga){erros.push({linha:i+1,motivo:'AGENDA, SENHA e CARGA são obrigatórios.'});return;}
+  if(partes.length<2){erros.push({linha:i+1,motivo:'AGENDA e SENHA são obrigatórios.'});return;}
+  const [agenda,senha,carga='',status='',fornecedor='',chegada='',dtaBase='']=partes;
+  if(!agenda||!senha){erros.push({linha:i+1,motivo:'AGENDA e SENHA são obrigatórios.'});return;}
   registros.push({agenda,senha,carga,status,fornecedor,chegada,dtaBase,linha:i+1});
  });
  return {registros,erros};
@@ -1079,7 +1081,7 @@ async function processarAtualizacaoCargas(){
  try{
  const jobs=[];
  if(dados.cargas)jobs.push((async()=>{const porCarga=new Map();dados.cargas.registros.forEach(r=>porCarga.set(r.carga,r.termo));const resumo=await salvarConjuntoImportado('CARGAS_RECEBIDAS',[...porCarga.entries()].map(([carga,termo])=>({carga,termo})),async r=>{const {data,error}=await sb.from(TABLE_CARGAS).select('CARGA,TERMO').eq('CARGA',r.carga).limit(1);if(error)throw error;const existente=data?.[0];if(!existente){const x=await sb.from(TABLE_CARGAS).insert({CARGA:r.carga,TERMO:r.termo});if(x.error)throw x.error;}else if(normalizarTextoImportado(existente.TERMO)!==r.termo){const x=await sb.from(TABLE_CARGAS).update({TERMO:r.termo}).eq('CARGA',r.carga);if(x.error)throw x.error;}});return ['ATUALIZAR CARGAS',resumo];})());
- if(dados.agenda)jobs.push((async()=>{const registros=dados.agenda.registros.filter(r=>r.agenda&&r.senha);return ['ATUALIZAR AGENDA',await salvarConjuntoImportado('AGENDA',registros,async r=>{const payload={[COL_AG.agenda]:r.agenda,[COL_AG.senha]:r.senha||null,[COL_AG.carga]:r.carga||null,[COL_AG.status]:r.status||null,[COL_AG.fornecedor]:r.fornecedor||null,[COL_AG.chegada]:r.chegada||null,[COL_AG.dtaBase]:r.dtaBase||null};if(r.carga){const ex=await sb.from(TABLE_AGENDA).select(COL_AG.carga).eq(COL_AG.carga,r.carga).limit(1);if(ex.error)throw ex.error;const q=ex.data?.length?await sb.from(TABLE_AGENDA).update(payload).eq(COL_AG.carga,r.carga):await sb.from(TABLE_AGENDA).insert(payload);if(q.error)throw q.error;}else{const q=await sb.from(TABLE_AGENDA).insert(payload);if(q.error)throw q.error;}})];})());
+ if(dados.agenda)jobs.push((async()=>{const registros=dados.agenda.registros.filter(r=>r.agenda&&r.senha);return ['ATUALIZAR AGENDA',await salvarConjuntoImportado('AGENDA',registros,async r=>{const payload={[COL_AG.agenda]:r.agenda,[COL_AG.senha]:r.senha||null,[COL_AG.carga]:r.carga||null,[COL_AG.status]:r.status||null,[COL_AG.fornecedor]:r.fornecedor||null,[COL_AG.chegada]:r.chegada||null,[COL_AG.dtaBase]:r.dtaBase||null};if(r.carga){if(r.carga){const ex=await sb.from(TABLE_AGENDA).select(COL_AG.carga).eq(COL_AG.carga,r.carga).limit(1);if(ex.error)throw ex.error;const q=ex.data?.length?await sb.from(TABLE_AGENDA).update(payload).eq(COL_AG.carga,r.carga):await sb.from(TABLE_AGENDA).insert(payload);if(q.error)throw q.error;}else{const q=await sb.from(TABLE_AGENDA).insert(payload);if(q.error)throw q.error;}}else{const q=await sb.from(TABLE_AGENDA).insert(payload);if(q.error)throw q.error;}})];})());
  if(dados.recusa)jobs.push((async()=>{const registros=dados.recusa.registros.map(r=>({dtaRecusa:r.dtaRecusa,senha:r.senha}));return ['RECUSA',await salvarConjuntoImportado('RECUSA',registros,async r=>{const q=await sb.from(TABLE_RECUSA).insert({[COL_RE.dtaRecusa]:r.dtaRecusa,[COL_RE.senha]:r.senha});if(q.error)throw q.error;})];})());
  if(dados.sobrepostos)jobs.push((async()=>{const porCarga=new Map();dados.sobrepostos.registros.forEach(r=>porCarga.set(r.carga,r));return ['SOBREPOSTOS',await salvarConjuntoImportado('SOBREPOSTOS',[...porCarga.values()],async r=>{const payload={CARGA:r.carga,QTD_PLTS:r.qtd===''?null:r.qtd,STATUS:r.status||null,TERMO:r.termo||null};const ex=await sb.from(TABLE_SOBREPOSTOS).select('CARGA').eq('CARGA',r.carga).limit(1);if(ex.error)throw ex.error;const q=ex.data?.length?await sb.from(TABLE_SOBREPOSTOS).update(payload).eq('CARGA',r.carga):await sb.from(TABLE_SOBREPOSTOS).insert(payload);if(q.error)throw q.error;})];})());
  const resultados=await Promise.all(jobs);resultados.forEach(([nome,r])=>toast(r.erros.length?`${nome}: concluído parcialmente`:`${nome}: salvo`,`${r.ok} registro(s) gravado(s)${r.erros.length?` · ${r.erros.length} erro(s): ${r.erros.slice(0,3).join(' | ')}`:''}`,r.erros.length?'warn':'ok'));
@@ -1089,7 +1091,7 @@ async function processarAtualizacaoCargas(){
 
 function storedNum(row,key){const col=RC[key];const v=col?row?.[col]:null;if(v===null||v===undefined||v==='')return null;const n=Number(v);return Number.isFinite(n)?n:null;}
 function getManualValue(key,date){
-  if(state.gran!=='dia'||key==='agenda'||key==='agenda_noshow'||key==='recusado')return null;
+  if(!canEdit()||state.gran!=='dia'||key==='agenda'||key==='agenda_noshow'||key==='recusado')return null;
   return storedNum(state.resultadosPorTurno[chaveResultado(date,state.turno)],key);
 }
 function payloadResultado(data,b,turno){
@@ -1105,7 +1107,7 @@ function payloadResultado(data,b,turno){
   return row;
 }
 function payloadBancoResultado(row){
-  const colunasPersistidas=['DATA','TURNO','NO SHOW','AGENDA - NOSHOW','RECEBIDO','BACKLOG RECEBIDO','BACKLOG PENDENTE','NO PRAZO','< 4 HRS','RECUSADO','% NO PRAZO','% RECEBIDO'];
+  const colunasPersistidas=['DATA','TURNO','NO SHOW','AGENDA - NOSHOW','RECEBIDO','BACKLOG RECEBIDO','BACKLOG PENDENTE','NO PRAZO','< 4 HRS','RECUSA NO DIA','RECUSA NO PRAZO','RECUSA BACKLOG','SOBREPOSTAS','% NO PRAZO','% RECEBIDO'];
   const payload={};
   for(const coluna of colunasPersistidas){if(Object.prototype.hasOwnProperty.call(row,coluna))payload[coluna]=row[coluna];}
   return payload;
@@ -1160,6 +1162,7 @@ function calcularResultados(){
   return rows;
 }
 async function gravarResultados(rows){
+  if(!canEdit())throw new Error('Apenas o usuário 5520967 pode gravar resultados.');
   const porData=new Map();
   for(const row of rows){
     if(!TURNOS.includes(row.TURNO))throw new Error(`TURNO ausente ou inválido em ${row.DATA}`);
@@ -1449,6 +1452,7 @@ function detectMissingCargas(){
   ).map(c=>({carga:String(c[COL_CR.carga]??'').trim(),termo:c[COL_CR.termo]||'',senha:c[COL_CR.senha]||'',agenda:c[COL_CR.agenda]||''}));
 }
 async function syncCargasComAgenda(){
+  if(!canEdit())return {ok:0,fail:0};
   const mapa=new Map();
   for(const a of state.rawAgenda){const k=String(a[COL_AG.carga]??'').trim();if(k&&!mapa.has(k))mapa.set(k,a);}
   let ok=0,fail=0;
@@ -1913,6 +1917,12 @@ function renderCharts(agg){
 function renderAgendaHourSummary(){
   const host=document.getElementById('agendaHourHost');
   if(!host)return;
+  if(!canEdit()){
+    host.innerHTML='<div class="empty-state"><h3>Detalhamento por horário indisponível</h3><p>O modo consulta exibe somente os indicadores consolidados gravados em BD_RESULTADOS.</p></div>';
+    const note=document.getElementById('agendaHourNote');
+    if(note)note.textContent='';
+    return;
+  }
   const [year,month]=state.mes.split('-').map(Number);
   const daysInMonth=new Date(year,month,0).getDate();
   const hours=[22,23,...Array.from({length:22},(_,i)=>i)];
@@ -2027,7 +2037,36 @@ function rowFilterFor(key, r){
   }
 }
 
-function openDrill(rowKey, colKey, colIdx, noScroll=false){
+async function carregarDadosDetalhamento(){
+  if(state.drillDataLoaded)return;
+  const [agendaRows,cargasRows,sobrepostosRows,recusaRows]=await Promise.all([
+    fetchAllFromTable(TABLE_AGENDA),
+    fetchAllFromTable(TABLE_CARGAS),
+    fetchAllFromTable(TABLE_SOBREPOSTOS),
+    fetchAllFromTable(TABLE_RECUSA)
+  ]);
+  state.rawAgenda=agendaRows||[];
+  state.rawCargas=cargasRows||[];
+  state.rawSobrepostos=sobrepostosRows||[];
+  state.rawRecusa=recusaRows||[];
+  buildRegistros();
+  state.drillDataLoaded=true;
+}
+
+async function openDrill(rowKey, colKey, colIdx, noScroll=false){
+  const somenteConsulta=!canEdit();
+  try{
+    if(somenteConsulta&&!state.drillDataLoaded){
+      showLoader(true,'Carregando detalhamento da linha…');
+      await carregarDadosDetalhamento();
+    }
+  }catch(e){
+    console.error(e);
+    toast('Falha no detalhamento',e.message||String(e),'err');
+    return;
+  }finally{
+    if(somenteConsulta)showLoader(false);
+  }
   const rowDef = ROWS.find(r => r.key === rowKey) || { label: rowKey, color: '#60a5fa' };
   const agg = aggregate();
   const col = agg.cols[colIdx];
@@ -2262,6 +2301,7 @@ function openMissingModal(){document.getElementById('missingMes').value=todayISO
 function closeMissingModal(){document.getElementById('modalMissing').classList.remove('show');}
 
 async function saveMissingCargas(){
+  if(!canEdit()){toast('Acesso negado','Apenas o usuário 5520967 pode atualizar cargas.','warn');return;}
   const rows = document.querySelectorAll('#missingTbody tr[data-idx]');
   const updates = [];
   rows.forEach(tr => {
@@ -2522,12 +2562,79 @@ async function fetchAllFromTable(tableName){
 
 let carregandoDados = false;
 
+// Usuários que não são 5520967 consultam exclusivamente os resultados já gravados.
+// O esquema atual de BD_RESULTADOS não possui AGENDA; ela é reconstruída pela soma
+// de AGENDA - NOSHOW + NO SHOW, sem alterar a estrutura do banco.
+function normalizarResultadoSomenteLeitura(row){
+  const numero=(...chaves)=>{
+    for(const chave of chaves){
+      const valor=row?.[chave];
+      if(valor!==null&&valor!==undefined&&valor!==''){
+        const n=Number(valor);
+        if(Number.isFinite(n))return n;
+      }
+    }
+    return 0;
+  };
+  const noShow=numero('NO SHOW');
+  const agendaSemNoShow=numero('AGENDA - NOSHOW');
+  return {
+    ...row,
+    DATA:String(row?.DATA||'').slice(0,10),
+    TURNO:TURNOS.includes(row?.TURNO)?row.TURNO:'TODOS',
+    AGENDA:agendaSemNoShow+noShow,
+    'NO SHOW':noShow,
+    'AGENDA - NOSHOW':agendaSemNoShow,
+    'RECEBIDO':numero('RECEBIDO'),
+    'BACKLOG RECEBIDO':numero('BACKLOG RECEBIDO'),
+    'BACKLOG PENDENTE':numero('BACKLOG PENDENTE'),
+    'NO PRAZO':numero('NO PRAZO'),
+    '< 4 HRS':numero('< 4 HRS'),
+    'RECUSA NO DIA':numero('RECUSA NO DIA','RECUSADO','RECUSADO DIA'),
+    'RECUSADO':numero('RECUSA NO DIA','RECUSADO','RECUSADO DIA'),
+    'RECUSA NO PRAZO':numero('RECUSA NO PRAZO'),
+    'RECUSA BACKLOG':numero('RECUSA BACKLOG'),
+    'SOBREPOSTAS':numero('SOBREPOSTAS'),
+    '% NO PRAZO':numero('% NO PRAZO'),
+    '% RECEBIDO':numero('% RECEBIDO')
+  };
+}
+
+async function carregarResultadosSomenteLeitura(){
+  const linhas=await fetchAllFromTable(TABLE_RESULTADOS);
+  const cache={};
+  for(const original of linhas){
+    const row=normalizarResultadoSomenteLeitura(original);
+    if(!row.DATA)continue;
+    cache[chaveResultado(row.DATA,row.TURNO)]=row;
+  }
+  // Não carregar nem calcular dados das tabelas de origem neste perfil.
+  state.rawAgenda=[];state.rawCargas=[];state.rawSobrepostos=[];state.rawRecusa=[];
+  state.registros=[];state.missingCargas=[];state.comments={};
+  state.drillDataLoaded=false;
+  state.computedResultadosPorTurno={};
+  state.resultadosPorTurno=cache;
+  // Previsão/clima é independente do cálculo e deve aparecer também no modo consulta.
+  await Promise.all([loadComments(), loadWeather()]);
+  const footer=document.getElementById('footerConexao');
+  if(footer)footer.textContent=`BD_RESULTADOS: ${nfInt.format(Object.keys(cache).length)} registro(s) · modo consulta`;
+  state.dataLoaded=true;
+  updateMissingAlert();updatePeriodHints();updateEditHint();
+  render();
+  return true;
+}
+
 async function loadData(force=false, syncSources=false, silent=false){
   if(!force&&state.dataLoaded){render();return true;}
   if(carregandoDados)return false;          // evita duas cargas ao mesmo tempo
   carregandoDados = true;
   if(!silent)showLoader(true,'Carregando bases, calculando turnos e gravando BD_RESULTADOS…');
   try{
+    if(!canEdit()){
+      const ok=await carregarResultadosSomenteLeitura();
+      if(silent)Chart.defaults.animation=false;
+      return ok;
+    }
     const [agendaRows,cargasRows,sobrepostosRows,recusaRows]=await Promise.all([
       fetchAllFromTable(TABLE_AGENDA),
       fetchAllFromTable(TABLE_CARGAS),
@@ -2545,6 +2652,7 @@ async function loadData(force=false, syncSources=false, silent=false){
       if(fail)toast('Sincronização parcial',`${fail} atualização(ões) falharam.`,'warn');
     }
     buildRegistros();
+    state.drillDataLoaded=true;
     detectMissingCargas();
     updateMissingAlert();
     document.getElementById('footerConexao').textContent=
@@ -2723,17 +2831,13 @@ function bindEvents(){
     const th = e.target.closest('th[data-date]');
     if (th){ handleDateClick(th.dataset.date, e.ctrlKey || e.metaKey, e.shiftKey); return; }
     const td = e.target.closest('td.numcell[data-row]');
-    if (td){
-      if (canEdit()){
-        if (cellClickTimer) clearTimeout(cellClickTimer);
-        const ds = td.dataset;
-        cellClickTimer = setTimeout(() => {
-          cellClickTimer = null;
-          openDrill(ds.row, ds.col, Number(ds.colidx));
-        }, 260);
-      } else {
-        openDrill(td.dataset.row, td.dataset.col, Number(td.dataset.colidx));
-      }
+    if (td && canEdit()){
+      if (cellClickTimer) clearTimeout(cellClickTimer);
+      const ds = td.dataset;
+      cellClickTimer = setTimeout(() => {
+        cellClickTimer = null;
+        openDrill(ds.row, ds.col, Number(ds.colidx));
+      }, 260);
     }
   });
 
@@ -2741,13 +2845,9 @@ function bindEvents(){
     const td = e.target.closest('td.numcell[data-row]');
     if (td){
       if (cellClickTimer){ clearTimeout(cellClickTimer); cellClickTimer = null; }
-      if (!canEdit()){
-        toast('Ação restrita', 'Somente o usuário autorizado pode editar valores manualmente.', 'warn');
-        return;
-      }
       e.preventDefault();
       e.stopPropagation();
-      openEditModal(td.dataset.row, td.dataset.col, Number(td.dataset.colidx));
+      openDrill(td.dataset.row, td.dataset.col, Number(td.dataset.colidx));
       return;
     }
     const th = e.target.closest('th[data-date]');
