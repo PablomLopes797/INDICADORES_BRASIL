@@ -300,7 +300,8 @@ td.nd{color:var(--quiet)}
 .par-b{cursor:pointer;transition:opacity .15s}
 .par-b:hover{opacity:.85!important}
 .par-t{font-size:9px;fill:var(--muted)}
-.par-v{font-size:9.5px;font-weight:800;fill:var(--text)}
+.par-v{font-size:9.5px;font-weight:800;fill:var(--text);paint-order:stroke;stroke:var(--panel2);stroke-width:3px;stroke-linejoin:round}
+.par-p{font-size:9px;font-weight:800;fill:var(--pink);paint-order:stroke;stroke:var(--panel2);stroke-width:3px;stroke-linejoin:round;pointer-events:none}
 .par-g{stroke:var(--line2);stroke-width:1}
 .par-80{stroke:var(--amber);stroke-dasharray:4 4;stroke-width:1}
 .par-l{fill:none;stroke:var(--pink);stroke-width:2;pointer-events:none}
@@ -1169,19 +1170,19 @@ function paretoCard(titulo,dim,mapa){
     const n=itens.length,bw=44,L=44,R=44,T=22,B=92,W=Math.max(480,n*bw+L+R),H=300,ph=H-T-B,mx=itens[0].v;
     let ac=0;const pts=[];
     const bars=itens.map((x,i)=>{
-      ac+=x.v;const cx=L+i*bw+bw/2,h=Math.max(1,x.v/mx*ph),y=T+ph-h,cy=T+ph-ac/tot*ph;pts.push([cx,cy]);
+      ac+=x.v;const cx=L+i*bw+bw/2,h=Math.max(1,x.v/mx*ph),y=T+ph-h,cy=T+ph-ac/tot*ph;pts.push([cx,cy,ac/tot*100]);
       const on=sel.has(x.k),apagado=any&&!on;
       const lab=x.k.length>16?x.k.slice(0,15)+'…':x.k;
       return `<g class="par-b" data-act="par" data-d="${dim}" data-v="${esc(x.k)}" style="opacity:${apagado?0.35:1}"><title>${esc(x.k)} · ${nf.format(x.v)} ausência(s) · ${pc.format(x.v/tot*100)}% do total · acumulado ${pc.format(ac/tot*100)}%</title>
         <rect x="${L+i*bw}" y="${T}" width="${bw}" height="${ph+B}" fill="transparent"/>
         <rect x="${cx-bw*0.36}" y="${y}" width="${bw*0.72}" height="${h}" rx="3" style="fill:${on?'var(--cyan)':'var(--accent2)'}"/>
-        <text x="${cx}" y="${y-4}" text-anchor="middle" class="par-v">${nf.format(x.v)}</text>
+        <text x="${cx}" y="${y-4}" text-anchor="middle" class="par-v">${nf1.format(x.v/tot*100)}%</text>
         <text transform="translate(${cx+4},${T+ph+10}) rotate(-45)" text-anchor="end" class="par-t">${esc(lab)}</text></g>`}).join('');
     const grid=[0,0.25,0.5,0.75,1].map(f=>{const y=T+ph-f*ph;return `<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" class="par-g"/><text x="${L-6}" y="${y+3}" text-anchor="end" class="par-t">${nf.format(Math.round(mx*f))}</text><text x="${W-R+6}" y="${y+3}" class="par-t">${Math.round(f*100)}%</text>`}).join('');
     const y80=T+ph-0.8*ph;
-    corpo=`<div class="par-w"><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img">${grid}<line x1="${L}" x2="${W-R}" y1="${y80}" y2="${y80}" class="par-80"/>${bars}<polyline points="${pts.map(p=>p.join(',')).join(' ')}" class="par-l"/>${pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3" class="par-d"/>`).join('')}</svg></div>`;
+    corpo=`<div class="par-w"><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img">${grid}<line x1="${L}" x2="${W-R}" y1="${y80}" y2="${y80}" class="par-80"/>${bars}<polyline points="${pts.map(p=>p[0]+','+p[1]).join(' ')}" class="par-l"/>${pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3" class="par-d"/><text x="${p[0]}" y="${p[1]-8}" text-anchor="middle" class="par-p">${nf1.format(p[2])}%</text>`).join('')}</svg></div>`;
   }
-  return `<div class="card c6"><h3>${esc(titulo)} <em>${nf.format(itens.length)} item(ns) · ${nf.format(tot)} ausência(s)${any?' · '+sel.size+' selecionado(s)':''}</em></h3>${corpo}<div class="hint">Clique filtra os demais gráficos · Ctrl+clique soma itens · clique de novo remove. Linha rosa = % acumulado; tracejado = 80%.</div></div>`;
+  return `<div class="card c6"><h3>${esc(titulo)} <em>${nf.format(itens.length)} item(ns) · ${nf.format(tot)} ausência(s)${any?' · '+sel.size+' selecionado(s)':''}</em></h3>${corpo}<div class="hint">Clique filtra os demais gráficos · Ctrl+clique soma itens · clique de novo remove. Rótulos: branco = % do total da barra; rosa = % acumulado; tracejado = 80%. Passe o mouse para ver o nº de ausências.</div></div>`;
 }
 function paretosGestores(){
   const ck=chaveFiltro()+'|pareto';let acc=state.cache.get(ck);
