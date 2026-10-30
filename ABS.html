@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0b0f19">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23a78bfa'/%3E%3Cstop offset='1' stop-color='%236d28d9'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='15' fill='url(%23g)'/%3E%3Crect x='13' y='34' width='8' height='16' rx='3' fill='%23fff' opacity='.55'/%3E%3Crect x='25' y='26' width='8' height='24' rx='3' fill='%23fff' opacity='.75'/%3E%3Crect x='37' y='18' width='8' height='32' rx='3' fill='%23fff'/%3E%3Ccircle cx='51' cy='15' r='5' fill='%23f472b6'/%3E%3C/svg%3E">
 <title>ABS · Assaí · Painel de absenteísmo</title>
 <style>
 :root{color-scheme:dark;--bg:#0b0f19;--bg2:#080b14;--panel:#121826;--panel2:#171e2e;--panel3:#0e1420;--line:rgba(226,232,255,.10);--line2:rgba(226,232,255,.06);--text:#e9edf7;--muted:#9aa6bf;--quiet:#6f7c96;--accent:#6366f1;--accent2:#8b5cf6;--cyan:#22d3ee;--green:#34d399;--red:#f87171;--amber:#fbbf24;--blue:#60a5fa;--pink:#f472b6;--chip:rgba(99,102,241,.14);--chip-line:rgba(99,102,241,.4);--shadow:0 18px 44px -30px rgba(0,0,0,.9);--track:rgba(255,255,255,.08);--radius:14px;font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif}
@@ -285,6 +286,16 @@ td.nd{color:var(--quiet)}
 #mqTable td,#mqTable th{text-align:left}
 #mqTable thead th{cursor:pointer;white-space:nowrap}
 .mq-hi{color:var(--red);font-weight:800}
+.lg-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 3s ease;z-index:0;pointer-events:none}
+.lg-video.on{opacity:.65}
+.lg-card{position:relative;z-index:1}
+.lg-cred{text-align:center;font-size:10px;letter-spacing:1.2px;color:var(--quiet);padding-top:2px}
+#jm,#gm{z-index:65}
+#acCard{width:min(1500px,98vw);height:94vh;max-height:94vh;display:flex;flex-direction:column}
+#acCard .jm-b{flex:1;overflow:auto;align-content:start}
+#acCard .tw{max-height:none}
+#acTable td:nth-child(-n+3){text-align:left}
+#acTable th:first-child,#acTable td:first-child{min-width:90px}
 </style>
 </head>
 <body>
@@ -312,8 +323,8 @@ td.nd{color:var(--quiet)}
       <p>ABS = ausência apurada (falta sem registro de presença no Suricato ou justificativa contabilizada). Presentes = registro de presença no Suricato. Domingos e feriados não geram falta. A ausência de registro de presença é contabilizada como falta, mesmo sem carga no período, exceto domingos, feriados, férias, justificativas e a regra do 4º turno aos sábados. Toda a tela (cards, gráficos, TOTAL CD, CD SETORES e tabela) lê a mesma agregação.</p>
     </div>
     <form id="monthForm">
-      <div class="field"><label for="monthInput">MÊS DE REFERÊNCIA</label><input id="monthInput" type="month" required></div>
-      <button class="btn btn-primary" id="reloadBtn" type="submit">↻ ATUALIZAR DADOS</button><button class="btn" id="mqBtn" type="button">👥 MEU QUADRO</button>
+      <div class="field"><label for="monthInput">MÊS DE REFERÊNCIA</label><input id="monthInput" type="month" required></div><button class="btn" id="expBtn" type="button">⬇ OBTER DADOS</button>
+      <button class="btn btn-primary" id="reloadBtn" type="submit">↻ ATUALIZAR DADOS</button><button class="btn" id="mqBtn" type="button">👥 MEU QUADRO</button><button class="btn" id="usrBtn" type="button" hidden>＋ CADASTRAR USUÁRIO</button>
     </form>
   </section>
 
@@ -410,6 +421,7 @@ td.nd{color:var(--quiet)}
   <footer class="foot"><span>ASSAÍ · ABS · PAINEL ANALÍTICO</span><span>CONSULTA DIRETA AO SUPABASE · SEM DADOS FICTÍCIOS</span></footer>
 
   <div class="lg" id="lg">
+  <video class="lg-video" id="lgVideo" muted loop playsinline preload="auto"></video>
   <form class="lg-card" id="lgForm">
     <div class="brand"><div class="mark">A</div><div><b><em>ABS</em> · ASSAÍ</b><small>PAINEL DE ABSENTEÍSMO</small></div></div>
     <h1>Acesso restrito</h1><p>Entre com sua matrícula e senha.</p>
@@ -418,6 +430,7 @@ td.nd{color:var(--quiet)}
     <div class="lg-err" id="lgErr" role="alert"></div>
     <button class="btn btn-primary" id="lgBtn" type="submit">ENTRAR</button>
     <div class="lg-st" id="lgSt">Carregando dados em segundo plano…</div>
+    <div class="lg-cred">Desenvolvido por Pablo Martins Lopes</div>
   </form>
 </div>
 <div class="ld" id="ld" role="status" aria-live="polite"><div class="ld-box"><div class="ld-t">CARREGANDO DADOS...</div><div class="ld-s"><span id="ldTxt">Conectando ao Supabase…</span> <b id="ldPct"></b></div><div class="ld-bar ind" id="ldBar"><i></i></div></div></div>
@@ -441,6 +454,29 @@ td.nd{color:var(--quiet)}
       <div class="jm-f"><button class="btn" id="jmCancel" type="button">Cancelar</button><button class="btn btn-primary" id="jmSalva" type="button">Gravar justificativa</button></div>
     </div>
   </div>
+  <div class="jm" id="um" hidden role="dialog" aria-modal="true">
+    <div class="jm-card">
+      <div class="jm-h"><div><h3>Cadastrar usuário</h3><small>Grava em ABS_USER · acesso ao painel</small></div><button class="jm-x" id="umFecha" type="button" aria-label="Fechar">✕</button></div>
+      <div class="jm-b">
+        <div><label>MATRÍCULA (USUÁRIO)</label><input id="umMat" type="text" inputmode="numeric" autocomplete="off"></div>
+        <div><label>SENHA</label><input id="umPass" type="password" autocomplete="new-password"></div>
+        <div><label>CONFIRMAR SENHA</label><input id="umPass2" type="password" autocomplete="new-password"></div>
+        <div class="jm-msg" id="umMsg" hidden></div>
+      </div>
+      <div class="jm-f"><button class="btn" id="umCancel" type="button">Fechar</button><button class="btn btn-primary" id="umSalva" type="button">Cadastrar</button></div>
+    </div>
+  </div>
+  <div class="jm" id="ex" hidden role="dialog" aria-modal="true">
+    <div class="jm-card">
+      <div class="jm-h"><div><h3>Obter dados</h3><small>Exporta a base do Supabase em CSV (separador ;)</small></div><button class="jm-x" id="exFecha" type="button" aria-label="Fechar">✕</button></div>
+      <div class="jm-b">
+        <div><label>BASE</label><select id="exBase"><option value="ABS_GESTOR_COLAB">ABS_GESTOR_COLAB</option><option value="ABS_JUSTIFICATIVAS">ABS_JUSTIFICATIVAS</option><option value="ABS_SURICATO">ABS_SURICATO</option></select></div>
+        <div id="exDatas" class="jm-row"><div><label>DATA INICIAL</label><input id="exIni" type="date"></div><div><label>DATA FINAL</label><input id="exFim" type="date"></div></div>
+        <div class="jm-msg" id="exMsg" hidden></div>
+      </div>
+      <div class="jm-f"><button class="btn" id="exCancel" type="button">Fechar</button><button class="btn btn-primary" id="exGo" type="button">OBTER DADOS</button></div>
+    </div>
+  </div>
   <div class="jm" id="mq" hidden role="dialog" aria-modal="true">
     <div class="jm-card" id="mqCard">
       <div class="jm-h"><div><h3>Meu quadro</h3><small>Equipe vinculada ao gestor · ABS_GESTOR_COLAB</small></div><button class="jm-x" id="mqFecha" type="button" aria-label="Fechar">✕</button></div>
@@ -454,6 +490,8 @@ td.nd{color:var(--quiet)}
             <div class="field"><label>TEMPO DE CASA</label><select id="mqCasa"></select></div>
             <div class="field"><label>CARGO</label><select id="mqCargo"></select></div>
             <div class="field"><label>MÊS</label><input id="mqMes" type="month"></div>
+            <div class="field"><label>VISÃO DO ABS</label><div class="seg" id="mqVisao"><button type="button" data-v="qtd" class="on">QUANTIDADE</button><button type="button" data-v="pct">PERCENTUAL</button></div></div>
+            <button class="btn" id="mqAcomp" type="button">📅 ACOMPANHAR</button>
             <button class="btn btn-primary" id="mqAdd" type="button">＋ ADICIONAR COLABORADOR À MINHA EQUIPE</button>
           </div>
           <div class="mq-sum" id="mqSum"></div>
@@ -461,6 +499,16 @@ td.nd{color:var(--quiet)}
         </div>
       </div>
       <div class="jm-f"><button class="btn" id="mqFechar2" type="button">Fechar</button></div>
+    </div>
+  </div>
+  <div class="jm" id="ac" hidden role="dialog" aria-modal="true">
+    <div class="jm-card" id="acCard">
+      <div class="jm-h"><div><h3>Acompanhar equipe · dia a dia</h3><small id="acSub"></small></div><button class="jm-x" id="acFecha" type="button" aria-label="Fechar">✕</button></div>
+      <div class="jm-b">
+        <div class="lgd" style="padding:0"><span><i style="background:rgba(248,113,113,.7)"></i>F/AT/AF · ABS</span><span><i style="background:rgba(52,211,153,.7)"></i>P · presença</span><span><i style="background:rgba(96,165,250,.7)"></i>FE · férias</span><span><i style="background:rgba(251,191,36,.7)"></i>FO/TR · não ABS</span><span>DOM/FER · sem falta · duplo clique justifica</span></div>
+        <div class="tw"><table class="mx" id="acTable"><caption>Acompanhamento da equipe</caption><thead id="acHead"></thead><tbody id="acRows"></tbody></table></div>
+      </div>
+      <div class="jm-f"><button class="btn" id="acFechar2" type="button">Fechar</button></div>
     </div>
   </div>
   <div class="jm" id="gm" hidden role="dialog" aria-modal="true" aria-labelledby="gmTitle">
@@ -1245,7 +1293,7 @@ async function gravarJust(){
     msg.className='jm-msg ok';msg.hidden=false;msg.textContent=`Gravado com sucesso: ${payload.length} registro(s) na tabela ABS_JUSTIFICATIVAS.`;
     await recarregarJustMes();
     invalidar();render();
-    setTimeout(fecharJust,900);
+    if(!$('#ac').hidden){mqRefresh();acRender()}setTimeout(fecharJust,900);
   }catch(e){
     msg.className='jm-msg err';msg.hidden=false;msg.textContent='Falha na gravação: '+(e.message||e)+'. Os dados do formulário foram preservados — verifique e tente novamente.';
     btn.disabled=false;btn.innerHTML='Gravar justificativa';
@@ -1439,7 +1487,7 @@ async function descobrirColunas(){
     return base+Object.values(state.cols).filter(Boolean).map(k=>`,"${k}"`).join('');
   }catch(e){console.warn('[ABS_QUADRO] descoberta de colunas falhou:',e.message||e);state.cols={};return base}
 }
-const mq={gestor:'',busca:'',idMin:'',idMax:'',casa:'',cargo:'',sort:'nome',dir:1,rows:[]};
+const mq={visao:'qtd',vis:[],gestor:'',busca:'',idMin:'',idMax:'',casa:'',cargo:'',sort:'nome',dir:1,rows:[]};
 const MQ_CASA=[['','Todos'],['0-12','< 1 ano'],['12-36','1 a 3 anos'],['36-60','3 a 5 anos'],['60-120','5 a 10 anos'],['120-99999','> 10 anos']];
 const MQ_COLS=[['matricula','MATRICULA'],['nome','NOME'],['idade','IDADE'],['admIso','DATA DE ADMISSÃO'],['casa','TEMPO DE CASA'],['cargo','CARGO'],['pct','MÉDIA DE ABS']];
 function mesesEntre(a,b){let m=(+b.slice(0,4)-+a.slice(0,4))*12+(+b.slice(5,7)-+a.slice(5,7));if(+b.slice(8,10)<+a.slice(8,10))m--;return Math.max(0,m)}
@@ -1471,10 +1519,10 @@ function mqTabela(){
   if(mq.cargo)l=l.filter(p=>p.cargo===mq.cargo);
   const q=semAcento(mq.busca);
   if(q)l=l.map(p=>({p,s:Math.max(pontua(q,semAcento(p.nome)),pontua(q,semAcento(p.matricula))*0.98)})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s).map(x=>x.p);
-  else l.sort((a,b)=>{const x=a[mq.sort],y=b[mq.sort];if(x==null&&y==null)return 0;if(x==null)return 1;if(y==null)return -1;
+  else l.sort((a,b)=>{const kS=(mq.sort==='pct'&&mq.visao==='qtd')?'aus':mq.sort,x=a[kS],y=b[kS];if(x==null&&y==null)return 0;if(x==null)return 1;if(y==null)return -1;
     return(typeof x==='number'?x-y:String(x).localeCompare(String(y),'pt-BR',{numeric:true}))*mq.dir});
-  $('#mqHead').innerHTML='<tr>'+MQ_COLS.map(([k,t])=>`<th data-k="${k}">${t}${mq.sort===k?(mq.dir>0?' ▲':' ▼'):''}</th>`).join('')+'</tr>';
-  $('#mqRows').innerHTML=l.map(p=>`<tr><td>${esc(p.matricula)}</td><td>${esc(p.nome)}</td><td>${p.idade==null?'—':p.idade}</td><td>${p.admIso?p.admIso.split('-').reverse().join('/'):'—'}</td><td>${casaTxt(p.casa)}</td><td>${esc(p.cargo)}</td><td><span class="cv ${p.pct!=null&&p.pct>8?'mq-hi':''}">${p.pct==null?'—':pc.format(p.pct)+'%'}</span><span class="cs">${p.aus} aus. / ${p.den} dias</span></td></tr>`).join('')||'<tr><td colspan="7" class="empty">Nenhum colaborador para os filtros.</td></tr>';
+  mq.vis=l;$('#mqHead').innerHTML='<tr>'+MQ_COLS.map(([k,t])=>`<th data-k="${k}">${t}${mq.sort===k?(mq.dir>0?' ▲':' ▼'):''}</th>`).join('')+'</tr>';
+  $('#mqRows').innerHTML=l.map(p=>`<tr><td>${esc(p.matricula)}</td><td>${esc(p.nome)}</td><td>${p.idade==null?'—':p.idade}</td><td>${p.admIso?p.admIso.split('-').reverse().join('/'):'—'}</td><td>${casaTxt(p.casa)}</td><td>${esc(p.cargo)}</td><td>${mqCelulaAbs(p)}</td></tr>`).join('')||'<tr><td colspan="7" class="empty">Nenhum colaborador para os filtros.</td></tr>';
   const A=l.reduce((s,p)=>s+p.aus,0),D=l.reduce((s,p)=>s+p.den,0);
   $('#mqSum').textContent=`${nf.format(l.length)} de ${nf.format(mq.rows.length)} colaborador(es) · média de ABS da equipe: ${D?pc.format(A/D*100)+'%':'—'} (${nf.format(A)} ausência(s) em ${nf.format(D)} pessoa-dia)`+(state.cols.nasc&&state.cols.adm?'':' · colunas de nascimento/admissão não encontradas no ABS_QUADRO');
 }
@@ -1499,7 +1547,7 @@ $('#mqBtn').onclick=()=>{if(!mq.gestor&&state.gestorF)mq.gestor=state.gestorF;mq
 const fechaMq=()=>{$('#mq').hidden=true};
 $('#mqFecha').onclick=fechaMq;$('#mqFechar2').onclick=fechaMq;
 document.addEventListener('click',e=>{if(e.target.id==='mq')fechaMq()});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#mq').hidden&&$('#gm').hidden)fechaMq()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#mq').hidden&&$('#gm').hidden&&$('#ac').hidden)fechaMq()});
 $('#mqGestor').onchange=e=>{mq.gestor=e.target.value;mq.cargo='';mqRefresh()};
 $('#mqBusca').oninput=e=>{mq.busca=e.target.value;mqTabela()};
 $('#mqIdMin').oninput=e=>{mq.idMin=e.target.value;mqTabela()};
@@ -1511,6 +1559,111 @@ $('#mqAdd').onclick=()=>abrirGestModal(mq.gestor);
 $('#mqHead').onclick=e=>{const th=e.target.closest('th[data-k]');if(!th)return;const k=th.dataset.k;mq.dir=mq.sort===k?-mq.dir:1;mq.sort=k;mqTabela()};
 $('#pcdFilter').onchange=e=>{state.pcdF=e.target.value;invalidar();render()};
 $('#sitFilter').onchange=e=>{state.sitF=e.target.value;invalidar();render()};
+
+/* ---------- ADMIN · FUNDO DE LOGIN · ACOMPANHAR · EXPORTAR ---------- */
+const ADMIN_USER='5520967';
+const VIDEO_LOGIN='./7020018_Particle_Dot_3840x2160.mp4';   /* mesma pasta do HTML no GitHub Pages; ajuste se estiver em outro lugar */
+let videoIniciado=false;
+async function iniciaVideoLogin(){
+  if(videoIniciado)return;videoIniciado=true;
+  const v=$('#lgVideo');if(!v)return;
+  const mostrar=()=>{v.play().catch(()=>{});requestAnimationFrame(()=>v.classList.add('on'))};   /* fade-in de 3s só com o vídeo 100% carregado */
+  try{const r=await fetch(VIDEO_LOGIN);if(!r.ok)throw Error('HTTP '+r.status);const bl=await r.blob();
+    v.addEventListener('canplay',mostrar,{once:true});v.src=URL.createObjectURL(bl);v.load()}
+  catch(e){v.addEventListener('canplaythrough',mostrar,{once:true});v.src=VIDEO_LOGIN;v.load()}
+}
+/* cadastrar usuário (somente 5520967) */
+const umMsg=(t,c)=>{const m=$('#umMsg');m.className='jm-msg '+c;m.textContent=t;m.hidden=false};
+$('#usrBtn').onclick=()=>{['#umMat','#umPass','#umPass2'].forEach(s=>$(s).value='');$('#umMsg').hidden=true;$('#umSalva').disabled=false;$('#um').hidden=false;setTimeout(()=>$('#umMat').focus(),30)};
+const fechaUm=()=>{$('#um').hidden=true};$('#umFecha').onclick=fechaUm;$('#umCancel').onclick=fechaUm;
+$('#umSalva').onclick=async()=>{
+  const btn=$('#umSalva');if(btn.disabled)return;
+  if(AUTH.user!==ADMIN_USER){umMsg('Apenas o usuário '+ADMIN_USER+' pode cadastrar usuários.','err');return}
+  const mat=normMat($('#umMat').value),s1=$('#umPass').value,s2=$('#umPass2').value;
+  if(!/^\d+$/.test(mat)){umMsg('Informe a matrícula (somente números).','err');return}
+  if(s1.length<4){umMsg('A senha deve ter ao menos 4 caracteres.','err');return}
+  if(s1!==s2){umMsg('As senhas não conferem.','err');return}
+  btn.disabled=true;btn.innerHTML='<span class="jm-loading"></span>Cadastrando…';
+  try{
+    const u=new URL(`${URL_SB}/rest/v1/ABS_USER`);u.searchParams.set('select','USER');u.searchParams.set('USER','eq.'+mat);u.searchParams.set('limit','1');
+    const rc=await fetch(u,{headers:headers(),cache:'no-store'});if(!rc.ok)throw Error(await detalhe(rc));
+    const jc=await rc.json();if(Array.isArray(jc)&&jc.length){umMsg('A matrícula '+mat+' já está cadastrada.','err');return}
+    const r=await fetch(`${URL_SB}/rest/v1/ABS_USER`,{method:'POST',headers:{...headers(),Prefer:'return=minimal','Content-Type':'application/json'},body:JSON.stringify([{USER:mat,PASS:s1}]),cache:'no-store'});
+    if(!r.ok)throw Error(await detalhe(r));
+    umMsg('✔ Usuário '+mat+' cadastrado. Pode cadastrar o próximo.','ok');
+    ['#umMat','#umPass','#umPass2'].forEach(s=>$(s).value='');$('#umMat').focus();
+  }catch(e){umMsg('Falha ao cadastrar: '+(e.message||e),'err')}
+  finally{btn.disabled=false;btn.textContent='Cadastrar'}
+};
+/* meu quadro: visão de ABS e acompanhamento */
+function mqCelulaAbs(p){
+  const hi=p.pct!=null&&p.pct>8?' mq-hi':'',pct=p.pct==null?'—':pc.format(p.pct)+'%';
+  return mq.visao==='pct'?`<span class="cv${hi}">${pct}</span><span class="cs">${p.aus} aus. / ${p.den} dias</span>`:`<span class="cv${hi}">${nf.format(p.aus)}</span><span class="cs">${pct} · ${p.den} dias apurados</span>`;
+}
+$('#mqVisao').onclick=e=>{const b=e.target.closest('[data-v]');if(!b)return;mq.visao=b.dataset.v;$$('#mqVisao button').forEach(x=>x.classList.toggle('on',x===b));mqTabela()};
+function acRender(){
+  const l=mq.vis||[];
+  const dias=state.dias.map(d=>({day:d,dow:dowDe(d),domingo:dowDe(d)===0,feriado:state.feriados.has(d),futuro:d>state.hoje}));
+  $('#acHead').innerHTML='<tr><th>MATRICULA</th><th>NOME</th><th>CARGO</th>'+dias.map(m=>`<th class="${m.domingo||m.feriado?'off':''}"><b>${m.day.slice(8)}</b><small>${dowNome(m.day)}</small></th>`).join('')+'</tr>';
+  $('#acRows').innerHTML=l.map(p=>`<tr><td>${esc(p.matricula)}</td><td>${esc(p.nome)}</td><td>${esc(p.cargo)}</td>`+dias.map(m=>{const st=statusDe(p,m),tj=state.just.has(kk(p.matricula,m.day));
+    return `<td class="st ${st.cls}${m.domingo||m.feriado?' off':''}${tj?' jc':''}" title="${esc(brData(m.day)+' · '+dowNome(m.day)+' · '+st.txt)}" data-jday="${m.day}" data-jmat="${esc(p.matricula)}">${st.c}</td>`}).join('')+'</tr>').join('')||'<tr><td colspan="40" class="empty">Nenhum colaborador para os filtros.</td></tr>';
+  $('#acSub').textContent=`${nf.format(l.length)} colaborador(es) · gestor ${mq.gestor} · ${String(state.mes).padStart(2,'0')}/${state.ano}`;
+}
+$('#mqAcomp').onclick=()=>{if(!mq.gestor)return;acRender();$('#ac').hidden=false};
+const fechaAc=()=>{$('#ac').hidden=true};$('#acFecha').onclick=fechaAc;$('#acFechar2').onclick=fechaAc;
+$('#acTable').addEventListener('dblclick',e=>{const t=e.target.closest('td[data-jday]');if(t)abrirJustModal(t.dataset.jday,t.dataset.jmat)});
+/* exportar dados */
+const EXP_DT={ABS_GESTOR_COLAB:false,ABS_JUSTIFICATIVAS:true,ABS_SURICATO:true};
+const exMsg=(t,c)=>{const m=$('#exMsg');m.className='jm-msg '+(c||'ok');m.textContent=t;m.hidden=false};
+function exAtualiza(){$('#exDatas').hidden=!EXP_DT[$('#exBase').value]}
+$('#exBase').onchange=exAtualiza;
+$('#expBtn').onclick=()=>{
+  const ult=diasDoMes(state.ano,state.mes).slice(-1)[0],ini=state.ano+'-'+pad2(state.mes)+'-01';
+  $('#exIni').value=ini;$('#exFim').value=ult<state.hoje?ult:(state.hoje>ini?state.hoje:ini);
+  $('#exMsg').hidden=true;exAtualiza();$('#ex').hidden=false};
+const fechaEx=()=>{$('#ex').hidden=true};$('#exFecha').onclick=fechaEx;$('#exCancel').onclick=fechaEx;
+function csvDe(rows){
+  const cols=[...rows.reduce((s,r)=>{Object.keys(r).forEach(k=>s.add(k));return s},new Set())];
+  const q=v=>{v=v==null?'':String(v);return /[";\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  return '\ufeff'+[cols.map(q).join(';'),...rows.map(r=>cols.map(c=>q(r[c])).join(';'))].join('\r\n');
+}
+function baixarCsv(nome,txt){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'text/csv;charset=utf-8'}));a.download=nome;document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)}
+async function exportaPorDias(tabela,dias,prog){
+  let n=0;
+  const consulta=async ds=>{
+    const f={or:`(${ds.flatMap(padroesSuricatoDia).map(p=>'DTA.like.'+p).join(',')})`};
+    try{return await pegaKeyset(tabela,'*',f,2000,k=>{n+=k;prog(n)})}
+    catch(e){if(!e.semId)throw e;return await pega(tabela,'*',f,'DTA.asc',1000)}
+  };
+  const carregar=async ds=>{try{return await consulta(ds)}catch(e){if(!e.timeout||ds.length<2)throw e;const m=ds.length>>1;return[...await carregar(ds.slice(0,m)),...await carregar(ds.slice(m))]}};
+  const lotes=[];for(let i=0;i<dias.length;i+=5)lotes.push(dias.slice(i,i+5));
+  const res=await mapaLimite(lotes,2,l=>carregar(l));
+  const vistos=new Set(),out=[];
+  for(const rs of res)for(const r of rs){const k=r.id!=null?'i'+r.id:JSON.stringify(r);if(!vistos.has(k)){vistos.add(k);out.push(r)}}
+  return out;
+}
+$('#exGo').onclick=async()=>{
+  const btn=$('#exGo'),b=$('#exBase').value;if(btn.disabled)return;
+  btn.disabled=true;
+  try{
+    let rows,nome;
+    if(!EXP_DT[b]){exMsg('Baixando '+b+'…');rows=await pega(b,'*',{},'COLABORADOR.asc');nome=b+'.csv'}
+    else{
+      const ini=$('#exIni').value,fim=$('#exFim').value;
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(ini)||!/^\d{4}-\d{2}-\d{2}$/.test(fim)||fim<ini)throw Error('informe um período válido (data final igual ou posterior à inicial).');
+      const dias=diasEntre(ini,fim);
+      if(b==='ABS_SURICATO'&&dias.length>93)throw Error('para o Suricato, exporte no máximo 93 dias por vez.');
+      exMsg('Consultando '+b+'…');
+      rows=await exportaPorDias(b,dias,k=>exMsg(`Lendo ${b} · ${nf.format(k)} registros…`));
+      nome=`${b}_${ini}_a_${fim}.csv`;
+    }
+    if(!rows.length){exMsg('Nenhum registro encontrado para o filtro.','err');return}
+    baixarCsv(nome,csvDe(rows));exMsg(`✔ ${nf.format(rows.length)} linha(s) exportada(s) em ${nome}.`);
+  }catch(e){exMsg('Falha: '+(e.message||e),'err')}
+  finally{btn.disabled=false}
+};
+document.addEventListener('click',e=>{if(e.target.id==='um')fechaUm();if(e.target.id==='ex')fechaEx();if(e.target.id==='ac')fechaAc()});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(!$('#um').hidden)fechaUm();else if(!$('#ex').hidden)fechaEx();else if(!$('#ac').hidden&&$('#jm').hidden&&$('#gm').hidden)fechaAc()});
 
 /* ---------- eventos ---------- */
 function ligar(){
@@ -1770,8 +1923,8 @@ function preencherFiltros(){
 }
 
 const AUTH={ok:false};
-try{AUTH.ok=sessionStorage.getItem('abs-auth')==='1'}catch{}
-function aplicaAuth(){$('#lg').hidden=AUTH.ok;ldToggle(state.carregando);if(!AUTH.ok)setTimeout(()=>$('#lgUser').focus(),30)}
+try{AUTH.ok=sessionStorage.getItem('abs-auth')==='1';AUTH.user=sessionStorage.getItem('abs-user')||''}catch{}
+function aplicaAuth(){$('#usrBtn').hidden=!(AUTH.ok&&AUTH.user==='5520967');const vd=$('#lgVideo');if(!AUTH.ok)iniciaVideoLogin();if(vd&&vd.src){AUTH.ok?vd.pause():vd.play().catch(()=>{})}$('#lg').hidden=AUTH.ok;ldToggle(state.carregando);if(!AUTH.ok)setTimeout(()=>$('#lgUser').focus(),30)}
 async function checaLogin(mat,senha){
   for(const m of new Set([mat,normMat(mat)])){
     const u=new URL(`${URL_SB}/rest/v1/ABS_USER`);
@@ -1786,13 +1939,13 @@ $('#lgForm').onsubmit=async e=>{
   e.preventDefault();const btn=$('#lgBtn'),er=$('#lgErr');er.textContent='';btn.disabled=true;btn.textContent='VALIDANDO…';
   try{
     if(await checaLogin(norm($('#lgUser').value),$('#lgPass').value)){
-      AUTH.ok=true;try{sessionStorage.setItem('abs-auth','1')}catch{}
+      AUTH.ok=true;AUTH.user=normMat($('#lgUser').value);try{sessionStorage.setItem('abs-auth','1');sessionStorage.setItem('abs-user',AUTH.user)}catch{}
       $('#lgPass').value='';aplicaAuth();
     }else er.textContent='Matrícula ou senha inválida.';
   }catch(x){er.textContent='Falha ao validar: '+(x.message||x)}
   finally{btn.disabled=false;btn.textContent='ENTRAR'}
 };
-$('#logoutBtn').onclick=()=>{AUTH.ok=false;try{sessionStorage.removeItem('abs-auth')}catch{}aplicaAuth()};
+$('#logoutBtn').onclick=()=>{AUTH.ok=false;AUTH.user='';try{sessionStorage.removeItem('abs-auth');sessionStorage.removeItem('abs-user')}catch{}aplicaAuth()};
 aplicaAuth();
 /* ---------- init ---------- */
 const mesInicial=QS.get('month')||new Intl.DateTimeFormat('en-CA',{year:'numeric',month:'2-digit',timeZone:'America/Sao_Paulo'}).format(new Date());
