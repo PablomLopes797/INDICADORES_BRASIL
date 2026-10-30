@@ -272,6 +272,19 @@ td.nd{color:var(--quiet)}
 .lg-card .field input{width:100%;min-width:0;padding:10px 12px;font-size:14px}
 .lg-err{color:var(--red);font-size:12px;min-height:16px}
 .lg-st{color:var(--quiet);font-size:10px;text-align:center;min-height:14px}
+
+.mq-f{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;padding-bottom:10px}
+.mq-f .field input,.mq-f .field select{min-width:110px}
+.mq-f .field.w{flex:1 1 240px}
+.mq-sum{font-size:11px;color:var(--muted);padding:2px 0 8px}
+#mqCard{transition:width .25s}
+#mqCard.max{width:min(1400px,98vw);height:94vh;max-height:94vh;display:flex;flex-direction:column}
+#mqCard.max .jm-b{flex:1;overflow:auto;align-content:start}
+#mqCard .tw{max-height:calc(94vh - 330px)}
+#mqTable th:first-child,#mqTable td:first-child{position:static;min-width:0}
+#mqTable td,#mqTable th{text-align:left}
+#mqTable thead th{cursor:pointer;white-space:nowrap}
+.mq-hi{color:var(--red);font-weight:800}
 </style>
 </head>
 <body>
@@ -300,7 +313,7 @@ td.nd{color:var(--quiet)}
     </div>
     <form id="monthForm">
       <div class="field"><label for="monthInput">MÊS DE REFERÊNCIA</label><input id="monthInput" type="month" required></div>
-      <button class="btn btn-primary" id="reloadBtn" type="submit">↻ ATUALIZAR DADOS</button>
+      <button class="btn btn-primary" id="reloadBtn" type="submit">↻ ATUALIZAR DADOS</button><button class="btn" id="mqBtn" type="button">👥 MEU QUADRO</button>
     </form>
   </section>
 
@@ -314,7 +327,7 @@ td.nd{color:var(--quiet)}
       <div class="field"><label for="turnoFilter">TURNO</label><select id="turnoFilter"><option value="">Todos os turnos</option></select></div>
       <div class="field"><label for="cdFilter">CD</label><select id="cdFilter"><option value="">Todos os CDs</option></select></div>
       <div class="field"><label for="cargoFilter">CARGO</label><select id="cargoFilter"><option value="">Todos os cargos</option></select></div>
-      <div class="field"><label for="gestorFilter">GESTOR</label><select id="gestorFilter"><option value="">Todos os gestores</option></select></div>
+      <div class="field"><label for="pcdFilter">PCD</label><select id="pcdFilter"><option value="">Todos</option></select></div><div class="field"><label for="sitFilter">SITUAÇÃO</label><select id="sitFilter"><option value="">Todas as situações</option></select></div><div class="field"><label for="gestorFilter">GESTOR</label><select id="gestorFilter"><option value="">Todos os gestores</option></select></div>
       <button class="btn btn-primary" id="gestBtn" type="button">＋ CADASTRAR GESTOR</button>
       <div class="field multi">
         <label>MOTIVOS CONTABILIZADOS COMO ABS</label>
@@ -428,12 +441,35 @@ td.nd{color:var(--quiet)}
       <div class="jm-f"><button class="btn" id="jmCancel" type="button">Cancelar</button><button class="btn btn-primary" id="jmSalva" type="button">Gravar justificativa</button></div>
     </div>
   </div>
+  <div class="jm" id="mq" hidden role="dialog" aria-modal="true">
+    <div class="jm-card" id="mqCard">
+      <div class="jm-h"><div><h3>Meu quadro</h3><small>Equipe vinculada ao gestor · ABS_GESTOR_COLAB</small></div><button class="jm-x" id="mqFecha" type="button" aria-label="Fechar">✕</button></div>
+      <div class="jm-b">
+        <div><label>GESTOR</label><select id="mqGestor"></select></div>
+        <div id="mqBody" hidden>
+          <div class="mq-f">
+            <div class="field w"><label>BUSCAR (NOME OU MATRÍCULA)</label><input id="mqBusca" type="search" autocomplete="off" placeholder="Digite nome ou matrícula…"></div>
+            <div class="field"><label>IDADE MÍN.</label><input id="mqIdMin" type="number" min="14" max="99" style="min-width:80px;width:80px"></div>
+            <div class="field"><label>IDADE MÁX.</label><input id="mqIdMax" type="number" min="14" max="99" style="min-width:80px;width:80px"></div>
+            <div class="field"><label>TEMPO DE CASA</label><select id="mqCasa"></select></div>
+            <div class="field"><label>CARGO</label><select id="mqCargo"></select></div>
+            <div class="field"><label>MÊS</label><input id="mqMes" type="month"></div>
+            <button class="btn btn-primary" id="mqAdd" type="button">＋ ADICIONAR COLABORADOR À MINHA EQUIPE</button>
+          </div>
+          <div class="mq-sum" id="mqSum"></div>
+          <div class="tw"><table class="mx" id="mqTable"><caption>Meu quadro</caption><thead id="mqHead"></thead><tbody id="mqRows"></tbody></table></div>
+        </div>
+      </div>
+      <div class="jm-f"><button class="btn" id="mqFechar2" type="button">Fechar</button></div>
+    </div>
+  </div>
   <div class="jm" id="gm" hidden role="dialog" aria-modal="true" aria-labelledby="gmTitle">
     <div class="jm-card">
       <div class="jm-h"><div><h3 id="gmTitle">Cadastrar gestor</h3><small>Grava em ABS_GESTOR_COLAB · COLABORADOR, GESTOR e NOME GESTOR</small></div><button class="jm-x" id="gmFecha" type="button" aria-label="Fechar">✕</button></div>
       <div class="jm-b">
         <div><label>COLABORADOR (matrícula ou nome)</label><input id="gmColab" type="text" autocomplete="off" placeholder="Digite a matrícula ou o nome…"><div class="jm-sg" id="gmColabSug" hidden></div><div id="gmColabInfo" style="font-size:10.5px;color:var(--muted);margin-top:4px;min-height:14px"></div></div>
         <div><label>GESTOR (matrícula ou nome)</label><input id="gmGest" type="text" autocomplete="off" placeholder="Digite a matrícula do gestor…"><div class="jm-sg" id="gmGestSug" hidden></div><div id="gmGestInfo" style="font-size:10.5px;color:var(--muted);margin-top:4px;min-height:14px"></div></div>
+        <div><label>SETOR</label><select id="gmSetor"><option value="">Selecione o setor…</option><option value="MOVIMENT. VERT.">MOVIMENT. VERT.</option><option value="PUX. REC.">PUX. REC.</option><option value="EXPEDIÇÃO">EXPEDIÇÃO</option><option value="RECEBIMENTO">RECEBIMENTO</option><option value="MOVIMENT. HOR.">MOVIMENT. HOR.</option><option value="CARREGAMENTO">CARREGAMENTO</option><option value="PUX. STRETCH.">PUX. STRETCH.</option><option value="TRIAGEM">TRIAGEM</option><option value="DESCARGA">DESCARGA</option><option value="MAQ. STRETCH.">MAQ. STRETCH.</option><option value="SEPARAÇÃO">SEPARAÇÃO</option><option value="ACIONAMENTO">ACIONAMENTO</option><option value="BOLSÃO">BOLSÃO</option><option value="MEZANINO">MEZANINO</option><option value="ACURACIDADE">ACURACIDADE</option><option value="PROGRAMAÇÃO">PROGRAMAÇÃO</option><option value="OUTBOUND">OUTBOUND</option><option value="ADMINISTRAÇÃO">ADMINISTRAÇÃO</option><option value="INBOUND">INBOUND</option><option value="REMONTE">REMONTE</option></select></div>
         <div class="jm-msg" id="gmMsg" hidden></div>
       </div>
       <div class="jm-f"><button class="btn" id="gmCancel" type="button">Fechar</button><button class="btn btn-primary" id="gmSalva" type="button">Salvar</button></div>
@@ -589,7 +625,7 @@ function consistente(d){ if(d.futuro||d.domingo||d.feriado||!d.quadroOk)return t
   return (d.presentes+d.ausentes+d.jn+d.ferias)===d.total && d.fora===0 && d.elegivel===(d.presentes+d.ausentes+d.jn) }
 /* ===== MODEL_END ===== */
 
-const state={ano:0,mes:0,dias:[],hoje:hoje(),snapshots:new Map(),just:new Map(),present:new Set(),presenceDays:new Set(),justObs:new Map(),
+const state={pcdF:'',sitF:'',cols:{},ano:0,mes:0,dias:[],hoje:hoje(),snapshots:new Map(),just:new Map(),present:new Set(),presenceDays:new Set(),justObs:new Map(),
 ferias:new Set(),feriados:new Set(),ativos:new Set(ATIVOS_PADRAO),cargo:new Map(),presentHours:new Map(),turno:'',cd:'',vista:'macro',metric:'abs',chartM:'abs',
 dia:'',setor:'',turnoF:'',cargoF:'',pessoa:'',busca:'',pagina:1,expand:new Set(),cache:new Map(),base:null,
 carregando:false,fonteFeriado:'—',fonteCargo:'ABS_QUADRO.CARGO',erro:'',aviso:'',ultimaAtualizacao:null,
@@ -768,12 +804,12 @@ function snapshotPara(day){let best=null;for(const[d,s]of state.snapshots){if(d<
   if(!best){let first=null;for(const[d,s]of state.snapshots){if(!first||d<first.date)first={date:d,rows:s.rows}}best=first}
   return best}
 function mapaPessoas(rows){const m=new Map();for(const r of rows){const mat=normMat(r.MATRICULA);if(!mat)continue;const t=parseData(r.DTA)?.getTime()||0;const o=m.get(mat);
-  if(!o||t>=o.time)m.set(mat,{matricula:mat,nome:norm(r.NOME)||mat,cd:norm(r.CD)||'—',setor:(state.gestorMap.get(mat)||{}).s||norm(r.SETOR)||'—',cargo:state.cargo.get(mat)||norm(r.CARGO)||'—',turno:norm(r.TURNO)||'—',time:t})}return[...m.values()]}
+  if(!o||t>=o.time)m.set(mat,{matricula:mat,nome:norm(r.NOME)||mat,cd:norm(r.CD)||'—',setor:(state.gestorMap.get(mat)||{}).s||norm(r.SETOR)||'—',cargo:state.cargo.get(mat)||norm(r.CARGO)||'—',turno:norm(r.TURNO)||'—',pcd:norm(r[state.cols.pcd||'PCD'])||'—',sit:norm(r[state.cols.sit||'SITUAÇÃO'])||'—',motSit:norm(r[state.cols.mot||'MOTIVO DA SITUAÇÃO']),nasc:r[state.cols.nasc||'_']??null,adm:r[state.cols.adm||'_']??null,time:t})}return[...m.values()]}
 function todasPessoas(){return mapaPessoas([...state.snapshots.values()].flatMap(s=>s.rows))}
-const filtroFixo=p=>(!state.turno||p.turno===state.turno)&&(!state.cd||p.cd===state.cd)&&(!state.cargoF||p.cargo===state.cargoF)&&(!state.setor||p.setor===state.setor)&&(!state.turnoF||p.turno===state.turnoF)&&(!state.gestorF||(state.gestorSet!==null&&state.gestorSet.has(p.matricula)));
+const filtroFixo=p=>(!state.turno||p.turno===state.turno)&&(!state.pcdF||p.pcd===state.pcdF)&&(!state.sitF||p.sit===state.sitF)&&(!state.cd||p.cd===state.cd)&&(!state.cargoF||p.cargo===state.cargoF)&&(!state.setor||p.setor===state.setor)&&(!state.turnoF||p.turno===state.turnoF)&&(!state.gestorF||(state.gestorSet!==null&&state.gestorSet.has(p.matricula)));
 function cargosDisponiveis(){return[...new Set(todasPessoas().filter(p=>(!state.turno||p.turno===state.turno)&&(!state.cd||p.cd===state.cd)).map(p=>p.cargo))].filter(c=>c&&c!=='—').sort((x,y)=>x.localeCompare(y,'pt-BR'))}
 function pessoasBase(){if(!state.base)state.base=todasPessoas().filter(filtroFixo);return state.base}
-function chaveFiltro(){return [state.turno,state.cd,state.cargoF,state.gestorF,state.setor,state.turnoF,[...state.ativos].sort().join(','),[...state.motivoFiltro].sort().join(',')].join('|')}
+function chaveFiltro(){return [state.pcdF,state.sitF,state.turno,state.cd,state.cargoF,state.gestorF,state.setor,state.turnoF,[...state.ativos].sort().join(','),[...state.motivoFiltro].sort().join(',')].join('|')}
 function invalidar(){state.cache=new Map();state.base=null}
 function dia(day){const ck=chaveFiltro()+'|'+day;const h=state.cache.get(ck);if(h)return h;const m=modeloDia(day);state.cache.set(ck,m);return m}
 function todosDias(){return state.dias.map(dia)}
@@ -873,7 +909,7 @@ function renderFiltrosOn(){
   if(state.dia)it.push(['dia','Dia '+brData(state.dia)+' · '+dowNome(state.dia)]);
   if(state.setor)it.push(['setor','Setor: '+state.setor]);
   if(state.turnoF)it.push(['turnoF','Turno: '+state.turnoF]);
-  if(state.cargoF)it.push(['cargoF','Cargo: '+state.cargoF]);
+  if(state.cargoF)it.push(['cargoF','Cargo: '+state.cargoF]);if(state.pcdF)it.push(['pcdF','PCD: '+state.pcdF]);if(state.sitF)it.push(['sitF','Situação: '+state.sitF]);for(const[i,k]of[['#pcdFilter','pcdF'],['#sitFilter','sitF']]){const e=$(i);if(e&&e.value!==state[k])e.value=state[k]}
   if(state.gestorF)it.push(['gestorF','Gestor: '+state.gestorF]);
   const gsel=$('#gestorFilter');if(gsel&&gsel.value!==state.gestorF)gsel.value=state.gestorF;
   if(state.pessoa){const p=pessoasBase().find(x=>x.matricula===state.pessoa);it.push(['pessoa','Colaborador: '+(p?p.nome+' · '+p.matricula:state.pessoa)])}
@@ -1345,12 +1381,12 @@ const campoColab=campoBusca('colab','#gmColab','#gmColabSug',false);
 const campoGest=campoBusca('gest','#gmGest','#gmGestSug',true);
 function gmMsg(tipo,txt){const m=$('#gmMsg');m.className='jm-msg '+tipo;m.textContent=txt;m.hidden=false}
 function fecharGest(){$('#gm').hidden=true}
-function abrirGestModal(){
+function abrirGestModal(pre){
   gm.pessoas=todasPessoas();
   campoColab.limpar();campoGest.limpar();$('#gmMsg').hidden=true;
   $('#gmSalva').disabled=false;$('#gmSalva').textContent='Salvar';
   /* se já há um gestor filtrado na tela, ele vem pré-selecionado */
-  if(state.gestorF){for(const[g,n]of state.gestoresMat)if(n===state.gestorF){campoGest.set({mat:g,nome:n});break}}
+  const preG=(typeof pre==='string'&&pre)||state.gestorF;$('#gmSetor').value='';if(preG){for(const[g,n]of state.gestoresMat)if(n===preG){campoGest.set({mat:g,nome:n});break}}
   $('#gm').hidden=false;
   setTimeout(()=>campoColab.foco(),30);
 }
@@ -1359,6 +1395,7 @@ async function salvarGestor(){
   const c=gm.colab,g=gm.gest;
   if(!c||!g){gmMsg('err','Selecione o colaborador e o gestor nas listas de sugestões.');return}
   if(c.mat===g.mat){gmMsg('err','Colaborador e gestor não podem ser a mesma pessoa.');return}
+  const setor=$('#gmSetor').value;if(!setor){gmMsg('err','Selecione o setor.');return}
   const ex=state.gestorMap.get(c.mat);
   if(ex&&ex.g===g.mat){gmMsg('err',`${c.nome} já está vinculado a ${g.nome}.`);return}
   if(ex&&!confirm(`${c.nome} já está vinculado a ${ex.n}.\nTransferir para ${g.nome}?`))return;
@@ -1369,16 +1406,16 @@ async function salvarGestor(){
     if(ex){
       const r=await fetch(`${base}?COLABORADOR=eq.${encodeURIComponent(c.mat)}`,{method:'PATCH',
         headers:{...headers(),Prefer:'return=representation','Content-Type':'application/json'},
-        body:JSON.stringify({GESTOR:g.mat,'NOME GESTOR':nomeGest}),cache:'no-store'});
+        body:JSON.stringify({GESTOR:g.mat,'NOME GESTOR':nomeGest,SETOR:setor}),cache:'no-store'});
       if(!r.ok)throw Error(await detalhe(r));
       const j=await r.json();if(!Array.isArray(j)||!j.length)throw Error('nenhuma linha foi atualizada (verifique as permissões da tabela)');
     }else{
       const r=await fetch(base,{method:'POST',headers:{...headers(),Prefer:'return=minimal','Content-Type':'application/json'},
-        body:JSON.stringify([{COLABORADOR:c.mat,GESTOR:g.mat,'NOME GESTOR':nomeGest,SETOR:(gm.pessoas.find(p=>p.matricula===c.mat)||{}).setor||undefined}]),cache:'no-store'});
+        body:JSON.stringify([{COLABORADOR:c.mat,GESTOR:g.mat,'NOME GESTOR':nomeGest,SETOR:setor}]),cache:'no-store'});
       if(!r.ok)throw Error(await detalhe(r));
     }
     aplicarGestorRows(await pegaGestorColab());
-    preencherGestores();invalidar();render();
+    preencherGestores();invalidar();render();mqRefresh();
     gmMsg('ok',`✔ ${c.nome} (${c.mat}) vinculado a ${nomeGest}. Pode lançar o próximo colaborador.`);
     campoColab.limpar();          /* colaborador zera; gestor continua selecionado */
     gmInfo();campoColab.foco();
@@ -1388,6 +1425,92 @@ async function salvarGestor(){
 $('#gmFecha').onclick=fecharGest;$('#gmCancel').onclick=fecharGest;$('#gmSalva').onclick=salvarGestor;
 document.addEventListener('click',e=>{if(e.target.id==='gm')fecharGest()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#gm').hidden)fecharGest()});
+
+/* ---------- MEU QUADRO ---------- */
+const SETORES_FIXOS=["MOVIMENT. VERT.", "PUX. REC.", "EXPEDIÇÃO", "RECEBIMENTO", "MOVIMENT. HOR.", "CARREGAMENTO", "PUX. STRETCH.", "TRIAGEM", "DESCARGA", "MAQ. STRETCH.", "SEPARAÇÃO", "ACIONAMENTO", "BOLSÃO", "MEZANINO", "ACURACIDADE", "PROGRAMAÇÃO", "OUTBOUND", "ADMINISTRAÇÃO", "INBOUND", "REMONTE"];
+async function descobrirColunas(){
+  const base='id,CD,DTA,MATRICULA,NOME,CARGO,SETOR,TURNO';
+  try{
+    const u=new URL(`${URL_SB}/rest/v1/${encodeURIComponent(T.quadro)}`);u.searchParams.set('select','*');u.searchParams.set('limit','1');
+    const r=await fetch(u,{headers:headers(),cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);
+    const j=await r.json(),ks=j[0]?Object.keys(j[0]):[];
+    const acha=re=>ks.find(k=>re.test(semAcento(k)));
+    state.cols={pcd:ks.find(k=>semAcento(k)==='PCD'),sit:ks.find(k=>semAcento(k)==='SITUACAO'),mot:acha(/MOTIVO.*SITUA/),nasc:acha(/NASC/),adm:acha(/ADMIS/)};
+    return base+Object.values(state.cols).filter(Boolean).map(k=>`,"${k}"`).join('');
+  }catch(e){console.warn('[ABS_QUADRO] descoberta de colunas falhou:',e.message||e);state.cols={};return base}
+}
+const mq={gestor:'',busca:'',idMin:'',idMax:'',casa:'',cargo:'',sort:'nome',dir:1,rows:[]};
+const MQ_CASA=[['','Todos'],['0-12','< 1 ano'],['12-36','1 a 3 anos'],['36-60','3 a 5 anos'],['60-120','5 a 10 anos'],['120-99999','> 10 anos']];
+const MQ_COLS=[['matricula','MATRICULA'],['nome','NOME'],['idade','IDADE'],['admIso','DATA DE ADMISSÃO'],['casa','TEMPO DE CASA'],['cargo','CARGO'],['pct','MÉDIA DE ABS']];
+function mesesEntre(a,b){let m=(+b.slice(0,4)-+a.slice(0,4))*12+(+b.slice(5,7)-+a.slice(5,7));if(+b.slice(8,10)<+a.slice(8,10))m--;return Math.max(0,m)}
+const casaTxt=m=>m==null?'—':(m>=12?Math.floor(m/12)+' a ':'')+(m%12)+' m';
+function mediaAbsPessoa(p){
+  let aus=0,den=0;
+  for(const day of state.dias){
+    if(day>state.hoje||dowDe(day)===0||state.feriados.has(day)||!snapshotPara(day)||!turnoConsiderado(p.turno,day))continue;
+    const{code}=classificar(p,{day,dow:dowDe(day)});
+    if(code==='FE'||code==='-'||code==='?')continue;
+    den++;if(code==='P')continue;
+    if(state.ativos.has(code)&&state.motivoFiltro.has(code))aus++;
+  }
+  return{aus,den,pct:den?aus/den*100:null};
+}
+function mqEquipe(){
+  const set=state.gestoresPorNome.get(mq.gestor);if(!set)return[];
+  return todasPessoas().filter(p=>set.has(p.matricula)).map(p=>{
+    const nasc=diaLocal(p.nasc),adm=diaLocal(p.adm);
+    return{...p,admIso:adm,idade:nasc?Math.floor(mesesEntre(nasc,state.hoje)/12):null,casa:adm?mesesEntre(adm,state.hoje):null,...mediaAbsPessoa(p)};
+  });
+}
+function mqTabela(){
+  let l=mq.rows.slice();
+  const imin=mq.idMin===''?null:+mq.idMin,imax=mq.idMax===''?null:+mq.idMax;
+  if(imin!=null)l=l.filter(p=>p.idade!=null&&p.idade>=imin);
+  if(imax!=null)l=l.filter(p=>p.idade!=null&&p.idade<=imax);
+  if(mq.casa){const[a,b]=mq.casa.split('-').map(Number);l=l.filter(p=>p.casa!=null&&p.casa>=a&&p.casa<b)}
+  if(mq.cargo)l=l.filter(p=>p.cargo===mq.cargo);
+  const q=semAcento(mq.busca);
+  if(q)l=l.map(p=>({p,s:Math.max(pontua(q,semAcento(p.nome)),pontua(q,semAcento(p.matricula))*0.98)})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s).map(x=>x.p);
+  else l.sort((a,b)=>{const x=a[mq.sort],y=b[mq.sort];if(x==null&&y==null)return 0;if(x==null)return 1;if(y==null)return -1;
+    return(typeof x==='number'?x-y:String(x).localeCompare(String(y),'pt-BR',{numeric:true}))*mq.dir});
+  $('#mqHead').innerHTML='<tr>'+MQ_COLS.map(([k,t])=>`<th data-k="${k}">${t}${mq.sort===k?(mq.dir>0?' ▲':' ▼'):''}</th>`).join('')+'</tr>';
+  $('#mqRows').innerHTML=l.map(p=>`<tr><td>${esc(p.matricula)}</td><td>${esc(p.nome)}</td><td>${p.idade==null?'—':p.idade}</td><td>${p.admIso?p.admIso.split('-').reverse().join('/'):'—'}</td><td>${casaTxt(p.casa)}</td><td>${esc(p.cargo)}</td><td><span class="cv ${p.pct!=null&&p.pct>8?'mq-hi':''}">${p.pct==null?'—':pc.format(p.pct)+'%'}</span><span class="cs">${p.aus} aus. / ${p.den} dias</span></td></tr>`).join('')||'<tr><td colspan="7" class="empty">Nenhum colaborador para os filtros.</td></tr>';
+  const A=l.reduce((s,p)=>s+p.aus,0),D=l.reduce((s,p)=>s+p.den,0);
+  $('#mqSum').textContent=`${nf.format(l.length)} de ${nf.format(mq.rows.length)} colaborador(es) · média de ABS da equipe: ${D?pc.format(A/D*100)+'%':'—'} (${nf.format(A)} ausência(s) em ${nf.format(D)} pessoa-dia)`+(state.cols.nasc&&state.cols.adm?'':' · colunas de nascimento/admissão não encontradas no ABS_QUADRO');
+}
+function mqRefresh(){
+  const nomes=[...state.gestoresPorNome.keys()].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  if(mq.gestor&&!state.gestoresPorNome.has(mq.gestor))mq.gestor='';
+  $('#mqGestor').innerHTML='<option value="">Selecione o gestor…</option>'+nomes.map(n=>`<option value="${esc(n)}">${esc(n)} (${state.gestoresPorNome.get(n).size})</option>`).join('');
+  $('#mqGestor').value=mq.gestor;
+  $('#mqMes').value=state.ano+'-'+pad2(state.mes);
+  $('#mqCasa').innerHTML=MQ_CASA.map(([v,t])=>`<option value="${v}">${t}</option>`).join('');$('#mqCasa').value=mq.casa;
+  const open=!!mq.gestor;
+  $('#mqCard').classList.toggle('max',open);$('#mqBody').hidden=!open;
+  if(!open){mq.rows=[];return}
+  mq.rows=mqEquipe();
+  const cargos=[...new Set(mq.rows.map(p=>p.cargo))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  if(!cargos.includes(mq.cargo))mq.cargo='';
+  $('#mqCargo').innerHTML='<option value="">Todos</option>'+cargos.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');$('#mqCargo').value=mq.cargo;
+  mqTabela();
+}
+$('#gmSetor').innerHTML='<option value="">Selecione o setor…</option>'+SETORES_FIXOS.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');
+$('#mqBtn').onclick=()=>{if(!mq.gestor&&state.gestorF)mq.gestor=state.gestorF;mqRefresh();$('#mq').hidden=false};
+const fechaMq=()=>{$('#mq').hidden=true};
+$('#mqFecha').onclick=fechaMq;$('#mqFechar2').onclick=fechaMq;
+document.addEventListener('click',e=>{if(e.target.id==='mq')fechaMq()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#mq').hidden&&$('#gm').hidden)fechaMq()});
+$('#mqGestor').onchange=e=>{mq.gestor=e.target.value;mq.cargo='';mqRefresh()};
+$('#mqBusca').oninput=e=>{mq.busca=e.target.value;mqTabela()};
+$('#mqIdMin').oninput=e=>{mq.idMin=e.target.value;mqTabela()};
+$('#mqIdMax').oninput=e=>{mq.idMax=e.target.value;mqTabela()};
+$('#mqCasa').onchange=e=>{mq.casa=e.target.value;mqTabela()};
+$('#mqCargo').onchange=e=>{mq.cargo=e.target.value;mqTabela()};
+$('#mqMes').onchange=e=>{const v=e.target.value;if(!/^\d{4}-\d{2}$/.test(v))return;$('#monthInput').value=v;carga().then(mqRefresh)};
+$('#mqAdd').onclick=()=>abrirGestModal(mq.gestor);
+$('#mqHead').onclick=e=>{const th=e.target.closest('th[data-k]');if(!th)return;const k=th.dataset.k;mq.dir=mq.sort===k?-mq.dir:1;mq.sort=k;mqTabela()};
+$('#pcdFilter').onchange=e=>{state.pcdF=e.target.value;invalidar();render()};
+$('#sitFilter').onchange=e=>{state.sitF=e.target.value;invalidar();render()};
 
 /* ---------- eventos ---------- */
 function ligar(){
@@ -1410,7 +1533,7 @@ function ligar(){
   $('#motivosMenu').onchange=()=>{state.motivoFiltro=new Set($$('#motivosMenu input:checked').map(x=>x.value));invalidar();rotulos();render()};
   $('#metricSeg').onclick=e=>{const b=e.target.closest('[data-metric]');if(!b)return;state.metric=b.dataset.metric;$$('#metricSeg button').forEach(x=>x.classList.toggle('on',x===b));render()};
   $('#chartSeg').onclick=e=>{const b=e.target.closest('[data-cm]');if(!b)return;state.chartM=b.dataset.cm;$$('#chartSeg button').forEach(x=>x.classList.toggle('on',x===b));render()};
-  $('#clearBtn').onclick=()=>{state.dia='';state.setor='';state.turnoF='';state.cargoF='';state.motivoFiltro=new Set(MOTIVOS);state.turno='';state.cd='';state.gestorF='';state.gestorSet=null;invalidar();$('#gestorFilter').value='';$('#turnoFilter').value='';$('#cdFilter').value='';$('#cargoFilter').value='';$$('#motivosMenu input').forEach(i=>i.checked=true);$('#motivosBtn').textContent='Todos os motivos';render()};
+  $('#clearBtn').onclick=()=>{state.dia='';state.setor='';state.turnoF='';state.cargoF='';state.motivoFiltro=new Set(MOTIVOS);state.turno='';state.cd='';state.gestorF='';state.gestorSet=null;state.pcdF='';state.sitF='';invalidar();$('#gestorFilter').value='';$('#pcdFilter').value='';$('#sitFilter').value='';$('#turnoFilter').value='';$('#cdFilter').value='';$('#cargoFilter').value='';$$('#motivosMenu input').forEach(i=>i.checked=true);$('#motivosBtn').textContent='Todos os motivos';render()};
   $('#copyBtn').onclick=copiar;
   $('#moreBtn').onclick=()=>{state.pagina++;render()};
   $('#tabs').onclick=e=>{const b=e.target.closest('.tab');if(!b)return;state.vista=b.dataset.view;state.pagina=1;state.setor='';state.turnoF='';invalidar();
@@ -1476,7 +1599,7 @@ async function carga(){
     state.ano=+mv[1];state.mes=+mv[2];state.dias=diasDoMes(state.ano,state.mes);
     state.hoje=hoje();
     const L=limites(state.ano,state.mes);
-    const SEL='id,CD,DTA,MATRICULA,NOME,CARGO,SETOR,TURNO';
+    const SEL=await descobrirColunas();
     /* TUDO em paralelo: o Suricato (parte mais pesada) começa já, junto com quadro, feriados, justificativas e férias. */
     const suriP=pegaSuricatoMes(state.ano,state.mes,n=>{if(state.carregando)status('busy',`Lendo Suricato · ${nf.format(n)} registros…`)});
     const mesP=pega(T.quadro,SEL,{DTA:'gte.'+L.ini,DTA_2:'lt.'+L.fim},'DTA.asc,id.asc');
@@ -1636,7 +1759,7 @@ function preencherFiltros(){
   const fill=(sel,vals,cur,todos)=>{const el=$(sel);el.innerHTML=`<option value="">${todos}</option>`+vals.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');el.value=cur};
   fill('#turnoFilter',turnos,state.turno,'Todos os turnos');
   fill('#cdFilter',cds,state.cd,'Todos os CDs');
-  fill('#cargoFilter',cargos,state.cargoF,'Todos os cargos');
+  fill('#cargoFilter',cargos,state.cargoF,'Todos os cargos');fill('#pcdFilter',[...new Set(ps.map(p=>p.pcd))].filter(v=>v&&v!=='—').sort((a,b)=>a.localeCompare(b,'pt-BR')),state.pcdF,'Todos');fill('#sitFilter',[...new Set(ps.map(p=>p.sit))].filter(v=>v&&v!=='—').sort((a,b)=>a.localeCompare(b,'pt-BR')),state.sitF,'Todas as situações');
   preencherGestores();
   $('#motiveMenu').innerHTML=MOTIVOS.map(c=>`<label class="check"><input type="checkbox" value="${c}" ${state.ativos.has(c)?'checked':''}> ${c} · ${MOTIVO_NOME[c]||c}</label>`).join('');
   const arr=MOTIVOS.filter(c=>state.ativos.has(c));
