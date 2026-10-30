@@ -296,6 +296,15 @@ td.nd{color:var(--quiet)}
 #acCard .tw{max-height:none}
 #acTable td:nth-child(-n+3){text-align:left}
 #acTable th:first-child,#acTable td:first-child{min-width:90px}
+.par-w{overflow-x:auto}
+.par-b{cursor:pointer;transition:opacity .15s}
+.par-b:hover{opacity:.85!important}
+.par-t{font-size:9px;fill:var(--muted)}
+.par-v{font-size:9.5px;font-weight:800;fill:var(--text)}
+.par-g{stroke:var(--line2);stroke-width:1}
+.par-80{stroke:var(--amber);stroke-dasharray:4 4;stroke-width:1}
+.par-l{fill:none;stroke:var(--pink);stroke-width:2;pointer-events:none}
+.par-d{fill:var(--pink);pointer-events:none}
 </style>
 </head>
 <body>
@@ -459,6 +468,8 @@ td.nd{color:var(--quiet)}
       <div class="jm-h"><div><h3>Cadastrar usuário</h3><small>Grava em ABS_USER · acesso ao painel</small></div><button class="jm-x" id="umFecha" type="button" aria-label="Fechar">✕</button></div>
       <div class="jm-b">
         <div><label>MATRÍCULA (USUÁRIO)</label><input id="umMat" type="text" inputmode="numeric" autocomplete="off"></div>
+        <div><label>NOME (NAME)</label><input id="umName" type="text" autocomplete="off"></div>
+        <div><label>NÍVEL (LEVEL)</label><select id="umLevel"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option></select></div>
         <div><label>SENHA</label><input id="umPass" type="password" autocomplete="new-password"></div>
         <div><label>CONFIRMAR SENHA</label><input id="umPass2" type="password" autocomplete="new-password"></div>
         <div class="jm-msg" id="umMsg" hidden></div>
@@ -854,10 +865,17 @@ function snapshotPara(day){let best=null;for(const[d,s]of state.snapshots){if(d<
 function mapaPessoas(rows){const m=new Map();for(const r of rows){const mat=normMat(r.MATRICULA);if(!mat)continue;const t=parseData(r.DTA)?.getTime()||0;const o=m.get(mat);
   if(!o||t>=o.time)m.set(mat,{matricula:mat,nome:norm(r.NOME)||mat,cd:norm(r.CD)||'—',setor:(state.gestorMap.get(mat)||{}).s||norm(r.SETOR)||'—',cargo:state.cargo.get(mat)||norm(r.CARGO)||'—',turno:norm(r.TURNO)||'—',pcd:norm(r[state.cols.pcd||'PCD'])||'—',sit:norm(r[state.cols.sit||'SITUAÇÃO'])||'—',motSit:norm(r[state.cols.mot||'MOTIVO DA SITUAÇÃO']),nasc:r[state.cols.nasc||'_']??null,adm:r[state.cols.adm||'_']??null,time:t})}return[...m.values()]}
 function todasPessoas(){return mapaPessoas([...state.snapshots.values()].flatMap(s=>s.rows))}
-const filtroFixo=p=>(!state.turno||p.turno===state.turno)&&(!state.pcdF||p.pcd===state.pcdF)&&(!state.sitF||p.sit===state.sitF)&&(!state.cd||p.cd===state.cd)&&(!state.cargoF||p.cargo===state.cargoF)&&(!state.setor||p.setor===state.setor)&&(!state.turnoF||p.turno===state.turnoF)&&(!state.gestorF||(state.gestorSet!==null&&state.gestorSet.has(p.matricula)));
+const filtroBase=p=>(!state.turno||p.turno===state.turno)&&(!state.pcdF||p.pcd===state.pcdF)&&(!state.sitF||p.sit===state.sitF)&&(!state.cd||p.cd===state.cd)&&(!state.cargoF||p.cargo===state.cargoF)&&(!state.setor||p.setor===state.setor)&&(!state.turnoF||p.turno===state.turnoF)&&(!state.gestorF||(state.gestorSet!==null&&state.gestorSet.has(p.matricula)));
+const PAR={gestor:new Set(),setor:new Set(),turno:new Set(),cargo:new Set()};
+const PAR_DIMS=['gestor','setor','turno','cargo'];
+const parDim=(p,d)=>d==='gestor'?((state.gestorMap.get(p.matricula)||{}).n||'Sem gestor'):d==='setor'?((state.gestorMap.get(p.matricula)||{}).s||'Sem setor'):d==='turno'?('Turno '+p.turno):(p.cargo||'—');
+const okPar=(p,skip)=>PAR_DIMS.every(d=>d===skip||!PAR[d].size||PAR[d].has(parDim(p,d)));
+const filtroFixo=p=>filtroBase(p)&&okPar(p,null);
+const PAR_LIMPA=()=>PAR_DIMS.forEach(d=>PAR[d].clear());
+const PARKEY=()=>PAR_DIMS.map(d=>[...PAR[d]].sort().join('~')).join('^');
 function cargosDisponiveis(){return[...new Set(todasPessoas().filter(p=>(!state.turno||p.turno===state.turno)&&(!state.cd||p.cd===state.cd)).map(p=>p.cargo))].filter(c=>c&&c!=='—').sort((x,y)=>x.localeCompare(y,'pt-BR'))}
 function pessoasBase(){if(!state.base)state.base=todasPessoas().filter(filtroFixo);return state.base}
-function chaveFiltro(){return [state.pcdF,state.sitF,state.turno,state.cd,state.cargoF,state.gestorF,state.setor,state.turnoF,[...state.ativos].sort().join(','),[...state.motivoFiltro].sort().join(',')].join('|')}
+function chaveFiltro(){return [PARKEY(),state.pcdF,state.sitF,state.turno,state.cd,state.cargoF,state.gestorF,state.setor,state.turnoF,[...state.ativos].sort().join(','),[...state.motivoFiltro].sort().join(',')].join('|')}
 function invalidar(){state.cache=new Map();state.base=null}
 function dia(day){const ck=chaveFiltro()+'|'+day;const h=state.cache.get(ck);if(h)return h;const m=modeloDia(day);state.cache.set(ck,m);return m}
 function todosDias(){return state.dias.map(dia)}
@@ -959,9 +977,10 @@ function renderFiltrosOn(){
   if(state.turnoF)it.push(['turnoF','Turno: '+state.turnoF]);
   if(state.cargoF)it.push(['cargoF','Cargo: '+state.cargoF]);if(state.pcdF)it.push(['pcdF','PCD: '+state.pcdF]);if(state.sitF)it.push(['sitF','Situação: '+state.sitF]);for(const[i,k]of[['#pcdFilter','pcdF'],['#sitFilter','sitF']]){const e=$(i);if(e&&e.value!==state[k])e.value=state[k]}
   if(state.gestorF)it.push(['gestorF','Gestor: '+state.gestorF]);
+  for(const d of PAR_DIMS)for(const v of PAR[d])it.push(['par|'+d+'|'+v,'Pareto · '+({gestor:'Gestor',setor:'Setor',turno:'Turno',cargo:'Cargo'})[d]+': '+v]);
   const gsel=$('#gestorFilter');if(gsel&&gsel.value!==state.gestorF)gsel.value=state.gestorF;
   if(state.pessoa){const p=pessoasBase().find(x=>x.matricula===state.pessoa);it.push(['pessoa','Colaborador: '+(p?p.nome+' · '+p.matricula:state.pessoa)])}
-  $('#filtersOn').innerHTML=it.length?it.map(([k,v])=>`<span class="chip">${esc(v)}<button type="button" data-act="unf" data-k="${k}" aria-label="Remover">✕</button></span>`).join(''):'<span style="font-size:10.5px;color:var(--quiet)">Nenhuma seleção ativa — clique em barras, colunas, setores ou nomes para filtrar; duplo clique em um dia abre a justificativa de ausência.</span>';
+  $('#filtersOn').innerHTML=it.length?it.map(([k,v])=>`<span class="chip">${esc(v)}<button type="button" data-act="unf" data-k="${esc(k)}" aria-label="Remover">✕</button></span>`).join(''):'<span style="font-size:10.5px;color:var(--quiet)">Nenhuma seleção ativa — clique em barras, colunas, setores ou nomes para filtrar; duplo clique em um dia abre a justificativa de ausência.</span>';
 }
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -1123,7 +1142,54 @@ function renderSetores(a){
 function renderGestores(a){
   $('#viewBody').innerHTML='<div class="grid">'+
     cardCalor('GESTOR','MAPA DE CALOR · GESTOR × DIA','ABS da equipe de cada gestor',a.ds,p=>(state.gestorMap.get(p.matricula)||{}).n||'Sem gestor','gestorF')+
-    cardCalor('CARGO','MAPA DE CALOR · CARGO × DIA','ABS por cargo (respeita o filtro de gestor)',a.ds,p=>p.cargo,'cargoF')+'</div>';
+    cardCalor('CARGO','MAPA DE CALOR · CARGO × DIA','ABS por cargo (respeita o filtro de gestor)',a.ds,p=>p.cargo,'cargoF')+paretosGestores()+'</div>';
+}
+/* ---------- PARETO (filtro cruzado estilo Power BI) ---------- */
+function paretoTodos(){
+  const acc={};for(const d of PAR_DIMS)acc[d]=new Map();
+  for(const day of state.dias){
+    if(day>state.hoje||dowDe(day)===0||state.feriados.has(day))continue;
+    const snap=snapshotPara(day);if(!snap)continue;
+    const pess=pessoasConsideradas(mapaPessoas(snap.rows).filter(filtroBase),day);
+    for(const p of pess){
+      const code=classificar(p,{day,dow:dowDe(day)}).code;
+      if(code==='P'||code==='FE'||code==='-'||code==='?')continue;
+      if(!(state.ativos.has(code)&&state.motivoFiltro.has(code)))continue;
+      for(const d of PAR_DIMS)if(okPar(p,d)){const k=parDim(p,d);acc[d].set(k,(acc[d].get(k)||0)+1)}
+    }
+  }
+  return acc;
+}
+function paretoCard(titulo,dim,mapa){
+  const itens=[...mapa.entries()].map(([k,v])=>({k,v})).sort((a,b)=>b.v-a.v||a.k.localeCompare(b.k,'pt-BR'));
+  const tot=itens.reduce((s,x)=>s+x.v,0),sel=PAR[dim],any=sel.size>0;
+  let corpo;
+  if(!tot)corpo='<div class="empty">Sem ausências para os filtros atuais.</div>';
+  else{
+    const n=itens.length,bw=44,L=44,R=44,T=22,B=92,W=Math.max(480,n*bw+L+R),H=300,ph=H-T-B,mx=itens[0].v;
+    let ac=0;const pts=[];
+    const bars=itens.map((x,i)=>{
+      ac+=x.v;const cx=L+i*bw+bw/2,h=Math.max(1,x.v/mx*ph),y=T+ph-h,cy=T+ph-ac/tot*ph;pts.push([cx,cy]);
+      const on=sel.has(x.k),apagado=any&&!on;
+      const lab=x.k.length>16?x.k.slice(0,15)+'…':x.k;
+      return `<g class="par-b" data-act="par" data-d="${dim}" data-v="${esc(x.k)}" style="opacity:${apagado?0.35:1}"><title>${esc(x.k)} · ${nf.format(x.v)} ausência(s) · ${pc.format(x.v/tot*100)}% do total · acumulado ${pc.format(ac/tot*100)}%</title>
+        <rect x="${L+i*bw}" y="${T}" width="${bw}" height="${ph+B}" fill="transparent"/>
+        <rect x="${cx-bw*0.36}" y="${y}" width="${bw*0.72}" height="${h}" rx="3" style="fill:${on?'var(--cyan)':'var(--accent2)'}"/>
+        <text x="${cx}" y="${y-4}" text-anchor="middle" class="par-v">${nf.format(x.v)}</text>
+        <text transform="translate(${cx+4},${T+ph+10}) rotate(-45)" text-anchor="end" class="par-t">${esc(lab)}</text></g>`}).join('');
+    const grid=[0,0.25,0.5,0.75,1].map(f=>{const y=T+ph-f*ph;return `<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" class="par-g"/><text x="${L-6}" y="${y+3}" text-anchor="end" class="par-t">${nf.format(Math.round(mx*f))}</text><text x="${W-R+6}" y="${y+3}" class="par-t">${Math.round(f*100)}%</text>`}).join('');
+    const y80=T+ph-0.8*ph;
+    corpo=`<div class="par-w"><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img">${grid}<line x1="${L}" x2="${W-R}" y1="${y80}" y2="${y80}" class="par-80"/>${bars}<polyline points="${pts.map(p=>p.join(',')).join(' ')}" class="par-l"/>${pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3" class="par-d"/>`).join('')}</svg></div>`;
+  }
+  return `<div class="card c6"><h3>${esc(titulo)} <em>${nf.format(itens.length)} item(ns) · ${nf.format(tot)} ausência(s)${any?' · '+sel.size+' selecionado(s)':''}</em></h3>${corpo}<div class="hint">Clique filtra os demais gráficos · Ctrl+clique soma itens · clique de novo remove. Linha rosa = % acumulado; tracejado = 80%.</div></div>`;
+}
+function paretosGestores(){
+  const ck=chaveFiltro()+'|pareto';let acc=state.cache.get(ck);
+  if(!acc){acc=paretoTodos();state.cache.set(ck,acc)}
+  return paretoCard('PARETO · ABS POR GESTOR','gestor',acc.gestor)+
+    paretoCard('PARETO · ABS POR SETOR (ABS_GESTOR_COLAB)','setor',acc.setor)+
+    paretoCard('PARETO · ABS POR TURNO','turno',acc.turno)+
+    paretoCard('PARETO · ABS POR CARGO','cargo',acc.cargo);
 }
 function renderTurnos(a){$('#viewBody').innerHTML=''}
 function listaPessoas(){
@@ -1574,13 +1640,14 @@ async function iniciaVideoLogin(){
 }
 /* cadastrar usuário (somente 5520967) */
 const umMsg=(t,c)=>{const m=$('#umMsg');m.className='jm-msg '+c;m.textContent=t;m.hidden=false};
-$('#usrBtn').onclick=()=>{['#umMat','#umPass','#umPass2'].forEach(s=>$(s).value='');$('#umMsg').hidden=true;$('#umSalva').disabled=false;$('#um').hidden=false;setTimeout(()=>$('#umMat').focus(),30)};
+$('#usrBtn').onclick=()=>{['#umMat','#umPass','#umPass2'].forEach(s=>$(s).value='');$('#umName').value='';$('#umLevel').value='2';$('#umMsg').hidden=true;$('#umSalva').disabled=false;$('#um').hidden=false;setTimeout(()=>$('#umMat').focus(),30)};
 const fechaUm=()=>{$('#um').hidden=true};$('#umFecha').onclick=fechaUm;$('#umCancel').onclick=fechaUm;
 $('#umSalva').onclick=async()=>{
   const btn=$('#umSalva');if(btn.disabled)return;
   if(AUTH.user!==ADMIN_USER){umMsg('Apenas o usuário '+ADMIN_USER+' pode cadastrar usuários.','err');return}
   const mat=normMat($('#umMat').value),s1=$('#umPass').value,s2=$('#umPass2').value;
   if(!/^\d+$/.test(mat)){umMsg('Informe a matrícula (somente números).','err');return}
+  const nome=norm($('#umName').value);if(!nome){umMsg('Informe o nome (NAME).','err');return}
   if(s1.length<4){umMsg('A senha deve ter ao menos 4 caracteres.','err');return}
   if(s1!==s2){umMsg('As senhas não conferem.','err');return}
   btn.disabled=true;btn.innerHTML='<span class="jm-loading"></span>Cadastrando…';
@@ -1588,10 +1655,10 @@ $('#umSalva').onclick=async()=>{
     const u=new URL(`${URL_SB}/rest/v1/ABS_USER`);u.searchParams.set('select','USER');u.searchParams.set('USER','eq.'+mat);u.searchParams.set('limit','1');
     const rc=await fetch(u,{headers:headers(),cache:'no-store'});if(!rc.ok)throw Error(await detalhe(rc));
     const jc=await rc.json();if(Array.isArray(jc)&&jc.length){umMsg('A matrícula '+mat+' já está cadastrada.','err');return}
-    const r=await fetch(`${URL_SB}/rest/v1/ABS_USER`,{method:'POST',headers:{...headers(),Prefer:'return=minimal','Content-Type':'application/json'},body:JSON.stringify([{USER:mat,PASS:s1}]),cache:'no-store'});
+    const r=await fetch(`${URL_SB}/rest/v1/ABS_USER`,{method:'POST',headers:{...headers(),Prefer:'return=minimal','Content-Type':'application/json'},body:JSON.stringify([{USER:mat,PASS:s1,NAME:nome,LEVEL:Number($('#umLevel').value)}]),cache:'no-store'});
     if(!r.ok)throw Error(await detalhe(r));
     umMsg('✔ Usuário '+mat+' cadastrado. Pode cadastrar o próximo.','ok');
-    ['#umMat','#umPass','#umPass2'].forEach(s=>$(s).value='');$('#umMat').focus();
+    ['#umMat','#umName','#umPass','#umPass2'].forEach(s=>$(s).value='');$('#umLevel').value='2';$('#umMat').focus();
   }catch(e){umMsg('Falha ao cadastrar: '+(e.message||e),'err')}
   finally{btn.disabled=false;btn.textContent='Cadastrar'}
 };
@@ -1671,7 +1738,7 @@ function ligar(){
   const tema=()=>{document.documentElement.dataset.theme=claro?'light':'dark';$('#themeBtn').textContent=claro?'☀️ Modo claro':'🌙 Modo escuro';
     try{localStorage.setItem('abs-theme',claro?'light':'dark')}catch{};render()};
   tema();$('#themeBtn').onclick=()=>{claro=!claro;tema()};
-  $('#monthForm').onsubmit=e=>{e.preventDefault();state.gestorF='';state.gestorSet=null;state.turno='';state.cd='';state.dia='';state.setor='';state.turnoF='';state.cargoF='';state.pessoa='';state.busca='';state.expand=new Set();state.pagina=1;
+  $('#monthForm').onsubmit=e=>{e.preventDefault();PAR_LIMPA();state.gestorF='';state.gestorSet=null;state.turno='';state.cd='';state.dia='';state.setor='';state.turnoF='';state.cargoF='';state.pessoa='';state.busca='';state.expand=new Set();state.pagina=1;
     $('#peopleSearch').value='';$('#searchClear').hidden=true;
     CACHE_PRES.clear();   /* "Atualizar dados" sempre busca de novo */
     invalidar();carga()};
@@ -1686,7 +1753,7 @@ function ligar(){
   $('#motivosMenu').onchange=()=>{state.motivoFiltro=new Set($$('#motivosMenu input:checked').map(x=>x.value));invalidar();rotulos();render()};
   $('#metricSeg').onclick=e=>{const b=e.target.closest('[data-metric]');if(!b)return;state.metric=b.dataset.metric;$$('#metricSeg button').forEach(x=>x.classList.toggle('on',x===b));render()};
   $('#chartSeg').onclick=e=>{const b=e.target.closest('[data-cm]');if(!b)return;state.chartM=b.dataset.cm;$$('#chartSeg button').forEach(x=>x.classList.toggle('on',x===b));render()};
-  $('#clearBtn').onclick=()=>{state.dia='';state.setor='';state.turnoF='';state.cargoF='';state.motivoFiltro=new Set(MOTIVOS);state.turno='';state.cd='';state.gestorF='';state.gestorSet=null;state.pcdF='';state.sitF='';invalidar();$('#gestorFilter').value='';$('#pcdFilter').value='';$('#sitFilter').value='';$('#turnoFilter').value='';$('#cdFilter').value='';$('#cargoFilter').value='';$$('#motivosMenu input').forEach(i=>i.checked=true);$('#motivosBtn').textContent='Todos os motivos';render()};
+  $('#clearBtn').onclick=()=>{PAR_LIMPA();state.dia='';state.setor='';state.turnoF='';state.cargoF='';state.motivoFiltro=new Set(MOTIVOS);state.turno='';state.cd='';state.gestorF='';state.gestorSet=null;state.pcdF='';state.sitF='';invalidar();$('#gestorFilter').value='';$('#pcdFilter').value='';$('#sitFilter').value='';$('#turnoFilter').value='';$('#cdFilter').value='';$('#cargoFilter').value='';$$('#motivosMenu input').forEach(i=>i.checked=true);$('#motivosBtn').textContent='Todos os motivos';render()};
   $('#copyBtn').onclick=copiar;
   $('#moreBtn').onclick=()=>{state.pagina++;render()};
   $('#tabs').onclick=e=>{const b=e.target.closest('.tab');if(!b)return;state.vista=b.dataset.view;state.pagina=1;state.setor='';state.turnoF='';invalidar();
@@ -1698,6 +1765,11 @@ function ligar(){
       pessoas:['Pessoas','Busca por nome ou matrícula, calendário individual e matriz por dia com destaque de linha e coluna.']}[b.dataset.view];
     $('#viewTitle').textContent=t[0];$('#viewSub').textContent=t[1];render()};
   const aoClicar=e=>{
+    const pr=e.target.closest('[data-act="par"]');if(pr){const s=PAR[pr.dataset.d],v=pr.dataset.v;
+      if(e.ctrlKey||e.metaKey){s.has(v)?s.delete(v):s.add(v)}
+      else if(s.size===1&&s.has(v))s.clear();
+      else{s.clear();s.add(v)}
+      invalidar();render();return}
     const hm=e.target.closest('[data-act="hm"]');if(hm){state.heatMode=hm.dataset.m;render();return}
     const g=e.target.closest('[data-act="grp"]');if(g){const k=g.dataset.g;state.expand.has(k)?state.expand.delete(k):state.expand.add(k);render();return}
     const p=e.target.closest('[data-act="pes"]');if(p){const m=p.dataset.m;state.pessoa=state.pessoa===m?'':m;render();return}
@@ -1714,7 +1786,7 @@ function ligar(){
       if(t==='gestorF')recalcGestor();
       invalidar();
       render();return}
-    const u=e.target.closest('[data-act="unf"]');if(u){const k=u.dataset.k;if(k==='pessoa')limparBusca();else{state[k]='';if(k==='gestorF')recalcGestor();invalidar();render()}}
+    const u=e.target.closest('[data-act="unf"]');if(u){const k=u.dataset.k;if(k.startsWith('par|')){const[,dm,...rs]=k.split('|');PAR[dm].delete(rs.join('|'));invalidar();render();return}if(k==='pessoa')limparBusca();else{state[k]='';if(k==='gestorF')recalcGestor();invalidar();render()}}
   };
   $('#viewBody').onclick=aoClicar;
   $('#tableWrap').onclick=aoClicar;
