@@ -444,6 +444,11 @@ table.grid td.rowlabel,table.grid td.total-cell,table.grid td.avg-cell{box-shado
 .agenda-hour-table tfoot th{left:0;z-index:6;text-align:left}
 .agenda-hour-table tfoot td:last-child{right:0;z-index:7}
 .agenda-hour-empty{padding:22px;color:var(--muted);text-align:center;font-size:12px}
+[hidden]{display:none!important}
+.recusa-charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.recusa-chart-scroll{max-height:440px;overflow:auto}
+#recusaRows td{white-space:normal;min-width:130px;word-break:break-word}
+@media(max-width:900px){.recusa-charts{grid-template-columns:1fr}}
 </style>
 </head>
 <body class="locked">
@@ -619,7 +624,7 @@ table.grid td.rowlabel,table.grid td.total-cell,table.grid td.avg-cell{box-shado
     <div class="agenda-hour-scroll" id="agendaHourHost" aria-live="polite"></div>
   </section>
 
-  <section class="card drill-card" id="drillCard">
+  <section class="card drill-card" id="drillCard" style="margin-top:18px">
     <div class="card-head">
       <div class="card-title" id="drillTitle">Detalhamento</div>
       <button class="btn btn-ghost" id="btnCloseDrill" style="padding:6px 10px">
@@ -636,6 +641,12 @@ table.grid td.rowlabel,table.grid td.total-cell,table.grid td.avg-cell{box-shado
         <h4>Top 10 Cargas · <b id="drillCtx2">–</b></h4>
         <div class="drill-list" id="drillListCarga"></div>
       </div>
+    </div>
+    <div id="recusaDetail" hidden style="padding:18px">
+      <p id="recusaSummary" style="color:var(--muted);margin-bottom:16px"></p>
+      <div id="recusaCharts" class="recusa-charts"></div>
+      <h4 style="margin:20px 0 12px">Todos os registros de recusa do contexto selecionado</h4>
+      <div class="preview" style="max-height:450px"><table><thead><tr><th>Data da recusa</th><th>Senha</th><th>Fornecedor</th><th>Tipo de recusa</th><th>Setor de recusa</th><th>Motivo de recusa</th><th>Detalhe da recusa</th></tr></thead><tbody id="recusaRows"></tbody></table></div>
     </div>
   </section>
 
@@ -1421,7 +1432,12 @@ function buildRegistros(){
       type:'recusa',
       carga:'',
       senha,
-      fornecedor:'RECUSA',
+      fornecedor:String(r['FORNECEDOR']??'').trim() || 'Não informado',
+      tipoRecusa:String(r['TIPO RECUSA']??'').trim() || 'Não informado',
+      setorRecusa:String(r['SETOR RECUSA']??'').trim() || 'Não informado',
+      motivoRecusa:String(r['MOTIVO RECUSA']??'').trim() || 'Não informado',
+      detalheRecusa:String(r['DETALHE RECUSA']??'').trim() || 'Não informado',
+      dataRecusaOriginal:r[COL_RE.dtaRecusa],
       dataAgenda:null,
       dataBase:null,
       dataTermo:dataRecusa,
@@ -1917,12 +1933,6 @@ function renderCharts(agg){
 function renderAgendaHourSummary(){
   const host=document.getElementById('agendaHourHost');
   if(!host)return;
-  if(!canEdit()){
-    host.innerHTML='<div class="empty-state"><h3>Detalhamento por horário indisponível</h3><p>O modo consulta exibe somente os indicadores consolidados gravados em BD_RESULTADOS.</p></div>';
-    const note=document.getElementById('agendaHourNote');
-    if(note)note.textContent='';
-    return;
-  }
   const [year,month]=state.mes.split('-').map(Number);
   const daysInMonth=new Date(year,month,0).getDate();
   const hours=[22,23,...Array.from({length:22},(_,i)=>i)];
@@ -2053,6 +2063,33 @@ async function carregarDadosDetalhamento(){
   state.drillDataLoaded=true;
 }
 
+
+let recusaChartInstances=[];
+function destroyRecusaCharts(){
+  recusaChartInstances.forEach(c=>c.destroy());
+  recusaChartInstances=[];
+}
+function renderRecusaDetails(regs){
+  destroyRecusaCharts();
+  const specs=[['fornecedor','Todos os fornecedores recusados'],['tipoRecusa','Quantidade por tipo de recusa'],['setorRecusa','Quantidade por setor de recusa'],['motivoRecusa','Quantidade por motivo de recusa'],['detalheRecusa','Quantidade por detalhe da recusa']];
+  const groups=specs.map(([key,title])=>{
+    const m=new Map();
+    for(const r of regs){const label=r[key]||'Não informado';m.set(label,(m.get(label)||0)+1);}
+    return {title,items:[...m].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'pt-BR'))};
+  });
+  document.getElementById('recusaSummary').textContent=`${intFmt(regs.length)} registros de recusa · ${intFmt(groups[0].items.length)} fornecedores · contagem por registro da tabela RECUSA, sem limite de Top 10. Campos vazios: Não informado.`;
+  const host=document.getElementById('recusaCharts');
+  host.innerHTML=groups.map((g,i)=>`<div class="card"><div class="card-head"><div class="card-title">${escapeHTML(g.title)}</div></div><div class="card-body"><div class="recusa-chart-scroll"><div style="height:${Math.max(220,g.items.length*32+50)}px;position:relative"><canvas id="recusaChart${i}"></canvas></div></div></div></div>`).join('');
+  const color=getComputedStyle(document.body).getPropertyValue('--txt-2').trim();
+  groups.forEach((g,i)=>{
+    recusaChartInstances.push(new Chart(document.getElementById(`recusaChart${i}`),{
+      type:'bar',data:{labels:g.items.map(x=>x[0]),datasets:[{label:'Quantidade de recusas',data:g.items.map(x=>x[1]),backgroundColor:['#f43f5e','#8b5cf6','#22d3ee','#fb923c','#10b981'][i],borderRadius:5}]},
+      options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',animation:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${intFmt(ctx.raw)} recusa(s) · ${pctFmt(regs.length?ctx.raw/regs.length*100:0)} do total`}}},scales:{x:{beginAtZero:true,ticks:{precision:0,color}},y:{ticks:{autoSkip:false,color,callback:function(v){const t=this.getLabelForValue(v);return t.length>45?t.slice(0,42)+'…':t;}}}}}
+    }));
+  });
+  document.getElementById('recusaRows').innerHTML=regs.length?regs.map(r=>`<tr>${[r.dataRecusaOriginal,r.senha,r.fornecedor,r.tipoRecusa,r.setorRecusa,r.motivoRecusa,r.detalheRecusa].map(v=>`<td>${escapeHTML(v||'Não informado')}</td>`).join('')}</tr>`).join(''):'<tr><td colspan="7">Nenhuma recusa neste contexto.</td></tr>';
+}
+
 async function openDrill(rowKey, colKey, colIdx, noScroll=false){
   const somenteConsulta=!canEdit();
   try{
@@ -2081,6 +2118,18 @@ async function openDrill(rowKey, colKey, colIdx, noScroll=false){
     return c && c.key === col.key;
   });
 
+  const isRecusa=['recusado','recusa_no_prazo','recusa_backlog'].includes(rowKey);
+  document.getElementById('recusaDetail').hidden=!isRecusa;
+  document.querySelector('#drillCard .drill-grid').hidden=isRecusa;
+  if(isRecusa){
+    state.drill={rowKey,colKey:col.key,colLabel:col.label,total:regs.length};
+    document.getElementById('drillCard').classList.add('show');
+    document.getElementById('drillTitle').textContent=`Detalhamento · ${rowDef.label} · ${col.sub||''} ${col.label}`;
+    renderRecusaDetails(regs);
+    if(!noScroll)document.getElementById('drillCard').scrollIntoView({behavior:'smooth',block:'start'});
+    return;
+  }
+  destroyRecusaCharts();
   const byForn = {}, byCarga = {};
   regs.forEach(r => {
     byForn[r.fornecedor] = (byForn[r.fornecedor]||0) + 1;
@@ -2119,6 +2168,7 @@ function renderDrillList(hostId, list){
 }
 
 function closeDrill(){
+  destroyRecusaCharts();
   state.drill = null;
   document.getElementById('drillCard').classList.remove('show');
 }
@@ -2608,14 +2658,14 @@ async function carregarResultadosSomenteLeitura(){
     if(!row.DATA)continue;
     cache[chaveResultado(row.DATA,row.TURNO)]=row;
   }
-  // Não carregar nem calcular dados das tabelas de origem neste perfil.
+  // Indicadores consolidados permanecem somente leitura; AGENDA alimenta o painel horário.
   state.rawAgenda=[];state.rawCargas=[];state.rawSobrepostos=[];state.rawRecusa=[];
   state.registros=[];state.missingCargas=[];state.comments={};
   state.drillDataLoaded=false;
   state.computedResultadosPorTurno={};
   state.resultadosPorTurno=cache;
   // Previsão/clima é independente do cálculo e deve aparecer também no modo consulta.
-  await Promise.all([loadComments(), loadWeather()]);
+  await Promise.all([loadComments(), loadWeather(), (async()=>{state.rawAgenda=await fetchAllFromTable(TABLE_AGENDA);})()]);
   const footer=document.getElementById('footerConexao');
   if(footer)footer.textContent=`BD_RESULTADOS: ${nfInt.format(Object.keys(cache).length)} registro(s) · modo consulta`;
   state.dataLoaded=true;
