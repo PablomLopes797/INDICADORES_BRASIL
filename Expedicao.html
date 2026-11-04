@@ -632,6 +632,20 @@ table.exp-table .cell{
 .imp-sum div.er{border-color:rgba(239,68,68,.5);color:#fca5a5}
 .imp-sum span{font-family:var(--mono);color:var(--derived-txt)}
 </style>
+
+<style id="importacao-ajustes">
+#impOverlay{z-index:1100;}
+#impOverlay.show{display:flex !important;visibility:visible;opacity:1;}
+#impOverlay .modal{max-height:90vh;max-height:90dvh;}
+#impOverlay .modal-body{min-height:0;}
+#btnImport{flex-shrink:0;}
+@media(max-width:640px){
+  #impOverlay{padding:10px;}
+  #impOverlay .modal{width:100%;border-radius:16px;}
+  #impOverlay .modal-head,#impOverlay .modal-body,#impOverlay .modal-foot{padding:14px;}
+}
+</style>
+<meta name="expedicao-build" content="importacao-ajustada-2026-11-04">
 </head>
 <body class="locked">
 
@@ -718,7 +732,7 @@ table.exp-table .cell{
       <div class="field"><label>&nbsp;</label>
         <div class="exp-controls">
           <button class="btn btn-primary" id="reload"><svg viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>Atualizar</button>
-          <button class="btn btn-warn" id="btnImport">⬆ ATUALIZAR</button>
+          <button type="button" class="btn btn-warn" id="btnImport">⬆ ATUALIZAR</button>
           <button class="btn" id="edit">✎ Editar CARGAS SOLIC.</button>
           <button class="btn btn-primary" id="save" style="display:none">💾 Salvar</button>
           <button class="btn btn-theme" id="btnTheme" title="Modo claro/escuro">
@@ -788,11 +802,11 @@ table.exp-table .cell{
   <footer class="app-footer">
     <b>Desenvolvido Por Pablo M. Lopes</b>
     <span class="dot">·</span>Expedição Vision
-    <span class="dot">·</span><span id="conn">● CONECTANDO</span>
+    <span class="dot">·</span><span id="conn">● CONECTANDO</span><span style="font-size:10px;opacity:.65"> · versão importação ajustada</span>
   </footer>
 </div>
 
-<div class="overlay" id="impOverlay">
+<div class="overlay" id="impOverlay" role="dialog" aria-modal="true" aria-label="Atualizar dados da Expedição" aria-hidden="true">
   <div class="modal wide">
     <div class="modal-head">
       <div><h2>⬆ Atualizar dados da Expedição</h2><p>Copie do Excel/Sheets (com ou sem cabeçalho) e cole na aba correspondente.</p></div>
@@ -1336,8 +1350,21 @@ function impPaintTab(){
   $('#impText').value=impBuf[impCur];
   impPaintInfo();
 }
-function impOpen(){$('#impOverlay').classList.add('show');$('#impSum').innerHTML='';impPaintTab()}
-function impClose(){if(!impBusy)$('#impOverlay').classList.remove('show')}
+function impOpen(){
+  const overlay=document.getElementById('impOverlay');
+  if(!overlay){console.error('Janela de importação não encontrada.');return;}
+  overlay.classList.add('show');
+  overlay.setAttribute('aria-hidden','false');
+  document.getElementById('impSum').textContent='';
+  try{
+    impPaintTab();
+    document.getElementById('impText').focus();
+  }catch(error){
+    console.error('Falha ao preparar importação:',error);
+    document.getElementById('impSum').textContent='Não foi possível preparar os campos: '+error.message;
+  }
+}
+function impClose(){if(!impBusy){$('#impOverlay').classList.remove('show');$('#impOverlay').setAttribute('aria-hidden','true')}}
 
 async function impPost(tb,rows){
   for(let i=0;i<rows.length;i+=500){
@@ -1372,7 +1399,10 @@ async function impSave(){
     load(true);
   }
 }
-$('#btnImport').onclick=impOpen;
+document.addEventListener('click',function(event){
+  const target=event.target instanceof Element?event.target.closest('#btnImport'):null;
+  if(target){event.preventDefault();impOpen();}
+});
 $('#impClose').onclick=impClose;
 $('#impCancel').onclick=impClose;
 $('#impOverlay').addEventListener('mousedown',e=>{if(e.target.id==='impOverlay')impClose()});
@@ -1415,7 +1445,5 @@ setTimeout(triggerNeon,7000);
   }
 })();
 </script>
-<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
-<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
 </body>
 </html>
