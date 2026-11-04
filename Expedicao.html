@@ -615,6 +615,22 @@ table.exp-table .cell{
   padding:6px 7px !important;font:600 11.5px var(--mono) !important;
 }
 .table-scroll{overflow:auto !important;max-height:min(70vh,780px) !important;overscroll-behavior:contain}
+/* ===== Modal ATUALIZAR ===== */
+.imp-mode{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.imp-mode small{font-size:10.5px;color:var(--muted);font-weight:600}
+.seg button:disabled{opacity:.4;cursor:not-allowed}
+.imp-tabs{margin-bottom:12px;flex-wrap:wrap}
+.imp-tabs .cnt{margin-left:6px;font:900 9.5px var(--mono);background:rgba(0,0,0,.35);color:#fff;border-radius:20px;padding:1px 7px}
+.imp-cols{font:600 10.5px var(--mono);color:var(--derived-txt);background:var(--derived-label);border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin-bottom:10px;line-height:1.7;word-break:break-word}
+#impText{width:100%;min-height:220px;resize:vertical;white-space:pre;overflow:auto;background:var(--input-bg);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font:500 11.5px var(--mono);outline:none;transition:border-color .2s,box-shadow .2s}
+#impText:focus{border-color:var(--cyan);box-shadow:0 0 0 4px rgba(34,211,238,.14)}
+.imp-info{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;font-size:11px;color:var(--muted);font-weight:600}
+.imp-info b{color:var(--txt-2);font-family:var(--mono)}
+.imp-sum{margin-top:14px;display:flex;flex-direction:column;gap:6px}
+.imp-sum div{display:flex;justify-content:space-between;gap:10px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card-2);font-size:11.5px;font-weight:700}
+.imp-sum div.ok{border-color:rgba(16,185,129,.5)}
+.imp-sum div.er{border-color:rgba(239,68,68,.5);color:#fca5a5}
+.imp-sum span{font-family:var(--mono);color:var(--derived-txt)}
 </style>
 </head>
 <body class="locked">
@@ -702,6 +718,7 @@ table.exp-table .cell{
       <div class="field"><label>&nbsp;</label>
         <div class="exp-controls">
           <button class="btn btn-primary" id="reload"><svg viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>Atualizar</button>
+          <button class="btn btn-warn" id="btnImport">⬆ ATUALIZAR</button>
           <button class="btn" id="edit">✎ Editar CARGAS SOLIC.</button>
           <button class="btn btn-primary" id="save" style="display:none">💾 Salvar</button>
           <button class="btn btn-theme" id="btnTheme" title="Modo claro/escuro">
@@ -773,6 +790,33 @@ table.exp-table .cell{
     <span class="dot">·</span>Expedição Vision
     <span class="dot">·</span><span id="conn">● CONECTANDO</span>
   </footer>
+</div>
+
+<div class="overlay" id="impOverlay">
+  <div class="modal wide">
+    <div class="modal-head">
+      <div><h2>⬆ Atualizar dados da Expedição</h2><p>Copie do Excel/Sheets (com ou sem cabeçalho) e cole na aba correspondente.</p></div>
+      <button class="x-btn" id="impClose">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="imp-mode">
+        <div class="seg">
+          <button disabled title="Em breve">📁 Carregar arquivos</button>
+          <button class="active">📋 Copiar e colar</button>
+        </div>
+        <small>Carregar arquivos: desativado por enquanto.</small>
+      </div>
+      <div class="seg imp-tabs" id="impTabs"></div>
+      <div class="imp-cols" id="impCols"></div>
+      <textarea id="impText" spellcheck="false" placeholder="Cole aqui os dados (separados por TAB, como vêm do Excel/Sheets)…"></textarea>
+      <div class="imp-info"><span id="impInfo">0 linhas</span><button class="btn btn-ghost" id="impClear">Limpar esta aba</button></div>
+      <div class="imp-sum" id="impSum"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="impCancel">Cancelar</button>
+      <button class="btn btn-primary" id="impSave">💾 Salvar e recarregar</button>
+    </div>
+  </div>
 </div>
 
 <div class="loader" id="loader"><div class="spinner"></div><p id="loaderText">Carregando expedição…</p></div>
@@ -1238,6 +1282,107 @@ $('#save')&&($('#save').onclick=async()=>{
 $('#month')&&($('#month').onchange=()=>load(false));
 $('#reload')&&($('#reload').onclick=()=>load(false));
 $('#turno')&&($('#turno').onchange=()=>{loadSaved(src.RESULTADOS_EXPEDICAO||[]);compute();render()});
+
+/* ===================== ATUALIZAR · COLAR DADOS ===================== */
+const IMP=[
+ {id:'CRONOGRAMA',lb:'CRONOGRAMA',tb:CR,num:['ITENS ROTEIRIZADOS','ITENS EM RUPTURA','CXS FECHADO','CAIXAS SEP','TT CX'],
+  cols:['CD','DTA_CRONO','CARGA','CONJ','LOJA','ITENS ROTEIRIZADOS','ITENS EM RUPTURA','CXS FECHADO','CAIXAS SEP','TT CX','STATUS','DTA PROG','TIPO','TURNO PROG','MENOR DATA CARGA']},
+ {id:'RGC',lb:'RGC',tb:RG,num:['CAIXAS ROITEIRIZADAS','CAIXAS FATURADAS','PLTS FATURADOS','CORTE'],
+  cols:['CD','DTA','TURNO_FAT','CARGA','LOJA','CAIXAS ROITEIRIZADAS','CAIXAS FATURADAS','PLTS FATURADOS','CORTE','ATENDIMENTO']},
+ {id:'CXSFAT',lb:'CXS FAT',tb:FT,num:['QTD_LOTES','QTD_VISITAS','QTD_CXS'],
+  cols:['CD','DTA','TURNO_SEP','TIPO','NROCARGA','QTD_LOTES','QTD_VISITAS','QTD_CXS']},
+ {id:'CXSPROD',lb:'CXS PROD',tb:PR,num:['QTD_LOTES','QTD_VISITAS','QTD_CXS'],
+  cols:['CD','DTA','TURNO_SEP','TIPO','NROCARGA','QTD_LOTES','QTD_VISITAS','QTD_CXS']},
+ {id:'SEPPROD',lb:'SEP PROD',tb:US,num:['USERS'],
+  cols:['CD','DTA','TURNO_SEP','USERS']}
+];
+const impBuf={};IMP.forEach(t=>impBuf[t.id]='');
+let impCur=IMP[0].id,impBusy=false;
+const impTab=id=>IMP.find(t=>t.id===id);
+
+function impParse(t,txt){
+  const lines=String(txt||'').replace(/\r/g,'').split('\n').filter(l=>l.trim());
+  if(!lines.length)return [];
+  const sep=lines[0].includes('\t')?'\t':(lines[0].includes(';')?';':'\t');
+  const rows=lines.map(l=>l.split(sep).map(c=>c.trim()));
+  const head=rows[0].map(nk);
+  if(t.cols.filter(c=>head.includes(nk(c))).length>=Math.min(3,t.cols.length))rows.shift();
+  return rows.map(r=>{
+    const o={};
+    t.cols.forEach((c,i)=>{
+      const v=r[i]===undefined||r[i]===''?null:r[i];
+      o[c]=(t.num.includes(c)&&v!=null)?num(v):v;
+    });
+    return o;
+  });
+}
+function impPaintTabs(){
+  $('#impTabs').innerHTML=IMP.map(t=>{
+    const n=impParse(t,impBuf[t.id]).length;
+    return `<button data-id="${t.id}" class="${t.id===impCur?'active':''}">${t.lb}${n?`<span class="cnt">${n}</span>`:''}</button>`;
+  }).join('');
+}
+function impPaintInfo(){
+  const t=impTab(impCur),n=impParse(t,impBuf[impCur]).length;
+  const raw=(impBuf[impCur]||'').split('\n').find(l=>l.trim())||'';
+  const nc=raw?raw.split(raw.includes('\t')?'\t':';').length:0;
+  const w=nc&&nc!==t.cols.length?` · <span style="color:var(--amber)">⚠ ${nc} colunas coladas (esperado ${t.cols.length})</span>`:'';
+  $('#impInfo').innerHTML=`<b>${n}</b> linha(s) prontas para gravar${w}`;
+  impPaintTabs();
+}
+function impPaintTab(){
+  const t=impTab(impCur);
+  $('#impCols').innerHTML=`<b>${t.tb}</b> · `+t.cols.join(' · ');
+  $('#impText').value=impBuf[impCur];
+  impPaintInfo();
+}
+function impOpen(){$('#impOverlay').classList.add('show');$('#impSum').innerHTML='';impPaintTab()}
+function impClose(){if(!impBusy)$('#impOverlay').classList.remove('show')}
+
+async function impPost(tb,rows){
+  for(let i=0;i<rows.length;i+=500){
+    const r=await fetch(BASE+tb,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify(rows.slice(i,i+500))});
+    if(!r.ok)throw new Error(r.status+' '+(await r.text()).slice(0,160));
+  }
+}
+async function impSave(){
+  if(impBusy)return;
+  impBuf[impCur]=$('#impText').value;
+  const jobs=IMP.map(t=>({t,rows:impParse(t,impBuf[t.id])})).filter(j=>j.rows.length);
+  if(!jobs.length){toast('Nada para gravar','Cole dados em pelo menos uma aba.','warn');return}
+  if(!askPass())return;
+  impBusy=true;
+  const bt=$('#impSave');bt.disabled=true;bt.textContent='Gravando…';
+  $('#impSum').innerHTML=jobs.map(j=>`<div id="imps-${j.t.id}">${j.t.lb} → ${j.t.tb}<span>aguardando…</span></div>`).join('');
+  let ok=true;
+  for(const j of jobs){
+    const el=document.getElementById('imps-'+j.t.id);
+    el.firstElementChild.textContent='gravando…';
+    try{await impPost(j.t.tb,j.rows);el.className='ok';el.firstElementChild.textContent=j.rows.length+' linhas ✔';impBuf[j.t.id]=''}
+    catch(e){ok=false;el.className='er';el.firstElementChild.textContent='erro: '+e.message}
+  }
+  impBusy=false;bt.disabled=false;bt.textContent='💾 Salvar e recarregar';
+  impPaintTabs();
+  if(ok){
+    toast('Dados gravados','Recarregando todos os indicadores…','ok');
+    $('#impOverlay').classList.remove('show');
+    await load(false);
+  }else{
+    toast('Gravação parcial','Veja o resumo no modal.','err');
+    load(true);
+  }
+}
+$('#btnImport').onclick=impOpen;
+$('#impClose').onclick=impClose;
+$('#impCancel').onclick=impClose;
+$('#impOverlay').addEventListener('mousedown',e=>{if(e.target.id==='impOverlay')impClose()});
+$('#impTabs').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  impBuf[impCur]=$('#impText').value;impCur=b.dataset.id;impPaintTab();
+});
+$('#impText').addEventListener('input',e=>{impBuf[impCur]=e.target.value;impPaintInfo()});
+$('#impClear').onclick=()=>{impBuf[impCur]='';$('#impText').value='';impPaintInfo()};
+$('#impSave').onclick=impSave;
 
 /* ===================== AUTO-REFRESH 5 MIN + NEON 5 MIN ===================== */
 const AUTO_MS=300000;
