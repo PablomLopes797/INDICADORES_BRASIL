@@ -632,16 +632,7 @@ table.exp-table .cell{
 .imp-sum div.er{border-color:rgba(239,68,68,.5);color:#fca5a5}
 .imp-sum span{font-family:var(--mono);color:var(--derived-txt)}
 </style>
-<style>
-.date-filter-bar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:14px 0;color:var(--txt)}
-.date-filter-bar small{color:var(--muted)}
-#clearDateFilter[hidden]{display:none!important}
-.day-filter{font:inherit;color:inherit;background:transparent;border:1px solid transparent;border-radius:8px;cursor:pointer;padding:7px 10px;width:100%}
-.day-filter:hover{background:rgba(96,165,250,.2)}
-.day-filter.day-active{background:#2563eb;color:white;border-color:#93c5fd;box-shadow:0 0 0 2px rgba(96,165,250,.25)}
-.day-filter:focus-visible{outline:2px solid #93c5fd}
-#impOverlay{z-index:1100}
-</style></head>
+<style>.result-day-active{background:#2563eb!important;color:white!important}#clearResultDay[hidden]{display:none!important}#impOverlay{z-index:1100}</style></head>
 <body class="locked">
 
 <div class="grid-bg"></div>
@@ -728,6 +719,7 @@ table.exp-table .cell{
         <div class="exp-controls">
           <button class="btn btn-primary" id="reload"><svg viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>Atualizar</button>
           <button class="btn btn-warn" id="btnImport">⬆ IMPORTAR DADOS</button>
+          <button type="button" class="btn btn-primary" id="saveAllResults">💾 Gravar resultados do mês</button>
           <button class="btn" id="edit">✎ Editar CARGAS SOLIC.</button>
           <button class="btn btn-primary" id="save" style="display:none">💾 Salvar</button>
           <button class="btn btn-theme" id="btnTheme" title="Modo claro/escuro">
@@ -749,8 +741,8 @@ table.exp-table .cell{
 
   <div class="exp-warn" id="warn"></div>
 
-  <div class="date-filter-bar" aria-live="polite"><span id="dateFilterLabel">Cards: mês completo</span><button type="button" class="btn" id="clearDateFilter" hidden>Mostrar mês completo</button><small>Clique no dia no cabeçalho da tabela para filtrar todos os cards.</small></div>
-  <section class="kpis" id="kpis">
+  <div style="display:flex;align-items:center;gap:12px;margin:12px 0"><span id="resultDayLabel">Cards: Mês completo</span><button type="button" class="btn" id="clearResultDay" hidden>Mostrar mês completo</button></div>
+<section class="kpis" id="kpis">
     <article class="kpi" style="--c:#60a5fa"><div class="kpi-top"><span class="kpi-label">Cargas faturadas</span><span class="kpi-badge">↗</span></div><div class="kpi-value" id="k1">0</div><div class="kpi-sub">Total do período</div></article>
     <article class="kpi" style="--c:#22d3ee"><div class="kpi-top"><span class="kpi-label">Cxs faturadas (sep + fech)</span><span class="kpi-badge">▣</span></div><div class="kpi-value" id="k2">0</div><div class="kpi-sub">Separação + fechamento</div></article>
     <article class="kpi" style="--c:#a78bfa"><div class="kpi-top"><span class="kpi-label">Cxs produzidas (sep + fech)</span><span class="kpi-badge">≋</span></div><div class="kpi-value" id="k3">0</div><div class="kpi-sub">Separação + fechamento</div></article>
@@ -1109,36 +1101,7 @@ function rowVals(name){
   if(name==='CARGAS SOLIC.')return solic.map(v=>v||0);
   return calc[name]||Array(days).fill(0);
 }
-let selectedDay=null;
 let cardMode='avg';
-function selectedDateLabel(){return selectedDay===null?'Mês completo':String(selectedDay+1).padStart(2,'0')+'/'+String(m).padStart(2,'0')+'/'+y;}
-function cardTotal(arr){return selectedDay===null?arr.reduce((a,b)=>a+(b||0),0):(arr[selectedDay]||0);}
-function updateDateCards(){
-  const S=name=>cardTotal(rowVals(name));
-  $('#k1').textContent=fmt(S('CARGAS FAT.'));
-  $('#k2').textContent=fmt(S('CXS SEP FAT.')+S('CXS FECH FAT.'));
-  $('#k3').textContent=fmt(S('CXS SEP PROD.')+S('CXS FECH PROD.'));
-  $('#k4').textContent=fmt(cardTotal(solic))+' / '+fmt(S('CARGAS FAT.'));
-  document.querySelectorAll('.kpi-sub').forEach((el,i)=>{
-    if(!el.dataset.monthLabel)el.dataset.monthLabel=el.textContent;
-    el.textContent=selectedDay===null?el.dataset.monthLabel:'Data: '+selectedDateLabel();
-  });
-  document.getElementById('dateFilterLabel').textContent=selectedDay===null?'Cards: mês completo':'Cards: '+selectedDateLabel();
-  document.getElementById('clearDateFilter').hidden=selectedDay===null;
-  document.querySelectorAll('.exp-table thead button[data-day]').forEach(btn=>{
-    const active=Number(btn.dataset.day)===selectedDay;
-    btn.classList.toggle('day-active',active);
-    btn.setAttribute('aria-pressed',String(active));
-  });
-  renderAvg();
-}
-function selectCardDay(day){selectedDay=selectedDay===day?null:day;updateDateCards();}
-document.querySelector('.exp-table thead').addEventListener('click',event=>{
-  const btn=event.target.closest('button[data-day]');
-  if(btn)selectCardDay(Number(btn.dataset.day));
-});
-document.getElementById('clearDateFilter').addEventListener('click',()=>{selectedDay=null;updateDateCards();});
-
 const ALL_ROWS=AVG_GRUPOS.flatMap(g=>g.rows.map(name=>({name,color:g.c})));
 
 document.getElementById('globalMode').addEventListener('click',e=>{
@@ -1152,12 +1115,12 @@ function renderAvg(){
   const host=document.getElementById('avgAll');if(!host)return;
   host.innerHTML=ALL_ROWS.map(({name,color})=>{
     const arr=rowVals(name),tot=arr.reduce((a,b)=>a+(b||0),0),av=media(arr);
-    const value=selectedDay===null?(cardMode==='sum'?tot:av):(arr[selectedDay]||0);
-    const label=selectedDay===null?(cardMode==='sum'?'Soma do mês':'Média / dia útil'):'Valor do dia';
+    const value=cardMode==='sum'?tot:av;
+    const label=cardMode==='sum'?'Soma do mês':'Média / dia útil';
     return `<article class="avgcard" style="--c:${color}">
       <div class="avgcard-top"><span class="avgcard-lbl" title="${name}">${name}</span></div>
-      <div class="avgcard-val">${selectedDay!==null||cardMode==='sum'?fmt(value):fmtAvg(value)}</div>
-      <div class="avgcard-sub"><span>${label}</span><b>${selectedDay===null?duList.length+' dias úteis':selectedDateLabel()}</b></div>
+      <div class="avgcard-val">${cardMode==='sum'?fmt(value):fmtAvg(value)}</div>
+      <div class="avgcard-sub"><span>${label}</span><b>${duList.length} dias úteis</b></div>
     </article>`;
   }).join('');
 }
@@ -1204,7 +1167,7 @@ function render(){
   $('#period').textContent=new Date(y,m-1,1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'})+` • 01/${mm} a ${days}/${mm} • Turno: ${$('#turno').value||'Todos'}`;
   $('#avgMeta').textContent=`${duList.length} dias úteis • ${isCur?'até '+String(hoje.getDate()).padStart(2,'0')+'/'+mm:'mês completo'} • sem sáb, dom e feriados`;
   let h='<tr><th>Indicador</th>';
-  for(let i=1;i<=days;i++)h+=`<th><button type="button" class="day-filter" data-day="${i-1}" aria-pressed="false" title="Filtrar cards por ${String(i).padStart(2,'0')}/${mm}/${y}">${String(i).padStart(2,'0')}<small>${new Date(y,m-1,i).toLocaleDateString('pt-BR',{weekday:'narrow'})}</small></button></th>`;
+  for(let i=1;i<=days;i++)h+=`<th>${String(i).padStart(2,'0')}<small>${new Date(y,m-1,i).toLocaleDateString('pt-BR',{weekday:'narrow'})}</small></th>`;
   $('thead').innerHTML=h+'<th class="avg">Média/dia útil</th><th class="total">Total</th></tr>';
   $('tbody').innerHTML=ROWS.map(([name,r])=>{
     const vals=Array(days).fill(null);
@@ -1231,7 +1194,7 @@ function render(){
   $('#k2').textContent=fmt(S('CXS SEP FAT.')+S('CXS FECH FAT.'));
   $('#k3').textContent=fmt(S('CXS SEP PROD.')+S('CXS FECH PROD.'));
   $('#k4').textContent=fmt(sol)+' / '+fmt(S('CARGAS FAT.'));
-  updateDateCards();
+  renderAvg();
   renderDailyCharts();
 }
 
@@ -1318,7 +1281,7 @@ $('#save')&&($('#save').onclick=async()=>{
     toast('CARGAS SOLIC. gravadas','Indicadores atualizados automaticamente.','ok');
   }catch(e){toast('Erro ao gravar',e.message,'err')}
 });
-$('#month')&&($('#month').onchange=()=>{selectedDay=null;load(false)});
+$('#month')&&($('#month').onchange=()=>load(false));
 $('#reload')&&($('#reload').onclick=()=>load(false));
 $('#turno')&&($('#turno').onchange=()=>{loadSaved(src.RESULTADOS_EXPEDICAO||[]);compute();render()});
 
@@ -1454,7 +1417,90 @@ setTimeout(triggerNeon,7000);
   }
 })();
 </script>
-<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
-<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
+
+<script>
+/* Persistência explícita do mês e filtro visual por dia. */
+const RESULT_COLUMN_MAP={
+ 'CARGAS FAT PRAZO':'CARGAS FAT NO PRAZO',
+ 'CARGAS FAT FORA PRAZO':'CARGAS FAT FORA PRAZO',
+ 'CXS FAT PRAZO.':'CXS FAT PRAZO',
+ 'CXS FAT FORA PRAZO.':'CXS FAT FORA PRAZO',
+ 'CXS FECH FORA PRAZO.':'CXS FECH FAT FORA PRAZO.'
+};
+let savingResults=false,selectedResultDay=null;
+function buildResultsPayload(){
+ const turno=$('#turno').value||'TODOS';
+ return Array.from({length:days},(_,i)=>{
+   const row={DTA:key(i),TURNO:turno};
+   ROWS.forEach(([name])=>{
+     const column=RESULT_COLUMN_MAP[name]||name;
+     const value=name==='CARGAS SOLIC.'?solic[i]:(calc[name]?.[i]??0);
+     row[column]=value==null?null:String(value);
+   });
+   return row;
+ });
+}
+async function saveAllResults(){
+ if(savingResults)return;
+ if(!state.user||!days){toast('Carregue o painel antes de salvar.','','warn');return;}
+ if(!askPass())return;
+ document.querySelectorAll('.cell').forEach(el=>{
+   const value=el.value.trim();
+   solic[Number(el.dataset.i)]=value===''?null:Math.max(0,Math.trunc(Number(value)||0));
+ });
+ savingResults=true;
+ const buttons=[$('#save'),$('#saveAllResults')];
+ buttons.forEach(b=>b.disabled=true);
+ try{
+   await upsert(buildResultsPayload());
+   editing=false;$('#save').style.display='none';
+   toast('Resultados gravados','Mês e turno selecionados salvos. Campos apagados de CARGAS SOLIC. foram limpos no banco.','ok');
+   await originalLoad(false);
+ }catch(error){toast('Erro ao gravar',error.message,'err');}
+ finally{savingResults=false;buttons.forEach(b=>b.disabled=false);}
+}
+$('#save').onclick=saveAllResults;
+$('#saveAllResults').onclick=saveAllResults;
+const originalLoad=load;
+load=async function(silent){if(savingResults||editing){return;}return originalLoad(silent);};
+function applyResultDay(){
+ const label=selectedResultDay===null?'Mês completo':String(selectedResultDay+1).padStart(2,'0')+'/'+String(m).padStart(2,'0')+'/'+y;
+ const total=arr=>selectedResultDay===null?arr.reduce((a,b)=>a+(b||0),0):(arr[selectedResultDay]||0);
+ const S=name=>total(rowVals(name));
+ $('#k1').textContent=fmt(S('CARGAS FAT.'));
+ $('#k2').textContent=fmt(S('CXS SEP FAT.')+S('CXS FECH FAT.'));
+ $('#k3').textContent=fmt(S('CXS SEP PROD.')+S('CXS FECH PROD.'));
+ $('#k4').textContent=fmt(total(solic))+' / '+fmt(S('CARGAS FAT.'));
+ document.querySelectorAll('.kpi-sub').forEach(el=>{
+   if(!el.dataset.monthLabel)el.dataset.monthLabel=el.textContent;
+   el.textContent=selectedResultDay===null?el.dataset.monthLabel:'Data: '+label;
+ });
+ $('#resultDayLabel').textContent='Cards: '+label;
+ $('#clearResultDay').hidden=selectedResultDay===null;
+ document.querySelectorAll('.exp-table thead th').forEach((th,i)=>{
+   const day=i-1;
+   if(day<0||day>=days)return;
+   th.classList.toggle('result-day-active',day===selectedResultDay);
+   th.style.cursor='pointer';th.title='Clique para filtrar os cards por este dia';
+   th.tabIndex=0;th.setAttribute('role','button');th.setAttribute('aria-pressed',String(day===selectedResultDay));
+ });
+ if(selectedResultDay!==null){
+   $('#avgAll').innerHTML=ALL_ROWS.map(({name,color})=>`<article class="avgcard" style="--c:${color}"><div class="avgcard-top"><span class="avgcard-lbl">${name}</span></div><div class="avgcard-val">${fmt(S(name))}</div><div class="avgcard-sub"><span>Valor do dia</span><b>${label}</b></div></article>`).join('');
+ }
+}
+const originalRenderAvg=renderAvg;
+renderAvg=function(){originalRenderAvg();applyResultDay();};
+const originalRender=render;
+render=function(){originalRender();applyResultDay();};
+function chooseResultDay(event){
+ const th=event.target.closest('th');if(!th)return;
+ const i=th.cellIndex-1;if(i<0||i>=days)return;
+ selectedResultDay=selectedResultDay===i?null:i;renderAvg();
+}
+document.querySelector('.exp-table thead').addEventListener('click',chooseResultDay);
+document.querySelector('.exp-table thead').addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();chooseResultDay(event);}});
+$('#clearResultDay').onclick=()=>{selectedResultDay=null;renderAvg();};
+$('#month').addEventListener('change',()=>{selectedResultDay=null;});
+</script>
 </body>
 </html>
