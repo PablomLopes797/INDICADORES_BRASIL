@@ -1646,5 +1646,347 @@ render=function(){
 };
 })();
 </script>
+   <style>
+table.exp-table thead th{user-select:none}
+table.exp-table thead th.has-just::after{content:'';position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:#fbbf24;box-shadow:0 0 8px #fbbf24}
+.just-lbl{font-size:10px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:7px}
+.just-ro{width:100%;background:var(--input-bg);color:var(--txt);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font:700 14px var(--mono);margin-bottom:16px;opacity:.85;cursor:not-allowed;outline:none}
+#justText{text-transform:uppercase}
+.just-count{text-align:right;font:700 10.5px var(--mono);color:var(--muted);margin-top:6px}
+.just-count.max{color:var(--amber)}
+</style>
+<script>
+(function(){
+const TB='EXP_JUSTIFICATIVAS',MAX=500;
+const DTA_BR=false; /* false = grava 2026-11-05 | true = grava 05/11/2026 (se a coluna DTA for texto nesse formato) */
+
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const brDate=k=>k.split('-').reverse().join('/');
+let justMap={},justOnce=false,curDay=null,justBusy=false,warned=false;
+
+/* ---- carrega justificativas ---- */
+async function loadJust(){
+  try{
+    const rows=await fetchAll(TB);
+    const map={};
+    for(const r of rows){
+      const d=dt(G(r,'DTA'));if(!d)continue;
+      const txt=String(G(r,'JUSTIFICATIVA')??'').trim();if(!txt)continue;
+      (map[d]=map[d]||[]).push({user:String(G(r,'USER')??'—'),text:txt});
+    }
+    justMap=map;
+  }catch(e){
+    console.warn('Justificativas:',e.message);
+    if(!warned){warned=true;toast('Justificativas não carregaram',e.message,'warn')}
+  }
+}
+
+/* ---- marca os dias que têm justificativa ---- */
+function paintJust(){
+  document.querySelectorAll('.exp-table thead th').forEach((th,i)=>{
+    const day=i-1;if(day<0||day>=days)return;
+    th.classList.toggle('has-just',!!(justMap[key(day)]||[]).length);
+  });
+}
+
+/* ---- tooltip ao passar o cursor ---- */
+const tip=document.createElement('div');tip.className='hover-tip';document.body.appendChild(tip);
+let tipDay=-1;
+function showTip(e,day){
+  const list=justMap[key(day)]||[];
+  if(!list.length){tip.classList.remove('show');tipDay=-1;return}
+  if(tipDay!==day){
+    tip.innerHTML=`<header><b>${brDate(key(day))}</b><span>${list.length} justificativa(s)</span></header>`
+      +list.map(j=>`<div class="obs-item"><div class="av">${esc(j.user.slice(0,2).toUpperCase())}</div><div><div class="who">${esc(j.user)}</div><div class="txt">${esc(j.text)}</div></div></div>`).join('')
+      +'<div class="hint">Clique 2x na data para justificar</div>';
+    tipDay=day;
+  }
+  tip.classList.add('show');
+  const w=tip.offsetWidth,h=tip.offsetHeight;
+  let px=e.clientX+14,py=e.clientY+16;
+  if(px+w>innerWidth-8)px=e.clientX-w-14;
+  if(py+h>innerHeight-8)py=innerHeight-h-8;
+  tip.style.left=Math.max(8,px)+'px';tip.style.top=Math.max(8,py)+'px';
+}
+const thead=document.querySelector('.exp-table thead');
+const dayOf=e=>{const th=e.target.closest('th');if(!th)return -1;const i=th.cellIndex-1;return(i>=0&&i<days)?i:-1};
+thead.addEventListener('mousemove',e=>{const d=dayOf(e);if(d<0){tip.classList.remove('show');tipDay=-1;return}showTip(e,d)});
+thead.addEventListener('mouseleave',()=>{tip.classList.remove('show');tipDay=-1});
+thead.addEventListener('dblclick',e=>{const d=dayOf(e);if(d>=0){e.preventDefault();openJust(d)}});
+
+/* ---- modal ---- */
+document.body.insertAdjacentHTML('beforeend',`
+<div class="overlay" id="justOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div><h2>📝 Justificativa do dia</h2><p>Registre o motivo do resultado deste dia.</p></div>
+      <button class="x-btn" id="justClose" type="button">×</button>
+    </div>
+    <div class="modal-body">
+      <label class="just-lbl">Data</label>
+      <input class="just-ro" id="justDate" readonly tabindex="-1">
+      <label class="just-lbl">Usuário</label>
+      <input class="just-ro" id="justUser" readonly tabindex="-1">
+      <label class="just-lbl">Justificativas já lançadas</label>
+      <div class="comment-list" id="justList"></div>
+      <div class="comment-compose">
+        <label for="justText">Nova justificativa</label>
+        <textarea id="justText" maxlength="${MAX}" spellcheck="false" placeholder="DIGITE A JUSTIFICATIVA..."></textarea>
+        <div class="just-count" id="justCount">0/${MAX}</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="justCancel" type="button">Cancelar</button>
+      <button class="btn btn-primary" id="justSave" type="button">💾 Salvar justificativa</button>
+    </div>
+  </div>
+</div>`);
+
+function countUpd(){
+  const n=$('#justText').value.length,c=$('#justCount');
+  c.textContent=n+'/'+MAX;c.classList.toggle('max',n>=MAX);
+}
+function openJust(day){
+  if(!state.user){toast('Faça login para justificar','','warn');return}
+  curDay=day;
+  const k=key(day),list=justMap[k]||[];
+  $('#justDate').value=brDate(k);
+  $('#justUser').value=(state.user.NAME||state.user.USER)+' · Mat. '+state.user.USER;
+  $('#justList').innerHTML=list.length
+    ?list.map(j=>`<div class="comment-item"><header><div class="who"><span class="av">${esc(j.user.slice(0,2).toUpperCase())}</span>${esc(j.user)}</div></header><p>${esc(j.text)}</p></div>`).join('')
+    :'<div class="comment-empty" style="margin-bottom:0">Nenhuma justificativa lançada para este dia.</div>';
+  $('#justText').value='';countUpd();
+  tip.classList.remove('show');tipDay=-1;
+  $('#justOverlay').classList.add('show');
+  setTimeout(()=>$('#justText').focus(),50);
+}
+function closeJust(){if(!justBusy){$('#justOverlay').classList.remove('show');curDay=null}}
+
+$('#justText').addEventListener('input',e=>{
+  const el=e.target,s=el.selectionStart;
+  el.value=el.value.toUpperCase().slice(0,MAX);
+  try{el.setSelectionRange(s,s)}catch(_){}
+  countUpd();
+});
+$('#justText').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();saveJust()}});
+$('#justClose').onclick=closeJust;
+$('#justCancel').onclick=closeJust;
+$('#justOverlay').addEventListener('mousedown',e=>{if(e.target.id==='justOverlay')closeJust()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#justOverlay').classList.contains('show'))closeJust()});
+$('#justSave').onclick=saveJust;
+
+async function saveJust(){
+  if(justBusy||curDay==null||!state.user)return;
+  const txt=$('#justText').value.toUpperCase().trim().slice(0,MAX);
+  if(!txt){toast('Digite a justificativa','','warn');return}
+  justBusy=true;
+  const bt=$('#justSave');bt.disabled=true;bt.textContent='Gravando…';
+  const k=key(curDay);
+  try{
+    const r=await fetch(BASE+TB,{method:'POST',
+      headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json',Prefer:'return=minimal'},
+      body:JSON.stringify([{DTA:DTA_BR?brDate(k):k,USER:String(state.user.USER),JUSTIFICATIVA:txt}])});
+    if(!r.ok)throw new Error(r.status+' '+(await r.text()).slice(0,150));
+    (justMap[k]=justMap[k]||[]).push({user:String(state.user.USER),text:txt});
+    paintJust();tipDay=-1;
+    justBusy=false;closeJust();
+    toast('Justificativa gravada',brDate(k),'ok');
+    loadJust().then(()=>{paintJust();tipDay=-1});
+  }catch(e){
+    toast('Erro ao gravar',e.message,'err');
+  }finally{
+    justBusy=false;bt.disabled=false;bt.textContent='💾 Salvar justificativa';
+  }
+}
+
+/* ---- encaixa nos renders / loads existentes ---- */
+const _render=render;
+render=function(){
+  _render();paintJust();
+  if(!justOnce){justOnce=true;loadJust().then(()=>{paintJust();tipDay=-1})}
+};
+const _load=load;
+load=async function(s){
+  const r=await _load(s);
+  loadJust().then(()=>{paintJust();tipDay=-1});
+  return r;
+};
+})();
+</script>
+   <style>
+.nu-lbl{font-size:10px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;color:var(--muted);display:block;margin:0 0 7px}
+.nu-input{width:100%;background:var(--input-bg);color:var(--txt);border:1px solid var(--line);border-radius:12px;padding:13px 14px;font:700 14px var(--mono);outline:none;margin-bottom:16px;transition:border-color .2s,box-shadow .2s}
+.nu-input:focus{border-color:var(--cyan);box-shadow:0 0 0 4px rgba(34,211,238,.14)}
+#nuBulk{min-height:220px;resize:vertical;white-space:pre;overflow:auto;margin-bottom:8px;font-weight:500;font-size:12px}
+.nu-pass{position:relative}
+.nu-pass .btn{position:absolute;right:6px;top:6px;padding:7px 10px}
+.nu-info{font-size:11px;color:var(--muted);font-weight:600;margin-bottom:12px;line-height:1.6}
+.nu-info b{color:var(--txt-2);font-family:var(--mono)}
+.nu-res{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.nu-res div{padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card-2);font-size:11.5px;font-weight:700;word-break:break-word}
+.nu-res div.ok{border-color:rgba(16,185,129,.5)}
+.nu-res div.wr{border-color:rgba(245,158,11,.5);color:var(--amber)}
+.nu-res div.er{border-color:rgba(239,68,68,.5);color:#fca5a5}
+</style>
+<script>
+(function(){
+const ADMIN='5520967';        /* único usuário que vê o botão */
+const TB='USERS';             /* tabela do BD de login */
+const COL_USER='USER';        /* nome EXATO da coluna da matrícula */
+const COL_PASS='PASS';        /* nome EXATO da coluna da senha (o login do painel usa PASS; se na tabela for PASSWORD, troque aqui) */
+
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let mode='one',busy=false;
+
+/* ---- botão (só admin) ---- */
+$('#btnTheme').insertAdjacentHTML('beforebegin','<button class="btn" id="btnNewUser" type="button" style="display:none">👤 Novo usuário</button>');
+const isAdmin=()=>!!(state.user&&String(state.user.USER).trim()===ADMIN);
+function updAdmin(){
+  $('#btnNewUser').style.display=isAdmin()?'':'none';
+  if(!isAdmin())$('#nuOverlay')&&$('#nuOverlay').classList.remove('show');
+}
+const _setUserUI=setUserUI;
+setUserUI=function(u){_setUserUI(u);updAdmin()};
+document.getElementById('btnLogout').addEventListener('click',()=>setTimeout(updAdmin,0));
+
+/* ---- modal ---- */
+document.body.insertAdjacentHTML('beforeend',`
+<div class="overlay" id="nuOverlay">
+  <div class="modal wide" style="width:min(720px,100%)">
+    <div class="modal-head">
+      <div><h2>👤 Cadastrar usuário</h2><p>Grava na tabela <b>${TB}</b> com os campos <b>${COL_USER}</b> e <b>${COL_PASS}</b>.</p></div>
+      <button class="x-btn" id="nuClose" type="button">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="seg" id="nuTabs" style="margin-bottom:16px;width:max-content">
+        <button type="button" data-m="one" class="active">Individual</button>
+        <button type="button" data-m="bulk">Em massa</button>
+      </div>
+      <div id="nuOne">
+        <label class="nu-lbl" for="nuUser">${COL_USER}</label>
+        <input class="nu-input" id="nuUser" type="text" autocomplete="off" spellcheck="false" placeholder="Matrícula">
+        <label class="nu-lbl" for="nuPass">${COL_PASS}</label>
+        <div class="nu-pass"><input class="nu-input" id="nuPass" type="password" autocomplete="new-password" spellcheck="false" placeholder="Senha" style="padding-right:80px"><button type="button" class="btn btn-ghost" id="nuEye">Mostrar</button></div>
+      </div>
+      <div id="nuMany" style="display:none">
+        <div class="nu-info">Cole uma linha por usuário no formato <b>${COL_USER}</b> e <b>${COL_PASS}</b>, separados por <b>TAB</b> (direto do Excel/Sheets) ou por <b>;</b> / <b>,</b>. O cabeçalho é opcional.<br>Exemplo: <b>1234567;minhasenha</b></div>
+        <textarea class="nu-input" id="nuBulk" spellcheck="false" placeholder="${COL_USER}	${COL_PASS}&#10;1234567	senha1&#10;7654321	senha2"></textarea>
+        <div class="nu-info" id="nuBulkInfo">0 usuários prontos</div>
+      </div>
+      <div class="nu-res" id="nuRes"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="nuCancel" type="button">Cancelar</button>
+      <button class="btn btn-primary" id="nuSave" type="button">💾 Cadastrar usuário</button>
+    </div>
+  </div>
+</div>`);
+
+function setMode(m){
+  mode=m;
+  document.querySelectorAll('#nuTabs button').forEach(b=>b.classList.toggle('active',b.dataset.m===m));
+  $('#nuOne').style.display=m==='one'?'':'none';
+  $('#nuMany').style.display=m==='bulk'?'':'none';
+  $('#nuSave').textContent=m==='one'?'💾 Cadastrar usuário':'💾 Cadastrar em massa';
+  $('#nuRes').innerHTML='';
+}
+function openNu(){
+  if(!isAdmin())return;
+  $('#nuUser').value='';$('#nuPass').value='';$('#nuBulk').value='';
+  $('#nuPass').type='password';$('#nuEye').textContent='Mostrar';
+  setMode('one');bulkInfo();
+  $('#nuOverlay').classList.add('show');
+  setTimeout(()=>$('#nuUser').focus(),50);
+}
+function closeNu(){if(!busy)$('#nuOverlay').classList.remove('show')}
+$('#btnNewUser').onclick=openNu;
+$('#nuClose').onclick=closeNu;
+$('#nuCancel').onclick=closeNu;
+$('#nuOverlay').addEventListener('mousedown',e=>{if(e.target.id==='nuOverlay')closeNu()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#nuOverlay').classList.contains('show'))closeNu()});
+$('#nuTabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setMode(b.dataset.m)});
+$('#nuEye').onclick=()=>{const i=$('#nuPass');i.type=i.type==='password'?'text':'password';$('#nuEye').textContent=i.type==='password'?'Mostrar':'Ocultar'};
+
+/* ---- leitura da colagem em massa ---- */
+function parseBulk(txt){
+  const lines=String(txt||'').replace(/\r/g,'').split('\n').map(l=>l.trim()).filter(Boolean);
+  const ok=[],bad=[],seen=new Set();let dup=0;
+  lines.forEach((l,idx)=>{
+    let u,p;
+    if(l.includes('\t')){const a=l.split('\t');u=(a[0]||'').trim();p=(a[1]||'').trim()}
+    else{
+      let i=l.indexOf(';');if(i<0)i=l.indexOf(',');
+      if(i<0){bad.push(l);return}
+      u=l.slice(0,i).trim();p=l.slice(i+1).trim();
+    }
+    if(idx===0&&nk(u)==='USER'&&['PASS','PASSWORD','SENHA'].includes(nk(p)))return;
+    if(!u||!p){bad.push(l);return}
+    if(seen.has(u)){dup++;return}
+    seen.add(u);ok.push({[COL_USER]:u,[COL_PASS]:p});
+  });
+  return{ok,bad,dup};
+}
+function bulkInfo(){
+  const r=parseBulk($('#nuBulk').value);
+  $('#nuBulkInfo').innerHTML=`<b>${r.ok.length}</b> usuário(s) pronto(s)`
+    +(r.bad.length?` · <span style="color:var(--amber)">⚠ ${r.bad.length} linha(s) inválida(s)</span>`:'')
+    +(r.dup?` · ${r.dup} repetido(s) na colagem`:'');
+}
+$('#nuBulk').addEventListener('input',bulkInfo);
+
+/* ---- grava no BD de login ---- */
+async function createUsers(rows){
+  const existing=new Set();
+  for(let i=0;i<rows.length;i+=200){
+    const chunk=rows.slice(i,i+200).map(r=>r[COL_USER]);
+    const {data,error}=await sbLogin.from(TB).select(COL_USER).in(COL_USER,chunk);
+    if(error)throw error;
+    (data||[]).forEach(d=>existing.add(String(d[COL_USER])));
+  }
+  const novos=rows.filter(r=>!existing.has(String(r[COL_USER])));
+  for(let i=0;i<novos.length;i+=200){
+    const {error}=await sbLogin.from(TB).insert(novos.slice(i,i+200));
+    if(error)throw error;
+  }
+  return{created:novos.length,existing:[...existing]};
+}
+async function saveNu(){
+  if(busy||!isAdmin())return;
+  let rows=[],extra={bad:0,dup:0};
+  if(mode==='one'){
+    const u=$('#nuUser').value.trim(),p=$('#nuPass').value;
+    if(!u||!p.trim()){toast('Preencha '+COL_USER+' e '+COL_PASS,'','warn');return}
+    rows=[{[COL_USER]:u,[COL_PASS]:p}];
+  }else{
+    const r=parseBulk($('#nuBulk').value);
+    rows=r.ok;extra={bad:r.bad.length,dup:r.dup};
+    if(!rows.length){toast('Nada para cadastrar','Cole ao menos uma linha válida.','warn');return}
+  }
+  busy=true;
+  const bt=$('#nuSave'),old=bt.textContent;bt.disabled=true;bt.textContent='Gravando…';
+  const res=$('#nuRes');res.innerHTML='';
+  try{
+    const r=await createUsers(rows);
+    let h='';
+    if(r.created)h+=`<div class="ok">✔ ${r.created} usuário(s) cadastrado(s)</div>`;
+    if(r.existing.length)h+=`<div class="wr">⚠ ${r.existing.length} já existia(m) e não foi(ram) alterado(s): ${esc(r.existing.slice(0,20).join(', '))}${r.existing.length>20?'…':''}</div>`;
+    if(extra.bad)h+=`<div class="wr">⚠ ${extra.bad} linha(s) inválida(s) ignorada(s)</div>`;
+    if(extra.dup)h+=`<div class="wr">⚠ ${extra.dup} repetido(s) na colagem ignorado(s)</div>`;
+    res.innerHTML=h;
+    if(r.created){
+      toast('Usuário(s) cadastrado(s)',r.created+' novo(s) em '+TB,'ok');
+      if(mode==='one'){$('#nuUser').value='';$('#nuPass').value='';$('#nuUser').focus()}
+      else{$('#nuBulk').value='';bulkInfo()}
+    }else toast('Nenhum usuário novo','Todos já existiam.','warn');
+  }catch(e){
+    res.innerHTML=`<div class="er">Erro ao gravar: ${esc(e.message||e)}</div>`;
+    toast('Erro ao cadastrar',e.message||String(e),'err');
+  }finally{busy=false;bt.disabled=false;bt.textContent=old}
+}
+$('#nuSave').onclick=saveNu;
+
+updAdmin(); /* caso a sessão já esteja ativa ao carregar a página */
+})();
+</script>
 </body>
 </html>
