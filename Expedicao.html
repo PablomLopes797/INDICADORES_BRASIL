@@ -1511,10 +1511,10 @@ table.exp-table td.rup-bad{color:#f87171 !important;font-weight:800}
 <script>
 (function(){
 const META=2.5;
-const RUPT_TEXT=true;
-const RUPT_TABLE='EXP_CRONOGRAMA', RUPT_COL='RUPTURA';
 
+/* linhas CAD. = CADENCIAMENTO */
 PEND.STATUS='CADENCIAMENTO';
+/* linha RUPTURA antes de CARGAS SOLIC. */
 if(!ROWS.some(r=>r[0]==='RUPTURA'))ROWS.unshift(['RUPTURA',null]);
 
 const fmtPct=v=>v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
@@ -1526,23 +1526,36 @@ function parsePct(v){
   const n=Number(s);return isFinite(n)?n:null;
 }
 
+/* lê RUPTURA de RESULTADOS_EXPEDICAO (mesmo mês e turno do painel) */
 let ruptVals=[];
 function computeRupt(){
   ruptVals=Array(days).fill(null);
-  const pref=key(0).slice(0,7);
-  for(const row of src[CR]||[]){
-    const d=dt(G(row,'DTA_CRONO'));
+  const pref=key(0).slice(0,7),tur=$('#turno').value||'TODOS';
+  for(const r of src.RESULTADOS_EXPEDICAO||[]){
+    const d=dt(G(r,'DTA')||G(r,'DATA'));
     if(!d||d.slice(0,7)!==pref)continue;
-    const p=parsePct(G(row,RUPT_COL));
-    if(p!=null)ruptVals[+d.slice(8)-1]=p;
+    if(nk(G(r,'TURNO')||'TODOS')!==nk(tur))continue;
+    ruptVals[+d.slice(8)-1]=parsePct(G(r,'RUPTURA'));
   }
 }
 const _compute=compute;
 compute=function(){_compute();computeRupt();};
 
+/* inclui RUPTURA no payload que já grava em RESULTADOS_EXPEDICAO */
 const _bp=buildResultsPayload;
-buildResultsPayload=function(){return _bp().map(r=>{delete r.RUPTURA;return r});};
+buildResultsPayload=function(){
+  const rows=_bp();
+  const inputs={};
+  document.querySelectorAll('.cellp').forEach(el=>{inputs[+el.dataset.r]=el});
+  return rows.map((r,i)=>{
+    let v=ruptVals[i];
+    if(inputs[i]){v=parsePct(inputs[i].value);if(v!=null)v=Math.min(100,Math.max(0,v))}
+    r.RUPTURA=v==null?null:fmtPct(v);
+    return r;
+  });
+};
 
+/* linha RUPTURA na tabela */
 function patchRuptRow(){
   const tr=[...document.querySelectorAll('.exp-table tbody tr')].find(r=>r.firstElementChild&&r.firstElementChild.textContent.trim()==='RUPTURA');
   if(!tr)return;
@@ -1562,6 +1575,7 @@ function patchRuptRow(){
   tr.innerHTML=`<th scope="row" title="Meta ${fmtPct(META)}">RUPTURA</th>${cells}<td class="avg">${av==null?'·':fmtPct(av)}</td><td class="total">—</td>`;
 }
 
+/* máscara de % enquanto digita */
 document.addEventListener('input',e=>{
   const el=e.target;if(!el.classList||!el.classList.contains('cellp'))return;
   let raw=el.value.replace(/[^\d,\.]/g,'').replace(/\./g,',');
@@ -1586,39 +1600,7 @@ document.addEventListener('focusout',e=>{
   const v=parsePct(el.value);el.value=v==null?'':fmtPct(Math.min(100,Math.max(0,v)));
 });
 
-async function saveRuptura(){
-  const inputs=[...document.querySelectorAll('.cellp')];if(!inputs.length)return;
-  const map={};
-  for(const row of src[CR]||[]){
-    const raw=G(row,'DTA_CRONO'),d=dt(raw);
-    if(!d)continue;(map[d]=map[d]||new Set()).add(raw);
-  }
-  const jobs=[];let skipped=0;
-  inputs.forEach(el=>{
-    const i=+el.dataset.r;
-    let nv=parsePct(el.value);if(nv!=null)nv=Math.min(100,Math.max(0,nv));
-    const ov=ruptVals[i];
-    if(nv==null&&ov==null)return;
-    if(nv!=null&&ov!=null&&Math.abs(nv-ov)<1e-9)return;
-    const raws=[...(map[key(i)]||[])];
-    if(!raws.length){skipped++;return}
-    jobs.push({nv,raws});
-  });
-  const reqs=jobs.flatMap(j=>j.raws.map(async raw=>{
-    const val=j.nv==null?null:(RUPT_TEXT?fmtPct(j.nv):j.nv);
-    const r=await fetch(BASE+RUPT_TABLE+'?DTA_CRONO=eq.'+encodeURIComponent(raw),{
-      method:'PATCH',
-      headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json',Prefer:'return=minimal'},
-      body:JSON.stringify({[RUPT_COL]:val})
-    });
-    if(!r.ok)throw new Error('RUPTURA: '+r.status+' '+(await r.text()).slice(0,150));
-  }));
-  await Promise.all(reqs);
-  if(skipped)toast('RUPTURA',skipped+' dia(s) sem linhas no EXP_CRONOGRAMA — não foi possível gravar.','warn');
-}
-const _upsert=upsert;
-upsert=async function(body){await _upsert(body);await saveRuptura();};
-
+/* card de média */
 function paintRuptCard(){
   const host=document.getElementById('avgAll');if(!host)return;
   const old=document.getElementById('rupCard');if(old)old.remove();
@@ -1628,6 +1610,8 @@ function paintRuptCard(){
   const color=v==null?'#8891ad':(v>META?'#ef4444':'#10b981');
   host.insertAdjacentHTML('afterbegin',`<article class="avgcard" id="rupCard" style="--c:${color}"><div class="avgcard-top"><span class="avgcard-lbl">RUPTURA</span></div><div class="avgcard-val">${v==null?'—':fmtPct(v)}</div><div class="avgcard-sub"><span>${label}</span><b>Meta ${fmtPct(META)}</b></div></article>`);
 }
+
+/* gráfico com linha de meta */
 let rupChart=null;
 function paintRuptChart(){
   const host=document.getElementById('dailyCharts');if(!host||typeof Chart==='undefined')return;
