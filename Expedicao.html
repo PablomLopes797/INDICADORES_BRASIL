@@ -1502,5 +1502,165 @@ document.querySelector('.exp-table thead').addEventListener('keydown',event=>{if
 $('#clearResultDay').onclick=()=>{selectedResultDay=null;renderAvg();};
 $('#month').addEventListener('change',()=>{selectedResultDay=null;});
 </script>
+<style>
+.cellp{width:70px;max-width:70px;min-width:70px;border:1px solid transparent;background:transparent;color:var(--txt);text-align:center;border-radius:7px;padding:6px 4px;font:600 11.5px var(--mono)}
+.cellp:hover,.cellp:focus{background:var(--input-bg);border-color:var(--amber);outline:none}
+table.exp-table td.rup-ok{color:#34d399 !important;font-weight:800}
+table.exp-table td.rup-bad{color:#f87171 !important;font-weight:800}
+</style>
+<script>
+(function(){
+const META=2.5;
+const RUPT_TEXT=true;
+const RUPT_TABLE='EXP_CRONOGRAMA', RUPT_COL='RUPTURA';
+
+PEND.STATUS='CADENCIAMENTO';
+if(!ROWS.some(r=>r[0]==='RUPTURA'))ROWS.unshift(['RUPTURA',null]);
+
+const fmtPct=v=>v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
+function parsePct(v){
+  if(v==null||v==='')return null;
+  if(typeof v==='number')return isFinite(v)?v:null;
+  let s=String(v).replace('%','').trim();if(!s)return null;
+  s=s.includes(',')?s.replace(/\./g,'').replace(',','.'):s;
+  const n=Number(s);return isFinite(n)?n:null;
+}
+
+let ruptVals=[];
+function computeRupt(){
+  ruptVals=Array(days).fill(null);
+  const pref=key(0).slice(0,7);
+  for(const row of src[CR]||[]){
+    const d=dt(G(row,'DTA_CRONO'));
+    if(!d||d.slice(0,7)!==pref)continue;
+    const p=parsePct(G(row,RUPT_COL));
+    if(p!=null)ruptVals[+d.slice(8)-1]=p;
+  }
+}
+const _compute=compute;
+compute=function(){_compute();computeRupt();};
+
+const _bp=buildResultsPayload;
+buildResultsPayload=function(){return _bp().map(r=>{delete r.RUPTURA;return r});};
+
+function patchRuptRow(){
+  const tr=[...document.querySelectorAll('.exp-table tbody tr')].find(r=>r.firstElementChild&&r.firstElementChild.textContent.trim()==='RUPTURA');
+  if(!tr)return;
+  tr.classList.add('grp');
+  let cells='';
+  for(let i=0;i<days;i++){
+    const we=[0,6].includes(new Date(y,m-1,i+1).getDay())?' we':'';
+    const v=ruptVals[i];
+    if(editing)cells+=`<td class="${we.trim()}"><input class="cellp" type="text" inputmode="decimal" autocomplete="off" data-r="${i}" value="${v==null?'':fmtPct(v)}" placeholder="0,00%"></td>`;
+    else{
+      const cls=(we+(v==null?' na':(v>META?' rup-bad':' rup-ok'))).trim();
+      cells+=`<td class="${cls}" title="RUPTURA · dia ${i+1}: ${v==null?'—':fmtPct(v)} (meta ${fmtPct(META)})">${v==null?'·':fmtPct(v)}</td>`;
+    }
+  }
+  const xs=duList.map(d=>ruptVals[d-1]).filter(x=>x!=null);
+  const av=xs.length?xs.reduce((a,b)=>a+b,0)/xs.length:null;
+  tr.innerHTML=`<th scope="row" title="Meta ${fmtPct(META)}">RUPTURA</th>${cells}<td class="avg">${av==null?'·':fmtPct(av)}</td><td class="total">—</td>`;
+}
+
+document.addEventListener('input',e=>{
+  const el=e.target;if(!el.classList||!el.classList.contains('cellp'))return;
+  let raw=el.value.replace(/[^\d,\.]/g,'').replace(/\./g,',');
+  const p=raw.indexOf(',');
+  if(p>=0)raw=raw.slice(0,p+1)+raw.slice(p+1).replace(/,/g,'');
+  let [ip,fp]=raw.split(',');
+  ip=ip.slice(0,3);
+  if(fp!==undefined&&ip==='')ip='0';
+  raw=fp===undefined?ip:ip+','+fp.slice(0,2);
+  if(Number(raw.replace(',','.'))>100)raw='100';
+  el.value=raw?raw+'%':'';
+  el.setSelectionRange(raw.length,raw.length);
+});
+document.addEventListener('keydown',e=>{
+  const el=e.target;if(!el.classList||!el.classList.contains('cellp'))return;
+  if(e.key==='Backspace'&&el.selectionStart===el.selectionEnd&&el.selectionStart===el.value.length&&el.value.endsWith('%'))
+    el.setSelectionRange(el.value.length-1,el.value.length-1);
+});
+document.addEventListener('focusin',e=>{const el=e.target;if(el.classList&&el.classList.contains('cellp'))setTimeout(()=>el.select(),0)});
+document.addEventListener('focusout',e=>{
+  const el=e.target;if(!el.classList||!el.classList.contains('cellp'))return;
+  const v=parsePct(el.value);el.value=v==null?'':fmtPct(Math.min(100,Math.max(0,v)));
+});
+
+async function saveRuptura(){
+  const inputs=[...document.querySelectorAll('.cellp')];if(!inputs.length)return;
+  const map={};
+  for(const row of src[CR]||[]){
+    const raw=G(row,'DTA_CRONO'),d=dt(raw);
+    if(!d)continue;(map[d]=map[d]||new Set()).add(raw);
+  }
+  const jobs=[];let skipped=0;
+  inputs.forEach(el=>{
+    const i=+el.dataset.r;
+    let nv=parsePct(el.value);if(nv!=null)nv=Math.min(100,Math.max(0,nv));
+    const ov=ruptVals[i];
+    if(nv==null&&ov==null)return;
+    if(nv!=null&&ov!=null&&Math.abs(nv-ov)<1e-9)return;
+    const raws=[...(map[key(i)]||[])];
+    if(!raws.length){skipped++;return}
+    jobs.push({nv,raws});
+  });
+  const reqs=jobs.flatMap(j=>j.raws.map(async raw=>{
+    const val=j.nv==null?null:(RUPT_TEXT?fmtPct(j.nv):j.nv);
+    const r=await fetch(BASE+RUPT_TABLE+'?DTA_CRONO=eq.'+encodeURIComponent(raw),{
+      method:'PATCH',
+      headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json',Prefer:'return=minimal'},
+      body:JSON.stringify({[RUPT_COL]:val})
+    });
+    if(!r.ok)throw new Error('RUPTURA: '+r.status+' '+(await r.text()).slice(0,150));
+  }));
+  await Promise.all(reqs);
+  if(skipped)toast('RUPTURA',skipped+' dia(s) sem linhas no EXP_CRONOGRAMA — não foi possível gravar.','warn');
+}
+const _upsert=upsert;
+upsert=async function(body){await _upsert(body);await saveRuptura();};
+
+function paintRuptCard(){
+  const host=document.getElementById('avgAll');if(!host)return;
+  const old=document.getElementById('rupCard');if(old)old.remove();
+  let v,label;
+  if(typeof selectedResultDay!=='undefined'&&selectedResultDay!==null){v=ruptVals[selectedResultDay];label='Valor do dia'}
+  else{const xs=duList.map(d=>ruptVals[d-1]).filter(x=>x!=null);v=xs.length?xs.reduce((a,b)=>a+b,0)/xs.length:null;label='Média / dia útil'}
+  const color=v==null?'#8891ad':(v>META?'#ef4444':'#10b981');
+  host.insertAdjacentHTML('afterbegin',`<article class="avgcard" id="rupCard" style="--c:${color}"><div class="avgcard-top"><span class="avgcard-lbl">RUPTURA</span></div><div class="avgcard-val">${v==null?'—':fmtPct(v)}</div><div class="avgcard-sub"><span>${label}</span><b>Meta ${fmtPct(META)}</b></div></article>`);
+}
+let rupChart=null;
+function paintRuptChart(){
+  const host=document.getElementById('dailyCharts');if(!host||typeof Chart==='undefined')return;
+  const old=document.getElementById('rupChartCard');if(old)old.remove();
+  host.insertAdjacentHTML('afterbegin',`<div class="daily-chart" id="rupChartCard" style="--c:#f43f5e"><div class="daily-chart-head"><div class="daily-chart-title"><i></i>RUPTURA (%)</div><div class="daily-chart-sub">Meta ${fmtPct(META)}</div></div><canvas id="chart-rupmeta"></canvas></div>`);
+  const labels=Array.from({length:days},(_,i)=>String(i+1).padStart(2,'0'));
+  const mx=Math.max(META*2,Math.max(0,...ruptVals.map(v=>v||0))*1.2);
+  rupChart=new Chart(document.getElementById('chart-rupmeta'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'RUPTURA %',data:ruptVals.slice(),borderColor:'#f43f5e',backgroundColor:'#f43f5e22',fill:true,tension:.32,borderWidth:2,spanGaps:true,pointRadius:4,pointHoverRadius:7,
+        pointBackgroundColor:c=>{const v=c.raw;return v!=null&&v>META?'#ef4444':'#10b981'},
+        datalabels:{display:c=>c.dataset.data[c.dataIndex]!=null,align:'top',anchor:'end',offset:-2,color:'#f43f5e',font:{family:'Inter',size:9,weight:'800'},formatter:v=>fmtPct(v)}},
+      {label:'Meta '+fmtPct(META),data:Array(days).fill(META),borderColor:'#10b981',borderDash:[6,5],borderWidth:2,pointRadius:0,fill:false,datalabels:{display:false}}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:20,right:12}},
+      plugins:{legend:{display:true,labels:{color:'#8891ad',font:{size:10}}},
+        tooltip:{callbacks:{title:i=>'Dia '+i[0].label,label:i=>i.dataset.label+': '+fmtPct(i.parsed.y)}}},
+      scales:{x:{grid:{display:false},ticks:{color:'#8891ad',font:{size:10}}},
+        y:{beginAtZero:true,suggestedMax:mx,grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#8891ad',font:{size:10},callback:v=>v.toLocaleString('pt-BR')+'%'}}}},
+    plugins:[ChartDataLabels]
+  });
+}
+
+const _renderAvg=renderAvg;
+renderAvg=function(){_renderAvg();paintRuptCard();};
+const _render=render;
+render=function(){
+  if(rupChart){try{rupChart.destroy()}catch(e){}rupChart=null}
+  _render();
+  patchRuptRow();paintRuptCard();paintRuptChart();
+};
+})();
+</script>
 </body>
 </html>
