@@ -55,8 +55,8 @@
       <section id="importView" hidden>
         <button class="back-link" type="button" data-back>← Voltar às bases</button>
         <div class="import-summary"><div><h3 id="importTitle">Importar CSV</h3><p id="importSubtitle">Selecione o arquivo para iniciar a validação.</p></div><span class="pill" id="tablePill">TABELA</span></div>
-        <div class="file-row"><div class="field"><label for="csvFile">ARQUIVO CSV (UTF-8)</label><input id="csvFile" type="file" accept=".csv,text/csv,.txt,text/plain"></div><div class="field"><label for="delimiterMode">SEPARADOR</label><select id="delimiterMode"><option value="auto">Detectar</option><option value="semicolon">Ponto e vírgula (;)</option><option value="comma">Vírgula (,)</option></select></div><button class="btn btn-primary" id="loadFile" type="button" disabled>CARREGAR</button></div>
-        <p class="helper" id="fileHint">Aceita separador vírgula ou ponto e vírgula. A prévia mostra os registros válidos e os erros antes de qualquer envio.</p>
+        <div class="file-row"><div class="field"><label for="csvFile" id="csvLabel">ARQUIVO CSV (UTF-8)</label><input id="csvFile" type="file" accept=".csv,text/csv,.txt,text/plain"></div><div class="field" id="manualBaseField" hidden><label for="manualXlsxFile">BASE DE ATIVOS MANUAL (XLSX)</label><input id="manualXlsxFile" type="file" accept=".xlsx,.xlsm,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></div><div class="field" id="delimiterField"><label for="delimiterMode">SEPARADOR</label><select id="delimiterMode"><option value="auto">Detectar</option><option value="semicolon">Ponto e vírgula (;)</option><option value="comma">Vírgula (,)</option></select></div><button class="btn btn-primary" id="loadFile" type="button" disabled>CARREGAR</button></div>
+        <p class="helper" id="fileHint">Aceita separador vírgula ou ponto e vírgula. A prévia mostra os registros válidos e os erros antes de qualquer envio.</p><p class="helper" id="quadroFileHint" hidden>ANEXE AQUI O ARQUIVO EXPORTADO DO LG (CSV) e ANEXE AQUI O ARQUIVO EDITADO MANUAL QUE CONTÉM OS TURNOS (XLSX). O cruzamento usa matrícula CSV na coluna A do XLSX; TURNO é extraído como números da coluna C.</p>
         <div class="warning"><span class="warn-icon">!</span><span>Envio em modo <b>inserção</b>: sem UPSERT, exclusão ou deduplicação automática. Matrícula sozinha não é tratada como chave única. Confirme que a prévia corresponde ao arquivo correto.</span></div>
         <div id="suricatoDedupePanel" class="dedupe-panel" hidden>
           <p class="helper"><b>Chave de duplicidade:</b> DTA + MATRICULA. A limpeza mantém um registro por chave e remove os demais. É necessário que ABS_SURICATO tenha uma coluna única <code>id</code> para excluir somente as cópias.</p>
@@ -85,8 +85,8 @@
   const ui = {
     overlay: $('#overlay'), open: $('#openUpdate'), close: $('#closeModal'), choices: $('#choiceView'),
     feriasView: $('#feriasView'), importer: $('#importView'), result: $('#resultView'),
-    file: $('#csvFile'), load: $('#loadFile'), preview: $('#previewArea'), confirm: $('#confirmImport'),
-    title: $('#importTitle'), subtitle: $('#importSubtitle'), table: $('#tablePill'),
+    file: $('#csvFile'), manualFile: $('#manualXlsxFile'), load: $('#loadFile'), preview: $('#previewArea'), confirm: $('#confirmImport'),
+    title: $('#importTitle'), subtitle: $('#importSubtitle'), table: $('#tablePill'), quadroFileHint: $('#quadroFileHint'), manualField: $('#manualBaseField'), delimiterField: $('#delimiterField'),
     dedupePanel: $('#suricatoDedupePanel'), dedupeButton: $('#dedupeSuricato'), progress: $('#progressWrap'), progressLabel: $('#progressLabel'),
     progressPercent: $('#progressPercent'), progressBar: $('#progressBar'), toast: $('#toast'),
     feriasFile: $('#xlsxFile'), feriasLoad: $('#loadXlsx'), feriasConfirm: $('#confirmFerias'),
@@ -131,6 +131,8 @@
     selectedModule = null;
     pending = null;
     ui.file.value = '';
+    ui.manualFile.value = '';
+    ui.manualFile.disabled = false;
     ui.load.disabled = true;
     ui.confirm.disabled = true;
     ui.preview.replaceChildren();
@@ -148,6 +150,7 @@
     busy = value;
     ui.load.disabled = value || !ui.file.files?.length;
     ui.file.disabled = value;
+    ui.manualFile.disabled = value;
     ui.confirm.disabled = value || !pending || !pending.valid.length || (selectedModule === 'suricato' && pending.errors.length > 0);
     ui.feriasLoad.disabled = value || !ui.feriasFile.files?.length;
     ui.feriasFile.disabled = value;
@@ -176,9 +179,14 @@
     ui.preview.replaceChildren();
     ui.progress.hidden = true;
     const isQuadro = module === 'quadro';
+    ui.manualField.hidden = !isQuadro;
+    ui.delimiterField.hidden = isQuadro;
+    ui.quadroFileHint.hidden = !isQuadro;
+    ui.file.closest('.field').querySelector('label').textContent = isQuadro ? 'BASE DO LG · CSV' : 'ARQUIVO CSV (UTF-8)';
+    ui.file.accept = isQuadro ? '.csv,text/csv,.txt,text/plain' : '.csv,text/csv,.txt,text/plain';
     ui.title.textContent = isQuadro ? 'Importação do QUADRO' : 'Importação do SURICATO';
     ui.subtitle.textContent = isQuadro
-      ? 'Mapeamento posicional para ABS_QUADRO · colunas A, B, C, E, G, I e J.'
+      ? 'BASE DO LG (CSV) + BASE DE ATIVOS MANUAL (XLSX) · cruzamento por matrícula.'
       : 'Mapeamento posicional para ABS_SURICATO · coluna A para DTA e coluna G para MATRICULA.';
     ui.table.textContent = `DESTINO · ${TABLES[module]}`;
     showView('import');
@@ -321,7 +329,7 @@
   function rowToRecord(module, row, referenceDate) {
     const c = row.values.map((value) => String(value ?? '').trim());
     if (module === 'quadro') {
-      if (c.length < 27) return { error: `linha ${row.line}: esperadas pelo menos 27 colunas (A–AA; TURNO na coluna AA), recebidas ${c.length}` };
+      if (c.length < 24) return { error: `linha ${row.line}: esperadas pelo menos 24 colunas (A–X), recebidas ${c.length}` };
       const matricula = c[0], nome = c[1];
       const admission = parseDateValue(c[2]);
       const birth = parseDateValue(c[9]);
@@ -341,7 +349,10 @@
         SETOR: c[8] || null,
         NASCIMENTO: birthValue,
         IDADE: birthValue ? ageOn(birthValue, referenceDate) : null,
-        TURNO: c[26] || null,
+        TURNO: null,
+        PCD: c[17] || null,
+        'SITUAÇÃO': c[20] || null,
+        'MOTIVO DA SITUAÇÃO': c[23] || null,
       };
       return { valid: { row: row.line, record, preview: [matricula,nome,record.CARGO || '',record.CD || '',record.SETOR || '',record.TURNO || '—',admission.display,birth.display,record.IDADE ?? '—'] } };
     }
@@ -417,7 +428,7 @@
     previewHead.className = 'preview-top';
     previewHead.innerHTML = `<strong>Prévia dos registros</strong><span class="preview-count">${result.found} linha(s) · ${result.valid.length} válida(s) · ${result.errors.length} erro(s) · ${result.ignored} vazia(s)/cabeçalho</span>`;
     wrap.append(previewHead);
-    if (quadro) { const dtaNote = document.createElement('div'); dtaNote.className = 'preview-empty'; dtaNote.textContent = 'DTA será gerado no instante da confirmação e será igual em todos os registros deste envio.'; wrap.append(dtaNote); }
+    if (quadro) { const dtaNote = document.createElement('div'); dtaNote.className = 'preview-empty'; dtaNote.textContent = `TURNO cruzado do XLSX pela matrícula (colunas A↔A; dígitos da coluna C). ${result.unmatched || 0} matrícula(s) sem correspondência. R→PCD, U→SITUAÇÃO e X→MOTIVO DA SITUAÇÃO também serão gravadas.`; wrap.append(dtaNote); }
     if (rows.length) {
       const scroll = document.createElement('div'); scroll.className = 'table-scroll';
       const table = document.createElement('table'); table.className = 'preview-table';
@@ -463,8 +474,32 @@
         }
       }
       if (!text.trim()) throw new Error('O arquivo está vazio. Selecione um CSV com linhas de dados.');
-      const result = parseFileText(text, selectedModule, $('#delimiterMode').value);
+      const result = parseFileText(text, selectedModule, selectedModule === 'quadro' ? 'auto' : $('#delimiterMode').value);
       if (!result.fileRows) throw new Error('Não foi possível identificar linhas no arquivo CSV.');
+      if (selectedModule === 'quadro') {
+        const manual = ui.manualFile.files?.[0];
+        if (!manual) throw new Error('ANEXE AQUI O ARQUIVO EDITADO MANUAL QUE CONTÉM OS TURNOS (XLSX).');
+        const workbook = XLSX.read(await manual.arrayBuffer(), {type:'array', cellDates:false});
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        if (!sheet) throw new Error('A planilha XLSX não contém uma aba de dados.');
+        const assets = XLSX.utils.sheet_to_json(sheet, {header:1, defval:'', raw:false});
+        const turnByMatricula = new Map();
+        for (const row of assets) {
+          const key = String(row?.[0] ?? '').replace(/\D/g, '');
+          if (!key) continue;
+          const turno = String(row?.[2] ?? '').replace(/\D/g, '');
+          if (!turnByMatricula.has(key)) turnByMatricula.set(key, turno || null);
+        }
+        let unmatched = 0;
+        for (const item of result.valid) {
+          const key = String(item.record.MATRICULA ?? '').replace(/\D/g, '');
+          item.record.TURNO = turnByMatricula.get(key) ?? null;
+          if (!turnByMatricula.has(key)) unmatched += 1;
+          item.preview[5] = item.record.TURNO || '—';
+        }
+        result.unmatched = unmatched;
+        result.manualName = manual.name;
+      }
       pending = { ...result, name: file.name, table: TABLES[selectedModule] };
       updateProgress(`Validação concluída · separador ${result.delimiter === ';' ? 'ponto e vírgula' : 'vírgula'}`, 100);
       renderPreview(result);
@@ -854,9 +889,10 @@
   document.querySelectorAll('[data-back]').forEach((button) => button.addEventListener('click', () => { if (!busy) { resetImport(); showView('choices'); } }));
   ui.file.addEventListener('change', () => {
     pending = null; ui.preview.replaceChildren(); ui.confirm.disabled = true;
-    ui.load.disabled = busy || !ui.file.files?.length;
+    ui.load.disabled = busy || !ui.file.files?.length || (selectedModule === 'quadro' && !ui.manualFile.files?.length);
     ui.progress.hidden = true;
   });
+  ui.manualFile.addEventListener('change', () => { pending = null; ui.preview.replaceChildren(); ui.confirm.disabled = true; ui.load.disabled = busy || !ui.file.files?.length || !ui.manualFile.files?.length; });
   ui.load.addEventListener('click', loadSelectedFile);
   ui.confirm.addEventListener('click', submitImport);
   ui.dedupeButton.addEventListener('click', removeSuricatoDuplicates);
