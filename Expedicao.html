@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Expedição Vision · Painel Executivo</title>
+<link id="dynamicFavicon" rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect x=%223%22 y=%223%22 width=%2258%22 height=%2258%22 rx=%2216%22 fill=%22%230a0e1f%22/%3E%3Cpath d=%22M13 20l19-9 19 9-19 9-19-9zm0 12l19 9 19-9M13 44l19 9 19-9%22 fill=%22none%22 stroke=%22%238b5cf6%22 stroke-width=%225%22 stroke-linecap=%22round%22/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -698,6 +699,7 @@ table.exp-table .cell{
     </div>
     <div class="dev-credit-top" id="devCredit">Desenvolvido Por <b>Pablo M. Lopes</b></div>
     <nav class="top-nav">
+      <button class="nav-btn" id="btnBases" type="button" title="Carregar bases"><span class="ico">▤</span><span class="lbl">BASES</span></button>
       <a class="nav-btn" href="Docas_Exp.html" title="Controle de Doca"><span class="ico">🚛</span><span class="lbl">Controle de Doca</span></a>
     </nav>
     <div class="topbar-spacer"></div>
@@ -1988,5 +1990,147 @@ $('#nuSave').onclick=saveNu;
 updAdmin(); /* caso a sessão já esteja ativa ao carregar a página */
 })();
 </script>
+
+<!-- Área BASES: importadores de arquivos e indicadores de processamento -->
+<div class="overlay" id="basesOverlay" aria-hidden="true">
+  <div class="modal wide bases-modal">
+    <div class="modal-head">
+      <div><h2>▤ Bases de dados</h2><p>Carregue arquivos, aplique os tratamentos solicitados e envie os resultados ao Supabase.</p></div>
+      <button class="x-btn" id="basesClose" type="button" aria-label="Fechar">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="bases-notice"><b>Importante:</b> os envios são adicionados às tabelas (append), sem excluir registros existentes. Reenviar o mesmo arquivo pode criar duplicidades no banco.</div>
+      <div class="bases-grid">
+        <article class="base-card" data-base-card="crono">
+          <div class="base-card-head"><span class="base-icon">▦</span><div><h3>CRONOGRAMA</h3><p>Tabela: <code>EXP_CRONOGRAMA</code></p></div></div>
+          <label class="drop-zone" id="dropCrono" for="fileCrono"><strong>CARREGUE O CRONOGRAMA</strong><span>Arraste ou selecione arquivo XLSM/XLSX</span><small id="filesCrono">Nenhum arquivo selecionado</small><input id="fileCrono" type="file" accept=".xlsm,.xlsx,.xls" multiple></label>
+          <button class="btn btn-primary base-run" id="runCrono" type="button">Processar e enviar cronograma</button>
+          <div class="base-result" id="resultCrono" aria-live="polite"></div>
+        </article>
+        <article class="base-card" data-base-card="rgc">
+          <div class="base-card-head"><span class="base-icon">▤</span><div><h3>RGC</h3><p>Tabela: <code>EXP_RGC_FAT</code></p></div></div>
+          <label class="drop-zone" id="dropRgc" for="fileRgc"><strong>CARREGUE O RELATÓRIO DE GESTÃO DE CARGA CONSINCO</strong><span>Arraste ou selecione arquivo CSV</span><small id="filesRgc">Nenhum arquivo selecionado</small><input id="fileRgc" type="file" accept=".csv,.txt" multiple></label>
+          <button class="btn btn-primary base-run" id="runRgc" type="button">Processar e enviar RGC</button>
+          <div class="base-result" id="resultRgc" aria-live="polite"></div>
+        </article>
+        <article class="base-card" data-base-card="pltprod">
+          <div class="base-card-head"><span class="base-icon">▥</span><div><h3>PLT FECH · Produção</h3><p>Tabela: <code>EXP_CXS_PROD</code></p></div></div>
+          <label class="drop-zone" id="dropPltProd" for="filePltProd"><strong>CARREGUE OS ARQUIVOS PLT FECH</strong><span>Arraste ou selecione arquivos TXT</span><small id="filesPltProd">Nenhum arquivo selecionado</small><input id="filePltProd" type="file" accept=".txt,.csv" multiple></label>
+          <button class="btn btn-primary base-run" id="runPltProd" type="button">Processar produção e enviar</button>
+          <div class="base-result" id="resultPltProd" aria-live="polite"></div>
+        </article>
+        <article class="base-card" data-base-card="pltfat">
+          <div class="base-card-head"><span class="base-icon">▥</span><div><h3>PLT FECH · Faturamento</h3><p>Tabela: <code>EXP_CXS_FAT</code></p></div></div>
+          <label class="drop-zone" id="dropPltFat" for="filePltFat"><strong>CARREGUE OS ARQUIVOS PLT FECH</strong><span>Arraste ou selecione arquivos TXT</span><small id="filesPltFat">Nenhum arquivo selecionado</small><input id="filePltFat" type="file" accept=".txt,.csv" multiple></label>
+          <button class="btn btn-primary base-run" id="runPltFat" type="button">Processar faturamento e enviar</button>
+          <div class="base-result" id="resultPltFat" aria-live="polite"></div>
+        </article>
+        <article class="base-card" data-base-card="pltusers">
+          <div class="base-card-head"><span class="base-icon">▥</span><div><h3>PLT FECH · Usuários separação</h3><p>Tabela: <code>EXP_SEP_USERS</code></p></div></div>
+          <label class="drop-zone" id="dropPltUsers" for="filePltUsers"><strong>CARREGUE OS ARQUIVOS PLT FECH</strong><span>Arraste ou selecione arquivos TXT</span><small id="filesPltUsers">Nenhum arquivo selecionado</small><input id="filePltUsers" type="file" accept=".txt,.csv" multiple></label>
+          <button class="btn btn-primary base-run" id="runPltUsers" type="button">Processar usuários e enviar</button>
+          <div class="base-result" id="resultPltUsers" aria-live="polite"></div>
+        </article>
+      </div>
+      <div class="bases-progress" id="basesProgress" hidden><span class="bases-spinner"></span><span id="basesProgressText">Processando arquivo…</span></div>
+      <p class="bases-footnote">Os nomes de colunas e regras seguem as consultas fornecidas no anexo. O envio depende das permissões de INSERT (RLS) configuradas nas tabelas do Supabase.</p>
+    </div>
+  </div>
+</div>
+<style>
+#basesOverlay{z-index:1200}
+.bases-modal{width:min(1120px,100%);max-height:92vh}
+.bases-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr));gap:14px}
+.base-card{min-width:0;padding:16px;background:linear-gradient(160deg,var(--card-1),var(--card-2));border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+.base-card-head{display:flex;align-items:center;gap:11px;margin-bottom:14px}
+.base-icon{width:40px;height:40px;display:grid;place-items:center;border-radius:12px;background:rgba(139,92,246,.17);color:var(--pct-txt);font-size:22px;font-weight:900}
+.base-card h3{font-size:12px;letter-spacing:.06em;font-weight:900;color:var(--txt)}
+.base-card p{font-size:10px;color:var(--muted);margin-top:4px}.base-card code{font:700 10px var(--mono);color:var(--derived-txt)}
+.drop-zone{position:relative;display:flex;min-height:110px;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:14px;text-align:center;border:1px dashed rgba(139,92,246,.55);border-radius:13px;background:rgba(139,92,246,.055);cursor:pointer;transition:.2s var(--ease)}
+.drop-zone:hover,.drop-zone.dragover{border-color:var(--cyan);background:rgba(34,211,238,.10);transform:translateY(-1px)}
+.drop-zone strong{font-size:10px;line-height:1.45;letter-spacing:.06em;color:var(--txt-2)}
+.drop-zone span{font-size:10px;color:var(--muted)}.drop-zone small{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9px;color:var(--derived-txt);font-weight:700}
+.drop-zone input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.base-run{width:100%;justify-content:center;margin-top:11px}.base-run:disabled{opacity:.55;cursor:wait;transform:none}
+.base-result{min-height:0;margin-top:8px;font-size:10.5px;line-height:1.5;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere}
+.base-result:empty{display:none}.base-result.ok{color:var(--derived-txt)}.base-result.err{color:#fca5a5}.base-result.warn{color:var(--amber)}
+.bases-notice{padding:11px 13px;margin-bottom:14px;border:1px solid rgba(245,158,11,.35);background:rgba(245,158,11,.07);border-radius:12px;color:var(--txt-2);font-size:11px;line-height:1.55}.bases-notice b{color:var(--amber)}
+.bases-progress{position:sticky;bottom:0;display:flex;align-items:center;gap:10px;padding:11px 14px;margin-top:14px;background:var(--card-head-1);border:1px solid var(--line);border-radius:12px;color:var(--derived-txt);font-size:11px;font-weight:800;z-index:3}
+.bases-progress[hidden]{display:none}.bases-spinner{width:15px;height:15px;border:2px solid rgba(34,211,238,.25);border-top-color:var(--cyan);border-radius:50%;animation:basesSpin .7s linear infinite}@keyframes basesSpin{to{transform:rotate(360deg)}}
+.bases-footnote{margin-top:14px;font-size:10px;line-height:1.6;color:var(--muted)}
+@media(max-width:600px){.bases-modal .modal-body{padding:14px}.base-card{padding:13px}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+(function(){
+'use strict';
+const BASES_API=BASE, BASES_KEY=KEY;
+const el=id=>document.getElementById(id);
+const norm=s=>String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+const escBase=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const dateISO=s=>{
+  if(s instanceof Date&&!isNaN(s))return `${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,'0')}-${String(s.getDate()).padStart(2,'0')}`;
+  if(typeof s==='number'&&window.XLSX){const d=XLSX.SSF.parse_date_code(s);if(d)return `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`}
+  const x=String(s??'').trim();if(!x)return null;
+  let m=x.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  m=x.match(/^(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{4})/);if(m)return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  const d=new Date(x);return isNaN(d)?null:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+};
+const numeric=v=>{if(v==null||String(v).trim()==='')return null;if(typeof v==='number')return Number.isFinite(v)?v:null;let s=String(v).trim().replace(/\s/g,'');if(s.includes(','))s=s.replace(/\./g,'').replace(',','.');else if(/^[-+]?\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,'');const n=Number(s);return Number.isFinite(n)?n:null};
+const intOrNull=v=>{const n=numeric(v);return n==null?null:Math.trunc(n)};
+const findVal=(o,...keys)=>{const m=new Map(Object.keys(o||{}).map(k=>[norm(k),o[k]]));for(const k of keys){const v=m.get(norm(k));if(v!==undefined)return v}return null};
+function uniqueRows(rows){const seen=new Set(),out=[];for(const r of rows){const k=JSON.stringify(r);if(!seen.has(k)){seen.add(k);out.push(r)}}return out}
+function filenameDate(name){const s=String(name||'');let part=s.slice(20,30);let d=dateISO(part);if(d)return d;const m=s.match(/(\d{4})[-_.](\d{2})[-_.](\d{2})|(\d{2})[-_.](\d{2})[-_.](\d{4})/);if(!m)return null;return m[1]?`${m[1]}-${m[2]}-${m[3]}`:`${m[6]}-${m[5]}-${m[4]}`}
+function parseDateTime(value){
+  if(value instanceof Date&&!isNaN(value))return {date:dateISO(value),minutes:value.getHours()*60+value.getMinutes()};
+  if(typeof value==='number'&&window.XLSX){const p=XLSX.SSF.parse_date_code(value);if(p)return{date:`${p.y}-${String(p.m).padStart(2,'0')}-${String(p.d).padStart(2,'0')}`,minutes:p.H*60+p.M}}
+  const s=String(value??'').trim();if(!s)return null;
+  const time=(s.match(/[ T](\d{1,2})[:.](\d{2})(?:[:.](\d{2}))?/)||[]);let date=dateISO(s);
+  if(!date&&/^\d{1,2}[:.]/.test(s))date=null;
+  if(!time.length)return date?{date,minutes:0}:null;
+  const hh=Number(time[1]),mm=Number(time[2]);if(hh>23||mm>59)return null;return{date,minutes:hh*60+mm};
+}
+function shiftAndTurn(dt){if(!dt||!dt.date)return null;let [y,m,d]=dt.date.split('-').map(Number);const date=new Date(y,m-1,d);if(dt.minutes>=22*60)date.setDate(date.getDate()+1);const dta=`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;const turno=dt.minutes<360?3:dt.minutes<860?1:dt.minutes<1320?2:3;return{DTA:dta,TURNO:turno}}
+function setProgress(on,text='Processando arquivo…'){el('basesProgress').hidden=!on;el('basesProgressText').textContent=text}
+function result(id,msg,kind=''){const x=el(id);x.className='base-result'+(kind?' '+kind:'');x.textContent=msg}
+function setFilesLabel(inputId,labelId,files){el(labelId).textContent=files.length?Array.from(files).map(f=>f.name).join(' · '):'Nenhum arquivo selecionado'}
+function bindDrop(zoneId,inputId,labelId){const z=el(zoneId),i=el(inputId);i.addEventListener('change',()=>setFilesLabel(inputId,labelId,i.files));['dragenter','dragover'].forEach(e=>z.addEventListener(e,ev=>{ev.preventDefault();z.classList.add('dragover')}));['dragleave','dragend'].forEach(e=>z.addEventListener(e,()=>z.classList.remove('dragover')));z.addEventListener('drop',ev=>{ev.preventDefault();z.classList.remove('dragover');if(ev.dataTransfer?.files?.length){try{i.files=ev.dataTransfer.files}catch(_){}setFilesLabel(inputId,labelId,ev.dataTransfer.files)}})}
+[['dropCrono','fileCrono','filesCrono'],['dropRgc','fileRgc','filesRgc'],['dropPltProd','filePltProd','filesPltProd'],['dropPltFat','filePltFat','filesPltFat'],['dropPltUsers','filePltUsers','filesPltUsers']].forEach(x=>bindDrop(...x));
+function decodeBuffer(buf){let s=new TextDecoder('utf-8').decode(buf);if(s.includes('\uFFFD'))try{s=new TextDecoder('windows-1252').decode(buf)}catch(_){}return s.replace(/^\uFEFF/,'')}
+function detectDelimiter(text){const first=String(text).split(/\r?\n/,1)[0]||'';const chars=['\t',';',','];let best='\t',count=-1;for(const d of chars){let n=0,quoted=false;for(let i=0;i<first.length;i++){if(first[i]==='\"')quoted=!quoted;else if(first[i]===d&&!quoted)n++}if(n>count){count=n;best=d}}return best}
+function parseDelimited(text){const src=String(text).replace(/^\uFEFF/,'').replace(/\r\n?/g,'\n');const delim=detectDelimiter(src);const rows=[];let row=[],cell='',quoted=false;for(let i=0;i<src.length;i++){const c=src[i];if(c==='"'){if(quoted&&src[i+1]==='"'){cell+='"';i++}else quoted=!quoted}else if(c===delim&&!quoted){row.push(cell);cell=''}else if(c==='\n'&&!quoted){row.push(cell);if(row.some(v=>String(v).trim()!==''))rows.push(row);row=[];cell=''}else cell+=c}if(cell!==''||row.length){row.push(cell);if(row.some(v=>String(v).trim()!==''))rows.push(row)}return rows}
+async function readTextFile(file){return decodeBuffer(await file.arrayBuffer())}
+async function fileRows(file,excel=false){if(excel){if(!window.XLSX)throw new Error('Biblioteca de leitura XLSX não carregou. Verifique sua conexão e tente novamente.');const wb=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:true});const sh=wb.Sheets[wb.SheetNames[0]];if(!sh)throw new Error('A planilha não contém abas.');return XLSX.utils.sheet_to_json(sh,{header:1,defval:null,raw:false})}return parseDelimited(await readTextFile(file))}
+function tableObjects(rows,required){if(!rows.length)throw new Error('Arquivo vazio.');let idx=-1;for(let i=0;i<Math.min(rows.length,40);i++){const h=(rows[i]||[]).map(norm);const ok=required.every(group=>group.some(alias=>h.includes(norm(alias))));if(ok){idx=i;break}}if(idx<0)throw new Error('Não encontrei o cabeçalho necessário: '+required.map(g=>g[0]).join(', '));const headers=rows[idx].map(v=>String(v??'').trim());return rows.slice(idx+1).filter(r=>r&&r.some(v=>String(v??'').trim()!=='')).map(r=>Object.fromEntries(headers.map((h,i)=>[h,r[i]??null])))}
+const CRONO_REQ=[['CD'],['Carga'],['LOJA'],['TURNO']];
+function transformCrono(file,objects){const base=[];for(const o of objects){const cd=intOrNull(findVal(o,'CD'));const carga=intOrNull(findVal(o,'Carga'));const turnoRaw=findVal(o,'TURNO');const entrega=dateISO(findVal(o,'DATA DE ENTREGA'));const dtaCrono=filenameDate(file.name);const turnotxt=String(turnoRaw??'');if(/(?:^|\s)(?:[0-3]?\d)\/(?:0?\d|1[0-2])(?:\s|$)/.test(turnotxt))continue;if(carga==null)continue;const conjVal=intOrNull(findVal(o,'Carga Conjugada'));const numbers=turnotxt.match(/\d/g)||[];const cad=/CADENCIAMENTO/i.test(turnotxt);const status=cad?'CADENCIAMENTO':numbers.length?'PROGRAMADO':'PENDÊNCIA';const dtaProg=status==='PROGRAMADO'||status==='CADENCIAMENTO'?(entrega||dtaCrono):null;const conjugada=conjVal!=null?(cd==null?'':String(carga))+'_'+String(conjVal):'-';base.push({CD:cd,DTA_CRONO:dtaCrono,CARGA:carga,CONJ:conjugada,LOJA:intOrNull(findVal(o,'LOJA')),"ITENS ROTEIRIZADOS":intOrNull(findVal(o,'Qtd. Itens Roteirizado','ITENS ROTEIRIZADOS')),"ITENS EM RUPTURA":intOrNull(findVal(o,'ITENS EM RUPTURA')),"CXS FECHADO":intOrNull(findVal(o,'CXS FECHADO')),"CAIXAS SEP":intOrNull(findVal(o,'CAIXAS SEP')),"TT CX":intOrNull(findVal(o,'TT CX')),STATUS:status,'DTA PROG':dtaProg,TIPO:cad?'CADENCIAMENTO':status==='PENDÊNCIA'?'PENDÊNCIA':'CARGA REGULAR','TURNO PROG':numbers.length?numbers.join(''):null});}const uniq=uniqueRows(base),maxByLoad=new Map();for(const r of uniq){const k=JSON.stringify([r.CD,r.CARGA]);if(r['DTA PROG']&&(!maxByLoad.has(k)||r['DTA PROG']>maxByLoad.get(k)))maxByLoad.set(k,r['DTA PROG'])}return uniq.map(r=>({...r,'MAIOR DATA CARGA':maxByLoad.get(JSON.stringify([r.CD,r.CARGA]))||null}))}
+async function uploadRows(table,rows,progress){if(!rows.length)throw new Error('O tratamento não gerou registros para envio.');let sent=0;for(let i=0;i<rows.length;i+=500){const chunk=rows.slice(i,i+500);const res=await fetch(BASES_API+encodeURIComponent(table),{method:'POST',headers:{apikey:BASES_KEY,Authorization:'Bearer '+BASES_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify(chunk)});if(!res.ok)throw new Error(`Falha ao gravar lote ${Math.floor(i/500)+1}: HTTP ${res.status} · ${(await res.text()).slice(0,220)}`);sent+=chunk.length;if(progress)progress(sent,rows.length)}return sent}
+async function runFiles({inputId,resultId,table,transform,excel=false}){const files=Array.from(el(inputId).files||[]);if(!files.length){result(resultId,'Selecione ou arraste pelo menos um arquivo.','warn');return}const btn=el(inputId.replace('file','run'));if(btn)btn.disabled=true;result(resultId,'');setProgress(true,'Lendo e tratando '+files.length+' arquivo(s)…');try{let all=[];for(const f of files){const rows=await fileRows(f,excel);const objects=tableObjects(rows,transform.required);all=all.concat(transform.map(f,objects))}all=uniqueRows(all);if(!all.length)throw new Error('Nenhum registro válido foi encontrado nos arquivos selecionados.');setProgress(true,`Enviando ${all.length.toLocaleString('pt-BR')} registros para ${table}…`);const sent=await uploadRows(table,all,(n,total)=>setProgress(true,`Enviando para ${table}: ${n.toLocaleString('pt-BR')} de ${total.toLocaleString('pt-BR')}…`));result(resultId,`Concluído: ${sent.toLocaleString('pt-BR')} registro(s) enviado(s) para ${table}.`, 'ok');if(typeof toast==='function')toast('Base atualizada',`${sent.toLocaleString('pt-BR')} registros em ${table}`,'ok')}catch(e){result(resultId,'Erro: '+(e.message||String(e)),'err');if(typeof toast==='function')toast('Falha ao importar',e.message||String(e),'err')}finally{setProgress(false);if(btn)btn.disabled=false}}
+
+function mapRgc(file,objects){const rows=[];for(const o of objects){const dt=parseDateTime(findVal(o,'Data Expedição'));const sh=shiftAndTurn(dt);if(!sh)continue;const cd=intOrNull(findVal(o,'CD Origem','CD'));const carga=intOrNull(findVal(o,'Carga'));const roteirizadas=intOrNull(findVal(o,'Qtd. Caixas Roteirizadas'));const faturadas=intOrNull(findVal(o,'Qtd. Caixas Expedidos'));rows.push({CD:cd,DTA:sh.DTA,TURNO_FAT:sh.TURNO,CARGA:carga,LOJA:intOrNull(findVal(o,'Cód. Loja Destino','LOJA')),'CAIXAS ROITEIRIZADAS':roteirizadas,'CAIXAS FATURADAS':faturadas,'PLTS FATURADOS':intOrNull(findVal(o,'Qtd. Paletes Expedidos')),CORTE:(roteirizadas??0)-(faturadas??0),ATENDIMENTO:roteirizadas?Number(((faturadas??0)/roteirizadas).toFixed(6)):null})}return uniqueRows(rows)}
+
+function rawPltRows(file,objects,mode){const cd=String(file.name||'').slice(0,3);const out=[];for(const o of uniqueRows(objects)){let stamp=mode==='fat'?findVal(o,'DTAHORFATURAMENTO'):findVal(o,'DTAHORFIMTAREFA');const dt=parseDateTime(stamp);if(!dt||!dt.date)continue;const sh=shiftAndTurn(dt);if(!sh)continue;let tipo=String(findVal(o,'PLTFECHADO')??'').trim().toUpperCase();if(tipo==='SIM')tipo='FECHADO';if(tipo==='NÃO'||tipo==='NAO')tipo='FRACIONADO';if(!tipo)continue;const seqProd=intOrNull(findVal(o,'SEQPRODUTO')),seqLote=intOrNull(findVal(o,'SEQLOTE')),nCarga=intOrNull(findVal(o,'NROCARGA'));if(nCarga==null)continue;out.push({CD,NROCARGA:nCarga,SEQLOTE:seqLote,SEQPRODUTO:seqProd,QTDEMBCONTADA:numeric(findVal(o,'QTDEMBCONTADA'))??0,TIPO:tipo,DTA:sh.DTA,TURNO_SEP:sh.TURNO})}return uniqueRows(out)}
+function aggregatePlt(base){const byProd=new Map();for(const r of base){const k=JSON.stringify([r.CD,r.DTA,r.TURNO_SEP,r.TIPO,r.NROCARGA,r.SEQLOTE,r.SEQPRODUTO]);let v=byProd.get(k);if(!v){v={...r,QTD_CXS:0,QTD_VISITAS:0};byProd.set(k,v)}v.QTD_CXS+=r.QTDEMBCONTADA;v.QTD_VISITAS++}const byLot=new Map();for(const r of byProd.values()){const k=JSON.stringify([r.CD,r.DTA,r.TURNO_SEP,r.TIPO,r.NROCARGA,r.SEQLOTE]);let v=byLot.get(k);if(!v){v={CD:r.CD,DTA:r.DTA,TURNO_SEP:r.TURNO_SEP,TIPO:r.TIPO,NROCARGA:r.NROCARGA,QTD_CXS:0,QTD_VISITAS:0};byLot.set(k,v)}v.QTD_CXS+=r.QTD_CXS;v.QTD_VISITAS+=r.QTD_VISITAS}const byLoad=new Map();for(const r of byLot.values()){const k=JSON.stringify([r.CD,r.DTA,r.TURNO_SEP,r.TIPO,r.NROCARGA]);let v=byLoad.get(k);if(!v){v={CD:r.CD,DTA:r.DTA,TURNO_SEP:r.TURNO_SEP,TIPO:r.TIPO,NROCARGA:r.NROCARGA,QTD_LOTES:0,QTD_VISITAS:0,QTD_CXS:0};byLoad.set(k,v)}v.QTD_LOTES++;v.QTD_VISITAS+=r.QTD_VISITAS;v.QTD_CXS+=r.QTD_CXS}return [...byLoad.values()].sort((a,b)=>String(a.DTA).localeCompare(String(b.DTA)))}
+const pltRequired=[['NROCARGA'],['SEQLOTE'],['SEQPRODUTO'],['QTDEMBCONTADA'],['PLTFECHADO']];
+async function runPlt(inputId,resultId,table,mode){return runFiles({inputId,resultId,table,transform:{required:pltRequired,map:(file,objects)=>aggregatePlt(rawPltRows(file,objects,mode))}})}
+el('runCrono').onclick=()=>runFiles({inputId:'fileCrono',resultId:'resultCrono',table:'EXP_CRONOGRAMA',excel:true,transform:{required:CRONO_REQ,map:transformCrono}});
+el('runRgc').onclick=()=>runFiles({inputId:'fileRgc',resultId:'resultRgc',table:'EXP_RGC_FAT',transform:{required:[['CD Origem','CD'],['Carga'],['Data Expedição']],map:mapRgc}});
+el('runPltProd').onclick=()=>runPlt('filePltProd','resultPltProd','EXP_CXS_PROD','prod');
+el('runPltFat').onclick=()=>runPlt('filePltFat','resultPltFat','EXP_CXS_FAT','fat');
+el('runPltUsers').onclick=()=>runPlt('filePltUsers','resultPltUsers','EXP_SEP_USERS','prod');
+
+const overlay=el('basesOverlay');
+el('btnBases')?.addEventListener('click',()=>{overlay.classList.add('show');overlay.setAttribute('aria-hidden','false')});
+function closeBases(){overlay.classList.remove('show');overlay.setAttribute('aria-hidden','true')}
+el('basesClose').addEventListener('click',closeBases);overlay.addEventListener('mousedown',e=>{if(e.target===overlay)closeBases()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&overlay.classList.contains('show'))closeBases()});
+
+/* Favicon dinâmico: animado durante a atualização e com retorno visual ao concluir. */
+const favicon=document.getElementById('dynamicFavicon');let tabTimer=null,tabFrame=0;
+function iconData(mark,color='#8b5cf6',frame=0){const rotate=frame%2?45:0;const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#22d3ee"/><stop offset=".55" stop-color="${color}"/><stop offset="1" stop-color="#ec4899"/></linearGradient></defs><rect x="3" y="3" width="58" height="58" rx="16" fill="#0a0e1f"/><path d="M13 20l19-9 19 9-19 9-19-9zm0 12l19 9 19-9M13 44l19 9 19-9" fill="none" stroke="url(#g)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><g transform="rotate(${rotate} 50 50)"><circle cx="50" cy="50" r="9" fill="${color}" stroke="#0a0e1f" stroke-width="2"/><text x="50" y="54" text-anchor="middle" font-size="11" font-family="Arial" font-weight="bold" fill="white">${mark}</text></g></svg>`;return 'data:image/svg+xml,'+encodeURIComponent(svg)}
+function setTabIcon(mode){if(!favicon)return;if(tabTimer){clearInterval(tabTimer);tabTimer=null}if(mode==='loading'){favicon.href=iconData('↻','#22d3ee',0);tabTimer=setInterval(()=>{tabFrame++;favicon.href=iconData('↻',tabFrame%2?'#22d3ee':'#a855f7',tabFrame)},420)}else if(mode==='done'){favicon.href=iconData('✓','#10b981',0);setTimeout(()=>{if(favicon)favicon.href=iconData('E','#8b5cf6',0)},2400)}else favicon.href=iconData('E','#8b5cf6',0)}
+const originalShowLoader=window.showLoader;if(typeof originalShowLoader==='function'){window.showLoader=function(show,text){originalShowLoader(show,text);if(show)setTabIcon('loading');else setTabIcon('done')}}
+})();
+</script>
+
 </body>
 </html>
