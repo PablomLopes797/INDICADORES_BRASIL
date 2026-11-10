@@ -339,8 +339,20 @@ td.nd{color:var(--quiet)}
 @keyframes screenSuck{0%{opacity:0;transform:translate(0,0) scale(1) rotate(0)}10%{opacity:1}58%{opacity:.95}82%{opacity:.75;transform:translate(calc(50vw - var(--x)),calc(50vh - var(--y))) scale(.42) rotate(210deg)}100%{opacity:0;transform:translate(calc(50vw - var(--x)),calc(50vh - var(--y))) scale(.015) rotate(420deg)}}
 @keyframes holePulse{0%,100%{box-shadow:0 0 0 8px rgba(0,0,0,.95),0 0 22px 12px #000,0 0 52px 20px #000}50%{box-shadow:0 0 0 10px #000,0 0 30px 16px #000,0 0 66px 25px #000}}@keyframes lensRotate{to{transform:rotate(360deg)}}@keyframes diskSpin{to{transform:translate(-50%,-50%) rotate(342deg)}}@keyframes haloPulse{50%{opacity:.45;filter:blur(2px);transform:scaleY(.43) rotate(-18deg)}}@keyframes streakOrbit{to{transform:rotate(360deg)}}@keyframes spaceWarp{to{transform:translate(-50%,-50%) scale(1.12);opacity:.55}}
 #umCard{width:min(1000px,98vw);height:min(90vh,900px);max-height:90vh;display:flex;flex-direction:column}#umCard .jm-b{flex:1;overflow:auto;align-content:start}#umTable td:last-child{white-space:nowrap}
-#ngCard{width:min(1500px,98vw);height:94vh;max-height:94vh;display:flex;flex-direction:column}#ngCard .jm-b{flex:1;overflow:auto;align-content:start}#ngTable th,#ngTable td{min-width:110px}#ngTable td:nth-child(6){min-width:220px}#ngTable td:nth-child(7){min-width:190px}
+#ng{z-index:90!important}#heatPeople{z-index:95!important}#ngCard{width:min(1500px,98vw);height:94vh;max-height:94vh;display:flex;flex-direction:column}#ngCard .jm-b{flex:1;overflow:auto;align-content:start}#ngTable th,#ngTable td{min-width:110px}#ngTable td:nth-child(6){min-width:220px}#ngTable td:nth-child(7){min-width:190px}
 #ngTable input,#ngTable select{background:var(--panel3);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:7px 8px;font:inherit;font-size:11px;width:100%}#ngTable .ng-saved{color:var(--green);font-size:10px}
+#motivoPeople{z-index:96!important}#motivoPeopleCard{width:min(1500px,98vw);max-width:1500px;height:90vh;max-height:90vh;display:flex;flex-direction:column}
+#motivoPeopleCard .jm-b{flex:1;min-height:0;overflow:auto}#motivoPeopleCard .tw{max-height:100%;overflow:auto}
+#motivoPeopleTable{width:100%;table-layout:fixed}#motivoPeopleTable th,#motivoPeopleTable td{white-space:normal;overflow-wrap:anywhere;padding:8px 5px}#motivoPeopleTable th:first-child,#motivoPeopleTable td:first-child{min-width:0;width:12%}#motivoPeopleTable th:nth-child(2),#motivoPeopleTable td:nth-child(2){width:20%}#motivoPeopleTable th:nth-child(3),#motivoPeopleTable td:nth-child(3){width:15%}#motivoPeopleTable th:nth-child(4),#motivoPeopleTable td:nth-child(4){width:9%}#motivoPeopleTable th:nth-child(5),#motivoPeopleTable td:nth-child(5){width:7%}#motivoPeopleTable th:nth-child(6),#motivoPeopleTable td:nth-child(6){width:12%}#motivoPeopleTable th:nth-child(7),#motivoPeopleTable td:nth-child(7){width:13%}#motivoPeopleTable th:nth-child(8),#motivoPeopleTable td:nth-child(8){width:12%}
+.motive-table-wrap{max-height:62vh}.motive-table{min-width:max-content}.motive-table th,.motive-table td{min-width:50px}.motive-table .motive-rowhead{position:sticky;left:0;z-index:4;background:var(--panel);text-align:left;min-width:120px}.motivo-val{width:100%;border:0;border-radius:6px;background:transparent;color:var(--text);font-family:inherit;font-size:11px;font-weight:800;padding:4px;cursor:pointer}.motivo-val:hover{background:var(--chip);outline:1px solid var(--chip-line)}.motive-chart{width:100%;min-height:300px}.motive-chart-scroll{width:100%;overflow-x:auto}.motive-chart svg{display:block;width:100%;min-width:900px;height:auto}.motivo-axis{fill:var(--muted);font:10px Inter,"Segoe UI",sans-serif}
+#heatPeople .jm-card{width:min(1100px,96vw);max-width:1100px;max-height:88vh;}
+#heatPeople .jm-b{padding:12px 18px;overflow:auto}
+#heatPeople .tw{width:100%;max-height:65vh;overflow-y:auto;overflow-x:hidden}
+#heatPeople table.mx{width:100%;table-layout:fixed}
+#heatPeople table.mx th,#heatPeople table.mx td{white-space:normal;overflow-wrap:anywhere;padding:10px 12px}
+#heatPeople table.mx th:nth-child(1),#heatPeople table.mx td:nth-child(1){width:22%;min-width:0}
+#heatPeople table.mx th:nth-child(2),#heatPeople table.mx td:nth-child(2){width:48%;min-width:0}
+#heatPeople table.mx th:nth-child(3),#heatPeople table.mx td:nth-child(3){width:30%;min-width:0}
 #viewBody .heat-detail{cursor:pointer}#viewBody .heat-detail:hover{outline:2px solid var(--text);transform:scale(1.06)}
 @media(max-width:650px){#ld .ld-box{padding-top:245px}#umCard{height:94vh}#ngCard{height:96vh}}
 @media(prefers-reduced-motion:reduce){#ld .black-hole * ,#ld .bh-object{animation-duration:8s!important}}
@@ -422,6 +434,7 @@ td.nd{color:var(--quiet)}
       <button class="tab" data-view="turnos" type="button">🕒 TURNOS</button>
       <button class="tab" data-view="pessoas" type="button">👤 PESSOAS</button>
       <button class="tab" data-view="gestores" type="button">👔 GESTORES</button>
+      <button class="tab" data-view="motivos" type="button">📊 MOTIVOS</button>
     </nav>
 
     <div class="view" id="viewBody"></div>
@@ -531,6 +544,11 @@ td.nd{color:var(--quiet)}
       <div class="jm-f"><button class="btn" id="pwCancel" type="button">Cancelar</button><button class="btn btn-primary" id="pwSalva" type="button">Salvar nova senha</button></div>
     </div>
   </div>
+  <div class="jm" id="motivoPeople" hidden role="dialog" aria-modal="true" aria-labelledby="motivoPeopleTitle">
+    <div class="jm-card" id="motivoPeopleCard"><div class="jm-h"><div><h3 id="motivoPeopleTitle">Detalhes do motivo</h3><small id="motivoPeopleSub"></small></div><button class="jm-x" id="motivoPeopleFecha" type="button" aria-label="Fechar">✕</button></div>
+      <div class="jm-b"><div class="tw"><table class="mx" id="motivoPeopleTable"><thead><tr><th>MATRICULA</th><th>NOME</th><th>CARGO</th><th>TURNO</th><th>IDADE</th><th>TEMPO DE CASA</th><th>GESTOR</th><th>SETOR</th></tr></thead><tbody id="motivoPeopleRows"></tbody></table></div></div>
+      <div class="jm-f"><button class="btn" id="motivoPeopleClose" type="button">Fechar</button></div></div>
+  </div>
   <div class="jm" id="heatPeople" hidden role="dialog" aria-modal="true" aria-labelledby="heatPeopleTitle">
     <div class="jm-card"><div class="jm-h"><div><h3 id="heatPeopleTitle">Colaboradores ausentes</h3><small id="heatPeopleSub"></small></div><button class="jm-x" id="heatPeopleFecha" type="button" aria-label="Fechar">✕</button></div>
       <div class="jm-b"><div class="tw"><table class="mx"><thead><tr><th>MATRICULA</th><th>NOME</th><th>CARGO</th></tr></thead><tbody id="heatPeopleRows"></tbody></table></div></div>
@@ -539,8 +557,8 @@ td.nd{color:var(--quiet)}
   </div>
   <div class="jm" id="ng" hidden role="dialog" aria-modal="true" aria-labelledby="ngTitle">
     <div class="jm-card" id="ngCard"><div class="jm-h"><div><h3 id="ngTitle">Colaboradores sem gestor</h3><small>Vínculo individual em ABS_GESTOR_COLAB · gestor e setor devem ser informados juntos</small></div><button class="jm-x" id="ngFecha" type="button" aria-label="Fechar">✕</button></div>
-      <div class="jm-b"><div class="sbox"><span class="ico">⌕</span><input id="ngBusca" type="search" placeholder="Pesquisar por matrícula ou nome…"></div><div class="mq-sum" id="ngSum"></div><div class="tw"><table class="mx" id="ngTable"><thead><tr><th>MATRICULA</th><th>NOME</th><th>CARGO</th><th>TURNO</th><th>TEMPO DE CASA</th><th>INFORMAR GESTOR</th><th>SETOR</th><th>AÇÃO</th></tr></thead><tbody id="ngRows"></tbody></table></div><div class="jm-msg" id="ngMsg" hidden></div></div>
-      <div class="jm-f"><button class="btn" id="ngClose" type="button">Fechar</button></div>
+      <div class="jm-b"><div class="sbox"><span class="ico">⌕</span><input id="ngBusca" type="search" placeholder="Pesquisar por matrícula ou nome…"></div><div class="mq-sum" id="ngSum"></div><div class="tw"><table class="mx" id="ngTable"><thead><tr><th>MATRICULA</th><th>NOME</th><th>CARGO</th><th>TURNO</th><th>TEMPO DE CASA</th><th>INFORMAR GESTOR</th><th>SETOR</th></tr></thead><tbody id="ngRows"></tbody></table></div><div class="jm-msg" id="ngMsg" hidden></div></div>
+      <div class="jm-f"><button class="btn" id="ngClose" type="button">Fechar</button><button class="btn btn-primary" id="ngSaveAll" type="button">Salvar vínculos preenchidos</button></div>
     </div>
   </div>
   <div class="jm" id="ex" hidden role="dialog" aria-modal="true">
@@ -993,12 +1011,14 @@ function render(){
   renderKpis(a);renderFiltrosOn();
   const v=state.vista;
   $('#peopleTools').hidden=v!=='pessoas';
-  const semTab=v==='macro'||v==='gestores';$('#tableWrap').hidden=semTab;
+  const semTab=v==='macro'||v==='gestores'||v==='motivos';$('#tableWrap').hidden=semTab;
   $('#moreWrap').hidden=v!=='pessoas';
   if(v==='macro')renderMacro(a);
   else if(v==='setores')renderSetores(a);
   else if(v==='turnos')renderTurnos(a);
-  else if(v==='gestores')renderGestores(a);else renderPessoas(a);
+  else if(v==='gestores')renderGestores(a);
+  else if(v==='motivos')renderMotivos(a);
+  else renderPessoas(a);
   if(!semTab)renderTabela(a);else{$('#thead').innerHTML='';$('#tbody').innerHTML='';$('#moreWrap').hidden=true}
   renderConsistencia(a);
 }
@@ -1151,6 +1171,7 @@ function renderMacro(a){
 
   $('#viewBody').innerHTML=`
   <div class="grid">
+    <div class="card c12"><h3>TAXA DE ABSENTEÍSMO · EVOLUÇÃO DIÁRIA <em>taxa por dia · largura total</em></h3><div id="evolTaxa"></div></div>
     <div class="card c12"><h3>EVOLUÇÃO DIÁRIA · ABS E TAXA <em>largura total · rótulos de dados em cada barra</em></h3><div id="evol"></div></div>
     <div class="card c4"><h3>ONDE ESTÁ O PROBLEMA · ABS POR SETOR <em>média/dia</em></h3><div class="scroll" id="rSetor"></div></div>
     <div class="card c4"><h3>POR DIA DA SEMANA <em>média de ausentes/dia</em></h3><div id="rDow"></div></div>
@@ -1159,6 +1180,7 @@ function renderMacro(a){
     <div class="card c5"><h3>TOP 10 · COLABORADORES COM MAIS ABS</h3><div class="scroll" id="rPes"></div></div>
     <div class="card c12"><h3>LEITURA EXECUTIVA · ONDE AGIR PRIMEIRO</h3><div class="ins" id="ins"></div></div>
   </div>`;
+  graficoTaxa(a.ds,$('#evolTaxa'));
   graficoEvolucao(a.ds,$('#evol'));
   $('#rSetor').innerHTML=listaRank(setores.slice(0,12),'setor',x=>`${nf1.format(x.valor)}<em>${pc.format(a.ausentes?x.aus/a.ausentes*100:0)}% do ABS</em>`);
   const mxD=Math.max(1,...dows.map(d=>d.media));
@@ -1206,6 +1228,39 @@ function cardCalor(rotulo,titulo,desc,ds,fn,tipoFiltro){
     <div class="heat full"><div class="hg full" style="grid-template-columns:minmax(180px,280px) repeat(${dias.length||1},minmax(34px,1fr)) minmax(56px,.8fr)">${head}${rows||''}</div></div>
     <div class="hlg"><span>0</span><i style="background:hsl(145 72% 60%)"></i><i style="background:hsl(109 72% 60%)"></i><i style="background:hsl(72 72% 60%)"></i><i style="background:hsl(36 72% 60%)"></i><i style="background:hsl(0 72% 60%)"></i><span>${fmt(mx)}${pct?'%':''}</span><span style="margin-left:auto">Mais quente = maior ABS. Taxa = ausentes ÷ (quadro − férias − 4º turno no sábado).</span></div></div>`;
 }
+function graficoTaxa(ds,alvo){
+  const usable=ds.filter(d=>!d.futuro&&!d.domingo&&!d.feriado&&d.quadroOk),max=Math.max(1,...usable.map(d=>d.taxa||0));
+  const bars=ds.map((d,i)=>{const ok=!d.futuro&&!d.domingo&&!d.feriado&&d.quadroOk&&d.taxa!==null;const h=ok?Math.max(2,d.taxa/max*100):2;const val=ok?pc.format(d.taxa)+'%':'—';const cls=[ok?'':'nd',(d.domingo||d.feriado)?'nw':'',state.dia===d.day?'on':''].filter(Boolean).join(' ');const tip=ok?`${brData(d.day)} · ${dowNome(d.day)} · ${pc.format(d.taxa)}% (${d.ausentes} ÷ ${d.denominador})`:(!d.quadroOk?'Sem quadro válido':d.futuro?'Dia futuro':d.feriado?'Feriado':d.domingo?'Domingo':'Sem taxa apurada');return `<div class="ebar ${cls}" data-act="day" data-day="${d.day}" title="${esc(tip)}" style="--i:${i}"><span class="ebar-v">${val}</span><span class="ebar-t"><i style="height:${h}%"></i></span><span class="ebar-l">${d.day.slice(8)}<em>${dowNome(d.day)}</em></span></div>`}).join('');
+  alvo.innerHTML=`<div class="evol"><div class="evol-bars" style="height:230px;width:100%">${bars}</div><div class="lgd"><span><i></i>Taxa de ABS = ausentes ÷ quadro elegível do dia</span><span><i class="c"></i>Dia selecionado</span><span><i class="b"></i>Domingos / feriados sem apuração</span></div></div>`;
+}
+const MOTIVOS_ABA=['QUADRO','P','F','FA','AT','AF','FE','FO','TR'];
+const MOTIVOS_DESC={QUADRO:'QUADRO',P:'P',F:'F',FA:'FA',AT:'AT',AF:'AF',FE:'FE',FO:'FO',TR:'TR'};
+let motivoDetalheMap=new Map();
+function motivoMetricas(ds){return MOTIVOS_ABA.map(code=>({code,values:ds.map(d=>{
+  if(!d.quadroOk)return{day:d.day,value:null,people:[]};
+  if(code==='QUADRO')return{day:d.day,value:d.total,people:d.people};
+  if(d.futuro||d.domingo||d.feriado)return{day:d.day,value:null,people:[]};
+  const people=d.people.filter(p=>classificar(p,d).code===code);return{day:d.day,value:people.length,people};
+})}))}
+function renderMotivos(a){
+  const metrics=motivoMetricas(a.ds);motivoDetalheMap.clear();
+  const days=a.ds;
+  const head=`<tr><th class="motive-rowhead">MOTIVO</th>${days.map(d=>`<th><b>${d.day.slice(8)}</b><small>${dowNome(d.day)}</small></th>`).join('')}</tr>`;
+  const rows=metrics.map(m=>`<tr><th class="motive-rowhead">${m.code}</th>${m.values.map(v=>{if(v.value==null)return'<td class="off">—</td>';const k=`${m.code}|${v.day}`;motivoDetalheMap.set(k,v.people);return`<td><button class="motivo-val" data-act="motivoDetail" data-code="${m.code}" data-day="${v.day}" type="button" title="Clique para ver os colaboradores">${nf.format(v.value)}</button></td>`}).join('')}</tr>`).join('');
+  $('#viewBody').innerHTML=`<div class="grid"><div class="card c12"><h3>COMPOSIÇÃO DIÁRIA · QUADRO E MOTIVOS <em>clique em um número para ver os colaboradores</em></h3><div class="tw motive-table-wrap"><table class="mx motive-table"><thead>${head}</thead><tbody>${rows}</tbody></table></div><div class="hint">QUADRO exibe o total de colaboradores do snapshot vigente. P, F, FA, AT, AF, FE, FO e TR refletem o código classificado para cada pessoa/dia; dias futuros, domingos e feriados ficam sem apuração.</div></div><div class="card c12"><h3>COMPORTAMENTO DOS MOTIVOS <em>quantidade diária por código</em></h3><div id="motivoChart" class="motive-chart"></div><div class="hlg" id="motivoLegend"></div></div></div>`;
+  renderMotivoChart(metrics,days);
+}
+function renderMotivoChart(metrics,days){
+ const host=$('#motivoChart'),legend=$('#motivoLegend'),colors=['#22d3ee','#34d399','#f87171','#fb7185','#fbbf24','#a78bfa','#60a5fa','#f59e0b','#c084fc'];
+ const W=Math.max(900,days.length*48),H=300,L=48,R=18,T=20,B=48,plotW=W-L-R,plotH=H-T-B,max=Math.max(1,...metrics.flatMap(m=>m.values.map(v=>v.value||0)));
+ const ticks=4,grid=Array.from({length:ticks+1},(_,i)=>{const y=T+plotH*i/ticks,v=Math.round(max*(ticks-i)/ticks);return`<line x1="${L}" y1="${y}" x2="${W-R}" y2="${y}" stroke="var(--line)"/><text x="${L-8}" y="${y+4}" text-anchor="end" class="motivo-axis">${v}</text>`}).join('');
+ const xlabels=days.map((d,i)=>`<text x="${L+(i+.5)*plotW/days.length}" y="${H-17}" text-anchor="middle" class="motivo-axis">${d.day.slice(8)}</text>`).join('');
+ const lines=metrics.map((m,mi)=>{const pts=m.values.map((v,i)=>v.value==null?null:`${L+(i+.5)*plotW/days.length},${T+plotH-(v.value/max)*plotH}`).filter(Boolean).join(' ');return pts?`<polyline fill="none" stroke="${colors[mi]}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" points="${pts}"/>`:''}).join('');
+ host.innerHTML=`<div class="motive-chart-scroll"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Gráfico de evolução dos motivos">${grid}${xlabels}${lines}</svg></div>`;
+ legend.innerHTML=metrics.map((m,i)=>`<span><i style="background:${colors[i]}"></i>${m.code}</span>`).join('');
+}
+function fecharMotivoPeople(){$('#motivoPeople').hidden=true}$('#motivoPeopleFecha').onclick=fecharMotivoPeople;$('#motivoPeopleClose').onclick=fecharMotivoPeople;
+function abrirMotivoPeople(code,day){const people=motivoDetalheMap.get(`${code}|${day}`)||[],hojeRef=state.hoje||hoje();$('#motivoPeopleTitle').textContent=`${code} · ${people.length} colaborador(es)`;$('#motivoPeopleSub').textContent=`${brData(day)} · ${dowNome(day)}`;$('#motivoPeopleRows').innerHTML=people.map(p=>{const nasc=diaLocal(p.nasc),adm=diaLocal(p.adm),idade=nasc?Math.floor(mesesEntre(nasc,day)/12):null,tenure=adm?mesesEntre(adm,day):null,gm=state.gestorMap.get(p.matricula)||{};return`<tr><td>${esc(p.matricula)}</td><td>${esc(p.nome)}</td><td>${esc(p.cargo||'—')}</td><td>${esc(p.turno||'—')}</td><td>${idade==null?'—':idade}</td><td>${casaTxt(tenure)}</td><td>${esc(gm.n||'Sem gestor')}</td><td>${esc(gm.s||p.setor||'—')}</td></tr>`}).join('')||'<tr><td colspan="8">Nenhum colaborador.</td></tr>';$('#motivoPeople').hidden=false}
 function renderSetores(a){
   $('#viewBody').innerHTML='<div class="grid">'+cardCalor('SETOR','MAPA DE CALOR · SETOR × DIA','quem concentra o ABS em quais dias',a.ds,p=>p.setor,'setor')+'</div>';
 }
@@ -1472,7 +1527,7 @@ document.addEventListener('mouseout',e=>{
   const t=e.target.closest('td.st.jc');
   if(t&&t===jtipTarget&&!(e.relatedTarget&&t.contains(e.relatedTarget))){clearTimeout(jtipTimer);jtipEl&&jtipEl.classList.remove('show');jtipTarget=null}
 });
-document.addEventListener('click',e=>{if(e.target.id==='jm')fecharJust()});
+
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&jtipEl)jtipEl.classList.remove('show')});
 $('#jmFecha').onclick=fecharJust;$('#jmCancel').onclick=fecharJust;
 $('#jmSegDia').onclick=()=>setModoJust('dia');$('#jmSegPer').onclick=()=>setModoJust('per');
@@ -1610,8 +1665,8 @@ async function salvarGestor(){
   finally{btn.disabled=false;btn.textContent='Salvar'}
 }
 $('#gmFecha').onclick=fecharGest;$('#gmCancel').onclick=fecharGest;$('#gmSalva').onclick=salvarGestor;
-document.addEventListener('click',e=>{if(e.target.id==='gm')fecharGest()});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#gm').hidden)fecharGest()});
+
+
 
 /* ---------- MEU QUADRO ---------- */
 const SETORES_FIXOS=["MOVIMENT. VERT.", "PUX. REC.", "EXPEDIÇÃO", "RECEBIMENTO", "MOVIMENT. HOR.", "CARREGAMENTO", "PUX. STRETCH.", "TRIAGEM", "DESCARGA", "MAQ. STRETCH.", "SEPARAÇÃO", "ACIONAMENTO", "BOLSÃO", "MEZANINO", "ACURACIDADE", "PROGRAMAÇÃO", "OUTBOUND", "ADMINISTRAÇÃO", "INBOUND", "REMONTE"];
@@ -1685,8 +1740,8 @@ $('#gmSetor').innerHTML='<option value="">Selecione o setor…</option>'+SETORES
 $('#mqBtn').onclick=()=>{if(!mq.gestor&&state.gestorF)mq.gestor=state.gestorF;mqRefresh();$('#mq').hidden=false};
 const fechaMq=()=>{$('#mq').hidden=true};
 $('#mqFecha').onclick=fechaMq;$('#mqFechar2').onclick=fechaMq;
-document.addEventListener('click',e=>{if(e.target.id==='mq')fechaMq()});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#mq').hidden&&$('#gm').hidden&&$('#ac').hidden)fechaMq()});
+
+
 $('#mqGestor').onchange=e=>{mq.gestor=e.target.value;mq.cargo='';mqRefresh()};
 $('#mqBusca').oninput=e=>{mq.busca=e.target.value;mqTabela()};
 $('#mqIdMin').oninput=e=>{mq.idMin=e.target.value;mqTabela()};
@@ -1701,12 +1756,36 @@ let noGestRows=[];
 function listaSemGestor(){const hojeRef=state.hoje||hoje();return todasPessoas().filter(p=>{const v=state.gestorMap.get(p.matricula);return !v||!v.g}).map(p=>{const adm=diaLocal(p.adm);return{...p,casaMeses:adm?mesesEntre(adm,hojeRef):null}}).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'))}
 function desenharSemGestor(){const q=semAcento($('#ngBusca').value);const l=noGestRows.filter(p=>!q||semAcento(p.nome).includes(q)||semAcento(p.matricula).includes(q));$('#ngSum').textContent=`${l.length} colaborador(es) sem gestor · não é obrigatório preencher todos; se informar gestor ou setor, os dois campos serão obrigatórios.`;
   const managers=[...new Map([...todasPessoas().map(p=>[p.matricula,{matricula:p.matricula,nome:p.nome}]),...[...state.gestoresMat].map(([mat,n])=>[mat,{matricula:mat,nome:n}])]).values()].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
-  $('#ngRows').innerHTML=l.map(p=>`<tr data-ng-mat="${esc(p.matricula)}"><td>${esc(p.matricula)}</td><td>${esc(p.nome)}</td><td>${esc(p.cargo||'—')}</td><td>${esc(p.turno||'—')}</td><td>${casaTxt(p.casaMeses)}</td><td><input class="ng-gest" list="ngGestOptions" placeholder="Nome ou matrícula…" aria-label="Informar gestor para ${esc(p.nome)}"></td><td><select class="ng-setor"><option value="">Selecione setor…</option>${SETORES_FIXOS.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('')}</select></td><td><button class="btn sm btn-primary" type="button" data-ng-save="${esc(p.matricula)}">Salvar</button></td></tr>`).join('')||'<tr><td colspan="8">Todos os colaboradores estão vinculados ou não há pessoas no quadro carregado.</td></tr>';
+  $('#ngRows').innerHTML=l.map(p=>`<tr data-ng-mat="${esc(p.matricula)}"><td>${esc(p.matricula)}</td><td>${esc(p.nome)}</td><td>${esc(p.cargo||'—')}</td><td>${esc(p.turno||'—')}</td><td>${casaTxt(p.casaMeses)}</td><td><input class="ng-gest" list="ngGestOptions" placeholder="Nome ou matrícula…" aria-label="Informar gestor para ${esc(p.nome)}"></td><td><select class="ng-setor"><option value="">Selecione setor…</option>${SETORES_FIXOS.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('')}</select></td></tr>`).join('')||'<tr><td colspan="7">Todos os colaboradores estão vinculados ou não há pessoas no quadro carregado.</td></tr>';
   let dl=document.getElementById('ngGestOptions');if(!dl){dl=document.createElement('datalist');dl.id='ngGestOptions';document.body.appendChild(dl)}dl.innerHTML=managers.map(m=>`<option value="${esc(m.matricula+' · '+m.nome)}"></option><option value="${esc(m.nome)}"></option>`).join('')}
 function abrirSemGestor(){noGestRows=listaSemGestor();$('#ngBusca').value='';$('#ngMsg').hidden=true;desenharSemGestor();$('#ng').hidden=false}
 function fechaNoGestor(){$('#ng').hidden=true}$('#mqNoGestor').onclick=abrirSemGestor;$('#ngFecha').onclick=fechaNoGestor;$('#ngClose').onclick=fechaNoGestor;$('#ngBusca').oninput=desenharSemGestor;
 function resolverGestorDigitado(v){const q=norm(v),digits=q.match(/^(\d+)\s*(?:[·|—-].*)?$/);if(digits){const mat=normMat(digits[1]);const p=todasPessoas().find(x=>x.matricula===mat);return p?{matricula:mat,nome:p.nome}:([...state.gestoresMat].some(([g])=>g===mat)?{matricula:mat,nome:state.gestoresMat.get(mat)}:null)}const clean=q.replace(/\s*[·|—-].*$/,'');const n=semAcento(clean);const p=todasPessoas().find(x=>semAcento(x.nome)===n);if(p)return{matricula:p.matricula,nome:p.nome};for(const[g,name]of state.gestoresMat)if(semAcento(name)===n)return{matricula:g,nome:name};return null}
-$('#ngRows').addEventListener('click',async e=>{const b=e.target.closest('[data-ng-save]');if(!b)return;const tr=b.closest('tr'),mat=normMat(b.dataset.ngSave),typed=norm(tr.querySelector('.ng-gest').value),setor=tr.querySelector('.ng-setor').value,msg=$('#ngMsg');msg.hidden=true;const gestor=typed?resolverGestorDigitado(typed):null;if((typed||setor)&&(!typed||!setor)){msg.className='jm-msg err';msg.hidden=false;msg.textContent='Para salvar, informe gestor e setor juntos; ou deixe os dois campos vazios para ignorar esta pessoa.';return}if(typed&&!gestor){msg.className='jm-msg err';msg.hidden=false;msg.textContent='Selecione um gestor válido nas sugestões (nome ou matrícula).';return}if(!typed&&!setor){msg.className='jm-msg';msg.hidden=false;msg.textContent='Nenhuma alteração: informar todos não é obrigatório.';return}if(gestor&&gestor.matricula===mat){msg.className='jm-msg err';msg.hidden=false;msg.textContent='O colaborador não pode ser o próprio gestor.';return}b.disabled=true;b.textContent='Salvando…';try{const url=`${URL_SB}/rest/v1/${encodeURIComponent(T.gestor)}?on_conflict=COLABORADOR`;const r=await fetch(url,{method:'POST',headers:{...headers(),Prefer:'resolution=merge-duplicates,return=minimal','Content-Type':'application/json'},body:JSON.stringify([{COLABORADOR:mat,GESTOR:gestor.matricula,'NOME GESTOR':gestor.nome,SETOR:setor}]),cache:'no-store'});if(!r.ok)throw Error(await detalhe(r));aplicarGestorRows(await pegaGestorColab());preencherGestores();invalidar();render();mqRefresh();noGestRows=noGestRows.filter(p=>p.matricula!==mat);desenharSemGestor();msg.className='jm-msg ok';msg.hidden=false;msg.textContent='Vínculo salvo para a matrícula '+mat+'.'}catch(x){msg.className='jm-msg err';msg.hidden=false;msg.textContent='Falha ao salvar vínculo: '+(x.message||x);b.disabled=false;b.textContent='Salvar'}});
+$('#ngSaveAll').onclick=async()=>{
+  const btn=$('#ngSaveAll'),msg=$('#ngMsg');if(btn.disabled)return;msg.hidden=true;
+  const payload=[],errs=[];
+  for(const tr of $$('#ngRows tr[data-ng-mat]')){
+    const mat=normMat(tr.dataset.ngMat),typed=norm(tr.querySelector('.ng-gest').value),setor=tr.querySelector('.ng-setor').value;
+    if(!typed&&!setor)continue;
+    if(!typed||!setor){errs.push(`${mat}: preencha gestor e setor juntos`);continue}
+    const gestor=resolverGestorDigitado(typed);
+    if(!gestor){errs.push(`${mat}: escolha um gestor válido nas sugestões`);continue}
+    if(gestor.matricula===mat){errs.push(`${mat}: não pode ser o próprio gestor`);continue}
+    payload.push({COLABORADOR:mat,GESTOR:gestor.matricula,'NOME GESTOR':gestor.nome,SETOR:setor});
+  }
+  if(errs.length){msg.className='jm-msg err';msg.hidden=false;msg.textContent='Corrija antes de salvar: '+errs.slice(0,8).join('; ')+(errs.length>8?` e mais ${errs.length-8} erro(s)`:'.');return}
+  if(!payload.length){msg.className='jm-msg';msg.hidden=false;msg.textContent='Nenhum vínculo preenchido. Não é necessário informar todos os colaboradores.';return}
+  btn.disabled=true;btn.innerHTML='<span class="jm-loading"></span>Salvando…';
+  try{
+    const url=`${URL_SB}/rest/v1/${encodeURIComponent(T.gestor)}?on_conflict=COLABORADOR`;
+    const r=await fetch(url,{method:'POST',headers:{...headers(),Prefer:'resolution=merge-duplicates,return=minimal','Content-Type':'application/json'},body:JSON.stringify(payload),cache:'no-store'});
+    if(!r.ok)throw Error(await detalhe(r));
+    aplicarGestorRows(await pegaGestorColab());preencherGestores();invalidar();render();mqRefresh();
+    noGestRows=noGestRows.filter(p=>!payload.some(x=>x.COLABORADOR===p.matricula));desenharSemGestor();
+    msg.className='jm-msg ok';msg.hidden=false;msg.textContent=`Salvo com sucesso: ${payload.length} vínculo(s). Os campos vazios foram ignorados.`;
+  }catch(e){msg.className='jm-msg err';msg.hidden=false;msg.textContent='Falha ao salvar: '+(e.message||e)+'. Nenhuma linha foi removida da lista.'}
+  finally{btn.disabled=false;btn.textContent='Salvar vínculos preenchidos'}
+};
 function fechaHeatPeople(){$('#heatPeople').hidden=true}$('#heatPeopleFecha').onclick=fechaHeatPeople;$('#heatPeopleClose').onclick=fechaHeatPeople;
 
 $('#pcdFilter').onchange=e=>{state.pcdF=e.target.value;invalidar();render()};
@@ -1823,8 +1902,8 @@ $('#exGo').onclick=async()=>{
   }catch(e){exMsg('Falha: '+(e.message||e),'err')}
   finally{btn.disabled=false}
 };
-document.addEventListener('click',e=>{if(e.target.id==='um')fechaUm();if(e.target.id==='ex')fechaEx();if(e.target.id==='ac')fechaAc();if(e.target.id==='pw')fechaPw();if(e.target.id==='heatPeople')fechaHeatPeople();if(e.target.id==='ng')fechaNoGestor()});
-document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(!$('#um').hidden)fechaUm();else if(!$('#ex').hidden)fechaEx();else if(!$('#ac').hidden&&$('#jm').hidden&&$('#gm').hidden)fechaAc();else if(!$('#pw').hidden)fechaPw();else if(!$('#heatPeople').hidden)fechaHeatPeople();else if(!$('#ng').hidden)fechaNoGestor()});
+
+
 
 /* ---------- eventos ---------- */
 function ligar(){
@@ -1856,9 +1935,11 @@ function ligar(){
       setores:['CD · setores','Indicadores do contexto, gráficos do setor e tabela detalhada com métrica explícita (ausentes, presentes, total ou taxa).'],
       turnos:['Turnos · setores · cargos','TOTAL CD aparece antes do primeiro turno; expanda turno, setor e cargo para investigar.'],
       gestores:['Gestores · mapa de calor','Absenteísmo por gestor e por cargo, dia a dia, em quantidade ou % do quadro.'],
+      motivos:['Motivos · composição diária','QUADRO e contagem diária de P, F, FA, AT, AF, FE, FO e TR, com detalhe de colaboradores.'],
       pessoas:['Pessoas','Busca por nome ou matrícula, calendário individual e matriz por dia com destaque de linha e coluna.']}[b.dataset.view];
     $('#viewTitle').textContent=t[0];$('#viewSub').textContent=t[1];render()};
   const aoClicar=e=>{
+    const md=e.target.closest('[data-act="motivoDetail"]');if(md){abrirMotivoPeople(md.dataset.code,md.dataset.day);return}
     const hd=e.target.closest('[data-act="heatdetail"]');if(hd){const rows=heatDetailStore.get(`gestor|${hd.dataset.grupo}|${hd.dataset.day}`)||[];$('#heatPeopleTitle').textContent=`${rows.length} colaborador(es) ausente(s)`;$('#heatPeopleSub').textContent=`${hd.dataset.grupo} · ${brData(hd.dataset.day)}`;$('#heatPeopleRows').innerHTML=rows.map(p=>`<tr><td>${esc(p.matricula)}</td><td>${esc(p.nome)}</td><td>${esc(p.cargo)}</td></tr>`).join('')||'<tr><td colspan="3">Nenhum colaborador listado.</td></tr>';$('#heatPeople').hidden=false;return}
     const pr=e.target.closest('[data-act="par"]');if(pr){const s=PAR[pr.dataset.d],v=pr.dataset.v;
       if(e.ctrlKey||e.metaKey){s.has(v)?s.delete(v):s.add(v)}
@@ -2120,7 +2201,7 @@ $('#monthInput').value=mesInicial;
 const mvIni=mesInicial.match(/^(\d{4})-(\d{2})$/);
 if(mvIni){state.ano=+mvIni[1];state.mes=+mvIni[2];state.dias=diasDoMes(state.ano,state.mes)}
 const qv=QS.get('view');
-if(qv&&['macro','setores','turnos','pessoas','gestores'].includes(qv)){state.vista=qv;$$('.tab').forEach(x=>x.classList.toggle('on',x.dataset.view===qv))}
+if(qv&&['macro','setores','turnos','pessoas','gestores','motivos'].includes(qv)){state.vista=qv;$$('.tab').forEach(x=>x.classList.toggle('on',x.dataset.view===qv))}
 if(window.__ABS_TEST__){window.__ABS_TEST__({parseDTA,cicloOperacional,diaLocal,horaLocal,normMat,classificar,padroesSuricatoDia,diasCivisSuricato,turnoConsiderado,pega,pegaKeyset,PAG,pegaSuricatoMes,modeloDia,statusDe,state,aplicarGestorRows,recalcGestor,filtroFixo});}
 else{ligar();carga();
   /* Atualização automática a cada 60 min, sem sobrepor uma carga em andamento. */
