@@ -306,6 +306,45 @@ td.nd{color:var(--quiet)}
 .par-80{stroke:var(--amber);stroke-dasharray:4 4;stroke-width:1}
 .par-l{fill:none;stroke:var(--pink);stroke-width:2;pointer-events:none}
 .par-d{fill:var(--pink);pointer-events:none}
+
+/* Buraco negro da tela de carregamento (efeito portado da Expedição) */
+#ld{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:16px;background:rgba(2,3,12,.96);backdrop-filter:blur(3px);overflow:hidden}
+#ld[hidden]{display:none!important}#ld .ld-box{position:relative;z-index:8;width:min(460px,86vw);text-align:center;padding-top:280px}
+#ld .ld-t{font-size:15px;font-weight:800;letter-spacing:3px;color:#7dd3fc;text-shadow:0 0 12px #38bdf8,0 0 28px #0ea5e9;margin-bottom:6px}
+#ld .ld-s{font-size:11px;color:var(--muted);min-height:16px;margin-bottom:12px}
+#ld .ld-s b{color:#7dd3fc}
+#ld .ld-bar{position:relative;height:8px;border-radius:999px;background:rgba(56,189,248,.14);overflow:hidden;box-shadow:0 0 0 1px rgba(56,189,248,.4),0 0 18px rgba(56,189,248,.4)}
+#ld .ld-bar i{position:absolute;left:0;top:0;bottom:0;width:0;overflow:hidden;border-radius:999px;background:linear-gradient(90deg,#0ea5e9,#38bdf8,#7dd3fc);box-shadow:0 0 14px #38bdf8,0 0 30px #0ea5e9;transition:width .3s}
+#ld .ld-bar i::after{content:"";position:absolute;top:0;bottom:0;left:0;width:40%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.9),transparent);animation:ldsh 1.1s linear infinite}
+#ld .ld-bar.ind i{width:35%;animation:ldind 1.3s ease-in-out infinite}
+@keyframes ldsh{from{transform:translateX(-120%)}to{transform:translateX(320%)}}@keyframes ldind{0%{left:-35%}100%{left:100%}}
+#ld .black-hole{display:block;position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden;isolation:isolate}
+#ld .black-hole::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(31,22,62,.24),transparent 34%),radial-gradient(circle at 15% 22%,rgba(36,76,120,.12),transparent 28%),radial-gradient(circle at 84% 78%,rgba(100,38,116,.12),transparent 30%),radial-gradient(#ffffff70 .7px,transparent 1px);background-size:auto,auto,auto,83px 83px;opacity:.7}
+#ld .black-hole::after{content:"";position:absolute;left:50%;top:50%;width:min(76vw,760px);height:min(76vw,760px);transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,transparent 0 13%,rgba(85,54,150,.035) 14%,transparent 42%);box-shadow:0 0 100px rgba(83,55,160,.08);animation:spaceWarp 5s ease-in-out infinite alternate}
+#ld .bh-center{position:absolute;z-index:5;left:50%;top:50%;width:210px;height:210px;transform:translate(-50%,-50%)}
+#ld .black-hole-core{position:absolute;z-index:6;left:50%;top:50%;width:88px;height:88px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 48% 45%,#000 0 58%,#020106 72%,#090512 100%);box-shadow:0 0 0 8px rgba(0,0,0,.95),0 0 22px 12px rgba(0,0,0,.98),0 0 52px 20px rgba(0,0,0,.95);animation:holePulse 3s ease-in-out infinite}
+#ld .black-hole-core::before{content:"";position:absolute;inset:-13px;border-radius:50%;border:3px solid rgba(255,232,190,.8);filter:blur(2px);box-shadow:0 0 12px 4px rgba(255,170,90,.8),0 0 28px 8px rgba(139,92,246,.45);animation:lensRotate 8s linear infinite}
+#ld .black-hole-core::after{content:"";position:absolute;inset:-25px;border-radius:50%;border:1px solid rgba(255,255,255,.25);filter:blur(5px);box-shadow:0 0 28px rgba(255,255,255,.12)}
+#ld .black-hole-disk{position:absolute;z-index:4;left:50%;top:50%;width:205px;height:72px;transform:translate(-50%,-50%) rotate(-18deg);border-radius:50%;background:linear-gradient(180deg,transparent 28%,rgba(255,110,42,.08) 39%,rgba(255,194,112,.95) 47%,rgba(255,244,214,.95) 50%,rgba(123,75,255,.8) 55%,rgba(25,190,255,.18) 65%,transparent 75%);filter:blur(1px) drop-shadow(0 0 9px rgba(255,137,65,.95));animation:diskSpin 4s linear infinite}
+#ld .black-hole-disk::before{content:"";position:absolute;inset:17px 4px;border-radius:50%;border-top:5px solid rgba(255,244,220,.95);border-bottom:3px solid rgba(130,91,255,.85);filter:blur(2px)}
+#ld .black-hole-halo{position:absolute;z-index:3;inset:14px;border:2px solid rgba(255,224,181,.65);border-radius:50%;box-shadow:0 0 18px 5px rgba(255,174,93,.4),0 0 42px 10px rgba(111,77,255,.2);transform:scaleY(.36) rotate(-18deg);animation:haloPulse 3s ease-in-out infinite}
+#ld .bh-streak{position:absolute;z-index:3;left:50%;top:50%;width:2px;height:95px;transform-origin:50% 0;background:linear-gradient(transparent,rgba(255,198,126,.85),transparent);filter:blur(1px);animation:streakOrbit 2.8s linear infinite}
+#ld .bh-streak.s2{height:120px;animation-duration:3.7s;animation-delay:-1s;opacity:.7}#ld .bh-streak.s3{height:80px;animation-duration:2.2s;animation-delay:-.5s;opacity:.6}
+#ld .bh-object{position:absolute;z-index:4;left:var(--x);top:var(--y);display:block;white-space:nowrap;transform-origin:center;animation:screenSuck var(--dur,3.8s) cubic-bezier(.45,.02,.9,.42) var(--delay,0s) infinite;will-change:transform,opacity;pointer-events:none}
+#ld .bh-number{font:800 clamp(10px,1.15vw,16px) monospace;color:#b8eaff;text-shadow:0 0 5px #35bfff,0 0 13px #387cff;letter-spacing:1px}#ld .bh-number.violet{color:#d7c4ff;text-shadow:0 0 6px #a78bfa,0 0 14px #7c3aed}
+#ld .bh-planet{width:var(--size,22px);height:var(--size,22px);border-radius:50%;background:radial-gradient(circle at 28% 25%,#fff4c2 0 3%,#e8a65c 15%,#a84e35 52%,#21152f 78%);box-shadow:inset -5px -3px 8px #090613,0 0 13px rgba(239,146,83,.55)}
+#ld .bh-planet.blue{background:radial-gradient(circle at 28% 25%,#d9f7ff 0 3%,#4ca8e8 22%,#17416e 65%,#080e27 82%);box-shadow:inset -5px -3px 8px #050918,0 0 13px rgba(67,160,255,.65)}
+#ld .bh-planet.ringed::after{content:"";position:absolute;left:-35%;top:34%;width:170%;height:38%;border:2px solid rgba(226,205,170,.8);border-radius:50%;transform:rotate(-25deg);box-shadow:0 0 5px rgba(226,205,170,.5)}
+#ld .bh-person{font-size:clamp(17px,2vw,27px);filter:drop-shadow(0 0 5px rgba(255,255,255,.35))}#ld .bh-comet{width:5px;height:5px;border-radius:50%;background:#fff;box-shadow:0 0 9px 3px #7dd3fc,0 0 24px 6px rgba(59,130,246,.45)}#ld .bh-comet::after{content:"";position:absolute;width:42px;height:2px;right:2px;top:1px;background:linear-gradient(90deg,transparent,#8bdcff);transform:rotate(-25deg);transform-origin:right}
+@keyframes screenSuck{0%{opacity:0;transform:translate(0,0) scale(1) rotate(0)}10%{opacity:1}58%{opacity:.95}82%{opacity:.75;transform:translate(calc(50vw - var(--x)),calc(50vh - var(--y))) scale(.42) rotate(210deg)}100%{opacity:0;transform:translate(calc(50vw - var(--x)),calc(50vh - var(--y))) scale(.015) rotate(420deg)}}
+@keyframes holePulse{0%,100%{box-shadow:0 0 0 8px rgba(0,0,0,.95),0 0 22px 12px #000,0 0 52px 20px #000}50%{box-shadow:0 0 0 10px #000,0 0 30px 16px #000,0 0 66px 25px #000}}@keyframes lensRotate{to{transform:rotate(360deg)}}@keyframes diskSpin{to{transform:translate(-50%,-50%) rotate(342deg)}}@keyframes haloPulse{50%{opacity:.45;filter:blur(2px);transform:scaleY(.43) rotate(-18deg)}}@keyframes streakOrbit{to{transform:rotate(360deg)}}@keyframes spaceWarp{to{transform:translate(-50%,-50%) scale(1.12);opacity:.55}}
+#umCard{width:min(1000px,98vw);height:min(90vh,900px);max-height:90vh;display:flex;flex-direction:column}#umCard .jm-b{flex:1;overflow:auto;align-content:start}#umTable td:last-child{white-space:nowrap}
+#ngCard{width:min(1500px,98vw);height:94vh;max-height:94vh;display:flex;flex-direction:column}#ngCard .jm-b{flex:1;overflow:auto;align-content:start}#ngTable th,#ngTable td{min-width:110px}#ngTable td:nth-child(6){min-width:220px}#ngTable td:nth-child(7){min-width:190px}
+#ngTable input,#ngTable select{background:var(--panel3);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:7px 8px;font:inherit;font-size:11px;width:100%}#ngTable .ng-saved{color:var(--green);font-size:10px}
+#viewBody .heat-detail{cursor:pointer}#viewBody .heat-detail:hover{outline:2px solid var(--text);transform:scale(1.06)}
+@media(max-width:650px){#ld .ld-box{padding-top:245px}#umCard{height:94vh}#ngCard{height:96vh}}
+@media(prefers-reduced-motion:reduce){#ld .black-hole * ,#ld .bh-object{animation-duration:8s!important}}
+
 </style>
 </head>
 <body>
@@ -321,6 +360,7 @@ td.nd{color:var(--quiet)}
       <span class="pill" id="consist"><i class="dot" id="consistDot"></i><span id="consistText">Consistência não verificada</span></span>
       <span class="pill last-update" id="lastUpdate">Última atualização: —</span>
       <a class="btn btn-primary exec-link" href="./ABS_UPDATE.html">Atualizar ABS</a>
+      <button class="btn" id="passBtn" type="button" hidden>ALTERAR SENHA</button>
       <button class="btn" id="logoutBtn" type="button">Sair</button>
       <button class="btn" id="themeBtn" type="button">☀️ Modo claro</button>
     </div>
@@ -334,7 +374,7 @@ td.nd{color:var(--quiet)}
     </div>
     <form id="monthForm">
       <div class="field"><label for="monthInput">MÊS DE REFERÊNCIA</label><input id="monthInput" type="month" required></div><button class="btn" id="expBtn" type="button">⬇ OBTER DADOS</button>
-      <button class="btn btn-primary" id="reloadBtn" type="submit">↻ ATUALIZAR DADOS</button><button class="btn" id="mqBtn" type="button">👥 MEU QUADRO</button><button class="btn" id="usrBtn" type="button" hidden>＋ CADASTRAR USUÁRIO</button>
+      <button class="btn btn-primary" id="reloadBtn" type="submit">↻ ATUALIZAR DADOS</button><button class="btn" id="mqBtn" type="button">👥 MEU QUADRO</button><button class="btn" id="usrBtn" type="button" hidden>USER</button>
     </form>
   </section>
 
@@ -443,7 +483,15 @@ td.nd{color:var(--quiet)}
     <div class="lg-cred">Desenvolvido por Pablo Martins Lopes</div>
   </form>
 </div>
-<div class="ld" id="ld" role="status" aria-live="polite"><div class="ld-box"><div class="ld-t">CARREGANDO DADOS...</div><div class="ld-s"><span id="ldTxt">Conectando ao Supabase…</span> <b id="ldPct"></b></div><div class="ld-bar ind" id="ldBar"><i></i></div></div></div>
+<div class="ld" id="ld" role="status" aria-live="polite" hidden>
+  <div class="black-hole" aria-hidden="true">
+    <span class="bh-object bh-number" style="--x:7vw;--y:16vh;--delay:-.2s;--dur:4.2s">01</span><span class="bh-object bh-number violet" style="--x:18vw;--y:78vh;--delay:-2.1s;--dur:4.8s">42</span><span class="bh-object bh-number" style="--x:88vw;--y:19vh;--delay:-1.4s;--dur:3.9s">87</span><span class="bh-object bh-number violet" style="--x:79vw;--y:86vh;--delay:-.8s;--dur:4.5s">23</span><span class="bh-object bh-number" style="--x:48vw;--y:7vh;--delay:-3s;--dur:4.1s">10</span><span class="bh-object bh-number violet" style="--x:3vw;--y:53vh;--delay:-1.8s;--dur:4.7s">99</span><span class="bh-object bh-number" style="--x:94vw;--y:57vh;--delay:-2.8s;--dur:4.3s">256</span><span class="bh-object bh-number violet" style="--x:35vw;--y:92vh;--delay:-.5s;--dur:5s">808</span>
+    <span class="bh-object bh-planet ringed" style="--x:12vw;--y:42vh;--size:32px;--delay:-1.2s;--dur:5s"></span><span class="bh-object bh-planet blue" style="--x:84vw;--y:39vh;--size:25px;--delay:-3.2s;--dur:4.6s"></span><span class="bh-object bh-planet" style="--x:63vw;--y:9vh;--size:16px;--delay:-2.4s;--dur:4.2s"></span><span class="bh-object bh-planet blue" style="--x:26vw;--y:25vh;--size:19px;--delay:-.6s;--dur:4.9s"></span><span class="bh-object bh-planet ringed" style="--x:72vw;--y:72vh;--size:28px;--delay:-1.9s;--dur:5.2s"></span>
+    <span class="bh-object bh-person" style="--x:25vw;--y:59vh;--delay:-2.7s;--dur:4.4s">🧍</span><span class="bh-object bh-person" style="--x:68vw;--y:28vh;--delay:-.9s;--dur:4.8s">🧍</span><span class="bh-object bh-person" style="--x:91vw;--y:76vh;--delay:-3.4s;--dur:4.1s">🧍</span><span class="bh-object bh-person" style="--x:9vw;--y:88vh;--delay:-1.5s;--dur:5.1s">🧍</span><span class="bh-object bh-comet" style="--x:43vw;--y:17vh;--delay:-2.2s;--dur:3.8s"></span><span class="bh-object bh-comet" style="--x:57vw;--y:83vh;--delay:-.4s;--dur:4.4s"></span>
+    <div class="bh-center"><div class="black-hole-halo"></div><div class="bh-streak"></div><div class="bh-streak s2"></div><div class="bh-streak s3"></div><div class="black-hole-disk"></div><div class="black-hole-core"></div></div>
+  </div>
+  <div class="ld-box"><div class="ld-t">CARREGANDO DADOS...</div><div class="ld-s"><span id="ldTxt">Conectando ao Supabase…</span> <b id="ldPct"></b></div><div class="ld-bar ind" id="ldBar"><i></i></div></div>
+</div>
   <div class="jm" id="jm" hidden role="dialog" aria-modal="true" aria-labelledby="jmTitle">
     <div class="jm-card">
       <div class="jm-h"><div><h3 id="jmTitle">Justificar ausência</h3><small>Grava em ABS_JUSTIFICATIVAS · um registro por dia do período</small></div><button class="jm-x" id="jmFecha" type="button" aria-label="Fechar">✕</button></div>
@@ -464,18 +512,35 @@ td.nd{color:var(--quiet)}
       <div class="jm-f"><button class="btn" id="jmCancel" type="button">Cancelar</button><button class="btn btn-primary" id="jmSalva" type="button">Gravar justificativa</button></div>
     </div>
   </div>
-  <div class="jm" id="um" hidden role="dialog" aria-modal="true">
-    <div class="jm-card">
-      <div class="jm-h"><div><h3>Cadastrar usuário</h3><small>Grava em ABS_USER · acesso ao painel</small></div><button class="jm-x" id="umFecha" type="button" aria-label="Fechar">✕</button></div>
+  <div class="jm" id="um" hidden role="dialog" aria-modal="true" aria-labelledby="umTitle">
+    <div class="jm-card" id="umCard">
+      <div class="jm-h"><div><h3 id="umTitle">USER · usuários</h3><small>Pesquisar, cadastrar, alterar ou excluir acessos em ABS_USER</small></div><button class="jm-x" id="umFecha" type="button" aria-label="Fechar">✕</button></div>
       <div class="jm-b">
-        <div><label>MATRÍCULA (USUÁRIO)</label><input id="umMat" type="text" inputmode="numeric" autocomplete="off"></div>
-        <div><label>NOME (NAME)</label><input id="umName" type="text" autocomplete="off"></div>
-        <div><label>NÍVEL (LEVEL)</label><select id="umLevel"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option></select></div>
-        <div><label>SENHA</label><input id="umPass" type="password" autocomplete="new-password"></div>
-        <div><label>CONFIRMAR SENHA</label><input id="umPass2" type="password" autocomplete="new-password"></div>
+        <div class="sbox"><span class="ico">⌕</span><input id="umBusca" type="search" placeholder="Pesquisar por matrícula ou nome…" autocomplete="off"></div>
+        <div class="tw" style="max-height:30vh"><table class="mx" id="umTable"><thead><tr><th>MATRÍCULA</th><th>NOME</th><th>NÍVEL</th><th>AÇÕES</th></tr></thead><tbody id="umRows"><tr><td colspan="4">Carregando usuários…</td></tr></tbody></table></div>
+        <div class="jm-row"><div><label>MATRÍCULA</label><input id="umMat" type="text" inputmode="numeric" autocomplete="off" placeholder="Somente números"></div><div><label>NOME</label><input id="umName" type="text" autocomplete="off"></div></div>
+        <div class="jm-row"><div><label>NÍVEL</label><select id="umLevel"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option></select></div><div><label>SENHA <span id="umPassHint">(obrigatória ao cadastrar)</span></label><input id="umPass" type="password" autocomplete="new-password" placeholder="Deixe em branco para manter ao editar"></div></div>
         <div class="jm-msg" id="umMsg" hidden></div>
       </div>
-      <div class="jm-f"><button class="btn" id="umCancel" type="button">Fechar</button><button class="btn btn-primary" id="umSalva" type="button">Cadastrar</button></div>
+      <div class="jm-f"><button class="btn" id="umNovo" type="button">Novo usuário</button><button class="btn" id="umCancel" type="button">Fechar</button><button class="btn btn-primary" id="umSalva" type="button">Cadastrar usuário</button></div>
+    </div>
+  </div>
+  <div class="jm" id="pw" hidden role="dialog" aria-modal="true" aria-labelledby="pwTitle">
+    <div class="jm-card"><div class="jm-h"><div><h3 id="pwTitle">Alterar minha senha</h3><small>Somente a senha da sua própria matrícula será alterada</small></div><button class="jm-x" id="pwFecha" type="button" aria-label="Fechar">✕</button></div>
+      <div class="jm-b"><div><label>SENHA ATUAL</label><input id="pwAtual" type="password" autocomplete="current-password"></div><div><label>NOVA SENHA</label><input id="pwNova" type="password" autocomplete="new-password"></div><div><label>CONFIRMAR NOVA SENHA</label><input id="pwConfirma" type="password" autocomplete="new-password"></div><div class="jm-msg" id="pwMsg" hidden></div></div>
+      <div class="jm-f"><button class="btn" id="pwCancel" type="button">Cancelar</button><button class="btn btn-primary" id="pwSalva" type="button">Salvar nova senha</button></div>
+    </div>
+  </div>
+  <div class="jm" id="heatPeople" hidden role="dialog" aria-modal="true" aria-labelledby="heatPeopleTitle">
+    <div class="jm-card"><div class="jm-h"><div><h3 id="heatPeopleTitle">Colaboradores ausentes</h3><small id="heatPeopleSub"></small></div><button class="jm-x" id="heatPeopleFecha" type="button" aria-label="Fechar">✕</button></div>
+      <div class="jm-b"><div class="tw"><table class="mx"><thead><tr><th>MATRICULA</th><th>NOME</th><th>CARGO</th></tr></thead><tbody id="heatPeopleRows"></tbody></table></div></div>
+      <div class="jm-f"><button class="btn" id="heatPeopleClose" type="button">Fechar</button></div>
+    </div>
+  </div>
+  <div class="jm" id="ng" hidden role="dialog" aria-modal="true" aria-labelledby="ngTitle">
+    <div class="jm-card" id="ngCard"><div class="jm-h"><div><h3 id="ngTitle">Colaboradores sem gestor</h3><small>Vínculo individual em ABS_GESTOR_COLAB · gestor e setor devem ser informados juntos</small></div><button class="jm-x" id="ngFecha" type="button" aria-label="Fechar">✕</button></div>
+      <div class="jm-b"><div class="sbox"><span class="ico">⌕</span><input id="ngBusca" type="search" placeholder="Pesquisar por matrícula ou nome…"></div><div class="mq-sum" id="ngSum"></div><div class="tw"><table class="mx" id="ngTable"><thead><tr><th>MATRICULA</th><th>NOME</th><th>CARGO</th><th>TURNO</th><th>TEMPO DE CASA</th><th>INFORMAR GESTOR</th><th>SETOR</th><th>AÇÃO</th></tr></thead><tbody id="ngRows"></tbody></table></div><div class="jm-msg" id="ngMsg" hidden></div></div>
+      <div class="jm-f"><button class="btn" id="ngClose" type="button">Fechar</button></div>
     </div>
   </div>
   <div class="jm" id="ex" hidden role="dialog" aria-modal="true">
@@ -494,6 +559,7 @@ td.nd{color:var(--quiet)}
       <div class="jm-h"><div><h3>Meu quadro</h3><small>Equipe vinculada ao gestor · ABS_GESTOR_COLAB</small></div><button class="jm-x" id="mqFecha" type="button" aria-label="Fechar">✕</button></div>
       <div class="jm-b">
         <div><label>GESTOR</label><select id="mqGestor"></select></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" id="mqNoGestor" type="button">COLAB SEM GESTOR</button></div>
         <div id="mqBody" hidden>
           <div class="mq-f">
             <div class="field w"><label>BUSCAR (NOME OU MATRÍCULA)</label><input id="mqBusca" type="search" autocomplete="off" placeholder="Digite nome ou matrícula…"></div>
@@ -1119,8 +1185,10 @@ function calorGrupo(ds,fn){
   }
   return{dias,g};
 }
+const heatDetailStore=new Map();
 function cardCalor(rotulo,titulo,desc,ds,fn,tipoFiltro){
   const{dias,g}=calorGrupo(ds,fn),pct=state.heatMode==='pct';
+  const detailDim=tipoFiltro==='gestorF'?'gestor':tipoFiltro==='cargoF'?'cargo':'setor';
   const val=c=>c?(pct?(c.den?c.aus/c.den*100:0):c.aus):0;
   const tot=o=>pct?(o.den?o.aus/o.den*100:0):o.aus;
   const fmt=v=>pct?nf1.format(v):nf.format(v);
@@ -1130,7 +1198,8 @@ function cardCalor(rotulo,titulo,desc,ds,fn,tipoFiltro){
   const rows=linhas.map(([k,o])=>{
     const cel=dias.map(d=>{const c=o.dias.get(d.day);if(!c||!c.den)return'<div class="hc e"></div>';
       const v=val(c),r=v/mx,h=145-r*145;
-      return `<div class="hc ${v?'':'e'}" style="${v?`background:hsl(${h} 72% ${r>.7?52:60}%)`:''}" title="${esc(k+' · '+brData(d.day)+' '+dowNome(d.day))} — ${c.aus} ausente(s) de ${c.den} (${pc.format(c.aus/c.den*100)}%)">${v?fmt(v):''}</div>`}).join('');
+      if(detailDim==='gestor'&&c.aus){const abs=new Set(d.ausentesLista);const people=d.people.filter(p=>(fn(p)||'—')===k&&abs.has(p.matricula)).map(p=>({matricula:p.matricula,nome:p.nome,cargo:p.cargo||state.cargo.get(p.matricula)||'—'}));heatDetailStore.set(`${detailDim}|${k}|${d.day}`,people)}
+      return `<div class="hc ${v?'':'e'} ${detailDim==='gestor'&&c.aus?'heat-detail':''}" ${detailDim==='gestor'&&c.aus?`data-act="heatdetail" data-day="${d.day}" data-grupo="${esc(k)}"`:''} style="${v?`background:hsl(${h} 72% ${r>.7?52:60}%)`:''}" title="${esc(k+' · '+brData(d.day)+' '+dowNome(d.day))} — ${c.aus} ausente(s) de ${c.den} (${pc.format(c.aus/c.den*100)}%)">${v?fmt(v):''}</div>`}).join('');
     return `<div class="hr pick ${state[tipoFiltro]===k?'on':''}" data-act="flt" data-t="${tipoFiltro}" data-v="${esc(k)}" title="${esc(k)} · clique para filtrar">${esc(k)}</div>${cel}<div class="hc tot" title="${o.aus} ausências em ${o.den} pessoa-dia (${pc.format(o.den?o.aus/o.den*100:0)}%)">${fmt(tot(o))}</div>`}).join('');
   const tg=`<span class="seg"><button type="button" data-act="hm" data-m="qtd" class="${pct?'':'on'}">Nº AUSENTES</button><button type="button" data-act="hm" data-m="pct" class="${pct?'on':''}">% ABS ÷ QUADRO</button></span>`;
   return `<div class="card c12"><h3>${esc(titulo)} <em>${esc(desc)}</em>${tg}</h3>
@@ -1141,6 +1210,7 @@ function renderSetores(a){
   $('#viewBody').innerHTML='<div class="grid">'+cardCalor('SETOR','MAPA DE CALOR · SETOR × DIA','quem concentra o ABS em quais dias',a.ds,p=>p.setor,'setor')+'</div>';
 }
 function renderGestores(a){
+  heatDetailStore.clear();
   $('#viewBody').innerHTML='<div class="grid">'+
     cardCalor('GESTOR','MAPA DE CALOR · GESTOR × DIA','ABS da equipe de cada gestor',a.ds,p=>(state.gestorMap.get(p.matricula)||{}).n||'Sem gestor','gestorF')+
     cardCalor('CARGO','MAPA DE CALOR · CARGO × DIA','ABS por cargo (respeita o filtro de gestor)',a.ds,p=>p.cargo,'cargoF')+paretosGestores()+'</div>';
@@ -1306,7 +1376,8 @@ function abrirJustModal(day,mat){
   $('#jmMotivo').value='';$('#jmMsg').hidden=true;
   $('#jmSalva').disabled=false;$('#jmSalva').innerHTML='Gravar justificativa';
   setModoJust('dia');
-  $('#jmGestor').textContent=state.gestor?`Matrícula ${state.gestor} (identificada do quadro vigente)`:'Não identificada nesta sessão — a gravação fica bloqueada até a origem do dado ser definida';
+  const gestorSessao=normMat(AUTH.user||state.gestor);
+  $('#jmGestor').textContent=gestorSessao?`Matrícula ${gestorSessao} (usuário autenticado nesta sessão)`:'Entre novamente para identificar sua matrícula.';
   $('#jm').hidden=false;
   if(mat)carregaInfoMat(mat);else $('#jmInfo').textContent='';
   setTimeout(()=>$('#jmMat').focus(),30);
@@ -1342,7 +1413,8 @@ async function gravarJust(){
   const ini=$('#jmIni').value,fim=jmModo==='per'?$('#jmFim').value:$('#jmIni').value;
   const mat=norm($('#jmMat').value),mot=$('#jmMotivo').value,obs=norm($('#jmObs').value).slice(0,100);
   const erros=[];
-  if(!state.gestor)erros.push('a matrícula do gestor não pôde ser identificada nesta sessão (nenhuma coluna GESTOR no ABS_QUADRO)');
+  const gestorSessao=normMat(AUTH.user||state.gestor);
+  if(!gestorSessao)erros.push('a matrícula do usuário logado não pôde ser identificada nesta sessão');
   if(!/^\d{4}-\d{2}-\d{2}$/.test(ini))erros.push('data inicial inválida');
   if(!/^\d{4}-\d{2}-\d{2}$/.test(fim))erros.push('data final inválida');
   if(/^\d{4}-\d{2}-\d{2}$/.test(ini)&&/^\d{4}-\d{2}-\d{2}$/.test(fim)&&fim<ini)erros.push('a data final deve ser igual ou posterior à inicial');
@@ -1351,7 +1423,7 @@ async function gravarJust(){
   if(erros.length){msg.className='jm-msg err';msg.hidden=false;msg.textContent='Corrija antes de gravar: '+erros.join('; ')+'.';return}
   const dias=diasEntre(ini,fim);
   if(!dias.length){msg.className='jm-msg err';msg.hidden=false;msg.textContent='O período informado não gerou datas.';return}
-  const payload=dias.map(dta=>({DTA:dta,'MATRICULA GESTOR':state.gestor,'MATRICULA COLABORADOR':mat,MOTIVO:mot,OBS:obs}));
+  const payload=dias.map(dta=>({DTA:dta,'MATRICULA GESTOR':gestorSessao,'MATRICULA COLABORADOR':mat,MOTIVO:mot,OBS:obs}));
   btn.disabled=true;btn.innerHTML='<span class="jm-loading"></span>Gravando…';
   try{
     const r=await fetch(`${URL_SB}/rest/v1/${encodeURIComponent(T.just)}`,{method:'POST',
@@ -1624,6 +1696,19 @@ $('#mqCargo').onchange=e=>{mq.cargo=e.target.value;mqTabela()};
 $('#mqMes').onchange=e=>{const v=e.target.value;if(!/^\d{4}-\d{2}$/.test(v))return;$('#monthInput').value=v;carga().then(mqRefresh)};
 $('#mqAdd').onclick=()=>abrirGestModal(mq.gestor);
 $('#mqHead').onclick=e=>{const th=e.target.closest('th[data-k]');if(!th)return;const k=th.dataset.k;mq.dir=mq.sort===k?-mq.dir:1;mq.sort=k;mqTabela()};
+/* Lista e vinculação opcional de colaboradores sem gestor */
+let noGestRows=[];
+function listaSemGestor(){const hojeRef=state.hoje||hoje();return todasPessoas().filter(p=>{const v=state.gestorMap.get(p.matricula);return !v||!v.g}).map(p=>{const adm=diaLocal(p.adm);return{...p,casaMeses:adm?mesesEntre(adm,hojeRef):null}}).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'))}
+function desenharSemGestor(){const q=semAcento($('#ngBusca').value);const l=noGestRows.filter(p=>!q||semAcento(p.nome).includes(q)||semAcento(p.matricula).includes(q));$('#ngSum').textContent=`${l.length} colaborador(es) sem gestor · não é obrigatório preencher todos; se informar gestor ou setor, os dois campos serão obrigatórios.`;
+  const managers=[...new Map([...todasPessoas().map(p=>[p.matricula,{matricula:p.matricula,nome:p.nome}]),...[...state.gestoresMat].map(([mat,n])=>[mat,{matricula:mat,nome:n}])]).values()].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+  $('#ngRows').innerHTML=l.map(p=>`<tr data-ng-mat="${esc(p.matricula)}"><td>${esc(p.matricula)}</td><td>${esc(p.nome)}</td><td>${esc(p.cargo||'—')}</td><td>${esc(p.turno||'—')}</td><td>${casaTxt(p.casaMeses)}</td><td><input class="ng-gest" list="ngGestOptions" placeholder="Nome ou matrícula…" aria-label="Informar gestor para ${esc(p.nome)}"></td><td><select class="ng-setor"><option value="">Selecione setor…</option>${SETORES_FIXOS.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('')}</select></td><td><button class="btn sm btn-primary" type="button" data-ng-save="${esc(p.matricula)}">Salvar</button></td></tr>`).join('')||'<tr><td colspan="8">Todos os colaboradores estão vinculados ou não há pessoas no quadro carregado.</td></tr>';
+  let dl=document.getElementById('ngGestOptions');if(!dl){dl=document.createElement('datalist');dl.id='ngGestOptions';document.body.appendChild(dl)}dl.innerHTML=managers.map(m=>`<option value="${esc(m.matricula+' · '+m.nome)}"></option><option value="${esc(m.nome)}"></option>`).join('')}
+function abrirSemGestor(){noGestRows=listaSemGestor();$('#ngBusca').value='';$('#ngMsg').hidden=true;desenharSemGestor();$('#ng').hidden=false}
+function fechaNoGestor(){$('#ng').hidden=true}$('#mqNoGestor').onclick=abrirSemGestor;$('#ngFecha').onclick=fechaNoGestor;$('#ngClose').onclick=fechaNoGestor;$('#ngBusca').oninput=desenharSemGestor;
+function resolverGestorDigitado(v){const q=norm(v),digits=q.match(/^(\d+)\s*(?:[·|—-].*)?$/);if(digits){const mat=normMat(digits[1]);const p=todasPessoas().find(x=>x.matricula===mat);return p?{matricula:mat,nome:p.nome}:([...state.gestoresMat].some(([g])=>g===mat)?{matricula:mat,nome:state.gestoresMat.get(mat)}:null)}const clean=q.replace(/\s*[·|—-].*$/,'');const n=semAcento(clean);const p=todasPessoas().find(x=>semAcento(x.nome)===n);if(p)return{matricula:p.matricula,nome:p.nome};for(const[g,name]of state.gestoresMat)if(semAcento(name)===n)return{matricula:g,nome:name};return null}
+$('#ngRows').addEventListener('click',async e=>{const b=e.target.closest('[data-ng-save]');if(!b)return;const tr=b.closest('tr'),mat=normMat(b.dataset.ngSave),typed=norm(tr.querySelector('.ng-gest').value),setor=tr.querySelector('.ng-setor').value,msg=$('#ngMsg');msg.hidden=true;const gestor=typed?resolverGestorDigitado(typed):null;if((typed||setor)&&(!typed||!setor)){msg.className='jm-msg err';msg.hidden=false;msg.textContent='Para salvar, informe gestor e setor juntos; ou deixe os dois campos vazios para ignorar esta pessoa.';return}if(typed&&!gestor){msg.className='jm-msg err';msg.hidden=false;msg.textContent='Selecione um gestor válido nas sugestões (nome ou matrícula).';return}if(!typed&&!setor){msg.className='jm-msg';msg.hidden=false;msg.textContent='Nenhuma alteração: informar todos não é obrigatório.';return}if(gestor&&gestor.matricula===mat){msg.className='jm-msg err';msg.hidden=false;msg.textContent='O colaborador não pode ser o próprio gestor.';return}b.disabled=true;b.textContent='Salvando…';try{const url=`${URL_SB}/rest/v1/${encodeURIComponent(T.gestor)}?on_conflict=COLABORADOR`;const r=await fetch(url,{method:'POST',headers:{...headers(),Prefer:'resolution=merge-duplicates,return=minimal','Content-Type':'application/json'},body:JSON.stringify([{COLABORADOR:mat,GESTOR:gestor.matricula,'NOME GESTOR':gestor.nome,SETOR:setor}]),cache:'no-store'});if(!r.ok)throw Error(await detalhe(r));aplicarGestorRows(await pegaGestorColab());preencherGestores();invalidar();render();mqRefresh();noGestRows=noGestRows.filter(p=>p.matricula!==mat);desenharSemGestor();msg.className='jm-msg ok';msg.hidden=false;msg.textContent='Vínculo salvo para a matrícula '+mat+'.'}catch(x){msg.className='jm-msg err';msg.hidden=false;msg.textContent='Falha ao salvar vínculo: '+(x.message||x);b.disabled=false;b.textContent='Salvar'}});
+function fechaHeatPeople(){$('#heatPeople').hidden=true}$('#heatPeopleFecha').onclick=fechaHeatPeople;$('#heatPeopleClose').onclick=fechaHeatPeople;
+
 $('#pcdFilter').onchange=e=>{state.pcdF=e.target.value;invalidar();render()};
 $('#sitFilter').onchange=e=>{state.sitF=e.target.value;invalidar();render()};
 
@@ -1639,30 +1724,38 @@ async function iniciaVideoLogin(){
     v.addEventListener('canplay',mostrar,{once:true});v.src=URL.createObjectURL(bl);v.load()}
   catch(e){v.addEventListener('canplaythrough',mostrar,{once:true});v.src=VIDEO_LOGIN;v.load()}
 }
-/* cadastrar usuário (somente 5520967) */
+/* gestão de usuários (somente 5520967) */
+let usuariosAbs=[],usuarioEditando='';
 const umMsg=(t,c)=>{const m=$('#umMsg');m.className='jm-msg '+c;m.textContent=t;m.hidden=false};
-$('#usrBtn').onclick=()=>{['#umMat','#umPass','#umPass2'].forEach(s=>$(s).value='');$('#umName').value='';$('#umLevel').value='2';$('#umMsg').hidden=true;$('#umSalva').disabled=false;$('#um').hidden=false;setTimeout(()=>$('#umMat').focus(),30)};
-const fechaUm=()=>{$('#um').hidden=true};$('#umFecha').onclick=fechaUm;$('#umCancel').onclick=fechaUm;
+function resetUserForm(){usuarioEditando='';$('#umMat').disabled=false;$('#umMat').value='';$('#umName').value='';$('#umLevel').value='2';$('#umPass').value='';$('#umPassHint').textContent='(obrigatória ao cadastrar)';$('#umSalva').textContent='Cadastrar usuário';$('#umMsg').hidden=true}
+async function carregaUsuarios(){
+  const body=$('#umRows');body.innerHTML='<tr><td colspan="4">Carregando usuários…</td></tr>';
+  try{const u=new URL(`${URL_SB}/rest/v1/ABS_USER`);u.searchParams.set('select','USER,NAME,LEVEL');u.searchParams.set('order','USER.asc');u.searchParams.set('limit','1000');const r=await fetch(u,{headers:headers(),cache:'no-store'});if(!r.ok)throw Error(await detalhe(r));usuariosAbs=await r.json();renderUsuarios()}
+  catch(e){usuariosAbs=[];body.innerHTML=`<tr><td colspan="4">Falha ao consultar usuários: ${esc(e.message||e)}</td></tr>`}
+}
+function renderUsuarios(){const q=semAcento($('#umBusca').value),l=usuariosAbs.filter(u=>!q||semAcento(u.USER).includes(q)||semAcento(u.NAME).includes(q));$('#umRows').innerHTML=l.map(u=>`<tr><td>${esc(u.USER)}</td><td>${esc(u.NAME||'—')}</td><td>${esc(u.LEVEL??'—')}</td><td><button class="btn sm" type="button" data-user-edit="${esc(u.USER)}">Alterar</button> <button class="btn sm" type="button" data-user-del="${esc(u.USER)}">Apagar</button></td></tr>`).join('')||'<tr><td colspan="4">Nenhum usuário encontrado.</td></tr>'}
+async function abreUserManager(){if(AUTH.user!==ADMIN_USER)return;resetUserForm();$('#umBusca').value='';$('#um').hidden=false;await carregaUsuarios()}
+$('#usrBtn').onclick=abreUserManager;const fechaUm=()=>{$('#um').hidden=true};$('#umFecha').onclick=fechaUm;$('#umCancel').onclick=fechaUm;$('#umNovo').onclick=resetUserForm;$('#umBusca').oninput=renderUsuarios;
+$('#umRows').addEventListener('click',async e=>{
+  const edit=e.target.closest('[data-user-edit]');if(edit){const u=usuariosAbs.find(x=>normMat(x.USER)===normMat(edit.dataset.userEdit));if(!u)return;usuarioEditando=normMat(u.USER);$('#umMat').value=u.USER;$('#umMat').disabled=true;$('#umName').value=u.NAME||'';$('#umLevel').value=String(u.LEVEL??2);$('#umPass').value='';$('#umPassHint').textContent='(opcional; em branco mantém a senha atual)';$('#umSalva').textContent='Salvar alterações';$('#umMsg').hidden=true;return}
+  const del=e.target.closest('[data-user-del]');if(del){if(AUTH.user!==ADMIN_USER)return;const mat=normMat(del.dataset.userDel);if(!confirm(`Apagar o usuário ${mat}? Esta ação não pode ser desfeita.`))return;try{const r=await fetch(`${URL_SB}/rest/v1/ABS_USER?USER=eq.${encodeURIComponent(mat)}`,{method:'DELETE',headers:{...headers(),Prefer:'return=minimal'},cache:'no-store'});if(!r.ok)throw Error(await detalhe(r));usuariosAbs=usuariosAbs.filter(u=>normMat(u.USER)!==mat);renderUsuarios();umMsg(`Usuário ${mat} apagado.`, 'ok')}catch(x){umMsg('Falha ao apagar: '+(x.message||x),'err')}}
+});
 $('#umSalva').onclick=async()=>{
-  const btn=$('#umSalva');if(btn.disabled)return;
-  if(AUTH.user!==ADMIN_USER){umMsg('Apenas o usuário '+ADMIN_USER+' pode cadastrar usuários.','err');return}
-  const mat=normMat($('#umMat').value),s1=$('#umPass').value,s2=$('#umPass2').value;
-  if(!/^\d+$/.test(mat)){umMsg('Informe a matrícula (somente números).','err');return}
-  const nome=norm($('#umName').value);if(!nome){umMsg('Informe o nome (NAME).','err');return}
-  if(s1.length<4){umMsg('A senha deve ter ao menos 4 caracteres.','err');return}
-  if(s1!==s2){umMsg('As senhas não conferem.','err');return}
-  btn.disabled=true;btn.innerHTML='<span class="jm-loading"></span>Cadastrando…';
-  try{
-    const u=new URL(`${URL_SB}/rest/v1/ABS_USER`);u.searchParams.set('select','USER');u.searchParams.set('USER','eq.'+mat);u.searchParams.set('limit','1');
-    const rc=await fetch(u,{headers:headers(),cache:'no-store'});if(!rc.ok)throw Error(await detalhe(rc));
-    const jc=await rc.json();if(Array.isArray(jc)&&jc.length){umMsg('A matrícula '+mat+' já está cadastrada.','err');return}
-    const r=await fetch(`${URL_SB}/rest/v1/ABS_USER`,{method:'POST',headers:{...headers(),Prefer:'return=minimal','Content-Type':'application/json'},body:JSON.stringify([{USER:mat,PASS:s1,NAME:nome,LEVEL:Number($('#umLevel').value)}]),cache:'no-store'});
-    if(!r.ok)throw Error(await detalhe(r));
-    umMsg('✔ Usuário '+mat+' cadastrado. Pode cadastrar o próximo.','ok');
-    ['#umMat','#umName','#umPass','#umPass2'].forEach(s=>$(s).value='');$('#umLevel').value='2';$('#umMat').focus();
-  }catch(e){umMsg('Falha ao cadastrar: '+(e.message||e),'err')}
-  finally{btn.disabled=false;btn.textContent='Cadastrar'}
+  const btn=$('#umSalva');if(btn.disabled)return;if(AUTH.user!==ADMIN_USER){umMsg('Apenas o usuário '+ADMIN_USER+' pode gerenciar usuários.','err');return}
+  const mat=normMat($('#umMat').value),nome=norm($('#umName').value),pass=$('#umPass').value,nivel=Number($('#umLevel').value);
+  if(!/^\d+$/.test(mat)){umMsg('Informe uma matrícula somente com números.','err');return}if(!nome){umMsg('Informe o nome.','err');return}if(![1,2,3].includes(nivel)){umMsg('Nível inválido.','err');return}
+  if(!usuarioEditando&&pass.length<4){umMsg('A senha deve ter ao menos 4 caracteres.','err');return}if(pass&&pass.length<4){umMsg('A senha deve ter ao menos 4 caracteres.','err');return}
+  btn.disabled=true;btn.innerHTML='<span class="jm-loading"></span>Salvando…';
+  try{let r;if(usuarioEditando){const data={NAME:nome,LEVEL:nivel};if(pass)data.PASS=pass;r=await fetch(`${URL_SB}/rest/v1/ABS_USER?USER=eq.${encodeURIComponent(usuarioEditando)}`,{method:'PATCH',headers:{...headers(),Prefer:'return=representation','Content-Type':'application/json'},body:JSON.stringify(data),cache:'no-store'});if(!r.ok)throw Error(await detalhe(r));const j=await r.json();if(!Array.isArray(j)||!j.length)throw Error('Nenhuma linha atualizada; verifique as permissões.');umMsg(`Usuário ${mat} atualizado.`, 'ok')}
+  else{if(usuariosAbs.some(u=>normMat(u.USER)===mat)){umMsg(`A matrícula ${mat} já está cadastrada.`, 'err');return}r=await fetch(`${URL_SB}/rest/v1/ABS_USER`,{method:'POST',headers:{...headers(),Prefer:'return=minimal','Content-Type':'application/json'},body:JSON.stringify([{USER:mat,PASS:pass,NAME:nome,LEVEL:nivel}]),cache:'no-store'});if(!r.ok)throw Error(await detalhe(r));umMsg(`Usuário ${mat} cadastrado.`, 'ok')}
+    const sucesso=usuarioEditando?`Usuário ${mat} atualizado.`:`Usuário ${mat} cadastrado.`;await carregaUsuarios();resetUserForm();umMsg(sucesso,'ok');
+  }catch(e){umMsg('Falha ao salvar: '+(e.message||e),'err')}finally{btn.disabled=false;btn.textContent=usuarioEditando?'Salvar alterações':'Cadastrar usuário'}
 };
+/* Alteração de senha pelo próprio usuário autenticado */
+const pwMsg=(t,c)=>{const m=$('#pwMsg');m.className='jm-msg '+c;m.textContent=t;m.hidden=false};
+$('#passBtn').onclick=()=>{$('#pwAtual').value='';$('#pwNova').value='';$('#pwConfirma').value='';$('#pwMsg').hidden=true;$('#pw').hidden=false};
+const fechaPw=()=>{$('#pw').hidden=true};$('#pwFecha').onclick=fechaPw;$('#pwCancel').onclick=fechaPw;
+$('#pwSalva').onclick=async()=>{const b=$('#pwSalva');if(b.disabled)return;const atual=$('#pwAtual').value,nova=$('#pwNova').value,conf=$('#pwConfirma').value;if(!AUTH.ok||!AUTH.user){pwMsg('Sessão não identificada; entre novamente.','err');return}if(nova.length<4){pwMsg('A nova senha deve ter ao menos 4 caracteres.','err');return}if(nova!==conf){pwMsg('A confirmação não confere.','err');return}if(nova===atual){pwMsg('A nova senha deve ser diferente da atual.','err');return}b.disabled=true;b.innerHTML='<span class="jm-loading"></span>Salvando…';try{if(!await checaLogin(AUTH.user,atual)){pwMsg('A senha atual está incorreta.','err');return}const r=await fetch(`${URL_SB}/rest/v1/ABS_USER?USER=eq.${encodeURIComponent(AUTH.user)}`,{method:'PATCH',headers:{...headers(),Prefer:'return=representation','Content-Type':'application/json'},body:JSON.stringify({PASS:nova}),cache:'no-store'});if(!r.ok)throw Error(await detalhe(r));const j=await r.json();if(!Array.isArray(j)||!j.length)throw Error('Nenhuma linha foi atualizada.');pwMsg('Senha alterada com sucesso.','ok');$('#pwAtual').value='';$('#pwNova').value='';$('#pwConfirma').value=''}catch(e){pwMsg('Falha ao alterar senha: '+(e.message||e),'err')}finally{b.disabled=false;b.textContent='Salvar nova senha'}};
 /* meu quadro: visão de ABS e acompanhamento */
 function mqCelulaAbs(p){
   const hi=p.pct!=null&&p.pct>8?' mq-hi':'',pct=p.pct==null?'—':pc.format(p.pct)+'%';
@@ -1730,8 +1823,8 @@ $('#exGo').onclick=async()=>{
   }catch(e){exMsg('Falha: '+(e.message||e),'err')}
   finally{btn.disabled=false}
 };
-document.addEventListener('click',e=>{if(e.target.id==='um')fechaUm();if(e.target.id==='ex')fechaEx();if(e.target.id==='ac')fechaAc()});
-document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(!$('#um').hidden)fechaUm();else if(!$('#ex').hidden)fechaEx();else if(!$('#ac').hidden&&$('#jm').hidden&&$('#gm').hidden)fechaAc()});
+document.addEventListener('click',e=>{if(e.target.id==='um')fechaUm();if(e.target.id==='ex')fechaEx();if(e.target.id==='ac')fechaAc();if(e.target.id==='pw')fechaPw();if(e.target.id==='heatPeople')fechaHeatPeople();if(e.target.id==='ng')fechaNoGestor()});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(!$('#um').hidden)fechaUm();else if(!$('#ex').hidden)fechaEx();else if(!$('#ac').hidden&&$('#jm').hidden&&$('#gm').hidden)fechaAc();else if(!$('#pw').hidden)fechaPw();else if(!$('#heatPeople').hidden)fechaHeatPeople();else if(!$('#ng').hidden)fechaNoGestor()});
 
 /* ---------- eventos ---------- */
 function ligar(){
@@ -1766,6 +1859,7 @@ function ligar(){
       pessoas:['Pessoas','Busca por nome ou matrícula, calendário individual e matriz por dia com destaque de linha e coluna.']}[b.dataset.view];
     $('#viewTitle').textContent=t[0];$('#viewSub').textContent=t[1];render()};
   const aoClicar=e=>{
+    const hd=e.target.closest('[data-act="heatdetail"]');if(hd){const rows=heatDetailStore.get(`gestor|${hd.dataset.grupo}|${hd.dataset.day}`)||[];$('#heatPeopleTitle').textContent=`${rows.length} colaborador(es) ausente(s)`;$('#heatPeopleSub').textContent=`${hd.dataset.grupo} · ${brData(hd.dataset.day)}`;$('#heatPeopleRows').innerHTML=rows.map(p=>`<tr><td>${esc(p.matricula)}</td><td>${esc(p.nome)}</td><td>${esc(p.cargo)}</td></tr>`).join('')||'<tr><td colspan="3">Nenhum colaborador listado.</td></tr>';$('#heatPeople').hidden=false;return}
     const pr=e.target.closest('[data-act="par"]');if(pr){const s=PAR[pr.dataset.d],v=pr.dataset.v;
       if(e.ctrlKey||e.metaKey){s.has(v)?s.delete(v):s.add(v)}
       else if(s.size===1&&s.has(v))s.clear();
@@ -1995,9 +2089,9 @@ function preencherFiltros(){
   $('#motivosBtn').textContent=mf.length===MOTIVOS.length?'Todos os motivos':mf.length?mf.join(', '):'Nenhum motivo';
 }
 
-const AUTH={ok:false};
+const AUTH={ok:false,user:''};
 try{AUTH.ok=sessionStorage.getItem('abs-auth')==='1';AUTH.user=sessionStorage.getItem('abs-user')||''}catch{}
-function aplicaAuth(){$('#usrBtn').hidden=!(AUTH.ok&&AUTH.user==='5520967');const vd=$('#lgVideo');if(!AUTH.ok)iniciaVideoLogin();if(vd&&vd.src){AUTH.ok?vd.pause():vd.play().catch(()=>{})}$('#lg').hidden=AUTH.ok;ldToggle(state.carregando);if(!AUTH.ok)setTimeout(()=>$('#lgUser').focus(),30)}
+function aplicaAuth(){$('#usrBtn').hidden=!(AUTH.ok&&AUTH.user==='5520967');$('#passBtn').hidden=!AUTH.ok;state.gestor=AUTH.ok?normMat(AUTH.user):'';const vd=$('#lgVideo');if(!AUTH.ok)iniciaVideoLogin();if(vd&&vd.src){AUTH.ok?vd.pause():vd.play().catch(()=>{})}$('#lg').hidden=AUTH.ok;ldToggle(state.carregando);if(!AUTH.ok)setTimeout(()=>$('#lgUser').focus(),30)}
 async function checaLogin(mat,senha){
   for(const m of new Set([mat,normMat(mat)])){
     const u=new URL(`${URL_SB}/rest/v1/ABS_USER`);
