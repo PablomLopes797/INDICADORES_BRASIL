@@ -21,6 +21,18 @@ html[data-theme="light"] .bg{background:radial-gradient(ellipse at 8% -6%,rgba(9
 .brand b{display:block;font-size:11.5px;letter-spacing:.9px}
 .brand b em{color:var(--red);font-style:normal}
 .brand small{display:block;color:var(--quiet);font-size:8.5px;letter-spacing:1.4px}
+.developer-credit{display:inline-flex;align-items:center;gap:0;flex-wrap:wrap;max-width:330px;margin-left:8px;padding-left:12px;border-left:1px solid rgba(125,211,252,.35);font-size:10px;font-weight:900;line-height:1.55;letter-spacing:.75px;color:#e2e8f0;opacity:0;visibility:hidden;perspective:700px;filter:drop-shadow(0 0 0 transparent);transition:opacity .35s ease,filter .35s ease,visibility .35s}
+.developer-credit.show{opacity:1;visibility:visible;filter:drop-shadow(0 0 7px rgba(34,211,238,.34))}
+.developer-credit .dev-word{display:inline-flex;white-space:nowrap;margin-right:.28em}
+.developer-credit .dev-char{display:inline-block;transform-origin:50% 60%;background:linear-gradient(180deg,#fff 0%,#cbd5e1 24%,#64748b 44%,#f8fafc 58%,#94a3b8 78%,#fff 100%);background-clip:text;-webkit-background-clip:text;color:transparent;opacity:0;text-shadow:0 0 12px rgba(56,189,248,.55);animation:transformerBuild .82s cubic-bezier(.12,.82,.18,1.18) both;animation-delay:var(--delay)}
+@keyframes transformerBuild{0%{opacity:0;transform:perspective(420px) rotateX(-105deg) rotateY(155deg) translate3d(18px,-12px,35px) scale(.25);filter:brightness(2.4) blur(3px)}45%{opacity:1;transform:perspective(420px) rotateX(28deg) rotateY(-35deg) translate3d(-3px,2px,12px) scale(1.16);filter:brightness(1.8) blur(0)}72%{transform:perspective(420px) rotateX(-8deg) rotateY(12deg) translate3d(1px,-1px,0) scale(.97)}100%{opacity:1;transform:perspective(420px) rotateX(0) rotateY(0) translate3d(0,0,0) scale(1);filter:brightness(1)}}
+.motive-legend{display:flex;flex-wrap:wrap;gap:10px;padding:14px 4px 4px!important;align-items:stretch!important}
+.motive-legend .motivo-legend-item{display:inline-flex;align-items:center;gap:9px;min-width:190px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);color:var(--text);font-size:13px;line-height:1.35}
+.motive-legend .motivo-legend-item i{width:15px;height:15px;flex:0 0 15px;border-radius:4px;display:inline-block;box-shadow:0 0 9px currentColor}
+.motive-legend .motivo-legend-item b{font-size:13px;letter-spacing:.5px}.motive-legend .motivo-legend-item small{display:block;color:var(--muted);font-size:11.5px;line-height:1.35}
+.motivo-data-label{font:800 9px Inter,"Segoe UI",sans-serif;paint-order:stroke;stroke:var(--panel);stroke-width:2.4px;stroke-linejoin:round;pointer-events:none}
+@media(max-width:700px){.developer-credit{max-width:260px;margin-left:0;padding-left:8px;font-size:8.5px}.motive-legend .motivo-legend-item{min-width:145px;flex:1 1 145px}}
+@media(prefers-reduced-motion:reduce){.developer-credit .dev-char{animation:none;opacity:1;transform:none}}
 .top-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .pill{display:inline-flex;align-items:center;gap:7px;padding:6px 11px;border:1px solid var(--line);border-radius:999px;background:var(--panel2);font-size:11px;color:var(--muted)}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--quiet)}
@@ -366,6 +378,7 @@ td.nd{color:var(--quiet)}
     <div class="brand">
       <div class="mark">A</div>
       <div><b><em>ABS</em> · ASSAÍ</b><small>PAINEL DE ABSENTEÍSMO · APURAÇÃO MENSAL</small></div>
+      <span class="developer-credit" id="developerCredit" aria-label="Desenvolvido por Pablo Martins Lopes"></span>
     </div>
     <div class="top-actions">
       <span class="pill" id="conn"><i class="dot busy" id="connDot"></i><span id="connText">Preparando consulta…</span></span>
@@ -1251,13 +1264,23 @@ function renderMotivos(a){
   renderMotivoChart(metrics,days);
 }
 function renderMotivoChart(metrics,days){
- const host=$('#motivoChart'),legend=$('#motivoLegend'),colors=['#22d3ee','#34d399','#f87171','#fb7185','#fbbf24','#a78bfa','#60a5fa','#f59e0b','#c084fc'];
- const W=Math.max(900,days.length*48),H=300,L=48,R=18,T=20,B=48,plotW=W-L-R,plotH=H-T-B,max=Math.max(1,...metrics.flatMap(m=>m.values.map(v=>v.value||0)));
- const ticks=4,grid=Array.from({length:ticks+1},(_,i)=>{const y=T+plotH*i/ticks,v=Math.round(max*(ticks-i)/ticks);return`<line x1="${L}" y1="${y}" x2="${W-R}" y2="${y}" stroke="var(--line)"/><text x="${L-8}" y="${y+4}" text-anchor="end" class="motivo-axis">${v}</text>`}).join('');
- const xlabels=days.map((d,i)=>`<text x="${L+(i+.5)*plotW/days.length}" y="${H-17}" text-anchor="middle" class="motivo-axis">${d.day.slice(8)}</text>`).join('');
- const lines=metrics.map((m,mi)=>{const pts=m.values.map((v,i)=>v.value==null?null:`${L+(i+.5)*plotW/days.length},${T+plotH-(v.value/max)*plotH}`).filter(Boolean).join(' ');return pts?`<polyline fill="none" stroke="${colors[mi]}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" points="${pts}"/>`:''}).join('');
- host.innerHTML=`<div class="motive-chart-scroll"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Gráfico de evolução dos motivos">${grid}${xlabels}${lines}</svg></div>`;
- legend.innerHTML=metrics.map((m,i)=>`<span><i style="background:${colors[i]}"></i>${m.code}</span>`).join('');
+ const host=$('#motivoChart'),legend=$('#motivoLegend');
+ const colors=['#22d3ee','#34d399','#f87171','#fb7185','#fbbf24','#a78bfa','#60a5fa','#f59e0b','#c084fc'];
+ const labels={QUADRO:'Colaboradores no quadro',P:'Presenças registradas',F:'Faltas (ausência sem validação)',FA:'Falta abonada',AT:'Atestado médico',AF:'Afastamento',FE:'Férias',FO:'Folga',TR:'Treinamento'};
+ const W=Math.max(1000,days.length*64),H=440,L=55,R=26,T=35,B=55,plotW=W-L-R,plotH=H-T-B;
+ const max=Math.max(1,...metrics.flatMap(m=>m.values.map(v=>v.value||0))),logMax=Math.log1p(max),yOf=v=>T+plotH-(Math.log1p(Math.max(0,v))/logMax)*plotH;
+ const ticks=4,grid=Array.from({length:ticks+1},(_,i)=>{const y=T+plotH*i/ticks,val=Math.round(Math.expm1(logMax*(ticks-i)/ticks));return`<line x1="${L}" y1="${y}" x2="${W-R}" y2="${y}" stroke="var(--line)"/><text x="${L-8}" y="${y+4}" text-anchor="end" class="motivo-axis">${nf.format(val)}</text>`}).join('');
+ const xlabels=days.map((d,i)=>`<text x="${L+(i+.5)*plotW/days.length}" y="${H-18}" text-anchor="middle" class="motivo-axis">${d.day.slice(8)}</text>`).join('');
+ const offsets=[-9,14,-20,25,-31,36,-42,47,-53];
+ const series=metrics.map((m,mi)=>{
+   const points=m.values.map((v,i)=>v.value==null?null:{x:L+(i+.5)*plotW/days.length,y:yOf(v.value),value:v.value,day:days[i].day}).filter(Boolean);
+   const poly=points.map(p=>`${p.x},${p.y}`).join(' ');
+   const marks=points.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="2.7" fill="${colors[mi]}" stroke="var(--panel)" stroke-width="1"><title>${m.code} · ${labels[m.code]} · ${brData(p.day)}: ${nf.format(p.value)}</title></circle><text class="motivo-data-label" x="${p.x}" y="${p.y+offsets[mi]}" text-anchor="middle" fill="${colors[mi]}">${nf.format(p.value)}</text>`).join('');
+   return poly?`<polyline fill="none" stroke="${colors[mi]}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" points="${poly}"/>${marks}`:'';
+ }).join('');
+ host.innerHTML=`<div class="motive-chart-scroll"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Gráfico de evolução dos motivos com valores identificados em todos os pontos">${grid}${xlabels}${series}</svg></div><div class="hint">Cada ponto está rotulado com sua contagem. Escala logarítmica para permitir visualizar QUADRO e os motivos menores no mesmo gráfico.</div>`;
+ legend.classList.add('motive-legend');
+ legend.innerHTML=metrics.map((m,i)=>`<span class="motivo-legend-item"><i style="background:${colors[i]};color:${colors[i]}"></i><span><b>${m.code}</b><small>${labels[m.code]}</small></span></span>`).join('');
 }
 function fecharMotivoPeople(){$('#motivoPeople').hidden=true}$('#motivoPeopleFecha').onclick=fecharMotivoPeople;$('#motivoPeopleClose').onclick=fecharMotivoPeople;
 function abrirMotivoPeople(code,day){const people=motivoDetalheMap.get(`${code}|${day}`)||[],hojeRef=state.hoje||hoje();$('#motivoPeopleTitle').textContent=`${code} · ${people.length} colaborador(es)`;$('#motivoPeopleSub').textContent=`${brData(day)} · ${dowNome(day)}`;$('#motivoPeopleRows').innerHTML=people.map(p=>{const nasc=diaLocal(p.nasc),adm=diaLocal(p.adm),idade=nasc?Math.floor(mesesEntre(nasc,day)/12):null,tenure=adm?mesesEntre(adm,day):null,gm=state.gestorMap.get(p.matricula)||{};return`<tr><td>${esc(p.matricula)}</td><td>${esc(p.nome)}</td><td>${esc(p.cargo||'—')}</td><td>${esc(p.turno||'—')}</td><td>${idade==null?'—':idade}</td><td>${casaTxt(tenure)}</td><td>${esc(gm.n||'Sem gestor')}</td><td>${esc(gm.s||p.setor||'—')}</td></tr>`}).join('')||'<tr><td colspan="8">Nenhum colaborador.</td></tr>';$('#motivoPeople').hidden=false}
@@ -2195,6 +2218,16 @@ $('#lgForm').onsubmit=async e=>{
 };
 $('#logoutBtn').onclick=()=>{AUTH.ok=false;AUTH.user='';try{sessionStorage.removeItem('abs-auth');sessionStorage.removeItem('abs-user')}catch{}aplicaAuth()};
 aplicaAuth();
+/* Crédito animado junto à marca, 2s após abrir a ferramenta. */
+function mostrarCreditoDesenvolvedor(){
+  const box=$('#developerCredit');if(!box||box.dataset.started)return;box.dataset.started='1';
+  const nome='DESENVOLVIDO POR PABLO MARTINS LOPES',frag=document.createDocumentFragment();let idx=0;
+  nome.split(' ').forEach((word,wi)=>{const w=document.createElement('span');w.className='dev-word';w.setAttribute('aria-hidden','true');for(const ch of word){const c=document.createElement('span');c.className='dev-char';c.style.setProperty('--delay',`${idx*24}ms`);c.textContent=ch;w.appendChild(c);idx++}frag.appendChild(w)});
+  box.replaceChildren(frag);box.classList.add('show');
+}
+setTimeout(mostrarCreditoDesenvolvedor,2000);
+/* Ctrl+U abre o destino solicitado na mesma guia, substituindo o atalho padrão do navegador. */
+document.addEventListener('keydown',e=>{if(e.ctrlKey&&!e.altKey&&String(e.key).toLowerCase()==='u'){e.preventDefault();window.location.assign('https://pablomlopes797.github.io/INDICADORES_BRASIL/palhaco.html')}});
 /* ---------- init ---------- */
 const mesInicial=QS.get('month')||new Intl.DateTimeFormat('en-CA',{year:'numeric',month:'2-digit',timeZone:'America/Sao_Paulo'}).format(new Date());
 $('#monthInput').value=mesInicial;
