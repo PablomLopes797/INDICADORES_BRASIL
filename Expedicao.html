@@ -478,11 +478,11 @@ body.light .toast{background:linear-gradient(160deg,rgba(255,255,255,.98),rgba(2
 .spinner{width:52px;height:52px;border-radius:50%;border:3px solid rgba(34,211,238,.18);border-top-color:var(--cyan);border-right-color:var(--blue);animation:spin .8s linear infinite;box-shadow:0 0 40px -8px rgba(139,92,246,.8)}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* Buraco negro em tela cheia: somente no tema noturno */
+/* Buraco negro em tela cheia: tema claro e noturno */
 .black-hole{display:none;position:fixed;inset:0;z-index:2;pointer-events:none;overflow:hidden;isolation:isolate}
 body:not(.light) .black-hole{display:block}
 body:not(.light) .spinner{display:none}
-body.light .black-hole{display:none}
+body.light .black-hole{display:block}
 
 /* Campo espacial ocupa a tela inteira; os objetos convergem para o centro */
 .loader{background:rgba(2,3,12,.94)}
