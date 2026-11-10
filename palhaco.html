@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>🤡 Olha você aí</title>
+<style>
+:root{box-sizing:border-box;--bg1:#ffe14d;--bg2:#ff3b6b;--ink:#1b1233;}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;overflow:hidden;background:var(--ink);font-family:"Comic Sans MS","Chalkboard SE","Marker Felt",cursive,sans-serif;user-select:none}
+#stage{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+ background:repeating-conic-gradient(var(--bg1) 0 10deg,var(--bg2) 10deg 20deg);animation:spin 40s linear infinite}
+@keyframes spin{to{filter:hue-rotate(360deg)}}
+#clown{height:78vh;max-width:96vw;aspect-ratio:1/1.1;cursor:pointer;animation:bob .5s ease-in-out infinite alternate}
+@keyframes bob{from{transform:rotate(-3deg) translateY(0)}to{transform:rotate(3deg) translateY(-1.5vh)}}
+#mouth{transform-origin:200px 300px;animation:laugh .25s ease-in-out infinite alternate}
+@keyframes laugh{from{transform:scaleY(.55)}to{transform:scaleY(1.1)}}
+.tear{animation:tear 1s ease-in infinite}
+@keyframes tear{from{transform:translateY(0);opacity:1}to{transform:translateY(40px);opacity:0}}
+#bubble{position:fixed;top:3vh;left:50%;transform:translateX(-50%);background:#fff;color:var(--ink);border:.6vh solid var(--ink);
+ border-radius:3vh;padding:1.6vh 3vw;font-size:clamp(20px,5vh,56px);font-weight:900;text-align:center;max-width:94vw;
+ box-shadow:1vh 1vh 0 var(--ink);z-index:5}
+#bubble::after{content:"";position:absolute;bottom:-2.6vh;left:50%;border:1.3vh solid transparent;border-top:2.6vh solid var(--ink)}
+#hint{position:fixed;bottom:2vh;left:0;right:0;text-align:center;color:#fff;font-size:clamp(14px,2.4vh,24px);text-shadow:0 2px 0 var(--ink);z-index:5}
+.pop{position:fixed;font-size:6vh;pointer-events:none;animation:up 1.4s ease-out forwards;z-index:4}
+@keyframes up{to{transform:translateY(-30vh) rotate(40deg);opacity:0}}
+#enter{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;text-align:center;padding:5vw;
+ background:var(--ink);color:#ffe14d;font-size:clamp(28px,8vh,90px);font-weight:900;cursor:pointer;animation:pulse .8s ease-in-out infinite alternate}
+@keyframes pulse{from{transform:scale(1)}to{transform:scale(1.06)}}
+#enter.gone{display:none}
+@media (prefers-reduced-motion:reduce){#stage,#clown,#mouth,.tear{animation:none}}
+</style>
+</head>
+<body>
+<audio id="bgm" loop preload="auto" src="Diovane_Severo_Feat._Igor_Ferrari-_Vai_Matar_Papai_(Clipe_Oficial)_MP3_320kbps.mp3.mpeg"></audio>
+<div id="enter" role="button" tabindex="0">🤡 CLIQUE PRA ENTRAR 🤡</div>
+<div id="stage">
+  <div id="bubble">Olha só quem apareceu... 🤡</div>
+  <svg id="clown" viewBox="0 0 400 440" aria-label="Palhaço debochando">
+    <!-- cabelo -->
+    <circle cx="70" cy="120" r="62" fill="#ff7a00"/><circle cx="330" cy="120" r="62" fill="#ff7a00"/>
+    <circle cx="40" cy="190" r="42" fill="#ff7a00"/><circle cx="360" cy="190" r="42" fill="#ff7a00"/>
+    <!-- chapéu -->
+    <polygon points="200,-10 130,90 270,90" fill="#6a2cff"/>
+    <circle cx="200" cy="-8" r="16" fill="#ffe14d"/>
+    <!-- rosto -->
+    <ellipse cx="200" cy="220" rx="140" ry="160" fill="#fff6ea" stroke="#1b1233" stroke-width="6"/>
+    <!-- bochechas -->
+    <circle cx="105" cy="260" r="26" fill="#ff5d7a" opacity=".6"/><circle cx="295" cy="260" r="26" fill="#ff5d7a" opacity=".6"/>
+    <!-- olhos -->
+    <path d="M85 150 Q125 90 170 150 Q125 125 85 150Z" fill="#2ad4ff" stroke="#1b1233" stroke-width="5"/>
+    <path d="M230 150 Q275 90 315 150 Q275 125 230 150Z" fill="#2ad4ff" stroke="#1b1233" stroke-width="5"/>
+    <g id="eyes">
+      <circle class="pupil" cx="130" cy="140" r="12" fill="#1b1233"/><circle class="pupil" cx="272" cy="140" r="12" fill="#1b1233"/>
+    </g>
+    <!-- sobrancelhas -->
+    <path d="M80 112 Q125 70 175 100" stroke="#1b1233" stroke-width="9" fill="none" stroke-linecap="round"/>
+    <path d="M225 100 Q275 70 320 112" stroke="#1b1233" stroke-width="9" fill="none" stroke-linecap="round"/>
+    <!-- lágrimas de rir -->
+    <ellipse class="tear" cx="82" cy="175" rx="8" ry="13" fill="#2ad4ff"/>
+    <ellipse class="tear" cx="320" cy="175" rx="8" ry="13" fill="#2ad4ff" style="animation-delay:.5s"/>
+    <!-- nariz -->
+    <circle cx="200" cy="220" r="34" fill="#ff1f4b" stroke="#1b1233" stroke-width="5"/>
+    <circle cx="188" cy="208" r="9" fill="#fff" opacity=".7"/>
+    <!-- boca -->
+    <g id="mouth">
+      <path d="M95 290 Q200 440 305 290 Q200 320 95 290Z" fill="#7a0019" stroke="#1b1233" stroke-width="6"/>
+      <path d="M150 335 Q200 400 250 335 Q200 365 150 335Z" fill="#ff7a8f"/>
+      <rect x="165" y="300" width="32" height="26" rx="5" fill="#fff"/><rect x="203" y="300" width="32" height="26" rx="5" fill="#fff"/>
+    </g>
+    <!-- língua pra fora -->
+    <ellipse cx="200" cy="415" rx="0" ry="0" fill="#ff7a8f"/>
+  </svg>
+  <div id="hint">Clica no palhaço. Vai, clica. 😏</div>
+</div>
+<script>
+(function(){
+  var frases=[
+    "Olha só quem apareceu... 🤡",
+    "HAHAHA! Você ainda está aí?",
+    "Sério que você abriu isso?",
+    "Tá com tempo livre, hein?",
+    "Tá olhando o quê? Parece que viu um palhaço!",
+    "Ai ai ai... que figura!",
+    "Eu faço rir por profissão. Você faz de graça!",
+    "Clicou de novo? Previsível.",
+    "Nem eu consigo ser tão engraçado quanto você.",
+    "Fecha essa aba e vai trabalhar! HAHAHA",
+    "Você sabia que isso ia acontecer, né?",
+    "Tá rindo? Eu que tô rindo de você!"
+  ];
+  var emojis=["🤣","😂","🤡","🎈","👉","😜","🎪"];
+  var b=document.getElementById("bubble"),c=document.getElementById("clown"),i=0;
+  var pupils=document.querySelectorAll(".pupil");
+  function say(t){b.textContent=t}
+  function pop(x,y){
+    var s=document.createElement("div");s.className="pop";
+    s.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+    s.style.left=x+"px";s.style.top=y+"px";document.body.appendChild(s);
+    setTimeout(function(){s.remove()},1400);
+  }
+  function next(e){
+    i=(i+1)%frases.length;say(frases[i]);
+    var x=e&&e.clientX?e.clientX:innerWidth/2,y=e&&e.clientY?e.clientY:innerHeight/2;
+    for(var k=0;k<5;k++)pop(x+(Math.random()-.5)*160,y+(Math.random()-.5)*80);
+    try{
+      var A=window.AudioContext||window.webkitAudioContext;if(!A)return;
+      var a=new A(),o=a.createOscillator(),g=a.createGain();
+      o.type="square";o.frequency.setValueAtTime(500,a.currentTime);
+      for(var n=0;n<5;n++)o.frequency.setValueAtTime(380+(n%2)*180,a.currentTime+n*.09);
+      g.gain.setValueAtTime(.08,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.5);
+      o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+.5);
+    }catch(_){}
+  }
+  var bgm=document.getElementById("bgm"),enter=document.getElementById("enter");
+  bgm.volume=.8;
+  function start(){
+    enter.classList.add("gone");
+    var p=bgm.play();if(p&&p.catch)p.catch(function(){});
+  }
+  enter.addEventListener("click",start);
+  enter.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" ")start()});
+  c.addEventListener("click",next);
+  setInterval(function(){next(null)},4500);
+  document.addEventListener("mousemove",function(e){
+    var r=c.getBoundingClientRect(),sx=r.width/400;
+    pupils.forEach(function(p,idx){
+      var cx=r.left+(idx?272:130)*sx,cy=r.top+140*sx;
+      var dx=e.clientX-cx,dy=e.clientY-cy,d=Math.hypot(dx,dy)||1,m=Math.min(10,d/20);
+      p.setAttribute("transform","translate("+(dx/d*m)+","+(dy/d*m)+")");
+    });
+  });
+})();
+</script>
+</body>
+</html>
