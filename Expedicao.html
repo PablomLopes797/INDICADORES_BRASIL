@@ -474,9 +474,65 @@ body.light .toast{background:linear-gradient(160deg,rgba(255,255,255,.98),rgba(2
 .toast small{display:block;color:var(--muted);font-weight:500;margin-top:2px;font-size:11px}
 .loader{position:fixed;inset:0;background:var(--overlay);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);display:none;align-items:center;justify-content:center;z-index:500;flex-direction:column;gap:18px}
 .loader.show{display:flex}
+/* Loader original preservado para o tema claro */
 .spinner{width:52px;height:52px;border-radius:50%;border:3px solid rgba(34,211,238,.18);border-top-color:var(--cyan);border-right-color:var(--blue);animation:spin .8s linear infinite;box-shadow:0 0 40px -8px rgba(139,92,246,.8)}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* Buraco negro em tela cheia: somente no tema noturno */
+.black-hole{display:none;position:fixed;inset:0;z-index:2;pointer-events:none;overflow:hidden;isolation:isolate}
+body:not(.light) .black-hole{display:block}
+body:not(.light) .spinner{display:none}
+body.light .black-hole{display:none}
+
+/* Campo espacial ocupa a tela inteira; os objetos convergem para o centro */
+.loader{background:rgba(2,3,12,.94)}
+body:not(.light) .loader{backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.black-hole::before{content:"";position:absolute;inset:0;background:
+ radial-gradient(ellipse at 50% 50%,rgba(31,22,62,.24),transparent 34%),
+ radial-gradient(circle at 15% 22%,rgba(36,76,120,.12),transparent 28%),
+ radial-gradient(circle at 84% 78%,rgba(100,38,116,.12),transparent 30%),
+ radial-gradient(#ffffff70 .7px,transparent 1px);
+ background-size:auto,auto,auto,83px 83px;opacity:.7}
+.black-hole::after{content:"";position:absolute;left:50%;top:50%;width:min(76vw,760px);height:min(76vw,760px);transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,transparent 0 13%,rgba(85,54,150,.035) 14%,transparent 42%);box-shadow:0 0 100px rgba(83,55,160,.08);animation:spaceWarp 5s ease-in-out infinite alternate}
+
+/* Horizonte de eventos, lente gravitacional e disco de acreção */
+.bh-center{position:fixed;z-index:5;left:50%;top:50%;width:210px;height:210px;transform:translate(-50%,-50%)}
+.black-hole-core{position:absolute;z-index:6;left:50%;top:50%;width:88px;height:88px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 48% 45%,#000 0 58%,#020106 72%,#090512 100%);box-shadow:0 0 0 8px rgba(0,0,0,.95),0 0 22px 12px rgba(0,0,0,.98),0 0 52px 20px rgba(0,0,0,.95);animation:holePulse 3s ease-in-out infinite}
+.black-hole-core::before{content:"";position:absolute;inset:-13px;border-radius:50%;border:3px solid rgba(255,232,190,.8);filter:blur(2px);box-shadow:0 0 12px 4px rgba(255,170,90,.8),0 0 28px 8px rgba(139,92,246,.45);animation:lensRotate 8s linear infinite}
+.black-hole-core::after{content:"";position:absolute;inset:-25px;border-radius:50%;border:1px solid rgba(255,255,255,.25);filter:blur(5px);box-shadow:0 0 28px rgba(255,255,255,.12)}
+.black-hole-disk{position:absolute;z-index:4;left:50%;top:50%;width:205px;height:72px;transform:translate(-50%,-50%) rotate(-18deg);border-radius:50%;background:linear-gradient(180deg,transparent 28%,rgba(255,110,42,.08) 39%,rgba(255,194,112,.95) 47%,rgba(255,244,214,.95) 50%,rgba(123,75,255,.8) 55%,rgba(25,190,255,.18) 65%,transparent 75%);filter:blur(1px) drop-shadow(0 0 9px rgba(255,137,65,.95));animation:diskSpin 4s linear infinite}
+.black-hole-disk::before{content:"";position:absolute;inset:17px 4px;border-radius:50%;border-top:5px solid rgba(255,244,220,.95);border-bottom:3px solid rgba(130,91,255,.85);filter:blur(2px)}
+.black-hole-halo{position:absolute;z-index:3;inset:14px;border:2px solid rgba(255,224,181,.65);border-radius:50%;box-shadow:0 0 18px 5px rgba(255,174,93,.4),0 0 42px 10px rgba(111,77,255,.2);transform:scaleY(.36) rotate(-18deg);animation:haloPulse 3s ease-in-out infinite}
+.bh-streak{position:absolute;z-index:3;left:50%;top:50%;width:2px;height:95px;transform-origin:50% 0;background:linear-gradient(transparent,rgba(255,198,126,.85),transparent);filter:blur(1px);animation:streakOrbit 2.8s linear infinite}
+.bh-streak.s2{height:120px;animation-duration:3.7s;animation-delay:-1s;opacity:.7}
+.bh-streak.s3{height:80px;animation-duration:2.2s;animation-delay:-.5s;opacity:.6}
+
+/* Corpos espalhados pela viewport, atraídos para o horizonte de eventos */
+.bh-object{position:absolute;z-index:4;left:var(--x);top:var(--y);display:block;white-space:nowrap;transform-origin:center;animation:screenSuck var(--dur,3.8s) cubic-bezier(.45,.02,.9,.42) var(--delay,0s) infinite;will-change:transform,opacity;pointer-events:none}
+.bh-number{font:800 clamp(10px,1.15vw,16px) var(--mono);color:#b8eaff;text-shadow:0 0 5px #35bfff,0 0 13px #387cff;letter-spacing:1px}
+.bh-number.violet{color:#d7c4ff;text-shadow:0 0 6px #a78bfa,0 0 14px #7c3aed}
+.bh-planet{width:var(--size,22px);height:var(--size,22px);border-radius:50%;background:radial-gradient(circle at 28% 25%,#fff4c2 0 3%,#e8a65c 15%,#a84e35 52%,#21152f 78%);box-shadow:inset -5px -3px 8px #090613,0 0 13px rgba(239,146,83,.55)}
+.bh-planet.blue{background:radial-gradient(circle at 28% 25%,#d9f7ff 0 3%,#4ca8e8 22%,#17416e 65%,#080e27 82%);box-shadow:inset -5px -3px 8px #050918,0 0 13px rgba(67,160,255,.65)}
+.bh-planet.ringed::after{content:"";position:absolute;left:-35%;top:34%;width:170%;height:38%;border:2px solid rgba(226,205,170,.8);border-radius:50%;transform:rotate(-25deg);box-shadow:0 0 5px rgba(226,205,170,.5)}
+.bh-person{font-size:clamp(17px,2vw,27px);filter:drop-shadow(0 0 5px rgba(255,255,255,.35))}
+.bh-comet{width:5px;height:5px;border-radius:50%;background:#fff;box-shadow:0 0 9px 3px #7dd3fc,0 0 24px 6px rgba(59,130,246,.45)}
+.bh-comet::after{content:"";position:absolute;width:42px;height:2px;right:2px;top:1px;background:linear-gradient(90deg,transparent,#8bdcff);transform:rotate(-25deg);transform-origin:right}
+@keyframes screenSuck{
+ 0%{opacity:0;transform:translate(0,0) scale(1) rotate(0deg)}
+ 10%{opacity:1}
+ 58%{opacity:.95}
+ 82%{opacity:.75;transform:translate(calc(50vw - var(--x)),calc(50vh - var(--y))) scale(.42) rotate(210deg)}
+ 100%{opacity:0;transform:translate(calc(50vw - var(--x)),calc(50vh - var(--y))) scale(.015) rotate(420deg)}
+}
+@keyframes holePulse{0%,100%{box-shadow:0 0 0 8px rgba(0,0,0,.95),0 0 22px 12px #000,0 0 52px 20px #000}50%{box-shadow:0 0 0 10px #000,0 0 30px 16px #000,0 0 66px 25px #000}}
+@keyframes lensRotate{to{transform:rotate(360deg)}}
+@keyframes diskSpin{to{transform:translate(-50%,-50%) rotate(342deg)}}
+@keyframes haloPulse{50%{opacity:.45;filter:blur(2px);transform:scaleY(.43) rotate(-18deg)}}
+@keyframes streakOrbit{to{transform:rotate(360deg)}}
+@keyframes spaceWarp{to{transform:translate(-50%,-50%) scale(1.12);opacity:.55}}
+@media(prefers-reduced-motion:reduce){.black-hole *,.bh-object{animation-duration:8s!important}}
 .loader p{font-size:12px;color:var(--muted);font-weight:800;letter-spacing:1.2px;text-transform:uppercase}
+body:not(.light) .loader p{position:fixed;left:50%;top:calc(50% + 132px);transform:translateX(-50%);z-index:8;color:#dbeafe;text-shadow:0 0 12px rgba(96,165,250,.75);white-space:nowrap}
 .empty-state{padding:60px 24px;text-align:center;color:var(--muted)}
 .empty-state svg{width:46px;height:46px;stroke:var(--muted-2);fill:none;stroke-width:1.4;margin-bottom:14px}
 .empty-state h3{font-size:15px;color:var(--txt-2);margin-bottom:6px;font-weight:700}
@@ -633,7 +689,66 @@ table.exp-table .cell{
 .imp-sum div.er{border-color:rgba(239,68,68,.5);color:#fca5a5}
 .imp-sum span{font-family:var(--mono);color:var(--derived-txt)}
 </style>
-<style>.result-day-active{background:#2563eb!important;color:white!important}#clearResultDay[hidden]{display:none!important}#impOverlay{z-index:1100}</style></head>
+<style>.result-day-active{background:#2563eb!important;color:white!important}#clearResultDay[hidden]{display:none!important}#impOverlay{z-index:1100}</style>
+<style id="transformer-transition">
+/* TRANSFORMER SEQUENCE — montagem mecânica sci-fi; o buraco negro do loader permanece intacto */
+@keyframes mechPanelIn{
+  0%{opacity:0;transform:perspective(1200px) translateY(34px) rotateX(-13deg) scale(.965);filter:brightness(1.8) saturate(1.7);clip-path:inset(0 0 100% 0)}
+  38%{opacity:1;clip-path:inset(0 0 0 0);transform:perspective(1200px) translateY(-5px) rotateX(4deg) scale(1.012);filter:brightness(1.55) saturate(1.5)}
+  62%{transform:perspective(1200px) translateY(2px) rotateX(-1.5deg) scale(.997);filter:brightness(1.18)}
+  100%{opacity:1;transform:none;filter:none;clip-path:inset(0 0 0 0)}
+}
+@keyframes mechCardIn{
+  0%{opacity:0;transform:perspective(900px) translateY(24px) rotateY(-15deg) rotateX(10deg) scale(.88);filter:brightness(2) saturate(1.8);clip-path:inset(0 50% 0 50% round 16px)}
+  34%{opacity:1;clip-path:inset(0 0 0 0 round 16px);transform:perspective(900px) translateY(-4px) rotateY(5deg) rotateX(-3deg) scale(1.035);filter:brightness(1.65) saturate(1.7)}
+  58%{transform:perspective(900px) translateY(2px) rotateY(-1.5deg) scale(.99);filter:brightness(1.2)}
+  100%{opacity:1;transform:none;filter:none;clip-path:inset(0 0 0 0 round 16px)}
+}
+@keyframes mechRowIn{
+  0%{opacity:0;transform:perspective(700px) translateX(-24px) rotateY(-8deg);filter:brightness(2);clip-path:inset(0 100% 0 0)}
+  45%{opacity:1;transform:perspective(700px) translateX(3px) rotateY(2deg);filter:brightness(1.45);clip-path:inset(0 0 0 0)}
+  72%{transform:translateX(-1px);filter:brightness(1.12)}
+  100%{opacity:1;transform:none;filter:none;clip-path:inset(0)}
+}
+@keyframes mechScan{
+  0%{opacity:0;transform:translateX(-110%) skewX(-18deg)}
+  22%{opacity:.9}
+  75%{opacity:.65}
+  100%{opacity:0;transform:translateX(130%) skewX(-18deg)}
+}
+.exp-panel.transformer-in{
+  position:relative;isolation:isolate;animation:mechPanelIn .95s cubic-bezier(.18,.78,.2,1) both;
+  box-shadow:0 0 0 1px rgba(34,211,238,.18),0 0 34px -16px rgba(34,211,238,.75),var(--shadow)
+}
+.exp-panel.transformer-in::after{
+  content:"";position:absolute;z-index:8;pointer-events:none;inset:0;
+  background:linear-gradient(105deg,transparent 28%,rgba(34,211,238,.22) 44%,rgba(196,181,253,.34) 50%,rgba(236,72,153,.18) 56%,transparent 72%);
+  animation:mechScan .9s ease-out both
+}
+.kpi.transformer-in,.avgcard.transformer-in{
+  transform-style:preserve-3d;backface-visibility:hidden;
+  animation:mechCardIn .82s cubic-bezier(.18,.78,.2,1) both
+}
+.kpi.transformer-in::before,.avgcard.transformer-in::after{
+  content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(115deg,transparent 35%,rgba(34,211,238,.2) 49%,rgba(196,181,253,.28) 53%,transparent 68%);
+  animation:mechScan .78s ease-out both
+}
+.exp-table.transformer-in{animation:mechPanelIn .9s cubic-bezier(.18,.78,.2,1) both}
+.exp-table tbody tr.transformer-row-in{
+  animation:mechRowIn .62s cubic-bezier(.18,.78,.2,1) both
+}
+.exp-table tbody tr.transformer-row-in:nth-child(4n+2){animation-delay:.035s}
+.exp-table tbody tr.transformer-row-in:nth-child(4n+3){animation-delay:.07s}
+.exp-table tbody tr.transformer-row-in:nth-child(4n+4){animation-delay:.105s}
+@media(prefers-reduced-motion:reduce){
+  .exp-panel.transformer-in,.kpi.transformer-in,.avgcard.transformer-in,
+  .exp-table.transformer-in,.exp-table tbody tr.transformer-row-in{animation:none!important;clip-path:none!important;filter:none!important;transform:none!important}
+  .exp-panel.transformer-in::after,.kpi.transformer-in::before,.avgcard.transformer-in::after{display:none!important}
+}
+</style>
+
+</head>
 <body class="locked">
 
 <div class="grid-bg"></div>
@@ -823,7 +938,36 @@ table.exp-table .cell{
   </div>
 </div>
 
-<div class="loader" id="loader"><div class="spinner"></div><p id="loaderText">Carregando expedição…</p></div>
+<div class="loader" id="loader">
+  <div class="spinner" aria-hidden="true"></div>
+  <div class="black-hole" aria-hidden="true">
+    <span class="bh-object bh-number" style="--x:7vw;--y:16vh;--delay:-.2s;--dur:4.2s">01</span>
+    <span class="bh-object bh-number violet" style="--x:18vw;--y:78vh;--delay:-2.1s;--dur:4.8s">42</span>
+    <span class="bh-object bh-number" style="--x:88vw;--y:19vh;--delay:-1.4s;--dur:3.9s">87</span>
+    <span class="bh-object bh-number violet" style="--x:79vw;--y:86vh;--delay:-.8s;--dur:4.5s">23</span>
+    <span class="bh-object bh-number" style="--x:48vw;--y:7vh;--delay:-3s;--dur:4.1s">10</span>
+    <span class="bh-object bh-number violet" style="--x:3vw;--y:53vh;--delay:-1.8s;--dur:4.7s">99</span>
+    <span class="bh-object bh-number" style="--x:94vw;--y:57vh;--delay:-2.8s;--dur:4.3s">256</span>
+    <span class="bh-object bh-number violet" style="--x:35vw;--y:92vh;--delay:-.5s;--dur:5s">808</span>
+    <span class="bh-object bh-planet ringed" style="--x:12vw;--y:42vh;--size:32px;--delay:-1.2s;--dur:5s"></span>
+    <span class="bh-object bh-planet blue" style="--x:84vw;--y:39vh;--size:25px;--delay:-3.2s;--dur:4.6s"></span>
+    <span class="bh-object bh-planet" style="--x:63vw;--y:9vh;--size:16px;--delay:-2.4s;--dur:4.2s"></span>
+    <span class="bh-object bh-planet blue" style="--x:26vw;--y:25vh;--size:19px;--delay:-.6s;--dur:4.9s"></span>
+    <span class="bh-object bh-planet ringed" style="--x:72vw;--y:72vh;--size:28px;--delay:-1.9s;--dur:5.2s"></span>
+    <span class="bh-object bh-person" style="--x:25vw;--y:59vh;--delay:-2.7s;--dur:4.4s">🧍</span>
+    <span class="bh-object bh-person" style="--x:68vw;--y:28vh;--delay:-.9s;--dur:4.8s">🧍</span>
+    <span class="bh-object bh-person" style="--x:91vw;--y:76vh;--delay:-3.4s;--dur:4.1s">🧍</span>
+    <span class="bh-object bh-person" style="--x:9vw;--y:88vh;--delay:-1.5s;--dur:5.1s">🧍</span>
+    <span class="bh-object bh-comet" style="--x:43vw;--y:17vh;--delay:-2.2s;--dur:3.8s"></span>
+    <span class="bh-object bh-comet" style="--x:57vw;--y:83vh;--delay:-.4s;--dur:4.4s"></span>
+    <div class="bh-center">
+      <div class="black-hole-halo"></div>
+      <div class="bh-streak"></div><div class="bh-streak s2"></div><div class="bh-streak s3"></div>
+      <div class="black-hole-disk"></div><div class="black-hole-core"></div>
+    </div>
+  </div>
+  <p id="loaderText">Carregando expedição…</p>
+</div>
 <div class="toasts" id="toasts"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -2129,6 +2273,45 @@ const favicon=document.getElementById('dynamicFavicon');let tabTimer=null,tabFra
 function iconData(mark,color='#8b5cf6',frame=0){const rotate=frame%2?45:0;const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#22d3ee"/><stop offset=".55" stop-color="${color}"/><stop offset="1" stop-color="#ec4899"/></linearGradient></defs><rect x="3" y="3" width="58" height="58" rx="16" fill="#0a0e1f"/><path d="M13 20l19-9 19 9-19 9-19-9zm0 12l19 9 19-9M13 44l19 9 19-9" fill="none" stroke="url(#g)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><g transform="rotate(${rotate} 50 50)"><circle cx="50" cy="50" r="9" fill="${color}" stroke="#0a0e1f" stroke-width="2"/><text x="50" y="54" text-anchor="middle" font-size="11" font-family="Arial" font-weight="bold" fill="white">${mark}</text></g></svg>`;return 'data:image/svg+xml,'+encodeURIComponent(svg)}
 function setTabIcon(mode){if(!favicon)return;if(tabTimer){clearInterval(tabTimer);tabTimer=null}if(mode==='loading'){favicon.href=iconData('↻','#22d3ee',0);tabTimer=setInterval(()=>{tabFrame++;favicon.href=iconData('↻',tabFrame%2?'#22d3ee':'#a855f7',tabFrame)},420)}else if(mode==='done'){favicon.href=iconData('✓','#10b981',0);setTimeout(()=>{if(favicon)favicon.href=iconData('E','#8b5cf6',0)},2400)}else favicon.href=iconData('E','#8b5cf6',0)}
 const originalShowLoader=window.showLoader;if(typeof originalShowLoader==='function'){window.showLoader=function(show,text){originalShowLoader(show,text);if(show)setTabIcon('loading');else setTabIcon('done')}}
+
+
+/* Reaplica a sequência de transformação quando cards, painéis ou linhas são redesenhados. */
+(function initTransformerTransitions(){
+  const selectors='.exp-panel,.kpi,.avgcard,.exp-table';
+  const animate=(el,cls)=>{
+    if(!el||!el.classList)return;
+    el.classList.remove(cls);
+    void el.offsetWidth;
+    el.classList.add(cls);
+    el.addEventListener('animationend',()=>el.classList.remove(cls),{once:true});
+  };
+  const paint=root=>{
+    if(root.nodeType!==1)return;
+    if(root.matches?.('.exp-panel'))animate(root,'transformer-in');
+    if(root.matches?.('.kpi,.avgcard'))animate(root,'transformer-in');
+    if(root.matches?.('.exp-table'))animate(root,'transformer-in');
+    root.querySelectorAll?.('.exp-panel,.kpi,.avgcard,.exp-table').forEach(el=>{
+      animate(el,el.matches('.kpi,.avgcard')?'transformer-in':'transformer-in');
+    });
+    root.querySelectorAll?.('.exp-table tbody tr').forEach((tr,i)=>{
+      tr.style.animationDelay=Math.min(i*.018,.32)+'s';
+      animate(tr,'transformer-row-in');
+    });
+  };
+  const start=()=>{
+    const app=document.getElementById('app')||document.body;
+    paint(app);
+    const observer=new MutationObserver(records=>{
+      for(const record of records){
+        record.addedNodes.forEach(node=>{if(node.nodeType===1)paint(node)});
+      }
+    });
+    observer.observe(app,{childList:true,subtree:true});
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
+  else start();
+})();
+
 })();
 </script>
 
