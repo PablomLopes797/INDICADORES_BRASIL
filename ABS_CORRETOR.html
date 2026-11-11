@@ -37,7 +37,7 @@ table{border-collapse:collapse;width:100%;font-size:13px}th,td{text-align:left;p
 <h2>1. Conexão</h2>
 <div class="row">
   <div class="field"><label for="endpoint">Endpoint REST da tabela</label><input id="endpoint" value="https://bebhhbimcaptgrioxxcw.supabase.co/rest/v1/ABS_SURICATO"></div>
-  <div class="field"><label for="apiKey">Chave do Supabase (campo protegido)</label><input id="apiKey" type="password" autocomplete="new-password" spellcheck="false" autocapitalize="off" placeholder="Cole a chave do Supabase"></div>
+  <div class="field"><label for="apiKey">Chave do Supabase (campo protegido)</label><input id="apiKey" type="password" autocomplete="off" spellcheck="false" autocapitalize="off" value="sb_publishable_LUjptV9j-EiIuG2Bc7UrKg_can_vhn_" placeholder="Chave publishable do Supabase"></div>
 </div>
 <div class="row">
   <button id="btnPreview" class="primary">Ler base e gerar prévia</button>
@@ -88,16 +88,20 @@ table{border-collapse:collapse;width:100%;font-size:13px}th,td{text-align:left;p
     $('btnApply').disabled = v || changes.length === 0;
     $('btnExport').disabled = v || changes.length === 0;
   }
+  // Chave publishable já configurada para evitar precisar colá-la a cada uso.
+  // Ela é uma chave pública de projeto; a proteção dos dados depende das políticas RLS.
+  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_LUjptV9j-EiIuG2Bc7UrKg_can_vhn_';
+
   function headers() {
-    // Remove espaços externos e caracteres invisíveis que podem ser inseridos ao copiar a chave.
-    const raw = $('apiKey').value;
+    // Permite usar a chave já salva no código ou substituí-la pelo campo, se necessário.
+    const raw = $('apiKey').value || SUPABASE_PUBLISHABLE_KEY;
     const key = raw.replace(/[\u200B-\u200D\u2060\uFEFF]/g, '').trim();
-    if (!key) throw new Error('A chave do Supabase não está configurada.');
-    // Chaves Supabase são ASCII. Não envia a credencial nem a inclui na mensagem de erro.
+    if (!key) throw new Error('A chave publishable do Supabase não está configurada.');
     if (!/^[\x21-\x7E]+$/.test(key)) {
-      throw new Error('A chave contém caracteres inválidos. Cole novamente a chave original, sem aspas, espaços internos ou quebras de linha.');
+      throw new Error('A chave contém caracteres inválidos. Confira o valor configurado.');
     }
-    return { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' };
+    // Publishable keys vão no apikey. Authorization Bearer é reservado ao JWT do usuário.
+    return { apikey: key, 'Content-Type': 'application/json' };
   }
   function parseDate(value) {
     if (value == null || String(value).trim() === '') return null;
