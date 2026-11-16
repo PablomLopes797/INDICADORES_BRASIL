@@ -45,6 +45,7 @@ html[data-theme="light"] .bg{background:radial-gradient(ellipse at 8% -6%,rgba(9
 .btn:active{transform:none}
 .btn:disabled{opacity:.55;cursor:progress}
 .btn-primary{border-color:transparent;background:linear-gradient(105deg,var(--accent),var(--accent2));color:#fff}
+.btn-operation{border-color:rgba(34,211,238,.42);color:var(--cyan);font-weight:800;letter-spacing:.45px}.btn-operation.on{background:linear-gradient(105deg,rgba(8,145,178,.22),rgba(99,102,241,.22));border-color:var(--cyan);color:var(--text);box-shadow:0 0 0 2px rgba(34,211,238,.10),0 0 18px rgba(34,211,238,.12)}
 .btn.sm{padding:5px 9px;font-size:10.5px;border-radius:8px}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel2)}
 .seg button{appearance:none;border:0;background:transparent;color:var(--muted);font:inherit;font-size:11px;font-weight:600;padding:7px 11px;cursor:pointer;transition:background .18s,color .18s}
@@ -414,6 +415,7 @@ td.nd{color:var(--quiet)}
       <div class="field"><label for="cdFilter">CD</label><select id="cdFilter"><option value="">Todos os CDs</option></select></div>
       <div class="field"><label for="cargoFilter">CARGO</label><select id="cargoFilter"><option value="">Todos os cargos</option></select></div>
       <div class="field"><label for="pcdFilter">PCD</label><select id="pcdFilter"><option value="">Todos</option></select></div><div class="field"><label for="sitFilter">SITUAÇÃO</label><select id="sitFilter"><option value="">Todas as situações</option></select></div><div class="field"><label for="gestorFilter">GESTOR</label><select id="gestorFilter"><option value="">Todos os gestores</option></select></div>
+      <button class="btn btn-operation" id="operacaoBtn" type="button" aria-pressed="false" title="Filtra somente CD ARUJA - OPERACOES I, II e III">⚙ OPERAÇÃO: DESATIVADA</button>
       <button class="btn btn-primary" id="gestBtn" type="button">＋ CADASTRAR GESTOR</button>
       <div class="field multi">
         <label>MOTIVOS CONTABILIZADOS COMO ABS</label>
@@ -786,7 +788,7 @@ const state={pcdF:'',sitF:'',cols:{},ano:0,mes:0,dias:[],hoje:hoje(),snapshots:n
 ferias:new Set(),feriados:new Set(),ativos:new Set(ATIVOS_PADRAO),cargo:new Map(),presentHours:new Map(),turno:'',cd:'',vista:'macro',metric:'abs',chartM:'abs',
 dia:'',setor:'',turnoF:'',cargoF:'',pessoa:'',busca:'',pagina:1,expand:new Set(),cache:new Map(),base:null,
 carregando:false,fonteFeriado:'—',fonteCargo:'ABS_QUADRO.CARGO',erro:'',aviso:'',ultimaAtualizacao:null,
-gestor:'',gestorF:'',gestorSet:null,gestorMap:new Map(),gestoresPorNome:new Map(),gestoresMat:new Map(),gestorErro:'',_lastDayClick:'',_lastDayTime:0,motivoFiltro:new Set(MOTIVOS),diasParciais:new Set(),semRegistroMes:new Set(),cobertura:[],turnoSemDado:new Set(),turnoDiag:[]};
+gestor:'',gestorF:'',gestorSet:null,gestorMap:new Map(),gestoresPorNome:new Map(),gestoresMat:new Map(),gestorErro:'',operacao:false,_lastDayClick:'',_lastDayTime:0,motivoFiltro:new Set(MOTIVOS),diasParciais:new Set(),semRegistroMes:new Set(),cobertura:[],turnoSemDado:new Set(),turnoDiag:[]};
 
 /* ---------- rede ---------- */
 const headers=()=>({apikey:KEY_SB,Authorization:'Bearer '+JWT_SB,Accept:'application/json'});
@@ -970,9 +972,10 @@ function snapshotPara(day){let best=null;for(const[d,s]of state.snapshots){if(d<
   if(!best){let first=null;for(const[d,s]of state.snapshots){if(!first||d<first.date)first={date:d,rows:s.rows}}best=first}
   return best}
 function mapaPessoas(rows){const m=new Map();for(const r of rows){const mat=normMat(r.MATRICULA);if(!mat)continue;const t=parseData(r.DTA)?.getTime()||0;const o=m.get(mat);
-  if(!o||t>=o.time)m.set(mat,{matricula:mat,nome:norm(r.NOME)||mat,cd:norm(r.CD)||'—',setor:(state.gestorMap.get(mat)||{}).s||norm(r.SETOR)||'—',cargo:state.cargo.get(mat)||norm(r.CARGO)||'—',turno:norm(r.TURNO)||'—',pcd:norm(r[state.cols.pcd||'PCD'])||'—',sit:norm(r[state.cols.sit||'SITUAÇÃO'])||'—',motSit:norm(r[state.cols.mot||'MOTIVO DA SITUAÇÃO']),nasc:r[state.cols.nasc||'_']??null,adm:r[state.cols.adm||'_']??null,time:t})}return[...m.values()]}
+  if(!o||t>=o.time)m.set(mat,{matricula:mat,nome:norm(r.NOME)||mat,cd:norm(r.CD)||'—',setor:(state.gestorMap.get(mat)||{}).s||norm(r.SETOR)||'—',setorQuadro:norm(r.SETOR)||'—',cargo:state.cargo.get(mat)||norm(r.CARGO)||'—',turno:norm(r.TURNO)||'—',pcd:norm(r[state.cols.pcd||'PCD'])||'—',sit:norm(r[state.cols.sit||'SITUAÇÃO'])||'—',motSit:norm(r[state.cols.mot||'MOTIVO DA SITUAÇÃO']),nasc:r[state.cols.nasc||'_']??null,adm:r[state.cols.adm||'_']??null,time:t})}return[...m.values()]}
 function todasPessoas(){return mapaPessoas([...state.snapshots.values()].flatMap(s=>s.rows))}
-const filtroBase=p=>(!state.turno||p.turno===state.turno)&&(!state.pcdF||p.pcd===state.pcdF)&&(!state.sitF||p.sit===state.sitF)&&(!state.cd||p.cd===state.cd)&&(!state.cargoF||p.cargo===state.cargoF)&&(!state.setor||p.setor===state.setor)&&(!state.turnoF||p.turno===state.turnoF)&&(!state.gestorF||(state.gestorSet!==null&&state.gestorSet.has(p.matricula)));
+const SETORES_OPERACAO=new Set(['CD ARUJA - OPERACOES I','CD ARUJA - OPERACOES II','CD ARUJA - OPERACOES III'].map(semAcento));
+const filtroBase=p=>(!state.operacao||SETORES_OPERACAO.has(semAcento(p.setorQuadro)))&&(!state.turno||p.turno===state.turno)&&(!state.pcdF||p.pcd===state.pcdF)&&(!state.sitF||p.sit===state.sitF)&&(!state.cd||p.cd===state.cd)&&(!state.cargoF||p.cargo===state.cargoF)&&(!state.setor||p.setor===state.setor)&&(!state.turnoF||p.turno===state.turnoF)&&(!state.gestorF||(state.gestorSet!==null&&state.gestorSet.has(p.matricula)));
 const PAR={gestor:new Set(),setor:new Set(),turno:new Set(),cargo:new Set()};
 const PAR_DIMS=['gestor','setor','turno','cargo'];
 const parDim=(p,d)=>d==='gestor'?((state.gestorMap.get(p.matricula)||{}).n||'Sem gestor'):d==='setor'?((state.gestorMap.get(p.matricula)||{}).s||'Sem setor'):d==='turno'?('Turno '+p.turno):(p.cargo||'—');
@@ -982,7 +985,7 @@ const PAR_LIMPA=()=>PAR_DIMS.forEach(d=>PAR[d].clear());
 const PARKEY=()=>PAR_DIMS.map(d=>[...PAR[d]].sort().join('~')).join('^');
 function cargosDisponiveis(){return[...new Set(todasPessoas().filter(p=>(!state.turno||p.turno===state.turno)&&(!state.cd||p.cd===state.cd)).map(p=>p.cargo))].filter(c=>c&&c!=='—').sort((x,y)=>x.localeCompare(y,'pt-BR'))}
 function pessoasBase(){if(!state.base)state.base=todasPessoas().filter(filtroFixo);return state.base}
-function chaveFiltro(){return [PARKEY(),state.pcdF,state.sitF,state.turno,state.cd,state.cargoF,state.gestorF,state.setor,state.turnoF,[...state.ativos].sort().join(','),[...state.motivoFiltro].sort().join(',')].join('|')}
+function chaveFiltro(){return [PARKEY(),state.pcdF,state.sitF,state.turno,state.cd,state.cargoF,state.gestorF,state.setor,state.turnoF,[...state.ativos].sort().join(','),[...state.motivoFiltro].sort().join(','),state.operacao].join('|')}
 function invalidar(){state.cache=new Map();state.base=null}
 function dia(day){const ck=chaveFiltro()+'|'+day;const h=state.cache.get(ck);if(h)return h;const m=modeloDia(day);state.cache.set(ck,m);return m}
 function todosDias(){return state.dias.map(dia)}
@@ -1081,6 +1084,8 @@ function renderConsistencia(a){
 }
 function renderFiltrosOn(){
   const it=[];
+  const opBtn=$('#operacaoBtn');if(opBtn){opBtn.classList.toggle('on',state.operacao);opBtn.setAttribute('aria-pressed',String(state.operacao));opBtn.textContent=state.operacao?'⚙ OPERAÇÃO: ATIVADA':'⚙ OPERAÇÃO: DESATIVADA'};
+  if(state.operacao)it.push(['operacao','Operação · Operações I, II e III']);
   if(state.dia)it.push(['dia','Dia '+brData(state.dia)+' · '+dowNome(state.dia)]);
   if(state.setor)it.push(['setor','Setor: '+state.setor]);
   if(state.turnoF)it.push(['turnoF','Turno: '+state.turnoF]);
@@ -1983,7 +1988,7 @@ function ligar(){
   tema();$('#themeBtn').onclick=()=>{claro=!claro;tema()};
   /* Trocar a referência dispara o mesmo fluxo do botão Atualizar, limpando filtros/cache. */
   $('#monthInput').addEventListener('change',()=>{if(/^\d{4}-\d{2}$/.test($('#monthInput').value))$('#monthForm').requestSubmit()});
-  $('#monthForm').onsubmit=e=>{e.preventDefault();PAR_LIMPA();state.gestorF='';state.gestorSet=null;state.turno='';state.cd='';state.dia='';state.setor='';state.turnoF='';state.cargoF='';state.pessoa='';state.busca='';state.expand=new Set();state.pagina=1;
+  $('#monthForm').onsubmit=e=>{e.preventDefault();PAR_LIMPA();state.gestorF='';state.gestorSet=null;state.operacao=false;state.turno='';state.cd='';state.dia='';state.setor='';state.turnoF='';state.cargoF='';state.pessoa='';state.busca='';state.expand=new Set();state.pagina=1;
     $('#peopleSearch').value='';$('#searchClear').hidden=true;
     CACHE_PRES.clear();   /* "Atualizar dados" sempre busca de novo */
     invalidar();carga()};
@@ -1991,6 +1996,7 @@ function ligar(){
   $('#cdFilter').onchange=e=>{state.cd=e.target.value;invalidar();render()};
   $('#cargoFilter').onchange=e=>{state.cargoF=e.target.value;invalidar();render()};
   $('#gestorFilter').onchange=e=>{state.gestorF=e.target.value;recalcGestor();state.pagina=1;invalidar();render()};
+  $('#operacaoBtn').onclick=()=>{state.operacao=!state.operacao;state.pessoa='';state.busca='';state.pagina=1;$('#peopleSearch').value='';$('#searchClear').hidden=true;$('#suggest').hidden=true;invalidar();render()};
   $('#gestBtn').onclick=abrirGestModal;
   $('#motiveBtn').onclick=()=>{const m=$('#motiveMenu');m.hidden=!m.hidden;$('#motiveBtn').setAttribute('aria-expanded',String(!m.hidden))};
   $('#motiveMenu').onchange=()=>{state.ativos=new Set($$('#motiveMenu input:checked').map(x=>x.value));invalidar();rotulos();render()};
@@ -2034,7 +2040,7 @@ function ligar(){
       if(t==='gestorF')recalcGestor();
       invalidar();
       render();return}
-    const u=e.target.closest('[data-act="unf"]');if(u){const k=u.dataset.k;if(k.startsWith('par|')){const[,dm,...rs]=k.split('|');PAR[dm].delete(rs.join('|'));invalidar();render();return}if(k==='pessoa')limparBusca();else{state[k]='';if(k==='gestorF')recalcGestor();invalidar();render()}}
+    const u=e.target.closest('[data-act="unf"]');if(u){const k=u.dataset.k;if(k.startsWith('par|')){const[,dm,...rs]=k.split('|');PAR[dm].delete(rs.join('|'));invalidar();render();return}if(k==='pessoa')limparBusca();else{state[k]=k==='operacao'?false:'';if(k==='gestorF')recalcGestor();invalidar();render()}}
   };
   $('#viewBody').onclick=aoClicar;
   $('#tableWrap').onclick=aoClicar;
