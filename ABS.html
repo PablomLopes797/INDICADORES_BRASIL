@@ -587,7 +587,7 @@ td.nd{color:var(--quiet)}
   </div>
   <div class="jm" id="mq" hidden role="dialog" aria-modal="true">
     <div class="jm-card" id="mqCard">
-      <div class="jm-h"><div><h3>Meu quadro</h3><small>Equipe vinculada ao gestor · ABS_GESTOR_COLAB</small></div><button class="jm-x" id="mqFecha" type="button" aria-label="Fechar">✕</button></div>
+      <div class="jm-h"><div><h3>Meu quadro</h3><small>Equipe hierárquica (todos os níveis abaixo do gestor) · duplo clique em quem lidera uma equipe para navegar · ABS_GESTOR_COLAB</small></div><button class="jm-x" id="mqFecha" type="button" aria-label="Fechar">✕</button></div>
       <div class="jm-b">
         <div><label>GESTOR</label><select id="mqGestor"></select></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" id="mqNoGestor" type="button">COLAB SEM GESTOR</button></div>
@@ -915,7 +915,7 @@ const CACHE_PRES=new Map();
 /* ABS_SURICATO do mês: 2 consultas (ISO e BR) paginadas por id, em paralelo; divide sozinho em caso de timeout.
    Qualquer falha definitiva ABORTA a apuração (nunca vira falta). Meses encerrados ficam em cache por 15 min. */
 async function pegaSuricatoMes(ano,mes,prog){
-  const ult=diasDoMes(ano,mes).slice(-1)[0],fechado=ult<state.hoje,ck=ano+'-'+mes;
+  const ult=diasDoMes(ano,mes).slice(-1)[0],fechado=ult<state.hoje,ck=ano+'-'+pad2(mes);
   const c=CACHE_PRES.get(ck);
   if(fechado&&c&&Date.now()-c.t<15*60*1000){c.out._diag.cache=true;return c.out}
   const diag={consultas:0,linhasBrutas:0,paginas:0,porConsulta:[],cache:false};
@@ -936,11 +936,20 @@ async function pegaSuricatoMes(ano,mes,prog){
   const carregar=async itens=>{
     try{return await consulta(itens.map(i=>i.pat))}
     catch(e){
-      if(!e.timeout)throw e;
-      if(itens.length>1){const m=itens.length>>1;return(await Promise.all([carregar(itens.slice(0,m)),carregar(itens.slice(m))])).flat()}
-      if(itens[0].sub&&itens[0].sub.length){
-        const subs=itens[0].sub,m=Math.ceil(subs.length/2);
-        return(await Promise.all([carregar(subs.slice(0,m)),carregar(subs.slice(m))])).flat()}
+      /* Consultas grandes do Suricato podem exceder o tempo: divide também por datas,
+         sem desistir do mês inteiro nem converter falha de consulta em ausência. */
+      if(e.timeout){
+        if(itens.length>1){const m=itens.length>>1;return(await Promise.all([carregar(itens.slice(0,m)),carregar(itens.slice(m))])).flat()}
+        if(itens[0].sub&&itens[0].sub.length){
+          const subs=itens[0].sub,m=Math.ceil(subs.length/2);
+          return(await Promise.all([carregar(subs.slice(0,m)),carregar(subs.slice(m))])).flat()}
+      }
+      /* DTA textual tem acentos/horários variáveis, mas alguns projetos guardam datas
+         no formato sem zero à esquerda. Uma nova consulta por dia cobre esses casos. */
+      if(itens.length===1&&itens[0].sub&&itens[0].sub.length){
+        const subs=itens[0].sub;
+        return(await Promise.all(subs.map(x=>consulta([x.pat])))).flat();
+      }
       throw e;
     }
   };
@@ -1721,8 +1730,15 @@ function mediaAbsPessoa(p){
   return{aus,den,pct:den?aus/den*100:null};
 }
 function mqEquipe(){
-  const set=state.gestoresPorNome.get(mq.gestor);if(!set)return[];
-  return todasPessoas().filter(p=>set.has(p.matricula)).map(p=>{
+  const gerente=[...state.gestoresMat].find(([,nome])=>nome===mq.gestor)?.[0];
+  if(!gerente)return[];
+  /* ABS_GESTOR_COLAB representa cada vínculo pai→filho. Percorre toda a árvore,
+     com proteção contra ciclos e duplicidades de matrícula. */
+  const descendentes=new Set(),fronteira=[gerente],vistos=new Set([gerente]);
+  while(fronteira.length){const pai=fronteira.shift();
+    for(const [mat,v] of state.gestorMap){if(v.g!==pai||vistos.has(mat))continue;vistos.add(mat);descendentes.add(mat);fronteira.push(mat)}
+  }
+  return todasPessoas().filter(p=>descendentes.has(p.matricula)).map(p=>{
     const nasc=diaLocal(p.nasc),adm=diaLocal(p.adm);
     return{...p,admIso:adm,idade:nasc?Math.floor(mesesEntre(nasc,state.hoje)/12):null,casa:adm?mesesEntre(adm,state.hoje):null,...mediaAbsPessoa(p)};
   });
@@ -1771,9 +1787,10 @@ $('#mqIdMin').oninput=e=>{mq.idMin=e.target.value;mqTabela()};
 $('#mqIdMax').oninput=e=>{mq.idMax=e.target.value;mqTabela()};
 $('#mqCasa').onchange=e=>{mq.casa=e.target.value;mqTabela()};
 $('#mqCargo').onchange=e=>{mq.cargo=e.target.value;mqTabela()};
-$('#mqMes').onchange=e=>{const v=e.target.value;if(!/^\d{4}-\d{2}$/.test(v))return;$('#monthInput').value=v;carga().then(mqRefresh)};
+$('#mqMes').onchange=e=>{const v=e.target.value;if(!/^\d{4}-\d{2}$/.test(v))return;$('#monthInput').value=v;CACHE_PRES.delete(v);carga().then(mqRefresh)};
 $('#mqAdd').onclick=()=>abrirGestModal(mq.gestor);
 $('#mqHead').onclick=e=>{const th=e.target.closest('th[data-k]');if(!th)return;const k=th.dataset.k;mq.dir=mq.sort===k?-mq.dir:1;mq.sort=k;mqTabela()};
+$('#mqRows').addEventListener('dblclick',e=>{const tr=e.target.closest('tr');if(!tr)return;const mat=normMat(tr.cells[0]?.textContent);const p=mq.vis.find(x=>x.matricula===mat);if(!p)return;const temEquipe=state.gestoresMat.has(p.matricula);if(!temEquipe)return;mq.gestor=state.gestoresMat.get(p.matricula);mqRefresh();$('#mqBusca').value='';mq.busca='';});
 /* Lista e vinculação opcional de colaboradores sem gestor */
 let noGestRows=[];
 function listaSemGestor(){const hojeRef=state.hoje||hoje();return todasPessoas().filter(p=>{const v=state.gestorMap.get(p.matricula);return !v||!v.g}).map(p=>{const adm=diaLocal(p.adm);return{...p,casaMeses:adm?mesesEntre(adm,hojeRef):null}}).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'))}
@@ -1964,6 +1981,8 @@ function ligar(){
   const tema=()=>{document.documentElement.dataset.theme=claro?'light':'dark';$('#themeBtn').textContent=claro?'☀️ Modo claro':'🌙 Modo escuro';
     try{localStorage.setItem('abs-theme',claro?'light':'dark')}catch{};render()};
   tema();$('#themeBtn').onclick=()=>{claro=!claro;tema()};
+  /* Trocar a referência dispara o mesmo fluxo do botão Atualizar, limpando filtros/cache. */
+  $('#monthInput').addEventListener('change',()=>{if(/^\d{4}-\d{2}$/.test($('#monthInput').value))$('#monthForm').requestSubmit()});
   $('#monthForm').onsubmit=e=>{e.preventDefault();PAR_LIMPA();state.gestorF='';state.gestorSet=null;state.turno='';state.cd='';state.dia='';state.setor='';state.turnoF='';state.cargoF='';state.pessoa='';state.busca='';state.expand=new Set();state.pagina=1;
     $('#peopleSearch').value='';$('#searchClear').hidden=true;
     CACHE_PRES.clear();   /* "Atualizar dados" sempre busca de novo */
