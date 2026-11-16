@@ -797,16 +797,16 @@ table.grid td.rowlabel,table.grid td.total-cell,table.grid td.avg-cell{box-shado
 /* ============================================================================
    CONFIG
    ============================================================================ */
-const SUPABASE_URL      = "https://iykukdzmdxbluehylkse.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_AOnZKBKy9NpHheU_VN-bcQ_y5Ldcgce";
+const SUPABASE_URL      = "https://bebhhbimcaptgrioxxcw.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_LUjptV9j-EiIuG2Bc7UrKg_can_vhn_";
 
-const TABLE_USERS  = "USERS";
-const TABLE_AGENDA = "AGENDA";
-const TABLE_CARGAS = "CARGAS_RECEBIDAS";
-const TABLE_OBS    = "OBS_REC";
-const TABLE_RESULTADOS = "BD_RESULTADOS";
-const TABLE_SOBREPOSTOS = "SOBREPOSTOS";
-const TABLE_RECUSA = "RECUSA";
+const TABLE_USERS  = "USERS_REC_VISION";
+const TABLE_AGENDA = "AGENDA_REC_VISION";
+const TABLE_CARGAS = "CARGAS_RECEBIDAS_REC_VISION";
+const TABLE_OBS    = "OBS_REC_REC_VISION";
+const TABLE_RESULTADOS = "BD_RESULTADOS_REC_VISION";
+const TABLE_SOBREPOSTOS = "SOBREPOSTOS_REC_VISION";
+const TABLE_RECUSA = "RECUSA_REC_VISION";
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -1113,7 +1113,7 @@ async function processarAtualizacaoCargas(){
  if(dados.cargas)jobs.push((async()=>{
   const porCarga=new Map();
   dados.cargas.registros.forEach(r=>porCarga.set(r.carga,r.termo));
-  const resumo=await salvarConjuntoImportado('CARGAS_RECEBIDAS',[...porCarga.entries()].map(([carga,termo])=>({carga,termo})),async r=>{
+  const resumo=await salvarConjuntoImportado(TABLE_CARGAS,[...porCarga.entries()].map(([carga,termo])=>({carga,termo})),async r=>{
    const {data,error}=await sb.from(TABLE_CARGAS).select('CARGA,TERMO').eq('CARGA',r.carga).limit(1);
    if(error)throw error;
    const existente=data?.[0];
@@ -1125,7 +1125,7 @@ async function processarAtualizacaoCargas(){
 
  if(dados.agenda)jobs.push((async()=>{
   const registros=dados.agenda.registros.filter(r=>r.agenda&&r.senha);
-  return ['ATUALIZAR AGENDA',await salvarConjuntoImportado('AGENDA',registros,async r=>{
+  return ['ATUALIZAR AGENDA',await salvarConjuntoImportado(TABLE_AGENDA,registros,async r=>{
    const payload={[COL_AG.agenda]:r.agenda,[COL_AG.senha]:r.senha||null,[COL_AG.carga]:r.carga||null,[COL_AG.status]:r.status||null,[COL_AG.fornecedor]:r.fornecedor||null,[COL_AG.chegada]:r.chegada||null,[COL_AG.dtaBase]:r.dtaBase||null};
    if(r.carga){
     const ex=await sb.from(TABLE_AGENDA).select(COL_AG.carga).eq(COL_AG.carga,r.carga).limit(1);
@@ -1143,7 +1143,7 @@ async function processarAtualizacaoCargas(){
   // remove duplicados dentro do próprio colado (mesma SENHA + DTA_RECUSA)
   const unicos=new Map();
   dados.recusa.registros.forEach(r=>unicos.set(`${r.senha}::${r.dtaRecusa}`,{dtaRecusa:r.dtaRecusa,senha:r.senha}));
-  return ['RECUSA',await salvarConjuntoImportado('RECUSA',[...unicos.values()],async r=>{
+  return ['RECUSA',await salvarConjuntoImportado(TABLE_RECUSA,[...unicos.values()],async r=>{
    // evita duplicar se já existir a mesma SENHA com a mesma DTA_RECUSA
    const ex=await sb.from(TABLE_RECUSA).select(COL_RE.senha).eq(COL_RE.senha,r.senha).eq(COL_RE.dtaRecusa,r.dtaRecusa).limit(1);
    if(ex.error)throw ex.error;
@@ -1156,7 +1156,7 @@ async function processarAtualizacaoCargas(){
  if(dados.sobrepostos)jobs.push((async()=>{
   const porCarga=new Map();
   dados.sobrepostos.registros.forEach(r=>porCarga.set(r.carga,r));
-  return ['SOBREPOSTOS',await salvarConjuntoImportado('SOBREPOSTOS',[...porCarga.values()],async r=>{
+  return ['SOBREPOSTOS',await salvarConjuntoImportado(TABLE_SOBREPOSTOS,[...porCarga.values()],async r=>{
    const payload={CARGA:r.carga,QTD_PLTS:r.qtd===''?null:r.qtd,STATUS:r.status||null,TERMO:r.termo||null};
    const ex=await sb.from(TABLE_SOBREPOSTOS).select('CARGA').eq('CARGA',r.carga).limit(1);
    if(ex.error)throw ex.error;
