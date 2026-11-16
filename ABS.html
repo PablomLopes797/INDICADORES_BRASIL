@@ -1799,14 +1799,44 @@ $('#ngSaveAll').onclick=async()=>{
   if(errs.length){msg.className='jm-msg err';msg.hidden=false;msg.textContent='Corrija antes de salvar: '+errs.slice(0,8).join('; ')+(errs.length>8?` e mais ${errs.length-8} erro(s)`:'.');return}
   if(!payload.length){msg.className='jm-msg';msg.hidden=false;msg.textContent='Nenhum vínculo preenchido. Não é necessário informar todos os colaboradores.';return}
   btn.disabled=true;btn.innerHTML='<span class="jm-loading"></span>Salvando…';
+  const base=`${URL_SB}/rest/v1/${encodeURIComponent(T.gestor)}`;
+  const salvos=[];
   try{
-    const url=`${URL_SB}/rest/v1/${encodeURIComponent(T.gestor)}?on_conflict=COLABORADOR`;
-    const r=await fetch(url,{method:'POST',headers:{...headers(),Prefer:'resolution=merge-duplicates,return=minimal','Content-Type':'application/json'},body:JSON.stringify(payload),cache:'no-store'});
-    if(!r.ok)throw Error(await detalhe(r));
+    // Não usar UPSERT/on_conflict: a tabela pode não ter uma constraint UNIQUE
+    // em COLABORADOR. Atualiza o vínculo existente; se não existir, insere.
+    for(const item of payload){
+      const filtro=`?COLABORADOR=eq.${encodeURIComponent(item.COLABORADOR)}`;
+      const atualiza=await fetch(`${base}${filtro}`,{
+        method:'PATCH',
+        headers:{...headers(),Prefer:'return=representation','Content-Type':'application/json'},
+        body:JSON.stringify({GESTOR:item.GESTOR,'NOME GESTOR':item['NOME GESTOR'],SETOR:item.SETOR}),
+        cache:'no-store'
+      });
+      if(!atualiza.ok)throw Error(`Matrícula ${item.COLABORADOR}: ${await detalhe(atualiza)}`);
+      const linhas=await atualiza.json();
+      if(Array.isArray(linhas)&&linhas.length){
+        salvos.push(item);
+        continue;
+      }
+      const inserir=await fetch(base,{
+        method:'POST',
+        headers:{...headers(),Prefer:'return=minimal','Content-Type':'application/json'},
+        body:JSON.stringify([item]),
+        cache:'no-store'
+      });
+      if(!inserir.ok)throw Error(`Matrícula ${item.COLABORADOR}: ${await detalhe(inserir)}`);
+      salvos.push(item);
+    }
     aplicarGestorRows(await pegaGestorColab());preencherGestores();invalidar();render();mqRefresh();
-    noGestRows=noGestRows.filter(p=>!payload.some(x=>x.COLABORADOR===p.matricula));desenharSemGestor();
-    msg.className='jm-msg ok';msg.hidden=false;msg.textContent=`Salvo com sucesso: ${payload.length} vínculo(s). Os campos vazios foram ignorados.`;
-  }catch(e){msg.className='jm-msg err';msg.hidden=false;msg.textContent='Falha ao salvar: '+(e.message||e)+'. Nenhuma linha foi removida da lista.'}
+    noGestRows=noGestRows.filter(p=>!salvos.some(x=>x.COLABORADOR===p.matricula));desenharSemGestor();
+    msg.className='jm-msg ok';msg.hidden=false;
+    msg.textContent=`Salvo com sucesso: ${salvos.length} de ${payload.length} vínculo(s). Os campos vazios foram ignorados.`;
+  }catch(e){
+    try{aplicarGestorRows(await pegaGestorColab());preencherGestores();invalidar();render();mqRefresh()}catch(_){}
+    noGestRows=noGestRows.filter(p=>!salvos.some(x=>x.COLABORADOR===p.matricula));desenharSemGestor();
+    msg.className='jm-msg err';msg.hidden=false;
+    msg.textContent=`Falha ao salvar: ${e.message||e}. ${salvos.length} vínculo(s) já foram gravados; os demais foram mantidos para nova tentativa.`;
+  }
   finally{btn.disabled=false;btn.textContent='Salvar vínculos preenchidos'}
 };
 function fechaHeatPeople(){$('#heatPeople').hidden=true}$('#heatPeopleFecha').onclick=fechaHeatPeople;$('#heatPeopleClose').onclick=fechaHeatPeople;
