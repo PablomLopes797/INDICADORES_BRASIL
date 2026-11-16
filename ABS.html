@@ -462,12 +462,12 @@ td.nd{color:var(--quiet)}
           <button class="sclr" id="searchClear" type="button" hidden aria-label="Limpar">✕</button>
         </div>
         <div class="sg" id="suggest" hidden></div>
-        <div class="lgd" id="legendaPess" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:9.5px;color:var(--muted);padding:2px 0 8px"><b style="color:var(--text);font-size:10px;letter-spacing:.6px">LEGENDA</b><span><i style="background:rgba(248,113,113,.7);width:8px;height:8px;display:inline-block;border-radius:2px;margin-right:4px;vertical-align:middle"></i>F/AT/AF · ABS</span><span><i style="background:rgba(52,211,153,.7);width:8px;height:8px;display:inline-block;border-radius:2px;margin-right:4px;vertical-align:middle"></i>P · presença</span><span><i style="background:rgba(96,165,250,.7);width:8px;height:8px;display:inline-block;border-radius:2px;margin-right:4px;vertical-align:middle"></i>FE · férias</span><span><i style="background:rgba(251,191,36,.7);width:8px;height:8px;display:inline-block;border-radius:2px;margin-right:4px;vertical-align:middle"></i>FO/TR · não ABS</span><span style="color:var(--quiet)">DOM/FER · sem falta · ausência sem validação = F · duplo clique justifica</span></div><div class="shint" id="searchHint">Digite para ver sugestões (nome ou matrícula). Enter filtra só o colaborador escolhido; ↑ ↓ navegam.</div>
+        <div class="lgd" id="legendaPess" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:9.5px;color:var(--muted);padding:2px 0 8px"><b style="color:var(--text);font-size:10px;letter-spacing:.6px">LEGENDA</b><span><i style="background:rgba(248,113,113,.7);width:8px;height:8px;display:inline-block;border-radius:2px;margin-right:4px;vertical-align:middle"></i>F/AT/AF · ABS · BEM CARE: até 14 dias AT, acima de 14 dias AF</span><span><i style="background:rgba(52,211,153,.7);width:8px;height:8px;display:inline-block;border-radius:2px;margin-right:4px;vertical-align:middle"></i>P · presença</span><span><i style="background:rgba(96,165,250,.7);width:8px;height:8px;display:inline-block;border-radius:2px;margin-right:4px;vertical-align:middle"></i>FE · férias</span><span><i style="background:rgba(251,191,36,.7);width:8px;height:8px;display:inline-block;border-radius:2px;margin-right:4px;vertical-align:middle"></i>FO/TR · não ABS</span><span style="color:var(--quiet)">DOM/FER · sem falta · ausência sem validação = F · duplo clique justifica</span></div><div class="shint" id="searchHint">Digite para ver sugestões (nome ou matrícula). Enter filtra só o colaborador escolhido; ↑ ↓ navegam.</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
         <button class="btn" id="copyBtn" type="button">Copiar tabela</button>
         <div class="lgd">
-          <span><i style="background:rgba(248,113,113,.7)"></i>F/AT/AF · ABS</span>
+          <span><i style="background:rgba(248,113,113,.7)"></i>F/AT/AF · ABS · BEM CARE: até 14 dias AT, acima de 14 dias AF</span>
           <span><i style="background:rgba(52,211,153,.7)"></i>P · presença</span>
           <span><i style="background:rgba(96,165,250,.7)"></i>FE · férias</span>
           <span><i style="background:rgba(251,191,36,.7)"></i>FO/TR · não ABS</span>
@@ -616,7 +616,7 @@ td.nd{color:var(--quiet)}
     <div class="jm-card" id="acCard">
       <div class="jm-h"><div><h3>Acompanhar equipe · dia a dia</h3><small id="acSub"></small></div><button class="jm-x" id="acFecha" type="button" aria-label="Fechar">✕</button></div>
       <div class="jm-b">
-        <div class="lgd" style="padding:0"><span><i style="background:rgba(248,113,113,.7)"></i>F/AT/AF · ABS</span><span><i style="background:rgba(52,211,153,.7)"></i>P · presença</span><span><i style="background:rgba(96,165,250,.7)"></i>FE · férias</span><span><i style="background:rgba(251,191,36,.7)"></i>FO/TR · não ABS</span><span>DOM/FER · sem falta · duplo clique justifica</span></div>
+        <div class="lgd" style="padding:0"><span><i style="background:rgba(248,113,113,.7)"></i>F/AT/AF · ABS · BEM CARE: até 14 dias AT, acima de 14 dias AF</span><span><i style="background:rgba(52,211,153,.7)"></i>P · presença</span><span><i style="background:rgba(96,165,250,.7)"></i>FE · férias</span><span><i style="background:rgba(251,191,36,.7)"></i>FO/TR · não ABS</span><span>DOM/FER · sem falta · duplo clique justifica</span></div>
         <div class="tw"><table class="mx" id="acTable"><caption>Acompanhamento da equipe</caption><thead id="acHead"></thead><tbody id="acRows"></tbody></table></div>
       </div>
       <div class="jm-f"><button class="btn" id="acFechar2" type="button">Fechar</button></div>
@@ -640,7 +640,7 @@ const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const URL_SB='https://bebhhbimcaptgrioxxcw.supabase.co';
 const KEY_SB='sb_publishable_LUjptV9j-EiIuG2Bc7UrKg_can_vhn_';
 const JWT_SB='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJlYmhoYmltY2FwdGdyaW94eGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyODE2MjksImV4cCI6MjA5OTg1NzYyOX0.WIhrT6A8LAh5BtV1pVz9xnONewehes155OhpgE1lXmI';
-const T={quadro:'ABS_QUADRO',just:'ABS_JUSTIFICATIVAS',suricato:'ABS_SURICATO',ferias:'ABS_FÉRIAS',feriado:'ABS_FERIADOS',gestor:'ABS_GESTOR_COLAB'};
+const T={quadro:'ABS_QUADRO',just:'ABS_JUSTIFICATIVAS',suricato:'ABS_SURICATO',ferias:'ABS_FÉRIAS',bemcare:'ABS_BEM_CARE',feriado:'ABS_FERIADOS',gestor:'ABS_GESTOR_COLAB'};
 const MOTIVOS=['P','FE','AT','AF','FO','TR','F','FA'];
 const MOTIVO_NOME={P:'Presença',FE:'Férias',AT:'Atestado',AF:'Afastamento',FO:'Folga',TR:'Treinamento',F:'Falta',FA:'Falta abonada'};
 const MOTIVOS_JUST=['P','FA','AF','AT','FO','FE','TR'];
@@ -734,11 +734,41 @@ function turnoConsiderado(turno,day){
 }
 function pessoasConsideradas(people,day){return people.filter(p=>turnoConsiderado(p.turno,day))}
 const turnoNum=t=>semAcento(t).replace(/[^0-9]/g,'');
-/* Classificação única (P > FE > justificativa > '-' sáb 4º turno > '?' > F). */
+/* Converte períodos da ABS_BEM_CARE em códigos por matrícula + dia operacional.
+   * Contagem inclusiva: até 14 dias = AT; acima de 14 dias = AF.
+   */
+function aplicarBemCareRows(rows, dias) {
+  const mapa = new Map();
+  let semMatricula = 0, datasInvalidas = 0, periodosAplicados = 0;
+  const ordinal = iso => Date.parse(iso + 'T00:00:00Z');
+  for (const row of rows || []) {
+    const matricula = normMat(row.MATRICULA);
+    const inicio = diaLocal(row.DTA_INICIO);
+    const fim = diaLocal(row.DTA_FIM);
+    if (!matricula) { semMatricula += 1; continue; }
+    if (!inicio || !fim || fim < inicio) { datasInvalidas += 1; continue; }
+    const duracaoDias = Math.floor((ordinal(fim) - ordinal(inicio)) / 86400000) + 1;
+    const codigo = duracaoDias > 14 ? 'AF' : 'AT';
+    let encontrouDia = false;
+    for (const dia of dias) {
+      if (dia < inicio || dia > fim) continue;
+      encontrouDia = true;
+      const key = kk(matricula, dia);
+      const anterior = mapa.get(key);
+      // Se os períodos se sobrepõem, AF prevalece sobre AT.
+      if (!anterior || codigo === 'AF') mapa.set(key, codigo);
+    }
+    if (encontrouDia) periodosAplicados += 1;
+  }
+  state.bemcare = mapa;
+  console.info('[ABS_BEM_CARE]', { linhas: (rows || []).length, periodosAplicados, diasMatricula: mapa.size, semMatricula, datasInvalidas });
+}
+/* Classificação única (P > FE > BEM CARE > justificativa > '-' sáb 4º turno > '?' > F). */
 function classificar(p,d){
   const k=kk(p.matricula,d.day);
   if(state.present.has(k))return{code:'P',regra:'presença no Suricato (matrícula + dia operacional)'};
   if(state.ferias.has(k))return{code:'FE',regra:'férias (ABS_FÉRIAS)'};
+  const bemcare=state.bemcare.get(k);if(bemcare)return{code:bemcare,regra:`BEM CARE (${bemcare}) · período de afastamento até 14 dias = AT; acima de 14 dias = AF`};
   const j=state.just.get(k);if(j)return{code:j,regra:'justificativa (ABS_JUSTIFICATIVAS)'};
   if(d.dow===6&&turnoNum(p.turno)===TURNO_4)return{code:'-',regra:'4º turno · sábado sem registro · exceção sem falta'};
   return{code:'F',regra:'falta · não passou na validação de presença, independentemente de haver registros no período'};
@@ -785,7 +815,7 @@ function consistente(d){ if(d.futuro||d.domingo||d.feriado||!d.quadroOk)return t
 /* ===== MODEL_END ===== */
 
 const state={pcdF:'',sitF:'',cols:{},ano:0,mes:0,dias:[],hoje:hoje(),snapshots:new Map(),just:new Map(),present:new Set(),presenceDays:new Set(),justObs:new Map(),
-ferias:new Set(),feriados:new Set(),ativos:new Set(ATIVOS_PADRAO),cargo:new Map(),presentHours:new Map(),turno:'',cd:'',vista:'macro',metric:'abs',chartM:'abs',
+ferias:new Set(),bemcare:new Map(),feriados:new Set(),ativos:new Set(ATIVOS_PADRAO),cargo:new Map(),presentHours:new Map(),turno:'',cd:'',vista:'macro',metric:'abs',chartM:'abs',
 dia:'',setor:'',turnoF:'',cargoF:'',pessoa:'',busca:'',pagina:1,expand:new Set(),cache:new Map(),base:null,
 carregando:false,fonteFeriado:'—',fonteCargo:'ABS_QUADRO.CARGO',erro:'',aviso:'',ultimaAtualizacao:null,
 gestor:'',gestorF:'',gestorSet:null,gestorMap:new Map(),gestoresPorNome:new Map(),gestoresMat:new Map(),gestorErro:'',operacao:false,_lastDayClick:'',_lastDayTime:0,motivoFiltro:new Set(MOTIVOS),diasParciais:new Set(),semRegistroMes:new Set(),cobertura:[],turnoSemDado:new Set(),turnoDiag:[]};
@@ -2079,13 +2109,14 @@ async function carga(){
     state.hoje=hoje();
     const L=limites(state.ano,state.mes);
     const SEL=await descobrirColunas();
-    /* TUDO em paralelo: o Suricato (parte mais pesada) começa já, junto com quadro, feriados, justificativas e férias. */
+    /* TUDO em paralelo: Suricato, quadro, feriados, justificativas, férias e BEM CARE. */
     const suriP=pegaSuricatoMes(state.ano,state.mes,n=>{if(state.carregando)status('busy',`Lendo Suricato · ${nf.format(n)} registros…`)});
     const mesP=pega(T.quadro,SEL,{DTA:'gte.'+L.ini,DTA_2:'lt.'+L.fim},'DTA.asc,id.asc');
     const outrosP=Promise.all([
       pega(T.feriado,'id,DTA,FERIADO',{},'id.asc').catch(()=>[]),
       pegaMes(T.just,JUST_SEL,state.ano,state.mes,'DTA.asc,id.asc').catch(()=>[]),
       pegaMes(T.ferias,'DTA,MATRICULA',state.ano,state.mes,'DTA.asc').catch(()=>[]),
+      pega(T.bemcare,'MATRICULA,DTA_INICIO,DTA_FIM',{},'').catch(e=>{throw Error(`Falha ao consultar ${T.bemcare}; não é seguro calcular ABS sem essa base. ${e.message||e}`)}),
       pegaGestorColab().then(r=>{state.gestorErro='';return r}).catch(e=>{state.gestorErro=String(e.message||e);return[]})
     ]);
     suriP.catch(()=>{});mesP.catch(()=>{});outrosP.catch(()=>{});
@@ -2094,7 +2125,7 @@ async function carga(){
     const ant=(await rAnt.json())[0]?.DTA||null;
     const prev=ant?await pega(T.quadro,SEL,{DTA:'eq.'+ant},'DTA.asc,id.asc'):[];
     const mes=await mesP;
-    const[feriados,just,ferias,gestRows]=await outrosP;
+    const[feriados,just,ferias,bemcareRows,gestRows]=await outrosP;
     aplicarGestorRows(gestRows);
     state.snapshots=snapshots([...prev,...mes]);
     state.feriados=new Set(feriados.map(r=>diaLocal(r.DTA)).filter(Boolean));
@@ -2115,6 +2146,7 @@ async function carga(){
     try{const totBruto=ferias.length,totAceito=state.ferias.size;
       if(totBruto&&totAceito<totBruto*0.9)console.warn('[ABS_FÉRIAS] filtro mês aceitou',totAceito,'de',totBruto,'linha(s) — vale conferir DTA no banco');
     }catch{}
+    aplicarBemCareRows(bemcareRows, state.dias);
     const validos=state.dias.filter(d=>d<=state.hoje&&dowDe(d)!==0&&!state.feriados.has(d));
     status('busy','Aguardando presenças do Suricato…');ldProg(null);
     const fmtSuri={ISO:0,BR:0,outros:0,ilegiveis:0,duplicados:0};
@@ -2290,7 +2322,7 @@ const mvIni=mesInicial.match(/^(\d{4})-(\d{2})$/);
 if(mvIni){state.ano=+mvIni[1];state.mes=+mvIni[2];state.dias=diasDoMes(state.ano,state.mes)}
 const qv=QS.get('view');
 if(qv&&['macro','setores','turnos','pessoas','gestores','motivos'].includes(qv)){state.vista=qv;$$('.tab').forEach(x=>x.classList.toggle('on',x.dataset.view===qv))}
-if(window.__ABS_TEST__){window.__ABS_TEST__({parseDTA,cicloOperacional,diaLocal,horaLocal,normMat,classificar,padroesSuricatoDia,diasCivisSuricato,turnoConsiderado,pega,pegaKeyset,PAG,pegaSuricatoMes,modeloDia,statusDe,state,aplicarGestorRows,recalcGestor,filtroFixo});}
+if(window.__ABS_TEST__){window.__ABS_TEST__({parseDTA,cicloOperacional,diaLocal,horaLocal,normMat,classificar,aplicarBemCareRows,padroesSuricatoDia,diasCivisSuricato,turnoConsiderado,pega,pegaKeyset,PAG,pegaSuricatoMes,modeloDia,statusDe,state,aplicarGestorRows,recalcGestor,filtroFixo});}
 else{ligar();carga();
   /* Atualização automática a cada 60 min, sem sobrepor uma carga em andamento. */
   setInterval(()=>{if(!state.carregando)carga()},60*60*1000);}
