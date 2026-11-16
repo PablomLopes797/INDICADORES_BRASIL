@@ -370,6 +370,18 @@ td.nd{color:var(--quiet)}
 @media(max-width:650px){#ld .ld-box{padding-top:245px}#umCard{height:94vh}#ngCard{height:96vh}}
 @media(prefers-reduced-motion:reduce){#ld .black-hole * ,#ld .bh-object{animation-duration:8s!important}}
 
+
+/* Cores oficiais dos motivos ABS */
+.st.mc-F,.st.mc-AT,.st.mc-AF,.st.mc-TR,.st.mc-FE,.st.mc-P{color:#fff!important;font-weight:900}
+.st.mc-F{background:#DC2626!important}.st.mc-AT{background:#EA580C!important}.st.mc-AF{background:#B91C1C!important}
+.st.mc-FA{background:#F59E0B!important;color:#111827!important;font-weight:900}.st.mc-TR{background:#3B82F6!important}
+.st.mc-FE{background:#06B6D4!important}.st.mc-FO{background:#94A3B8!important;color:#111827!important;font-weight:900}.st.mc-P{background:#16A34A!important}
+.motive-rowhead.mc-QUADRO{color:#64748B!important;border-left:4px solid #64748B}.motive-rowhead.mc-P{color:#16A34A!important;border-left:4px solid #16A34A}
+.motive-rowhead.mc-F{color:#DC2626!important;border-left:4px solid #DC2626}.motive-rowhead.mc-AT{color:#EA580C!important;border-left:4px solid #EA580C}
+.motive-rowhead.mc-AF{color:#B91C1C!important;border-left:4px solid #B91C1C}.motive-rowhead.mc-FA{color:#F59E0B!important;border-left:4px solid #F59E0B}
+.motive-rowhead.mc-TR{color:#3B82F6!important;border-left:4px solid #3B82F6}.motive-rowhead.mc-FE{color:#06B6D4!important;border-left:4px solid #06B6D4}
+.motive-rowhead.mc-FO{color:#94A3B8!important;border-left:4px solid #94A3B8}
+
 </style>
 </head>
 <body>
@@ -642,9 +654,11 @@ const KEY_SB='sb_publishable_LUjptV9j-EiIuG2Bc7UrKg_can_vhn_';
 const JWT_SB='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJlYmhoYmltY2FwdGdyaW94eGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyODE2MjksImV4cCI6MjA5OTg1NzYyOX0.WIhrT6A8LAh5BtV1pVz9xnONewehes155OhpgE1lXmI';
 const T={quadro:'ABS_QUADRO',just:'ABS_JUSTIFICATIVAS',suricato:'ABS_SURICATO',ferias:'ABS_FÉRIAS',bemcare:'ABS_BEM_CARE',feriado:'ABS_FERIADOS',gestor:'ABS_GESTOR_COLAB'};
 const MOTIVOS=['P','FE','AT','AF','FO','TR','F','FA'];
-const MOTIVO_NOME={P:'Presença',FE:'Férias',AT:'Atestado',AF:'Afastamento',FO:'Folga',TR:'Treinamento',F:'Falta',FA:'Falta abonada'};
+const MOTIVO_NOME={F:'FALTA',AT:'ATESTADO',AF:'AFASTAMENTO',FA:'FALTA ABONADA',TR:'TREINAMENTO',FE:'FÉRIAS',FO:'FOLGA',P:'PRESENÇA'};
+const MOTIVO_COR={F:'#DC2626',AT:'#EA580C',AF:'#B91C1C',FA:'#F59E0B',TR:'#3B82F6',FE:'#06B6D4',FO:'#94A3B8',P:'#16A34A',QUADRO:'#64748B'};
+const MOTIVO_COR_NOME={F:'Vermelho escuro',AT:'Laranja escuro',AF:'Vermelho intenso',FA:'Amarelo',TR:'Azul',FE:'Ciano',FO:'Cinza claro',P:'Verde',QUADRO:'Cinza azulado'};
 const MOTIVOS_JUST=['P','FA','AF','AT','FO','FE','TR'];
-const MOTIVO_NOME_JUST={P:'Presença',FA:'Falta abonada',AF:'Afastamento',AT:'Atestado',FO:'Folga',FE:'Férias',TR:'Treinamento'};
+const MOTIVO_NOME_JUST={P:'PRESENÇA',FA:'FALTA ABONADA',AF:'AFASTAMENTO',AT:'ATESTADO',FO:'FOLGA',FE:'FÉRIAS',TR:'TREINAMENTO'};
 const INICIO_TURNO={'1':6*60,'2':13*60+40,'3':22*60,'4':8*60};
 const TURNO_4='4';
 const ATIVOS_PADRAO=new Set(['F','AT','AF']);
@@ -1051,8 +1065,8 @@ function statusDe(p,d){
   if(d.futuro)return{c:'-',cls:'fut',txt:'dia futuro'};
   if(d.domingo||d.feriado)return{c:'-',cls:'nw',txt:(d.feriado?'feriado':'domingo')+' · sem falta'};
   const {code,regra}=classificar(p,d);
-  if(code==='P')return{c:'P',cls:'pre',txt:'presença registrada no Suricato'};
-  if(code==='FE')return{c:'FE',cls:'fer',txt:'férias'};
+  if(code==='P')return{c:'P',cls:'pre',txt:'PRESENÇA registrada no Suricato'};
+  if(code==='FE')return{c:'FE',cls:'fer',txt:'FÉRIAS'};
   if(code==='-')return{c:'-',cls:'nw',txt:'4º turno · sábado sem registro · sem falta'};
   if(code==='?')return{c:'F',cls:'abs',txt:'falta · ausência de validação de presença'};
   if(code==='F')return{c:'F',cls:'abs',txt:'falta inferida · sem presença e sem justificativa'};
@@ -1291,7 +1305,7 @@ function graficoTaxa(ds,alvo){
   alvo.innerHTML=`<div class="evol"><div class="evol-bars" style="height:230px;width:100%">${bars}</div><div class="lgd"><span><i></i>Taxa de ABS = ausentes ÷ quadro elegível do dia</span><span><i class="c"></i>Dia selecionado</span><span><i class="b"></i>Domingos / feriados sem apuração</span></div></div>`;
 }
 const MOTIVOS_ABA=['QUADRO','P','F','FA','AT','AF','FE','FO','TR'];
-const MOTIVOS_DESC={QUADRO:'QUADRO',P:'P',F:'F',FA:'FA',AT:'AT',AF:'AF',FE:'FE',FO:'FO',TR:'TR'};
+const MOTIVOS_DESC={QUADRO:'QUADRO DE COLABORADORES',P:'PRESENÇA',F:'FALTA',FA:'FALTA ABONADA',AT:'ATESTADO',AF:'AFASTAMENTO',FE:'FÉRIAS',FO:'FOLGA',TR:'TREINAMENTO'};
 let motivoDetalheMap=new Map();
 function motivoMetricas(ds){return MOTIVOS_ABA.map(code=>({code,values:ds.map(d=>{
   if(!d.quadroOk)return{day:d.day,value:null,people:[]};
@@ -1303,14 +1317,14 @@ function renderMotivos(a){
   const metrics=motivoMetricas(a.ds);motivoDetalheMap.clear();
   const days=a.ds;
   const head=`<tr><th class="motive-rowhead">MOTIVO</th>${days.map(d=>`<th><b>${d.day.slice(8)}</b><small>${dowNome(d.day)}</small></th>`).join('')}</tr>`;
-  const rows=metrics.map(m=>`<tr><th class="motive-rowhead">${m.code}</th>${m.values.map(v=>{if(v.value==null)return'<td class="off">—</td>';const k=`${m.code}|${v.day}`;motivoDetalheMap.set(k,v.people);return`<td><button class="motivo-val" data-act="motivoDetail" data-code="${m.code}" data-day="${v.day}" type="button" title="Clique para ver os colaboradores">${nf.format(v.value)}</button></td>`}).join('')}</tr>`).join('');
+  const rows=metrics.map(m=>`<tr><th class="motive-rowhead mc-${m.code}">${m.code} · ${m.code==='QUADRO'?'QUADRO DE COLABORADORES':(MOTIVO_NOME[m.code]||m.code)} · ${MOTIVO_COR_NOME[m.code]} · ${MOTIVO_COR[m.code]}</th>${m.values.map(v=>{if(v.value==null)return'<td class="off">—</td>';const k=`${m.code}|${v.day}`;motivoDetalheMap.set(k,v.people);return`<td><button class="motivo-val" data-act="motivoDetail" data-code="${m.code}" data-day="${v.day}" type="button" title="Clique para ver os colaboradores">${nf.format(v.value)}</button></td>`}).join('')}</tr>`).join('');
   $('#viewBody').innerHTML=`<div class="grid"><div class="card c12"><h3>COMPOSIÇÃO DIÁRIA · QUADRO E MOTIVOS <em>clique em um número para ver os colaboradores</em></h3><div class="tw motive-table-wrap"><table class="mx motive-table"><thead>${head}</thead><tbody>${rows}</tbody></table></div><div class="hint">QUADRO exibe o total de colaboradores do snapshot vigente. P, F, FA, AT, AF, FE, FO e TR refletem o código classificado para cada pessoa/dia; dias futuros, domingos e feriados ficam sem apuração.</div></div><div class="card c12"><h3>COMPORTAMENTO DOS MOTIVOS <em>quantidade diária por código</em></h3><div id="motivoChart" class="motive-chart"></div><div class="hlg" id="motivoLegend"></div></div></div>`;
   renderMotivoChart(metrics,days);
 }
 function renderMotivoChart(metrics,days){
  const host=$('#motivoChart'),legend=$('#motivoLegend');
- const colors=['#22d3ee','#34d399','#f87171','#fb7185','#fbbf24','#a78bfa','#60a5fa','#f59e0b','#c084fc'];
- const labels={QUADRO:'Colaboradores no quadro',P:'Presenças registradas',F:'Faltas (ausência sem validação)',FA:'Falta abonada',AT:'Atestado médico',AF:'Afastamento',FE:'Férias',FO:'Folga',TR:'Treinamento'};
+ const colors=[MOTIVO_COR.QUADRO,MOTIVO_COR.P,MOTIVO_COR.F,MOTIVO_COR.FA,MOTIVO_COR.AT,MOTIVO_COR.AF,MOTIVO_COR.FE,MOTIVO_COR.FO,MOTIVO_COR.TR];
+ const labels={QUADRO:'QUADRO DE COLABORADORES',P:'PRESENÇA',F:'FALTA',FA:'FALTA ABONADA',AT:'ATESTADO',AF:'AFASTAMENTO',FE:'FÉRIAS',FO:'FOLGA',TR:'TREINAMENTO'};
  const W=Math.max(1000,days.length*64),H=440,L=55,R=26,T=35,B=55,plotW=W-L-R,plotH=H-T-B;
  const max=Math.max(1,...metrics.flatMap(m=>m.values.map(v=>v.value||0))),logMax=Math.log1p(max),yOf=v=>T+plotH-(Math.log1p(Math.max(0,v))/logMax)*plotH;
  const ticks=4,grid=Array.from({length:ticks+1},(_,i)=>{const y=T+plotH*i/ticks,val=Math.round(Math.expm1(logMax*(ticks-i)/ticks));return`<line x1="${L}" y1="${y}" x2="${W-R}" y2="${y}" stroke="var(--line)"/><text x="${L-8}" y="${y+4}" text-anchor="end" class="motivo-axis">${nf.format(val)}</text>`}).join('');
@@ -1324,7 +1338,7 @@ function renderMotivoChart(metrics,days){
  }).join('');
  host.innerHTML=`<div class="motive-chart-scroll"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Gráfico de evolução dos motivos com valores identificados em todos os pontos">${grid}${xlabels}${series}</svg></div><div class="hint">Cada ponto está rotulado com sua contagem. Escala logarítmica para permitir visualizar QUADRO e os motivos menores no mesmo gráfico.</div>`;
  legend.classList.add('motive-legend');
- legend.innerHTML=metrics.map((m,i)=>`<span class="motivo-legend-item"><i style="background:${colors[i]};color:${colors[i]}"></i><span><b>${m.code}</b><small>${labels[m.code]}</small></span></span>`).join('');
+ legend.innerHTML=metrics.map((m,i)=>`<span class="motivo-legend-item"><i style="background:${colors[i]};color:${colors[i]}"></i><span><b>${m.code} · ${labels[m.code]}</b><small>${MOTIVO_COR_NOME[m.code]} · ${colors[i]}</small></span></span>`).join('');
 }
 function fecharMotivoPeople(){$('#motivoPeople').hidden=true}$('#motivoPeopleFecha').onclick=fecharMotivoPeople;$('#motivoPeopleClose').onclick=fecharMotivoPeople;
 function abrirMotivoPeople(code,day){const people=motivoDetalheMap.get(`${code}|${day}`)||[],hojeRef=state.hoje||hoje();$('#motivoPeopleTitle').textContent=`${code} · ${people.length} colaborador(es)`;$('#motivoPeopleSub').textContent=`${brData(day)} · ${dowNome(day)}`;$('#motivoPeopleRows').innerHTML=people.map(p=>{const nasc=diaLocal(p.nasc),adm=diaLocal(p.adm),idade=nasc?Math.floor(mesesEntre(nasc,day)/12):null,tenure=adm?mesesEntre(adm,day):null,gm=state.gestorMap.get(p.matricula)||{};return`<tr><td>${esc(p.matricula)}</td><td>${esc(p.nome)}</td><td>${esc(p.cargo||'—')}</td><td>${esc(p.turno||'—')}</td><td>${idade==null?'—':idade}</td><td>${casaTxt(tenure)}</td><td>${esc(gm.n||'Sem gestor')}</td><td>${esc(gm.s||p.setor||'—')}</td></tr>`}).join('')||'<tr><td colspan="8">Nenhum colaborador.</td></tr>';$('#motivoPeople').hidden=false}
@@ -1450,7 +1464,7 @@ function renderTabelaPessoas(body,head){
       <small style="display:block;color:var(--muted);font-size:9.5px">${nf.format(aus)} ausência(s) · ${nf.format(pre)} presença(s)</small></td>`+
       state.dias.map((d,i)=>{const m=mods[i],st=sts[i];const tj=state.just.has(kk(p.matricula,d));const cls=[st.cls,(m.domingo||m.feriado)?'off':'',d===state.dia?'hl':'',tj?'jc':''].filter(Boolean).join(' ');
         const horas=state.present.has(kk(p.matricula,d))?presentTooltip(p.matricula,d):'';
-        return `<td class="st ${cls}" title="${esc(brData(d)+' · '+dowNome(d)+' · '+st.txt+(horas?'\n'+horas:'')+(tj?'\nDuplo clique: editar justificativa':''))}" data-dbl="just" data-jday="${d}" data-jmat="${esc(p.matricula)}">${st.c}</td>`}).join('')+'</tr>'}).join('')||'<tr><td class="empty" colspan="40">Nenhum colaborador encontrado.</td></tr>';
+        return `<td class="st ${cls} mc-${st.c}" title="${esc(brData(d)+' · '+dowNome(d)+' · '+st.txt+(horas?'\n'+horas:'')+(tj?'\nDuplo clique: editar justificativa':''))}" data-dbl="just" data-jday="${d}" data-jmat="${esc(p.matricula)}">${st.c}</td>`}).join('')+'</tr>'}).join('')||'<tr><td class="empty" colspan="40">Nenhum colaborador encontrado.</td></tr>';
   $('#moreInfo').textContent=`${nf.format(l.length)} de ${nf.format(todos.length)} colaborador(es)`;
   $('#moreBtn').hidden=l.length>=todos.length;
 }
@@ -1951,7 +1965,7 @@ function acRender(){
   const dias=state.dias.map(d=>({day:d,dow:dowDe(d),domingo:dowDe(d)===0,feriado:state.feriados.has(d),futuro:d>state.hoje}));
   $('#acHead').innerHTML='<tr><th>MATRICULA</th><th>NOME</th><th>CARGO</th>'+dias.map(m=>`<th class="${m.domingo||m.feriado?'off':''}"><b>${m.day.slice(8)}</b><small>${dowNome(m.day)}</small></th>`).join('')+'</tr>';
   $('#acRows').innerHTML=l.map(p=>`<tr><td>${esc(p.matricula)}</td><td>${esc(p.nome)}</td><td>${esc(p.cargo)}</td>`+dias.map(m=>{const st=statusDe(p,m),tj=state.just.has(kk(p.matricula,m.day));
-    return `<td class="st ${st.cls}${m.domingo||m.feriado?' off':''}${tj?' jc':''}" title="${esc(brData(m.day)+' · '+dowNome(m.day)+' · '+st.txt)}" data-jday="${m.day}" data-jmat="${esc(p.matricula)}">${st.c}</td>`}).join('')+'</tr>').join('')||'<tr><td colspan="40" class="empty">Nenhum colaborador para os filtros.</td></tr>';
+    return `<td class="st ${st.cls} mc-${st.c}${m.domingo||m.feriado?' off':''}${tj?' jc':''}" title="${esc(brData(m.day)+' · '+dowNome(m.day)+' · '+st.txt)}" data-jday="${m.day}" data-jmat="${esc(p.matricula)}">${st.c}</td>`}).join('')+'</tr>').join('')||'<tr><td colspan="40" class="empty">Nenhum colaborador para os filtros.</td></tr>';
   $('#acSub').textContent=`${nf.format(l.length)} colaborador(es) · gestor ${mq.gestor} · ${String(state.mes).padStart(2,'0')}/${state.ano}`;
 }
 $('#mqAcomp').onclick=()=>{if(!mq.gestor)return;acRender();$('#ac').hidden=false};
