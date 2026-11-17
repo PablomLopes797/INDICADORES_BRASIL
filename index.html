@@ -449,6 +449,13 @@ table.grid td.rowlabel,table.grid td.total-cell,table.grid td.avg-cell{box-shado
 .recusa-chart-scroll{max-height:440px;overflow:auto}
 #recusaRows td{white-space:normal;min-width:130px;word-break:break-word}
 @media(max-width:900px){.recusa-charts{grid-template-columns:1fr}}
+
+/* Modal de detalhes dos registros da célula */
+.cell-details-scroll{overflow:auto;max-height:62vh;border:1px solid var(--line);border-radius:12px}
+.cell-details-table{border-collapse:separate;border-spacing:0;min-width:100%;font-size:11px}
+.cell-details-table th{position:sticky;top:0;background:var(--card-head-1);color:var(--muted);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+.cell-details-table td{padding:9px 12px;color:var(--txt-2);border-bottom:1px solid var(--line-soft);vertical-align:top;white-space:pre-wrap;min-width:110px;max-width:340px;overflow-wrap:anywhere}
+.cell-details-table tr:last-child td{border-bottom:0}
 </style>
 </head>
 <body class="locked">
@@ -555,6 +562,8 @@ table.grid td.rowlabel,table.grid td.total-cell,table.grid td.avg-cell{box-shado
             Cargas faltantes <span class="badge" id="missingCount">0</span>
           </button>
           <button class="btn btn-primary" id="btnRefresh"><svg viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>Atualizar</button>
+          <button class="btn" id="btnManageUsers" type="button" style="display:none">Usuários</button>
+          <button class="btn btn-danger" id="btnDeleteCycles" type="button" style="display:none">Apagar ciclo/período</button>
           <button class="btn" id="btnCopy" title="Copiar tabela (Ctrl+C)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
           <button class="btn" id="btnExport" title="Exportar CSV"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></button>
           <button class="btn btn-theme" id="btnTheme" title="Modo claro/escuro">
@@ -608,7 +617,7 @@ table.grid td.rowlabel,table.grid td.total-cell,table.grid td.avg-cell{box-shado
       <div class="card-title" id="tableTitle">Recebimento</div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <span style="font-size:10.5px;color:var(--muted);font-weight:600">
-          <b style="color:#a855f7">Clique</b> = foco/drill · <b style="color:#a855f7">Ctrl+clique</b> = multi · <b style="color:#a855f7">Shift+clique</b> = intervalo · <b style="color:#a855f7">Duplo</b> = comentar<span id="editHintLabel"></span>
+          <b style="color:#a855f7">Clique</b> = foco/drill · <b style="color:#a855f7">Ctrl+clique</b> = multi · <b style="color:#a855f7">Shift+clique</b> = intervalo · <b style="color:#a855f7">Duplo na data</b> = comentar · <b style="color:#a855f7">duplo no número</b> = detalhes<span id="editHintLabel"></span>
         </span>
       </div>
     </div>
@@ -658,6 +667,15 @@ table.grid td.rowlabel,table.grid td.total-cell,table.grid td.avg-cell{box-shado
 </div>
 
 <div class="hover-tip" id="hoverTip"></div>
+
+<!-- MODAL DETALHES DA CÉLULA -->
+<div class="overlay" id="modalCellDetails" role="dialog" aria-modal="true" aria-labelledby="cellDetailsTitle">
+  <div class="modal wide">
+    <div class="modal-head"><div><h2 id="cellDetailsTitle">Detalhes dos registros</h2><p id="cellDetailsSubtitle"></p></div><button class="x-btn" id="closeCellDetails" aria-label="Fechar">×</button></div>
+    <div class="modal-body"><div id="cellDetailsContent"></div></div>
+    <div class="modal-foot"><button class="btn" id="closeCellDetailsFoot">Fechar</button></div>
+  </div>
+</div>
 
 <!-- MODAL COMENTÁRIOS -->
 <div class="overlay" id="modalComment">
@@ -770,6 +788,7 @@ table.grid td.rowlabel,table.grid td.total-cell,table.grid td.avg-cell{box-shado
   <div class="modal wide">
     <div class="modal-head"><div><h2>Atualizar dados</h2><p>Preencha um ou mais conjuntos; campos vazios serão ignorados.</p></div><button class="x-btn" id="closeAtualizarCargas" aria-label="Fechar">×</button></div>
     <div class="modal-body" style="display:flex;flex-direction:column;gap:16px;max-height:70vh;overflow:auto">
+      <label style="display:flex;align-items:flex-start;gap:9px;padding:11px 13px;border:1px solid rgba(245,158,11,.4);border-radius:12px;background:rgba(245,158,11,.08);color:var(--txt-2);font-size:11.5px;line-height:1.5"><input id="replaceCyclesOnImport" type="checkbox" checked style="margin-top:2px;accent-color:#f59e0b"><span><b style="color:#fbbf24">Substituir ciclos encontrados nos dados colados.</b> Antes de gravar, remove os registros atuais desses ciclos nas bases e grava os novos. Use quando estiver enviando a base completa do(s) ciclo(s).</span></label>
       <div><label for="cargasPasteArea" style="display:block;margin:0 0 7px;font-size:11px;font-weight:800;letter-spacing:.8px">ATUALIZAR CARGAS · CARGA / TERMO</label><textarea id="cargasPasteArea" style="width:100%;min-height:110px;resize:vertical;background:var(--input-bg);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.6;outline:none" placeholder="CARGA&#9;TERMO"></textarea><div id="cargasPastePreview" style="display:none;margin-top:8px;padding:10px;border-radius:10px;background:var(--card-2);border:1px solid var(--line);font-size:12px;color:var(--txt-2)"></div></div>
       <div><label for="agendaPasteArea" style="display:block;margin:0 0 7px;font-size:11px;font-weight:800;letter-spacing:.8px">ATUALIZAR AGENDA · AGENDA / SENHA / CARGA / STATUS / FORNECEDOR / CHEGADA / DTA_BASE</label><textarea id="agendaPasteArea" style="width:100%;min-height:130px;resize:vertical;background:var(--input-bg);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.6;outline:none" placeholder="AGENDA&#9;SENHA&#9;CARGA&#9;STATUS&#9;FORNECEDOR&#9;CHEGADA&#9;DTA_BASE"></textarea><div id="agendaPastePreview" style="display:none;margin-top:8px;padding:10px;border-radius:10px;background:var(--card-2);border:1px solid var(--line);font-size:12px;color:var(--txt-2)"></div></div>
       <div><label for="recusaPasteArea" style="display:block;margin:0 0 7px;font-size:11px;font-weight:800;letter-spacing:.8px">RECUSA · DTA_RECUSA / SENHA</label><textarea id="recusaPasteArea" style="width:100%;min-height:110px;resize:vertical;background:var(--input-bg);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.6;outline:none" placeholder="DTA_RECUSA&#9;SENHA&#10;23/10/2026 12:00&#9;123"></textarea><div id="recusaPastePreview" style="display:none;margin-top:8px;padding:10px;border-radius:10px;background:var(--card-2);border:1px solid var(--line);font-size:12px;color:var(--txt-2)"></div></div>
@@ -789,6 +808,19 @@ table.grid td.rowlabel,table.grid td.total-cell,table.grid td.avg-cell{box-shado
     </div>
     <div class="modal-foot"><button class="btn" id="cancelarModalAtualizacao" type="button">Fechar</button></div>
   </div>
+</div>
+<div class="overlay" id="modalUsers" role="dialog" aria-modal="true" aria-labelledby="usersTitle">
+ <div class="modal wide"><div class="modal-head"><div><h2 id="usersTitle">Gerenciar usuários</h2><p>Somente nível 1. O usuário 5520967 é protegido e não pode ser alterado ou removido.</p></div><button class="x-btn" id="closeUsers">×</button></div>
+ <div class="modal-body"><div class="stats" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
+  <div class="field"><label for="newUserId">Matrícula</label><input id="newUserId" autocomplete="off"></div><div class="field"><label for="newUserName">Nome</label><input id="newUserName" autocomplete="off"></div><div class="field"><label for="newUserPass">Senha</label><input id="newUserPass" type="password" autocomplete="new-password"></div><div class="field"><label for="newUserLevel">Nível</label><select id="newUserLevel"><option value="1">1 · Master</option><option value="2">2 · Atualiza bases</option><option value="3">3 · Consulta</option></select></div>
+ </div><button class="btn btn-primary" id="createUserBtn" type="button">Criar usuário</button>
+ <div style="overflow:auto;max-height:48vh;margin-top:16px;border:1px solid var(--line);border-radius:12px"><table class="cell-details-table" style="width:100%"><thead><tr><th>Matrícula</th><th>Nome</th><th>Nova senha (opcional)</th><th>Nível</th><th>Ações</th></tr></thead><tbody id="usersTableBody"></tbody></table></div></div>
+ <div class="modal-foot"><button class="btn" id="closeUsersFoot">Fechar</button></div></div>
+</div>
+<div class="overlay" id="modalDeleteCycles" role="dialog" aria-modal="true" aria-labelledby="deleteCyclesTitle">
+ <div class="modal"><div class="modal-head"><div><h2 id="deleteCyclesTitle">Apagar ciclo(s)</h2><p>Remove dados brutos e resultados dos ciclos selecionados.</p></div><button class="x-btn" id="closeDeleteCycles">×</button></div>
+ <div class="modal-body"><div class="field" style="margin-bottom:12px"><label for="cycleDeleteStart">Ciclo inicial (data do ciclo)</label><input id="cycleDeleteStart" type="date"></div><div class="field"><label for="cycleDeleteEnd">Ciclo final (inclusivo; igual ao inicial para apagar um ciclo)</label><input id="cycleDeleteEnd" type="date"></div><p style="margin-top:12px;color:var(--muted);font-size:11px;line-height:1.5">Um ciclo operacional vai das 22:00 do dia anterior até antes das 22:00 da data selecionada. A exclusão abrange AGENDA, CARGAS_RECEBIDAS, RECUSA, SOBREPOSTOS e BD_RESULTADOS.</p></div>
+ <div class="modal-foot"><button class="btn" id="cancelDeleteCycles">Cancelar</button><button class="btn btn-danger" id="confirmDeleteCycles">Apagar definitivamente</button></div></div>
 </div>
 <div class="loader" id="loader"><div class="spinner"></div><p id="loaderText">Processando…</p></div>
 <div class="toasts" id="toasts"></div>
@@ -1005,18 +1037,23 @@ function turnoDaMetrica(registro,chave){
    ============================================================================ */
 const RC={agenda:'AGENDA',no_show:'NO SHOW',agenda_noshow:'AGENDA - NOSHOW',recebido:'RECEBIDO',backlog_recebido:'BACKLOG RECEBIDO',backlog_pendente:'BACKLOG PENDENTE',no_prazo:'NO PRAZO',abaixo_4hrs:'< 4 HRS',recusado:'RECUSA NO DIA',recusa_no_prazo:'RECUSA NO PRAZO',recusa_backlog:'RECUSA BACKLOG',sobrepostas:'SOBREPOSTAS',pct_no_prazo:'% NO PRAZO',pct_recebido:'% RECEBIDO'};
 const RK=['no_show','recebido','backlog_recebido','backlog_pendente','no_prazo','abaixo_4hrs','recusado','recusa_no_prazo','recusa_backlog'];
-function canEdit(){return String(state.user?.USER||'')===EDIT_USER;}
-function podeAtualizarCargas(){return String(state.user?.USER||'')===EDIT_USER;}
+function userLevel(){const n=Number(state.user?.LEVEL);return [1,2,3].includes(n)?n:(String(state.user?.USER||'')===EDIT_USER?1:3);}
+function isMaster(){return String(state.user?.USER||'')===EDIT_USER||userLevel()===1;}
+function canEdit(){return isMaster();}
+function canReadBases(){return userLevel()<=2;}
+function podeAtualizarCargas(){return userLevel()===1||userLevel()===2;}
 function mostrarBotoesAtualizacao(){
   const permitido=podeAtualizarCargas();
   ['opAtualizarAgenda','opAtualizarCargas'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=!permitido;});
   const aviso=document.getElementById('avisoPermissaoAtualizacao');
   if(aviso)aviso.style.display=permitido?'none':'block';
+  const users=document.getElementById('btnManageUsers');if(users)users.style.display=isMaster()?'':'none';
+  const del=document.getElementById('btnDeleteCycles');if(del)del.style.display=permitido?'':'none';
 }
 function abrirModalAtualizacao(){mostrarBotoesAtualizacao();document.getElementById('modalAtualizacao').classList.add('show');}
 function fecharModalAtualizacao(){document.getElementById('modalAtualizacao')?.classList.remove('show');}
 async function atualizarTudo(){
-  if(!canEdit()){toast('Acesso negado','Somente a matrícula 5520967 pode recalcular os resultados.','warn');return;}
+  if(!isMaster()){toast('Acesso negado','Somente usuários nível 1 podem recalcular os resultados.','warn');return;}
   fecharModalAtualizacao();
   const ok=await loadData(true,true);
   if(ok)toast('Recalculo concluído','Todos os registros foram recalculados e gravados por data e turno.','ok');
@@ -1055,8 +1092,15 @@ function interpretarRecusaColada(texto){
   const cab=partes.map(p=>normUpper(p).replace(/[\s_]/g,''));
   if(i===0&&cab.some(p=>['DTARECUSA','SENHA'].includes(p)))return;
   if(partes.length<2){erros.push({linha:i+1,motivo:'Informe DTA_RECUSA e SENHA.'});return;}
-  const [dtaRecusa,senha]=partes;
-  if(!dtaRecusa||!senha){erros.push({linha:i+1,motivo:'DTA_RECUSA e SENHA são obrigatórios.'});return;}
+  let [dtaRecusa,senha]=partes;
+  // Aceita as colunas em qualquer ordem, identificando qual valor contém uma data.
+  const pareceData=v=>/^(?:\d{1,2}\/\d{1,2}\/\d{4}|\d{4}-\d{2}-\d{2})(?:[ T]+\d{1,2}:\d{2}(?::\d{2})?)?$/.test(String(v||'').trim())&&!!parseDateTimeBR(v);
+  const primeiraEhData=pareceData(dtaRecusa);
+  const segundaEhData=pareceData(senha);
+  if(!primeiraEhData&&segundaEhData)[dtaRecusa,senha]=[senha,dtaRecusa];
+  if(!dtaRecusa||!senha||!pareceData(dtaRecusa)){
+    erros.push({linha:i+1,motivo:'Informe uma DTA_RECUSA válida e a SENHA correspondente.'});return;
+  }
   registros.push({dtaRecusa,senha,linha:i+1});
  });
  return {registros,erros};
@@ -1081,7 +1125,7 @@ function exibirPreviewSobrepostosImportados(){mostrarPreviewImportacao(interpret
 function exibirPreviewRecusaImportada(){mostrarPreviewImportacao(interpretarRecusaColada(document.getElementById('recusaPasteArea').value),document.getElementById('recusaPastePreview'));}
 async function salvarConjuntoImportado(nome,registros,salvarUm){const resumo={ok:0,erros:[]};let prox=0;const workers=Array.from({length:Math.min(6,registros.length)},async()=>{while(true){const i=prox++;if(i>=registros.length)return;const r=registros[i];try{await salvarUm(r);resumo.ok++;}catch(e){console.error(`Erro ao gravar ${nome}:`,r,e);resumo.erros.push(`${r.carga||r.senha||''}: ${e.message||String(e)}`);}}});await Promise.all(workers);return resumo;}
 async function processarAtualizacaoCargas(){
- if(!podeAtualizarCargas()){toast('Acesso negado','Somente o usuário autorizado pode executar esta operação.','warn');return;}
+ if(!podeAtualizarCargas()){toast('Acesso negado','Apenas usuários nível 1 ou 2 podem executar esta operação.','warn');return;}
  const textos={
   cargas:document.getElementById('cargasPasteArea').value,
   agenda:document.getElementById('agendaPasteArea').value,
@@ -1108,6 +1152,16 @@ async function processarAtualizacaoCargas(){
  if(botao.disabled)return;
  botao.disabled=true;showLoader(true,'Salvando conjuntos no Supabase...');
  try{
+ const substituir=document.getElementById('replaceCyclesOnImport').checked;
+ const ciclos=substituir?ciclosNosDados(dados):[];
+ if(substituir&&ciclos.length){
+  if(!confirm(`A substituição vai apagar os registros atuais das cinco bases e BD_RESULTADOS nos ciclos abaixo, antes de gravar os dados colados.
+
+${ciclos.map(formatBR).join(', ')}
+
+Confirma?`))return;
+  for(const ciclo of ciclos)await apagarCiclosEntre(ciclo,ciclo);
+ }
  const jobs=[];
 
  if(dados.cargas)jobs.push((async()=>{
@@ -1148,7 +1202,8 @@ async function processarAtualizacaoCargas(){
    const ex=await sb.from(TABLE_RECUSA).select(COL_RE.senha).eq(COL_RE.senha,r.senha).eq(COL_RE.dtaRecusa,r.dtaRecusa).limit(1);
    if(ex.error)throw ex.error;
    if(ex.data?.length)return;
-   const q=await sb.from(TABLE_RECUSA).insert({[COL_RE.dtaRecusa]:r.dtaRecusa,[COL_RE.senha]:r.senha});
+   const payloadRecusa={DTA_RECUSA:r.dtaRecusa,SENHA:r.senha};
+   const q=await sb.from(TABLE_RECUSA).insert(payloadRecusa);
    if(q.error)throw q.error;
   })];
  })());
@@ -1168,7 +1223,7 @@ async function processarAtualizacaoCargas(){
  const resultados=await Promise.all(jobs);
  resultados.forEach(([nome,r])=>toast(r.erros.length?`${nome}: concluído parcialmente`:`${nome}: salvo`,`${r.ok} registro(s) processado(s)${r.erros.length?` · ${r.erros.length} erro(s): ${r.erros.slice(0,3).join(' | ')}`:''}`,r.erros.length?'warn':'ok'));
  const falhou=resultados.some(([,r])=>r.erros.length);
- if(!falhou){fecharModalAtualizarCargas();state.dataLoaded=false;toast('Atualização gravada','Clique em Atualizar > Atualizar Tudo para recarregar as bases e recalcular os resultados.','warn');}
+ if(!falhou){fecharModalAtualizarCargas();state.dataLoaded=false;await loadData(true,false);toast('Atualização gravada',canEdit()?'Bases recarregadas e BD_RESULTADOS atualizado.':'Bases recarregadas; BD_RESULTADOS não foi alterado pelo nível 2.','ok');}
  else toast('Gravação parcial','Os conjuntos sem erro foram processados. Corrija as linhas indicadas antes de reenviar os conjuntos que falharam.','warn');
  }catch(e){console.error(e);toast('Erro na atualização',e.message||String(e),'err');}
  finally{botao.disabled=false;showLoader(false);}
@@ -1247,7 +1302,7 @@ function calcularResultados(){
   return rows;
 }
 async function gravarResultados(rows){
-  if(!canEdit())throw new Error('Apenas o usuário 5520967 pode gravar resultados.');
+  if(!isMaster())throw new Error('Apenas usuários nível 1 podem gravar resultados.');
   const porData=new Map();
   for(const row of rows){
     if(!TURNOS.includes(row.TURNO))throw new Error(`TURNO ausente ou inválido em ${row.DATA}`);
@@ -1271,7 +1326,7 @@ async function gravarResultados(rows){
   }
 }
 async function updateResultado(date,patch){
-  if(!canEdit())throw new Error('Somente o usuário 5520967 pode alterar os resultados.');
+  if(!isMaster())throw new Error('Somente usuários nível 1 podem alterar os resultados.');
   const turno=state.turno;
   if(!TURNOS.includes(turno))throw new Error('Turno inválido.');
   const key=chaveResultado(date,turno);
@@ -1876,7 +1931,7 @@ function renderTable(agg){
     ...ROWS.map(r => `<span><i style="background:${r.color};color:${r.color}"></i>${r.label}</span>`),
     `<span><i style="background:#a855f7;color:#a855f7"></i>% NO PRAZO</span>`,
     `<span><i style="background:#ec4899;color:#ec4899"></i>% RECEBIDO</span>`,
-    `<span style="margin-left:auto;color:var(--muted-2)">Clique num número para ver Top 10 Fornecedores</span>`
+    `<span style="margin-left:auto;color:var(--muted-2)">Clique num número para ver Top 10 Fornecedores · duplo clique para detalhes</span>`
   ].join('');
 }
 
@@ -2162,6 +2217,45 @@ function renderRecusaDetails(regs){
     }));
   });
   document.getElementById('recusaRows').innerHTML=regs.length?regs.map(r=>`<tr>${[r.dataRecusaOriginal,r.senha,r.fornecedor,r.tipoRecusa,r.setorRecusa,r.motivoRecusa,r.detalheRecusa].map(v=>`<td>${escapeHTML(v||'Não informado')}</td>`).join('')}</tr>`).join(''):'<tr><td colspan="7">Nenhuma recusa neste contexto.</td></tr>';
+}
+
+function closeCellDetailsModal(){
+  document.getElementById('modalCellDetails').classList.remove('show');
+  document.body.classList.remove('locked');
+}
+async function openCellDetails(rowKey,colKey,colIdx){
+  const somenteConsulta=!canReadBases();
+  try{
+    if(somenteConsulta){
+      const agg=aggregate(),col=agg.cols[colIdx];if(!col)return;
+      const rows=Object.values(state.resultadosPorTurno||{}).filter(r=>{if(state.turno!=='TODOS'&&r.TURNO!==state.turno)return false;const c=colForDate(agg.cols,String(r.DATA||'').slice(0,10));return c&&c.key===col.key;});
+      const content=document.getElementById('cellDetailsContent'),fields=[...new Set(rows.flatMap(r=>Object.keys(r)))];
+      content.innerHTML=rows.length?`<div class="cell-details-scroll"><table class="cell-details-table"><thead><tr>${fields.map(k=>`<th>${escapeHTML(k)}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${fields.map(k=>`<td>${r[k]===null||r[k]===undefined?'—':escapeHTML(String(r[k]))}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`:'<div class="comment-empty">Nenhum resultado gravado para este período.</div>';
+      document.getElementById('cellDetailsTitle').textContent=`BD_RESULTADOS · ${col.sub||''} ${col.label}`.trim();document.getElementById('cellDetailsSubtitle').textContent=`Consulta somente leitura · ${rows.length} registro(s).`;document.getElementById('modalCellDetails').classList.add('show');document.body.classList.add('locked');return;
+    }
+    if(!state.drillDataLoaded){showLoader(true,'Carregando registros…');await carregarDadosDetalhamento();}
+    const rowDef=ROWS.find(r=>r.key===rowKey)||{label:rowKey};
+    const agg=aggregate();
+    const col=agg.cols[colIdx];
+    if(!col)return;
+    const regs=agg.registros.filter(r=>{
+      if(!rowFilterFor(rowKey,r))return false;
+      if(state.turno!=='TODOS'&&turnoDaMetrica(r,rowKey)!==state.turno)return false;
+      const dt=dateForRow(r,rowKey);
+      if(!dt)return false;
+      const c=colForDate(agg.cols,dt);
+      return c&&c.key===col.key;
+    });
+    const labels={type:'Tipo de registro',carga:'Carga',senha:'Senha',fornecedor:'Fornecedor',dataAgenda:'Data da agenda',dataBase:'Data base',dataTermo:'Data do termo',dataRecusaOriginal:'Data original da recusa',tipoRecusa:'Tipo de recusa',setorRecusa:'Setor da recusa',motivoRecusa:'Motivo da recusa',detalheRecusa:'Detalhe da recusa',agenda:'Agenda',recebido:'Recebido',no_prazo:'No prazo',backlog_recebido:'Backlog recebido',backlog_pendente:'Backlog pendente',abaixo_4hrs:'Abaixo de 4 horas',no_show:'No show',recusado:'Recusado',recusa_no_prazo:'Recusa no prazo',recusa_backlog:'Recusa backlog',sobrepostas:'Sobrepostas',turnoAgenda:'Turno da agenda',turnoTermo:'Turno do termo',turnoRecusado:'Turno da recusa'};
+    const content=document.getElementById('cellDetailsContent');
+    const fields=[...new Set(regs.flatMap(r=>Object.keys(r)))];
+    content.innerHTML=regs.length?`<div class="cell-details-scroll"><table class="cell-details-table"><thead><tr><th>#</th>${fields.map(k=>`<th>${escapeHTML(labels[k]||k)}</th>`).join('')}</tr></thead><tbody>${regs.map((r,i)=>`<tr><td>${i+1}</td>${fields.map(k=>`<td>${r[k]===null||r[k]===undefined||r[k]===''?'—':escapeHTML(String(r[k]))}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`:'<div class="comment-empty">Nenhum registro encontrado para esta célula.</div>';
+    document.getElementById('cellDetailsTitle').textContent=`${rowDef.label} · ${col.sub||''} ${col.label}`.trim();
+    document.getElementById('cellDetailsSubtitle').textContent=`${regs.length} registro(s) correspondente(s) ao indicador e dia selecionados.`;
+    document.getElementById('modalCellDetails').classList.add('show');
+    document.body.classList.add('locked');
+  }catch(err){console.error(err);toast('Falha ao abrir detalhes',err.message||String(err),'err');}
+  finally{if(somenteConsulta)showLoader(false);}
 }
 
 async function openDrill(rowKey, colKey, colIdx, noScroll=false){
@@ -2686,7 +2780,7 @@ async function fetchAllFromTable(tableName){
 
 let carregandoDados = false;
 
-// Usuários que não são 5520967 consultam exclusivamente os resultados já gravados.
+// Usuários nível 3 consultam exclusivamente os resultados já gravados em BD_RESULTADOS.
 // O esquema atual de BD_RESULTADOS não possui AGENDA; ela é reconstruída pela soma
 // de AGENDA - NOSHOW + NO SHOW, sem alterar a estrutura do banco.
 function normalizarResultadoSomenteLeitura(row){
@@ -2739,7 +2833,7 @@ async function carregarResultadosSomenteLeitura(){
   state.computedResultadosPorTurno={};
   state.resultadosPorTurno=cache;
   // Previsão/clima é independente do cálculo e deve aparecer também no modo consulta.
-  await Promise.all([loadComments(), loadWeather(), (async()=>{state.rawAgenda=await fetchAllFromTable(TABLE_AGENDA);})()]);
+  await loadWeather();
   const footer=document.getElementById('footerConexao');
   if(footer)footer.textContent=`BD_RESULTADOS: ${nfInt.format(Object.keys(cache).length)} registro(s) · modo consulta`;
   state.dataLoaded=true;
@@ -2754,7 +2848,7 @@ async function loadData(force=false, syncSources=false, silent=false){
   carregandoDados = true;
   if(!silent)showLoader(true,'Carregando bases, calculando turnos e gravando BD_RESULTADOS…');
   try{
-    if(!canEdit()){
+    if(!canReadBases()){
       const ok=await carregarResultadosSomenteLeitura();
       if(silent)Chart.defaults.animation=false;
       return ok;
@@ -2783,7 +2877,7 @@ async function loadData(force=false, syncSources=false, silent=false){
       `AGENDA: ${nfInt.format(state.rawAgenda.length)} · CARGAS_RECEBIDAS: ${nfInt.format(state.rawCargas.length)} · SOBREPOSTOS: ${nfInt.format(state.rawSobrepostos.length)} · RECUSA: ${nfInt.format((state.rawRecusa||[]).length)}`;
 
     const computed=calcularResultados();
-    if(!silent)await gravarResultados(computed);   // auto-refresh NÃO grava no banco
+    if(!silent&&canEdit())await gravarResultados(computed);   // somente nível 1 persiste o recálculo
     const cache={};
     computed.forEach(row=>cache[chaveResultado(row.DATA,row.TURNO)]=row);
     state.computedResultadosPorTurno={...cache};
@@ -2857,7 +2951,7 @@ function setUserUI(u){
   const initials = (u.NAME || u.USER || '?').trim().split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase();
   document.getElementById('userAvatar').textContent = initials || '?';
   document.getElementById('userName').textContent = u.NAME || u.USER || '–';
-  document.getElementById('userMat').textContent = 'Mat. ' + (u.USER || '–');
+  document.getElementById('userMat').textContent = 'Mat. ' + (u.USER || '–') + ' · Nível ' + (String(u.USER)===EDIT_USER?1:(Number(u.LEVEL)||3));
 }
 async function doLogin(user, pass){
   const errBox = document.getElementById('loginError');
@@ -2871,7 +2965,7 @@ async function doLogin(user, pass){
     if (error) throw error;
     if (!data || !data.length) throw new Error('Matrícula ou senha incorretos.');
     const u = data[0];
-    state.user = { USER: u.USER, NAME: u.NAME || u.USER };
+    state.user = { USER: String(u.USER), NAME: u.NAME || u.USER, LEVEL: Number(u.LEVEL)||3 };
     saveSession(state.user);
     setUserUI(state.user);
     hideLogin();
@@ -2908,6 +3002,73 @@ function bindLogin(){
     vid.addEventListener('loadeddata', () => { vid.style.opacity = 1; });
     setTimeout(() => { vid.style.opacity = 1; }, 100);
   }
+}
+
+/* ============================================================================
+   USUÁRIOS E EXCLUSÃO DE CICLOS
+   ============================================================================ */
+function abrirUsuarios(){if(!isMaster()){toast('Acesso negado','Apenas nível 1 pode gerenciar usuários.','warn');return;}document.getElementById('modalUsers').classList.add('show');carregarUsuarios();}
+function fecharUsuarios(){document.getElementById('modalUsers').classList.remove('show');}
+async function carregarUsuarios(){
+ if(!isMaster())return;
+ const body=document.getElementById('usersTableBody');body.innerHTML='<tr><td colspan="5">Carregando…</td></tr>';
+ try{const {data,error}=await sb.from(TABLE_USERS).select('USER,NAME,LEVEL').order('USER');if(error)throw error;
+  body.innerHTML=(data||[]).map(u=>{const master=String(u.USER)===EDIT_USER;return `<tr data-user="${escapeHTML(u.USER)}"><td>${escapeHTML(u.USER)}${master?' · PROTEGIDO':''}</td><td><input data-edit="NAME" value="${escapeHTML(u.NAME||'')}" ${master?'disabled':''}></td><td><input data-edit="PASS" type="password" placeholder="Manter atual" ${master?'disabled':''}></td><td><select data-edit="LEVEL" ${master?'disabled':''}><option value="1" ${Number(u.LEVEL)===1?'selected':''}>1 · Master</option><option value="2" ${Number(u.LEVEL)===2?'selected':''}>2 · Bases</option><option value="3" ${Number(u.LEVEL)===3?'selected':''}>3 · Consulta</option></select></td><td>${master?'<span>Protegido</span>':'<button class="btn btn-primary" data-action="save-user">Salvar</button> <button class="btn btn-danger" data-action="delete-user">Apagar</button>'}</td></tr>`;}).join('')||'<tr><td colspan="5">Nenhum usuário cadastrado.</td></tr>';
+ }catch(e){body.innerHTML=`<tr><td colspan="5">Falha ao carregar: ${escapeHTML(e.message||String(e))}</td></tr>`;}
+}
+async function criarUsuario(){
+ if(!isMaster())return;
+ const USER=document.getElementById('newUserId').value.trim(),NAME=document.getElementById('newUserName').value.trim(),PASS=document.getElementById('newUserPass').value,LEVEL=Number(document.getElementById('newUserLevel').value);
+ if(!USER||!NAME||!PASS||![1,2,3].includes(LEVEL)){toast('Dados incompletos','Informe matrícula, nome, senha e nível válido.','warn');return;}
+ if(USER===EDIT_USER){toast('Usuário protegido','A matrícula 5520967 não pode ser criada/alterada por este formulário.','err');return;}
+ try{const {error}=await sb.from(TABLE_USERS).insert({USER,NAME,PASS,LEVEL});if(error)throw error;['newUserId','newUserName','newUserPass'].forEach(id=>document.getElementById(id).value='');toast('Usuário criado',`${USER} · nível ${LEVEL}`,'ok');await carregarUsuarios();}catch(e){toast('Falha ao criar usuário',e.message||String(e),'err');}
+}
+async function agirUsuario(e){
+ if(!isMaster())return;const btn=e.target.closest('button[data-action]');if(!btn)return;const tr=btn.closest('tr'),id=tr?.dataset.user;if(!id)return;
+ if(id===EDIT_USER){toast('Usuário protegido','A matrícula 5520967 não pode ser alterada ou apagada.','err');return;}
+ try{if(btn.dataset.action==='save-user'){
+  const NAME=tr.querySelector('[data-edit="NAME"]').value.trim(),PASS=tr.querySelector('[data-edit="PASS"]').value,LEVEL=Number(tr.querySelector('[data-edit="LEVEL"]').value);
+  if(!NAME||![1,2,3].includes(LEVEL))throw new Error('Nome e nível válido são obrigatórios.');
+  const patch={NAME,LEVEL};if(PASS)patch.PASS=PASS;
+  const {error}=await sb.from(TABLE_USERS).update(patch).eq('USER',id);if(error)throw error;toast('Usuário atualizado',id,'ok');await carregarUsuarios();
+ }else if(btn.dataset.action==='delete-user'){
+  if(!confirm(`Apagar definitivamente o usuário ${id}?`))return;
+  const {error}=await sb.from(TABLE_USERS).delete().eq('USER',id);if(error)throw error;toast('Usuário apagado',id,'ok');await carregarUsuarios();
+ }}catch(err){toast('Falha no gerenciamento',err.message||String(err),'err');}
+}
+function abrirApagarCiclos(){if(!podeAtualizarCargas()){toast('Acesso negado','Apenas níveis 1 e 2 podem apagar ciclos.','warn');return;}const t=todayISO();document.getElementById('cycleDeleteStart').value=t;document.getElementById('cycleDeleteEnd').value=t;document.getElementById('modalDeleteCycles').classList.add('show');}
+function fecharApagarCiclos(){document.getElementById('modalDeleteCycles').classList.remove('show');}
+function cicloISO(v){const d=parseDateTimeBR(v);return d?toISODate(applyCycle(d)):null;}
+async function apagarCiclosEntre(inicio,fim){
+ if(!podeAtualizarCargas())throw new Error('Sem permissão para apagar ciclos.');
+ const configs=[{table:TABLE_AGENDA,cols:['AGENDA','DTA_BASE']},{table:TABLE_CARGAS,cols:['TERMO']},{table:TABLE_RECUSA,cols:['DTA_RECUSA']},{table:TABLE_SOBREPOSTOS,cols:['TERMO']},{table:TABLE_RESULTADOS,cols:['DATA']}];
+ let removidos=0;
+ for(const cfg of configs){
+  const rows=await fetchAllFromTable(cfg.table);
+  for(const col of cfg.cols){
+   const dates=new Set();
+   for(const r of rows){const value=r?.[col],cycle=cfg.table===TABLE_RESULTADOS?String(value||'').slice(0,10):cicloISO(value);if(value!=null&&cycle>=inicio&&cycle<=fim)dates.add(String(value));}
+   for(const value of dates){const {error,count}=await sb.from(cfg.table).delete({count:'exact'}).eq(col,value);if(error)throw new Error(`${cfg.table}.${col}: ${error.message}`);removidos+=count||0;}
+  }
+ }
+ return removidos;
+}
+async function confirmarApagarCiclos(){
+ const start=document.getElementById('cycleDeleteStart').value,end=document.getElementById('cycleDeleteEnd').value;
+ if(!start||!end||end<start){toast('Período inválido','Informe datas válidas e um ciclo final igual ou posterior ao inicial.','warn');return;}
+ const n=Math.round((Date.parse(end+'T00:00:00')-Date.parse(start+'T00:00:00'))/86400000)+1;
+ if(n>90&&!confirm(`Você selecionou ${n} ciclos. Confirma a exclusão?`))return;
+ if(!confirm(`Apagar DEFINITIVAMENTE os dados das bases e BD_RESULTADOS de ${formatBR(start)} até ${formatBR(end)} (${n} ciclo(s)? Esta ação não pode ser desfeita.`))return;
+ const b=document.getElementById('confirmDeleteCycles');if(b.disabled)return;b.disabled=true;showLoader(true,'Apagando dados dos ciclos…');
+ try{const count=await apagarCiclosEntre(start,end);fecharApagarCiclos();state.dataLoaded=false;await loadData(true,false);toast('Ciclos apagados',`${count} registro(s) removido(s).`,'ok');}catch(e){console.error(e);toast('Erro ao apagar',e.message||String(e),'err');}finally{b.disabled=false;showLoader(false);}
+}
+function ciclosNosDados(dados){
+ const datas=new Set();const add=v=>{const d=cicloISO(v);if(d)datas.add(d);};
+ (dados.agenda?.registros||[]).forEach(r=>{add(r.agenda);add(r.dtaBase);});
+ (dados.cargas?.registros||[]).forEach(r=>add(r.termo));
+ (dados.recusa?.registros||[]).forEach(r=>add(r.dtaRecusa));
+ (dados.sobrepostos?.registros||[]).forEach(r=>add(r.termo));
+ return [...datas].sort();
 }
 
 /* ============================================================================
@@ -2955,7 +3116,7 @@ function bindEvents(){
     const th = e.target.closest('th[data-date]');
     if (th){ handleDateClick(th.dataset.date, e.ctrlKey || e.metaKey, e.shiftKey); return; }
     const td = e.target.closest('td.numcell[data-row]');
-    if (td && canEdit()){
+    if (td && canReadBases()){
       if (cellClickTimer) clearTimeout(cellClickTimer);
       const ds = td.dataset;
       cellClickTimer = setTimeout(() => {
@@ -2971,7 +3132,7 @@ function bindEvents(){
       if (cellClickTimer){ clearTimeout(cellClickTimer); cellClickTimer = null; }
       e.preventDefault();
       e.stopPropagation();
-      openDrill(td.dataset.row, td.dataset.col, Number(td.dataset.colidx));
+      openCellDetails(td.dataset.row, td.dataset.col, Number(td.dataset.colidx));
       return;
     }
     const th = e.target.closest('th[data-date]');
@@ -2999,6 +3160,15 @@ function bindEvents(){
   document.getElementById('btnCloseDrill').addEventListener('click', closeDrill);
 
   document.getElementById('btnRefresh').addEventListener('click',abrirModalAtualizacao);
+  document.getElementById('btnManageUsers').addEventListener('click',abrirUsuarios);
+  document.getElementById('btnDeleteCycles').addEventListener('click',abrirApagarCiclos);
+  document.getElementById('closeUsers').addEventListener('click',fecharUsuarios);document.getElementById('closeUsersFoot').addEventListener('click',fecharUsuarios);
+  document.getElementById('modalUsers').addEventListener('click',e=>{if(e.target.id==='modalUsers')fecharUsuarios();});
+  document.getElementById('createUserBtn').addEventListener('click',criarUsuario);
+  document.getElementById('usersTableBody').addEventListener('click',agirUsuario);
+  document.getElementById('closeDeleteCycles').addEventListener('click',fecharApagarCiclos);document.getElementById('cancelDeleteCycles').addEventListener('click',fecharApagarCiclos);
+  document.getElementById('confirmDeleteCycles').addEventListener('click',confirmarApagarCiclos);
+  document.getElementById('modalDeleteCycles').addEventListener('click',e=>{if(e.target.id==='modalDeleteCycles')fecharApagarCiclos();});
   document.getElementById('fecharModalAtualizacao').addEventListener('click',fecharModalAtualizacao);
   document.getElementById('cancelarModalAtualizacao').addEventListener('click',fecharModalAtualizacao);
   document.getElementById('modalAtualizacao').addEventListener('click',e=>{if(e.target.id==='modalAtualizacao')fecharModalAtualizacao();});
@@ -3029,6 +3199,9 @@ function bindEvents(){
     toast('Sessão encerrada', 'Faça login novamente.', 'warn');
   });
 
+  document.getElementById('closeCellDetails').addEventListener('click',closeCellDetailsModal);
+  document.getElementById('closeCellDetailsFoot').addEventListener('click',closeCellDetailsModal);
+  document.getElementById('modalCellDetails').addEventListener('click',e=>{if(e.target.id==='modalCellDetails')closeCellDetailsModal();});
   document.getElementById('closeComment').addEventListener('click', closeCommentModal);
   document.getElementById('cancelComment').addEventListener('click', closeCommentModal);
   document.getElementById('saveComment').addEventListener('click', saveComment);
@@ -3059,7 +3232,7 @@ function bindEvents(){
   document.getElementById('recusaPasteArea')?.addEventListener('input',exibirPreviewRecusaImportada);
   document.getElementById('sobrepostosPasteArea')?.addEventListener('input',exibirPreviewSobrepostosImportados);
   document.getElementById('modalAtualizarCargas')?.addEventListener('click',e=>{if(e.target.id==='modalAtualizarCargas')fecharModalAtualizarCargas();});
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'){fecharModalAtualizacao();fecharModalAtualizarCargas();}});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){fecharModalAtualizacao();fecharModalAtualizarCargas();fecharUsuarios();fecharApagarCiclos();closeCellDetailsModal();}});
 
   document.getElementById('modalMissing').addEventListener('click', e => {
     if (e.target.id === 'modalMissing') closeMissingModal();
@@ -3117,8 +3290,16 @@ document.addEventListener('visibilitychange',()=>{
    ============================================================================ */
 let appBooted = false;
 let eventsBound = false;
+async function atualizarUsuarioDaSessao(u){
+  const {data,error}=await sb.from(TABLE_USERS).select('USER,NAME,LEVEL').eq('USER',String(u.USER)).limit(1);
+  if(error)throw error;
+  if(!data?.length)throw new Error('Usuário não existe mais ou foi desativado. Faça login novamente.');
+  state.user={USER:String(data[0].USER),NAME:data[0].NAME||data[0].USER,LEVEL:Number(data[0].LEVEL)||3};
+  saveSession(state.user);setUserUI(state.user);
+}
 async function bootstrapApp(){
   if(!eventsBound){bindEvents();eventsBound=true;}
+  await atualizarUsuarioDaSessao(state.user);
   appBooted=true;
   updatePeriodHints();
   updateEditHint();
@@ -3146,9 +3327,7 @@ async function bootstrapApp(){
   const sess = loadSession();
   if (sess && sess.USER){
     state.user = sess;
-    setUserUI(sess);
-    hideLogin();
-    await bootstrapApp();
+    try{await atualizarUsuarioDaSessao(sess);hideLogin();await bootstrapApp();}catch(e){console.warn('Sessão inválida:',e);clearSession();state.user=null;showLogin();}
   } else {
     showLogin();
   }
