@@ -813,9 +813,17 @@ function modeloDia(day){
   if(!snap)return base;
   const people=pessoasConsideradas(mapaPessoas(snap.rows).filter(filtroFixo),day);
   base.people=people;base.total=people.length;base.quadroOk=true;base.quadroData=snap.date;base.quadroAproximado=snap.date>day;
-  const naoUtil=base.domingo||base.feriado;
   base.presencaOk=state.presenceDays.has(day);
-  if(base.futuro||naoUtil)return base;
+  if(base.futuro||base.domingo)return base;
+  /* Em feriados, registrar somente as presenças reais; nunca inferir faltas. */
+  if(base.feriado){
+    for(const p of people)if(state.present.has(kk(p.matricula,day))){
+      base.presentes++;base.presentesLista.push(p.matricula);base.porCodigo.P=(base.porCodigo.P||0)+1;
+      base.porSetor[p.setor]=(base.porSetor[p.setor]||0)+1;
+      base.porTurno[p.turno]=(base.porTurno[p.turno]||0)+1;
+    }
+    return base;
+  }
   let presentes=0,ausentes=0,ferias=0,fora=0,jn=0,sab4=0;
   const porMotivo={},porCodigo={},porSetor={},porTurno={},ausentesLista=[],presentesLista=[],jnLista=[];
   for(const p of people){
@@ -1051,12 +1059,12 @@ function todosDias(){return state.dias.map(dia)}
 const DD=()=>state.dias;
 
 function agregar(ds){
-  const r={ds,diasU:0,ausU:0,codigos:{},ausentes:0,presentes:0,elegivel:0,denominador:0,total:0,ferias:0,jn:0,fora:0,apurados:0,semDados:0,domingo:0,feriado:0,futuro:0,semQuadro:0,
+  const r={ds,diasU:0,ausU:0,codigos:{},ausentes:0,presentes:0,presentesFeriado:0,elegivel:0,denominador:0,total:0,ferias:0,jn:0,fora:0,apurados:0,semDados:0,domingo:0,feriado:0,futuro:0,semQuadro:0,
     taxa:null,mediaAbs:0,mediaPre:0,mediaTotal:0,motivos:{},setores:new Map(),turnos:new Map(),cargos:new Map(),
     dows:Array.from({length:7},()=>({aus:0,pre:0,ele:0,dias:0})),pessoas:new Map(),heat:new Map(),inconsist:0};
   for(const d of ds){
     if(d.futuro){r.futuro++;continue}
-    if(d.feriado){r.feriado++;continue}
+    if(d.feriado){r.feriado++;r.presentesFeriado+=d.presentes;continue}
     if(d.domingo){r.domingo++;continue}
     if(!d.quadroOk){r.semQuadro++;continue}
     if(d.dow!==6){r.diasU++;r.ausU+=d.ausentes}r.apurados++;r.denominador+=d.denominador||Math.max(0,d.total-d.ferias);r.ausentes+=d.ausentes;r.presentes+=d.presentes;r.elegivel+=d.elegivel;r.total+=d.total;r.ferias+=d.ferias;r.jn+=d.jn;r.fora+=d.fora;
@@ -1078,7 +1086,13 @@ function agregar(ds){
 function pessoasDoDia(d){return d.people.map(p=>({...p,status:statusDe(p,d)}))}
 function statusDe(p,d){
   if(d.futuro)return{c:'-',cls:'fut',txt:'dia futuro'};
-  if(d.domingo||d.feriado)return{c:'-',cls:'nw',txt:(d.feriado?'feriado':'domingo')+' · sem falta'};
+  if(d.feriado){
+    /* Em feriados, mostrar somente quem tem presença registrada no Suricato. */
+    return state.present.has(kk(p.matricula,d.day))
+      ?{c:'P',cls:'pre',txt:'PRESENÇA registrada no Suricato · feriado'}
+      :{c:'',cls:'nw',txt:'feriado · sem presença registrada'};
+  }
+  if(d.domingo)return{c:'-',cls:'nw',txt:'domingo · sem falta'};
   const {code,regra}=classificar(p,d);
   if(code==='P')return{c:'P',cls:'pre',txt:'PRESENÇA registrada no Suricato'};
   if(code==='FE')return{c:'FE',cls:'fer',txt:'FÉRIAS'};
@@ -1121,7 +1135,7 @@ function renderKpis0(a){
     const st=d.futuro?'Dia futuro':(d.feriado?'Feriado · sem falta':(d.domingo?'Domingo · sem falta':(!d.quadroOk?'Sem quadro válido':(!d.presencaOk?'Sem carga de presença · fora da apuração':'Dia apurado'))));
     $('#kpis').innerHTML=
       kpi('bad','AUSENTES (ABS) · '+brData(d.day)+' '+dowNome(d.day),!d.domingo&&!d.feriado&&!d.futuro&&d.quadroOk?nf.format(d.ausentes):'—','ocorrências de ausência apuradas no dia')+
-      kpi('ok','PRESENTES · '+brData(d.day),d.presencaOk&&!d.domingo&&!d.feriado&&!d.futuro?nf.format(d.presentes):'—','com registro de presença no Suricato')+
+      kpi('ok','PRESENTES · '+brData(d.day),!d.domingo&&!d.futuro?nf.format(d.presentes):'—',d.feriado?'somente registros de presença no feriado':'com registro de presença no Suricato')+
       kpi('info','TAXA DE ABSENTEÍSMO',d.taxa===null?'—':pc.format(d.taxa)+'%','ausentes ÷ quadro elegível do dia')+
       kpi('','QUADRO ELEGÍVEL DO DIA',d.elegivel?nf.format(d.elegivel):'—',`total ${nf.format(d.total)} − férias ${nf.format(d.ferias)} − sem dados ${nf.format(d.fora)} = elegível`)+
       kpi('warn','JUSTIFICADOS NÃO-ABS',nf.format(d.jn),'folga/treinamento e afins: fora do ABS')+
@@ -1130,7 +1144,7 @@ function renderKpis0(a){
   }
   $('#kpis').innerHTML=
     kpi('bad','ABS MÉDIO POR DIA ÚTIL',a.mediaAbs===null?'—':nf1.format(a.mediaAbs),a.diasU?`${nf.format(a.ausU)} ausências ÷ ${nf.format(a.diasU)} dia(s) útil(eis) seg–sex, sem feriados`:'sem dias úteis apurados no período')+
-    kpi('ok','PRESENTES MÉDIO POR DIA',nf1.format(a.mediaPre),`${nf.format(a.presentes)} presenças no período`)+
+    kpi('ok','PRESENTES MÉDIO POR DIA',nf1.format(a.mediaPre),`${nf.format(a.presentes)} presenças em dias apurados · ${nf.format(a.presentesFeriado)} presença(s) em feriado, sem faltas`)+
     kpi('info','TAXA DE ABSENTEÍSMO',pct,state.dias.includes(state.hoje)?'dia atual usa somente turnos já iniciados; histórico usa quadro completo':'ausentes ÷ soma do quadro elegível dos dias apurados')+
     kpi('','QUADRO ELEGÍVEL MÉDIO/DIA',nf1.format(a.mediaTotal),`${nf.format(a.elegivel)} elegíveis somados no mês`)+
     kpi('warn','JUSTIFICADOS NÃO-ABS',nf.format(a.jn),'folga/treinamento e afins: fora do ABS')+
@@ -1161,20 +1175,21 @@ function graficoEvolucao(ds,alvo){
   const met=state.chartM;
   const max=Math.max(1,...ds.map(d=>met==='taxa'?(d.taxa||0):d.ausentes));
   const bars=ds.map((d,i)=>{
+    const feriadoPres=d.feriado&&!d.futuro;
     const util=!d.futuro&&!d.domingo&&!d.feriado&&d.quadroOk;
-    const cls=[util?'':'nd',(d.domingo||d.feriado)?'nw':'',state.dia===d.day?'on':''].filter(Boolean).join(' ');
-    const val=met==='taxa'?(d.taxa===null?null:d.taxa):d.ausentes;
-    const h=util&&val!==null?Math.max(2,val/max*100):2;
-    const rot=util&&val!==null?(met==='taxa'?pc.format(val)+'%':nf.format(val)):'—';
+    const cls=[util||feriadoPres?'':'nd',(d.domingo||d.feriado)?'nw':'',state.dia===d.day?'on':''].filter(Boolean).join(' ');
+    const val=feriadoPres?d.presentes:(met==='taxa'?(d.taxa===null?null:d.taxa):d.ausentes);
+    const h=(util||feriadoPres)&&val!==null?Math.max(2,val/max*100):2;
+    const rot=(util||feriadoPres)&&val!==null?(feriadoPres?nf.format(val)+' P':(met==='taxa'?pc.format(val)+'%':nf.format(val))):'—';
     let motivo;
     if(!d.quadroOk)motivo='Sem quadro válido';
     else if(d.futuro)motivo='Dia futuro';
-    else if(d.feriado)motivo='Feriado — sem falta';
+    else if(d.feriado)motivo=`Feriado — ${d.presentes} presença(s); faltas não exibidas`;
     else if(d.domingo)motivo='Domingo — sem falta';
     else if(!d.presencaOk)motivo='Sem carga de presença no Suricato — ausência inferida pela regra solicitada';
     else motivo='';
     const tt=`${brData(d.day)} · ${dowNome(d.day)}${d.feriado?' · feriado':''}${d.domingo?' · domingo':''}${d.futuro?' · dia futuro':''}\n`+
-      (util?`Ausentes: ${d.ausentes}\nPresentes: ${d.presentes}\nQuadro elegível: ${d.elegivel}\nFérias: ${d.ferias}\nTaxa: ${d.taxa===null?'—':pc.format(d.taxa)+'%'}\nDuplo clique: justificar ausência`:motivo);
+      (feriadoPres?`Presentes: ${d.presentes}\nFeriado — ausências não apuradas`:(util?`Ausentes: ${d.ausentes}\nPresentes: ${d.presentes}\nQuadro elegível: ${d.elegivel}\nFérias: ${d.ferias}\nTaxa: ${d.taxa===null?'—':pc.format(d.taxa)+'%'}\nDuplo clique: justificar ausência`:motivo));
     return `<div class="ebar ${cls}" data-act="day" data-day="${d.day}" title="${esc(tt)}" style="--i:${i}">
       <span class="ebar-v">${rot}</span>
       <span class="ebar-t"><i style="height:${h}%"></i></span>
@@ -1315,17 +1330,22 @@ function cardCalor(rotulo,titulo,desc,ds,fn,tipoFiltro){
     <div class="hlg"><span>0</span><i style="background:hsl(145 72% 60%)"></i><i style="background:hsl(109 72% 60%)"></i><i style="background:hsl(72 72% 60%)"></i><i style="background:hsl(36 72% 60%)"></i><i style="background:hsl(0 72% 60%)"></i><span>${fmt(mx)}${pct?'%':''}</span><span style="margin-left:auto">Mais quente = maior ABS. Taxa = ausentes ÷ (quadro − férias − 4º turno no sábado).</span></div></div>`;
 }
 function graficoTaxa(ds,alvo){
-  const usable=ds.filter(d=>!d.futuro&&!d.domingo&&!d.feriado&&d.quadroOk),max=Math.max(1,...usable.map(d=>d.taxa||0));
-  const bars=ds.map((d,i)=>{const ok=!d.futuro&&!d.domingo&&!d.feriado&&d.quadroOk&&d.taxa!==null;const h=ok?Math.max(2,d.taxa/max*100):2;const val=ok?pc.format(d.taxa)+'%':'—';const cls=[ok?'':'nd',(d.domingo||d.feriado)?'nw':'',state.dia===d.day?'on':''].filter(Boolean).join(' ');const tip=ok?`${brData(d.day)} · ${dowNome(d.day)} · ${pc.format(d.taxa)}% (${d.ausentes} ÷ ${d.denominador})`:(!d.quadroOk?'Sem quadro válido':d.futuro?'Dia futuro':d.feriado?'Feriado':d.domingo?'Domingo':'Sem taxa apurada');return `<div class="ebar ${cls}" data-act="day" data-day="${d.day}" title="${esc(tip)}" style="--i:${i}"><span class="ebar-v">${val}</span><span class="ebar-t"><i style="height:${h}%"></i></span><span class="ebar-l">${d.day.slice(8)}<em>${dowNome(d.day)}</em></span></div>`}).join('');
-  alvo.innerHTML=`<div class="evol"><div class="evol-bars" style="height:230px;width:100%">${bars}</div><div class="lgd"><span><i></i>Taxa de ABS = ausentes ÷ quadro elegível do dia</span><span><i class="c"></i>Dia selecionado</span><span><i class="b"></i>Domingos / feriados sem apuração</span></div></div>`;
+  const usable=ds.filter(d=>!d.futuro&&!d.domingo&&!d.feriado&&d.quadroOk),max=Math.max(1,...usable.map(d=>d.taxa||0),...ds.filter(d=>d.feriado&&!d.futuro).map(d=>d.presentes||0));
+  const bars=ds.map((d,i)=>{const ferPres=d.feriado&&!d.futuro;const ok=!d.futuro&&!d.domingo&&!d.feriado&&d.quadroOk&&d.taxa!==null;const value=ferPres?d.presentes:d.taxa;const h=(ok||ferPres)?Math.max(2,value/max*100):2;const val=ferPres?nf.format(d.presentes)+' P':(ok?pc.format(d.taxa)+'%':'—');const cls=[ok?'':'nd',(d.domingo||d.feriado)?'nw':'',state.dia===d.day?'on':''].filter(Boolean).join(' ');const tip=ferPres?`${brData(d.day)} · ${dowNome(d.day)} · feriado · ${d.presentes} presença(s), sem faltas`:ok?`${brData(d.day)} · ${dowNome(d.day)} · ${pc.format(d.taxa)}% (${d.ausentes} ÷ ${d.denominador})`:(!d.quadroOk?'Sem quadro válido':d.futuro?'Dia futuro':d.feriado?'Feriado':d.domingo?'Domingo':'Sem taxa apurada');return `<div class="ebar ${cls}" data-act="day" data-day="${d.day}" title="${esc(tip)}" style="--i:${i}"><span class="ebar-v">${val}</span><span class="ebar-t"><i style="height:${h}%"></i></span><span class="ebar-l">${d.day.slice(8)}<em>${dowNome(d.day)}</em></span></div>`}).join('');
+  alvo.innerHTML=`<div class="evol"><div class="evol-bars" style="height:230px;width:100%">${bars}</div><div class="lgd"><span><i></i>Taxa de ABS = ausentes ÷ quadro elegível do dia</span><span><i class="c"></i>Dia selecionado</span><span><i class="b"></i>Domingos sem apuração · feriados mostram presentes (P), sem ABS</span></div></div>`;
 }
 const MOTIVOS_ABA=['QUADRO','P','F','FA','AT','AF','FE','FO','TR'];
 const MOTIVOS_DESC={QUADRO:'QUADRO DE COLABORADORES',P:'PRESENÇA',F:'FALTA',FA:'FALTA ABONADA',AT:'ATESTADO',AF:'AFASTAMENTO',FE:'FÉRIAS',FO:'FOLGA',TR:'TREINAMENTO'};
 let motivoDetalheMap=new Map();
 function motivoMetricas(ds){return MOTIVOS_ABA.map(code=>({code,values:ds.map(d=>{
   if(!d.quadroOk)return{day:d.day,value:null,people:[]};
+  if(d.feriado){
+    if(code!=='P')return{day:d.day,value:null,people:[]};
+    const people=d.people.filter(p=>state.present.has(kk(p.matricula,d.day)));
+    return{day:d.day,value:people.length,people};
+  }
   if(code==='QUADRO')return{day:d.day,value:d.total,people:d.people};
-  if(d.futuro||d.domingo||d.feriado)return{day:d.day,value:null,people:[]};
+  if(d.futuro||d.domingo)return{day:d.day,value:null,people:[]};
   const people=d.people.filter(p=>classificar(p,d).code===code);return{day:d.day,value:people.length,people};
 })}))}
 function renderMotivos(a){
@@ -1333,7 +1353,7 @@ function renderMotivos(a){
   const days=a.ds;
   const head=`<tr><th class="motive-rowhead">MOTIVO</th>${days.map(d=>`<th><b>${d.day.slice(8)}</b><small>${dowNome(d.day)}</small></th>`).join('')}</tr>`;
   const rows=metrics.map(m=>`<tr><th class="motive-rowhead mc-${m.code}">${m.code} · ${m.code==='QUADRO'?'QUADRO DE COLABORADORES':(MOTIVO_NOME[m.code]||m.code)} · ${MOTIVO_COR_NOME[m.code]} · ${MOTIVO_COR[m.code]}</th>${m.values.map(v=>{if(v.value==null)return'<td class="off">—</td>';const k=`${m.code}|${v.day}`;motivoDetalheMap.set(k,v.people);return`<td><button class="motivo-val" data-act="motivoDetail" data-code="${m.code}" data-day="${v.day}" type="button" title="Clique para ver os colaboradores">${nf.format(v.value)}</button></td>`}).join('')}</tr>`).join('');
-  $('#viewBody').innerHTML=`<div class="grid"><div class="card c12"><h3>COMPOSIÇÃO DIÁRIA · QUADRO E MOTIVOS <em>clique em um número para ver os colaboradores</em></h3><div class="tw motive-table-wrap"><table class="mx motive-table"><thead>${head}</thead><tbody>${rows}</tbody></table></div><div class="hint">QUADRO exibe o total de colaboradores do snapshot vigente. P, F, FA, AT, AF, FE, FO e TR refletem o código classificado para cada pessoa/dia; dias futuros, domingos e feriados ficam sem apuração.</div></div><div class="card c12"><h3>COMPORTAMENTO DOS MOTIVOS <em>quantidade diária por código</em></h3><div id="motivoChart" class="motive-chart"></div><div class="hlg" id="motivoLegend"></div></div></div>`;
+  $('#viewBody').innerHTML=`<div class="grid"><div class="card c12"><h3>COMPOSIÇÃO DIÁRIA · QUADRO E MOTIVOS <em>clique em um número para ver os colaboradores</em></h3><div class="tw motive-table-wrap"><table class="mx motive-table"><thead>${head}</thead><tbody>${rows}</tbody></table></div><div class="hint">QUADRO exibe o total de colaboradores do snapshot vigente. P, F, FA, AT, AF, FE, FO e TR refletem o código classificado para cada pessoa/dia; dias futuros e domingos ficam sem apuração; em feriados, somente a série P (presenças registradas) é exibida, sem faltas nem outros motivos.</div></div><div class="card c12"><h3>COMPORTAMENTO DOS MOTIVOS <em>quantidade diária por código</em></h3><div id="motivoChart" class="motive-chart"></div><div class="hlg" id="motivoLegend"></div></div></div>`;
   renderMotivoChart(metrics,days);
 }
 function renderMotivoChart(metrics,days){
@@ -1428,11 +1448,12 @@ function valorCelula(people,m){
   const somente4=people.length>0&&people.every(p=>semAcento(p.turno).replace(/[^0-9]/g,'')===TURNO_4);
   if(dowDe(m.day)===6&&somente4)return{c:'-',s:'4º turno · não opera aos sábados',cls:'nw'};
   if(m.futuro)return{c:'-',s:'futuro',cls:'fut'};
-  if(m.domingo||m.feriado)return{c:'—',s:m.feriado?'FER':'DOM',cls:'nw'};
-  if(!m.quadroOk)return{c:'—',s:'sem quadro',cls:'cd'};
   const set=new Set(people.map(p=>p.matricula));
   const alvo=m.people.filter(p=>set.has(p.matricula));
   const pre=alvo.filter(p=>state.present.has(kk(p.matricula,m.day))).length;
+  if(m.feriado)return{c:nf.format(pre),s:'PRESENTES · feriado',cls:pre?'pre':'nw'};
+  if(m.domingo)return{c:'—',s:'DOM',cls:'nw'};
+  if(!m.quadroOk)return{c:'—',s:'sem quadro',cls:'cd'};
   const fer=alvo.filter(p=>state.ferias.has(kk(p.matricula,m.day))).length;
   const tot=alvo.length;const den=tot-fer;
   const ausF=alvo.filter(p=>{const st=statusDe(p,m);return st.cls==='abs'&&state.motivoFiltro.has(st.c)}).length;
