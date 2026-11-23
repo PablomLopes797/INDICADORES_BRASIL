@@ -1085,23 +1085,30 @@ function interpretarSobrepostosColados(texto){
  });
  return {registros,erros};
 }
+function normalizarSenha(v){
+  const s=String(v??'').trim();
+  if(!s)return '';
+  return /^\d+$/.test(s)?String(Number(s)):normUpper(s);
+}
 function interpretarRecusaColada(texto){
  const linhas=String(texto||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean),registros=[],erros=[];
  linhas.forEach((linha,i)=>{
-  const partes=dividirLinhaImportada(linha).map(normalizarTextoImportado);
+  let partes=dividirLinhaImportada(linha).map(normalizarTextoImportado);
   const cab=partes.map(p=>normUpper(p).replace(/[\s_]/g,''));
   if(i===0&&cab.some(p=>['DTARECUSA','SENHA'].includes(p)))return;
+  if(partes.length<2){
+    const m=linha.match(/^((?:\d{1,2}\/\d{1,2}\/\d{4}|\d{4}-\d{2}-\d{2})(?:[ T]+\d{1,2}:\d{2}(?::\d{2})?)?)[\s;|]+(.+)$/);
+    if(m)partes=[m[1].trim(),...m[2].split(/[\t;|]/).map(normalizarTextoImportado)];
+  }
   if(partes.length<2){erros.push({linha:i+1,motivo:'Informe DTA_RECUSA e SENHA.'});return;}
-  let [dtaRecusa,senha]=partes;
-  // Aceita as colunas em qualquer ordem, identificando qual valor contém uma data.
+  let [dtaRecusa,senha,...detalhes]=partes;
   const pareceData=v=>/^(?:\d{1,2}\/\d{1,2}\/\d{4}|\d{4}-\d{2}-\d{2})(?:[ T]+\d{1,2}:\d{2}(?::\d{2})?)?$/.test(String(v||'').trim())&&!!parseDateTimeBR(v);
-  const primeiraEhData=pareceData(dtaRecusa);
-  const segundaEhData=pareceData(senha);
+  const primeiraEhData=pareceData(dtaRecusa),segundaEhData=pareceData(senha);
   if(!primeiraEhData&&segundaEhData)[dtaRecusa,senha]=[senha,dtaRecusa];
   if(!dtaRecusa||!senha||!pareceData(dtaRecusa)){
     erros.push({linha:i+1,motivo:'Informe uma DTA_RECUSA válida e a SENHA correspondente.'});return;
   }
-  registros.push({dtaRecusa,senha,linha:i+1});
+  registros.push({dtaRecusa,senha:normalizarSenha(senha),fornecedor:detalhes[0]||'',tipoRecusa:detalhes[1]||'',setorRecusa:detalhes[2]||'',motivoRecusa:detalhes[3]||'',detalheRecusa:detalhes[4]||'',linha:i+1});
  });
  return {registros,erros};
 }
@@ -1196,13 +1203,17 @@ Confirma?`))return;
  if(dados.recusa)jobs.push((async()=>{
   // remove duplicados dentro do próprio colado (mesma SENHA + DTA_RECUSA)
   const unicos=new Map();
-  dados.recusa.registros.forEach(r=>unicos.set(`${r.senha}::${r.dtaRecusa}`,{dtaRecusa:r.dtaRecusa,senha:r.senha}));
+  dados.recusa.registros.forEach(r=>unicos.set(`${normalizarSenha(r.senha)}::${r.dtaRecusa}`,{...r,senha:normalizarSenha(r.senha)}));
   return ['RECUSA',await salvarConjuntoImportado(TABLE_RECUSA,[...unicos.values()],async r=>{
-   // evita duplicar se já existir a mesma SENHA com a mesma DTA_RECUSA
    const ex=await sb.from(TABLE_RECUSA).select(COL_RE.senha).eq(COL_RE.senha,r.senha).eq(COL_RE.dtaRecusa,r.dtaRecusa).limit(1);
    if(ex.error)throw ex.error;
    if(ex.data?.length)return;
    const payloadRecusa={DTA_RECUSA:r.dtaRecusa,SENHA:r.senha};
+   if(r.fornecedor)payloadRecusa.FORNECEDOR=r.fornecedor;
+   if(r.tipoRecusa)payloadRecusa['TIPO RECUSA']=r.tipoRecusa;
+   if(r.setorRecusa)payloadRecusa['SETOR RECUSA']=r.setorRecusa;
+   if(r.motivoRecusa)payloadRecusa['MOTIVO RECUSA']=r.motivoRecusa;
+   if(r.detalheRecusa)payloadRecusa['DETALHE RECUSA']=r.detalheRecusa;
    const q=await sb.from(TABLE_RECUSA).insert(payloadRecusa);
    if(q.error)throw q.error;
   })];
@@ -1261,7 +1272,7 @@ function calcularResultados(){
   };
   for(const a of state.rawAgenda){
     const data=refDateISO(a[COL_AG.agenda]);
-    const senha=String(a[COL_AG.senha]??'').trim();
+    const senha=normalizarSenha(a[COL_AG.senha]);
     if(!data||!senha)continue;
     if(!senhas.has(chaveResultado(data,'TODOS')))senhas.set(chaveResultado(data,'TODOS'),new Set());
     senhas.get(chaveResultado(data,'TODOS')).add(senha);
@@ -1315,14 +1326,18 @@ async function gravarResultados(rows){
   }
   const legado=await sb.from(TABLE_RESULTADOS).update({TURNO:'TODOS'}).is('TURNO',null);
   if(legado.error)throw new Error(`Falha ao normalizar TURNO antigo: ${legado.error.message||legado.error}`);
-  const datas=[...porData.keys()];
-  for(let i=0;i<datas.length;i+=50){
-    const loteDatas=datas.slice(i,i+50);
+  // Reconciliação completa: também remove datas que desapareceram das bases.
+  const existentes=await fetchAllFromTable(TABLE_RESULTADOS);
+  const datasAntigas=[...new Set(existentes.map(r=>String(r?.DATA||'').slice(0,10)).filter(Boolean))];
+  for(let i=0;i<datasAntigas.length;i+=50){
+    const loteDatas=datasAntigas.slice(i,i+50);
     const removidos=await sb.from(TABLE_RESULTADOS).delete().in('DATA',loteDatas);
-    if(removidos.error)throw new Error(`Falha ao substituir resultados antigos: ${removidos.error.message||removidos.error}`);
-    const lote=loteDatas.flatMap(data=>porData.get(data).map(payloadBancoResultado));
-    const gravados=await sb.from(TABLE_RESULTADOS).insert(lote);
-    if(gravados.error)throw new Error(`Falha ao inserir os quatro resultados por data: ${gravados.error.message||gravados.error}`);
+    if(removidos.error)throw new Error(`Falha ao zerar resultados antigos: ${removidos.error.message||removidos.error}`);
+  }
+  const rowsPersistiveis=[...porData.values()].flatMap(grupo=>grupo.map(payloadBancoResultado));
+  for(let i=0;i<rowsPersistiveis.length;i+=200){
+    const gravados=await sb.from(TABLE_RESULTADOS).insert(rowsPersistiveis.slice(i,i+200));
+    if(gravados.error)throw new Error(`Falha ao inserir resultados recalculados: ${gravados.error.message||gravados.error}`);
   }
 }
 async function updateResultado(date,patch){
@@ -1541,7 +1556,7 @@ function buildRegistros(){
   /* --- Registros RECUSA --- */
   const agendaBySenha = new Map();
   state.rawAgenda.forEach(a => {
-    const senha = String(a[COL_AG.senha] ?? '').trim();
+    const senha = normalizarSenha(a[COL_AG.senha]);
     const ag = parseDateTimeBR(a[COL_AG.agenda]);
     if(!senha || !ag) return;
     const atual = agendaBySenha.get(senha);
@@ -1549,7 +1564,7 @@ function buildRegistros(){
   });
 
   (state.rawRecusa||[]).forEach(r => {
-    const senha = String(r[COL_RE.senha] ?? '').trim();
+    const senha = normalizarSenha(r[COL_RE.senha]);
     const dtaRecusa = parseDateTimeBR(r[COL_RE.dtaRecusa]);
     if(!senha || !dtaRecusa) return;
 
