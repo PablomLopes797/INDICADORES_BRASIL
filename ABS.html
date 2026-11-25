@@ -387,7 +387,7 @@ td.nd{color:var(--quiet)}
 #quadroView .qf{width:100%;min-width:90px;background:var(--panel3);color:var(--text);border:1px solid var(--line);border-radius:7px;padding:5px}
 #quadroView td,#quadroView th{text-align:center!important}
 
-#mqBulkModal{z-index:85!important}#mqTransfer{z-index:86!important}
+#mqBulkModal{z-index:85!important}#mqTransfer{z-index:86!important}#setorAdminModal{z-index:88!important}.setor-card{width:min(620px,96vw)}.sector-list{display:flex;flex-wrap:wrap;gap:6px;max-height:36vh;overflow:auto;padding:8px;border:1px solid var(--line);border-radius:9px}.sector-chip{padding:5px 9px;border:1px solid var(--line);border-radius:999px;background:var(--panel2);color:var(--text);font-size:11px}
 .quadro-filterbar{gap:9px;align-items:flex-end}.quadro-filterbar .field{min-width:145px;flex:1 1 145px}.quadro-filterbar select{width:100%}.quadro-filterbar>[data-clear-table-filters]{flex:0 0 auto}
 /* Filtros no padrão de controles nativos do Meu Quadro */
 .quadro-table th{min-width:115px}.quadro-table th:first-child{min-width:90px}
@@ -435,7 +435,7 @@ td.nd{color:var(--quiet)}
     </div>
     <form id="monthForm">
       <div class="field"><label for="monthInput">MÊS DE REFERÊNCIA</label><input id="monthInput" type="month" required></div><button class="btn" id="expBtn" type="button">⬇ OBTER DADOS</button>
-      <button class="btn btn-primary" id="reloadBtn" type="submit">↻ ATUALIZAR DADOS</button><button class="btn" id="mqBtn" type="button">👥 MEU QUADRO</button><button class="btn" id="quadroBtn" type="button">📋 QUADRO</button><button class="btn" id="orcadoBtn" type="button">📊 QUADRO ORÇADO</button><button class="btn" id="usrBtn" type="button" hidden>USER</button>
+      <button class="btn btn-primary" id="reloadBtn" type="submit">↻ ATUALIZAR DADOS</button><button class="btn" id="mqBtn" type="button">👥 MEU QUADRO</button><button class="btn" id="quadroBtn" type="button">📋 QUADRO</button><button class="btn" id="orcadoBtn" type="button">📊 QUADRO ORÇADO</button><button class="btn" id="usrBtn" type="button" hidden>USER</button><button class="btn" id="setorBtn" type="button" hidden>＋ CADASTRAR SETOR</button>
     </form>
   </section>
 
@@ -601,6 +601,7 @@ td.nd{color:var(--quiet)}
       <div class="jm-b"><div class="sbox"><span class="ico">⌕</span><input id="motivoPeopleSearch" type="search" placeholder="Buscar por nome ou matrícula…"></div><div class="tw"><table class="mx" id="motivoPeopleTable"><thead><tr><th>MATRICULA</th><th>NOME</th><th>CARGO</th><th>TURNO</th><th>IDADE</th><th>TEMPO DE CASA</th><th>GESTOR</th><th>SETOR</th></tr></thead><tbody id="motivoPeopleRows"></tbody></table></div></div>
       <div class="jm-f"><button class="btn" id="motivoPeopleClose" type="button">Fechar</button></div></div>
   </div>
+  <div class="jm" id="setorAdminModal" hidden role="dialog" aria-modal="true" aria-labelledby="setorAdminTitle"><div class="jm-card setor-card"><div class="jm-h"><div><h3 id="setorAdminTitle">Cadastrar setor</h3><small>Catálogo de setores · ABS_SETORES</small></div><button class="jm-x" id="setorAdminClose" type="button" aria-label="Fechar">✕</button></div><div class="jm-b"><div class="field"><label for="setorNovo">NOVO SETOR</label><input id="setorNovo" type="text" maxlength="120" placeholder="Digite o nome do setor…" autocomplete="off"></div><div class="jm-msg" id="setorAdminMsg" hidden></div><div><label>SETORES CADASTRADOS</label><div class="sector-list" id="setorAdminList"></div></div></div><div class="jm-f"><button class="btn" id="setorAdminClose2" type="button">Fechar</button><button class="btn btn-primary" id="setorAdminSave" type="button">Cadastrar setor</button></div></div></div>
   <div class="jm" id="mqBulkModal" hidden role="dialog" aria-modal="true"><div class="jm-card" style="width:min(1200px,98vw);max-height:92vh"><div class="jm-h"><div><h3>Cadastro em massa</h3><small>Gestor responsável: selecionado em Meu quadro</small></div><button class="jm-x" id="mqBulkClose" type="button">✕</button></div><div class="jm-b"><div id="mqBulkRows"></div><div class="jm-msg" id="mqBulkMsg" hidden></div></div><div class="jm-f"><button class="btn" id="mqBulkAdd" type="button">♙ Adicionar Colaborador</button><button class="btn" id="mqBulkCancel" type="button">Cancelar</button><button class="btn btn-primary" id="mqBulkSave" type="button">Salvar alterações em massa</button></div></div></div>
   <div class="jm" id="mqTransfer" hidden role="dialog" aria-modal="true"><div class="jm-card" style="width:min(1200px,98vw)"><div class="jm-h"><div><h3>Redirecionar colaboradores removidos</h3><small>Informe o novo gestor e setor antes de concluir a atualização da equipe.</small></div></div><div class="jm-b"><div class="tw"><table class="mx"><thead><tr><th>MATRÍCULA</th><th>NOME</th><th>CARGO</th><th>NOVO GESTOR</th><th>SETOR</th></tr></thead><tbody id="mqTransferRows"></tbody></table></div><div class="jm-msg" id="mqTransferMsg" hidden></div></div><div class="jm-f"><button class="btn btn-primary" id="mqTransferSave">Salvar gestores e setores</button></div></div></div>
   <div class="jm" id="detailPeople" hidden role="dialog" aria-modal="true"><div class="jm-card"><div class="jm-h"><div><h3 id="detailPeopleTitle">Colaboradores</h3><small id="detailPeopleSub"></small></div><button class="jm-x" id="detailPeopleFecha" type="button">✕</button></div><div class="jm-b"><div class="sbox"><span class="ico">⌕</span><input id="detailPeopleSearch" type="search" placeholder="Buscar nome ou matrícula…"></div><div class="tw"><table class="mx"><thead><tr><th>MATRÍCULA</th><th>NOME</th><th>TURNO</th><th>CARGO</th><th>SETOR</th><th>STATUS</th></tr></thead><tbody id="detailPeopleRows"></tbody></table></div></div><div class="jm-f"><button class="btn" id="detailPeopleClose" type="button">Fechar</button></div></div></div>
@@ -669,7 +670,7 @@ td.nd{color:var(--quiet)}
       <div class="jm-b">
         <div><label>COLABORADOR (matrícula ou nome)</label><input id="gmColab" type="text" autocomplete="off" placeholder="Digite a matrícula ou o nome…"><div class="jm-sg" id="gmColabSug" hidden></div><div id="gmColabInfo" style="font-size:10.5px;color:var(--muted);margin-top:4px;min-height:14px"></div></div>
         <div><label>GESTOR (matrícula ou nome)</label><input id="gmGest" type="text" autocomplete="off" placeholder="Digite a matrícula do gestor…"><div class="jm-sg" id="gmGestSug" hidden></div><div id="gmGestInfo" style="font-size:10.5px;color:var(--muted);margin-top:4px;min-height:14px"></div></div>
-        <div><label>SETOR</label><select id="gmSetor"><option value="">Selecione o setor…</option><option value="MOVIMENT. VERT.">MOVIMENT. VERT.</option><option value="PUX. REC.">PUX. REC.</option><option value="EXPEDIÇÃO">EXPEDIÇÃO</option><option value="RECEBIMENTO">RECEBIMENTO</option><option value="MOVIMENT. HOR.">MOVIMENT. HOR.</option><option value="CARREGAMENTO">CARREGAMENTO</option><option value="PUX. STRETCH.">PUX. STRETCH.</option><option value="TRIAGEM">TRIAGEM</option><option value="DESCARGA">DESCARGA</option><option value="MAQ. STRETCH.">MAQ. STRETCH.</option><option value="SEPARAÇÃO">SEPARAÇÃO</option><option value="ACIONAMENTO">ACIONAMENTO</option><option value="BOLSÃO">BOLSÃO</option><option value="MEZANINO">MEZANINO</option><option value="ACURACIDADE">ACURACIDADE</option><option value="PROGRAMAÇÃO">PROGRAMAÇÃO</option><option value="OUTBOUND">OUTBOUND</option><option value="ADMINISTRAÇÃO">ADMINISTRAÇÃO</option><option value="INBOUND">INBOUND</option><option value="REMONTE">REMONTE</option></select></div>
+        <div><label>SETOR</label><select id="gmSetor"><option value="">Selecione o setor…</option></select></div>
         <div class="jm-msg" id="gmMsg" hidden></div>
       </div>
       <div class="jm-f"><button class="btn" id="gmCancel" type="button">Fechar</button><button class="btn btn-primary" id="gmSalva" type="button">Salvar</button></div>
@@ -1816,7 +1817,10 @@ $('#gmFecha').onclick=fecharGest;$('#gmCancel').onclick=fecharGest;$('#gmSalva')
 
 
 /* ---------- MEU QUADRO ---------- */
-const SETORES_FIXOS=["MOVIMENT. VERT.", "PUX. REC.", "EXPEDIÇÃO", "RECEBIMENTO", "MOVIMENT. HOR.", "CARREGAMENTO", "PUX. STRETCH.", "TRIAGEM", "DESCARGA", "MAQ. STRETCH.", "SEPARAÇÃO", "ACIONAMENTO", "BOLSÃO", "MEZANINO", "ACURACIDADE", "PROGRAMAÇÃO", "OUTBOUND", "ADMINISTRAÇÃO", "INBOUND", "REMONTE"];
+let SETORES_FIXOS=[],setoresErro='';
+function preencherSetoresSelect(el,prompt='Selecione setor…'){if(!el)return;const prev=el.value;el.innerHTML=`<option value="">${esc(prompt)}</option>`+SETORES_FIXOS.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');if(SETORES_FIXOS.includes(prev))el.value=prev}
+function atualizarSetoresSelects(){preencherSetoresSelect($('#gmSetor'),'Selecione o setor…')}
+async function carregarSetores(){const rows=await pega('ABS_SETORES','SETOR',{},'SETOR.asc',1000);SETORES_FIXOS=[...new Set(rows.map(r=>norm(r.SETOR)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));setoresErro='';atualizarSetoresSelects();return SETORES_FIXOS}
 async function descobrirColunas(){
   const base='id,CD,DTA,MATRICULA,NOME,CARGO,SETOR,TURNO';
   try{
@@ -1890,7 +1894,7 @@ function mqRefresh(){
   $('#mqCargo').innerHTML='<option value="">Todos</option>'+cargos.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');$('#mqCargo').value=mq.cargo;
   mqTabela();
 }
-$('#gmSetor').innerHTML='<option value="">Selecione o setor…</option>'+SETORES_FIXOS.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');
+preencherSetoresSelect($('#gmSetor'),'Selecione o setor…');
 $('#mqBtn').onclick=()=>{if(!mq.gestor&&state.gestorF)mq.gestor=state.gestorF;mqRefresh();$('#mq').hidden=false};
 const fechaMq=()=>{$('#mq').hidden=true};
 $('#mqFecha').onclick=fechaMq;$('#mqFechar2').onclick=fechaMq;
@@ -1997,6 +2001,11 @@ $('#sitFilter').onchange=e=>{state.sitF=e.target.value;invalidar();render()};
 
 /* ---------- ADMIN · FUNDO DE LOGIN · ACOMPANHAR · EXPORTAR ---------- */
 const ADMIN_USER='5520967';
+function renderSetorAdmin(){const host=$('#setorAdminList');host.innerHTML=SETORES_FIXOS.map(x=>`<span class="sector-chip">${esc(x)}</span>`).join('')||'<span class="empty">Nenhum setor cadastrado.</span>';const msg=$('#setorAdminMsg');if(setoresErro){msg.className='jm-msg err';msg.textContent='Falha ao consultar ABS_SETORES: '+setoresErro;msg.hidden=false}}
+async function abrirSetorAdmin(){if(!AUTH.ok||AUTH.user!==ADMIN_USER)return;$('#setorNovo').value='';$('#setorAdminMsg').hidden=true;$('#setorAdminModal').hidden=false;try{await carregarSetores();renderSetorAdmin()}catch(e){setoresErro=String(e.message||e);renderSetorAdmin()}setTimeout(()=>$('#setorNovo').focus(),50)}
+function fecharSetorAdmin(){$('#setorAdminModal').hidden=true}
+$('#setorBtn').onclick=abrirSetorAdmin;$('#setorAdminClose').onclick=$('#setorAdminClose2').onclick=fecharSetorAdmin;
+$('#setorAdminSave').onclick=async()=>{if(!AUTH.ok||AUTH.user!==ADMIN_USER)return;const btn=$('#setorAdminSave'),msg=$('#setorAdminMsg'),nome=norm($('#setorNovo').value);if(!nome){msg.className='jm-msg err';msg.textContent='Digite o nome do setor.';msg.hidden=false;return}if(SETORES_FIXOS.some(x=>semAcento(x)===semAcento(nome))){msg.className='jm-msg err';msg.textContent='Esse setor já está cadastrado.';msg.hidden=false;return}btn.disabled=true;btn.innerHTML='<span class="jm-loading"></span>Salvando…';try{const r=await fetch(`${URL_SB}/rest/v1/ABS_SETORES`,{method:'POST',headers:{...headers(),Prefer:'return=minimal','Content-Type':'application/json'},body:JSON.stringify([{SETOR:nome}]),cache:'no-store'});if(!r.ok)throw Error(await detalhe(r));$('#setorNovo').value='';await carregarSetores();renderSetorAdmin();msg.className='jm-msg ok';msg.textContent=`Setor “${nome}” cadastrado e disponível nos seletores.`;msg.hidden=false}catch(e){msg.className='jm-msg err';msg.textContent='Falha ao cadastrar: '+(e.message||e);msg.hidden=false}finally{btn.disabled=false;btn.textContent='Cadastrar setor'}};
 const VIDEO_LOGIN='./7020018_Particle_Dot_3840x2160.mp4';   /* mesma pasta do HTML no GitHub Pages; ajuste se estiver em outro lugar */
 let videoIniciado=false;
 async function iniciaVideoLogin(){
@@ -2243,6 +2252,7 @@ async function carga(){
     state.hoje=hoje();
     const L=limites(state.ano,state.mes);
     const SEL=await descobrirColunas();
+    const setoresP=carregarSetores().catch(e=>{setoresErro=String(e.message||e);SETORES_FIXOS=[];atualizarSetoresSelects();return[]});
     /* TUDO em paralelo: Suricato, quadro, feriados, justificativas, férias e BEM CARE. */
     const suriP=pegaSuricatoMes(state.ano,state.mes,n=>{if(state.carregando)status('busy',`Lendo Suricato · ${nf.format(n)} registros…`)});
     const mesP=pega(T.quadro,SEL,{DTA:'gte.'+L.ini,DTA_2:'lt.'+L.fim},'DTA.asc,id.asc');
@@ -2252,7 +2262,8 @@ async function carga(){
       pegaMes(T.ferias,'DTA,MATRICULA',state.ano,state.mes,'DTA.asc').catch(()=>[]),
       pega(T.bemcare,'MATRICULA,DTA_INICIO,DTA_FIM',{},'').catch(e=>{throw Error(`Falha ao consultar ${T.bemcare}; não é seguro calcular ABS sem essa base. ${e.message||e}`)}),
       pega('ABS_ESCALA','id,TURNO,"INICIO JORNADA","FIM JORNADA"',{},'id.asc').catch(e=>{throw Error(`Falha ao consultar ABS_ESCALA; a apuração exige as regras de jornada do Supabase. ${e.message||e}`)}),
-      pegaGestorColab().then(r=>{state.gestorErro='';return r}).catch(e=>{state.gestorErro=String(e.message||e);return[]})
+      pegaGestorColab().then(r=>{state.gestorErro='';return r}).catch(e=>{state.gestorErro=String(e.message||e);return[]}),
+      setoresP
     ]);
     suriP.catch(()=>{});mesP.catch(()=>{});outrosP.catch(()=>{});
     const uAnt=new URL(`${URL_SB}/rest/v1/${encodeURIComponent(T.quadro)}`);uAnt.searchParams.set('select','DTA');uAnt.searchParams.set('DTA','lt.'+L.ini);uAnt.searchParams.set('order','DTA.desc');uAnt.searchParams.set('limit','1');
@@ -2420,7 +2431,7 @@ function preencherFiltros(){
 
 const AUTH={ok:false,user:''};
 try{AUTH.ok=sessionStorage.getItem('abs-auth')==='1';AUTH.user=sessionStorage.getItem('abs-user')||''}catch{}
-function aplicaAuth(){$('#usrBtn').hidden=!(AUTH.ok&&AUTH.user==='5520967');$('#passBtn').hidden=!AUTH.ok;state.gestor=AUTH.ok?normMat(AUTH.user):'';const vd=$('#lgVideo');if(!AUTH.ok)iniciaVideoLogin();if(vd&&vd.src){AUTH.ok?vd.pause():vd.play().catch(()=>{})}$('#lg').hidden=AUTH.ok;ldToggle(state.carregando);if(!AUTH.ok)setTimeout(()=>$('#lgUser').focus(),30)}
+function aplicaAuth(){$('#usrBtn').hidden=!(AUTH.ok&&AUTH.user==='5520967');$('#setorBtn').hidden=!(AUTH.ok&&AUTH.user==='5520967');$('#passBtn').hidden=!AUTH.ok;state.gestor=AUTH.ok?normMat(AUTH.user):'';const vd=$('#lgVideo');if(!AUTH.ok)iniciaVideoLogin();if(vd&&vd.src){AUTH.ok?vd.pause():vd.play().catch(()=>{})}$('#lg').hidden=AUTH.ok;ldToggle(state.carregando);if(!AUTH.ok)setTimeout(()=>$('#lgUser').focus(),30)}
 async function checaLogin(mat,senha){
   for(const m of new Set([mat,normMat(mat)])){
     const u=new URL(`${URL_SB}/rest/v1/ABS_USER`);
