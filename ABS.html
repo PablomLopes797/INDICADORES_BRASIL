@@ -382,6 +382,10 @@ td.nd{color:var(--quiet)}
 .motive-rowhead.mc-TR{color:#3B82F6!important;border-left:4px solid #3B82F6}.motive-rowhead.mc-FE{color:#06B6D4!important;border-left:4px solid #06B6D4}
 .motive-rowhead.mc-FO{color:#94A3B8!important;border-left:4px solid #94A3B8}
 
+
+.mq-sector{max-width:180px;background:var(--panel3);color:var(--text);border:1px solid var(--line);border-radius:7px;padding:5px}
+#quadroView .qf{width:100%;min-width:90px;background:var(--panel3);color:var(--text);border:1px solid var(--line);border-radius:7px;padding:5px}
+#quadroView td,#quadroView th{text-align:center!important}
 </style>
 </head>
 <body>
@@ -408,7 +412,7 @@ td.nd{color:var(--quiet)}
     <div>
       <div class="eyebrow">GESTÃO · QUADRO VIGENTE POR DATA · DADOS REAIS DO SUPABASE</div>
       <h1>Mapa de <span>absenteísmo</span></h1>
-      <p>ABS = ausência apurada (falta sem registro de presença no Suricato ou justificativa contabilizada). Presentes = registro de presença no Suricato. Domingos e feriados não geram falta. A ausência de registro de presença é contabilizada como falta, mesmo sem carga no período, exceto domingos, feriados, férias, justificativas e a regra do 4º turno aos sábados. Toda a tela (cards, gráficos, TOTAL CD, CD SETORES e tabela) lê a mesma agregação.</p>
+      <p>ABS = ausência apurada (falta sem registro de presença no Suricato ou justificativa contabilizada). Presentes = registro de presença no Suricato. Domingos e feriados não geram falta. A ausência de registro de presença é contabilizada como falta, mesmo sem carga no período, exceto domingos, feriados, férias, justificativas e as regras do 3º e 4º turnos aos sábados. Toda a tela (cards, gráficos, TOTAL CD, CD SETORES e tabela) lê a mesma agregação.</p>
     </div>
     <form id="monthForm">
       <div class="field"><label for="monthInput">MÊS DE REFERÊNCIA</label><input id="monthInput" type="month" required></div><button class="btn" id="expBtn" type="button">⬇ OBTER DADOS</button>
@@ -462,9 +466,11 @@ td.nd{color:var(--quiet)}
       <button class="tab" data-view="pessoas" type="button">👤 PESSOAS</button>
       <button class="tab" data-view="gestores" type="button">👔 GESTORES</button>
       <button class="tab" data-view="motivos" type="button">📊 MOTIVOS</button>
+      <button class="tab" data-view="quadro" type="button">📋 QUADRO</button>
     </nav>
 
     <div class="view" id="viewBody"></div>
+    <div id="quadroView" hidden></div>
 
     <div class="tools" id="peopleTools" hidden>
       <div class="search" id="searchWrap">
@@ -499,10 +505,10 @@ td.nd{color:var(--quiet)}
         <p><b>PRESENTES (P)</b> — existe registro de presença em <code>ABS_SURICATO</code> para a matrícula naquele dia. A coluna <code>DTA</code> pode vir em <b>dois formatos</b> — ISO (<code>2026-10-10T20:02:00-03:00</code>) <i>ou</i> brasileiro (<code>15/10/2026 13:36</code>): o painel lê os dois com o mesmo interpretador e usa o <b>dia local de São Paulo</b> do registro. <b>Dia operacional:</b> registros de 00:00 a 21:59 pertencem ao próprio dia; a partir de 22:00 pertencem ao dia seguinte (vale para os dois formatos e para todos os turnos). Qualquer registro da matrícula no dia operacional conta como presença, mesmo fora da janela do turno. Os dados do Suricato são carregados com paginação completa; se alguma página falhar, a apuração é interrompida em vez de gerar faltas. Registros repetidos no mesmo dia contam uma única vez.</p>
         <p><b>AUSENTES / ABS</b> — não há registro de presença no dia e: (a) existe justificativa em <code>ABS_JUSTIFICATIVAS</code> cujo MOTIVO está nos motivos ativos; ou (b) não existe justificativa e o dia possui carga de presença, gerando falta inferida (F). Nunca conta quem está de férias.</p>
         <p><b>FÉRIAS (FE)</b> — matrícula presente em <code>ABS_FÉRIAS</code> na data (DTA pode estar gravada como texto DD/MM/AAAA <i>ou</i> como data ISO YYYY-MM-DD; o painel filtra pelo sufixo de mês/ano e valida a janela antes de aplicar). Sempre tem precedência sobre falta (<code>F</code>) e sobre justificativa (<code>FE</code> &gt; <code>F</code> &gt; <code>?</code>). Sai do quadro elegível.</p>
-        <p><b>FALTA POR AUSÊNCIA DE VALIDAÇÃO</b> — se não existir registro de presença no Suricato para a matrícula e dia operacional, o colaborador recebe <code>F</code>, mesmo que não tenha nenhum registro no período, o dia esteja sem carga, a carga seja parcial ou o turno esteja sem carga confiável. Permanecem as exceções: presença registrada (<code>P</code>), férias (<code>FE</code>), justificativas cadastradas e a regra do 4º turno aos sábados, além de domingos, feriados e dias futuros sem falta.</p>
+        <p><b>FALTA POR AUSÊNCIA DE VALIDAÇÃO</b> — se não existir registro de presença no Suricato para a matrícula e dia operacional, o colaborador recebe <code>F</code>, mesmo que não tenha nenhum registro no período, o dia esteja sem carga, a carga seja parcial ou o turno esteja sem carga confiável. Permanecem as exceções: presença registrada (<code>P</code>), férias (<code>FE</code>), justificativas cadastradas, domingos, feriados, dias futuros e a classificação automática como FO do 3º e 4º turnos aos sábados, sem ABS.</p>
         <p><b>DOMINGO / FERIADO</b> — sem falta para ninguém. Feriados vêm de <code>ABS_FERIADOS</code> (DTA em dd/mm/aaaa). Se houver justificativa registrada, ela é exibida, mas não entra no ABS.</p>
         <p><b>JUSTIFICADOS NÃO-ABS</b> — existe justificativa registrada cujo MOTIVO está fora dos motivos ativos (ex.: FO, TR). Aparecem na composição do dia, mas não entram no ABS. Por isso o invariante correto é: <b>presentes + ausentes + justificados não-ABS = quadro elegível</b>; somando férias e sem dados chega-se ao total do quadro do dia.</p>
-        <p><b>TAXA DE ABSENTEÍSMO</b> — ausentes ÷ quadro elegível (no mês, soma dos dias apurados). No dia atual, entram apenas os turnos cujo início já ocorreu: 1º 06:00, 2º 13:40, 3º 22:00 do dia anterior e 4º 08:00; aos sábados, somente o <b>4º turno</b> sem registro fica como <code>-</code> (sem falta); se tiver registro, conta presença. Os 1º, 2º e 3º turnos seguem a regra normal no sábado. <b>ABS MÉDIO/DIA</b> — ausentes ÷ dias apurados (média, não soma do período).</p>
+        <p><b>TAXA DE ABSENTEÍSMO</b> — ausentes ÷ quadro elegível (no mês, soma dos dias apurados). No dia atual, entram apenas os turnos cujo início já ocorreu: 1º 06:00, 2º 13:40, 3º 22:00 do dia anterior e 4º 08:00; aos sábados, o <b>3º e o 4º turnos</b> sem registro ficam como <code>-</code>, sem falta e fora do denominador elegível; se houver presença registrada, ela continua sendo exibida como P. <b>ABS MÉDIO/DIA</b> — ausentes ÷ dias apurados (média, não soma do período).</p>
         <p><b>QUADRO DE REFERÊNCIA</b> — quando o mês não possui nenhuma atualização de ABS_QUADRO anterior ao dia apurado, o painel usa a atualização mais antiga disponível e marca a data explicitamente. Nenhum número é estimado ou inventado.</p>
       </div>
     </details>
@@ -573,9 +579,12 @@ td.nd{color:var(--quiet)}
   </div>
   <div class="jm" id="motivoPeople" hidden role="dialog" aria-modal="true" aria-labelledby="motivoPeopleTitle">
     <div class="jm-card" id="motivoPeopleCard"><div class="jm-h"><div><h3 id="motivoPeopleTitle">Detalhes do motivo</h3><small id="motivoPeopleSub"></small></div><button class="jm-x" id="motivoPeopleFecha" type="button" aria-label="Fechar">✕</button></div>
-      <div class="jm-b"><div class="tw"><table class="mx" id="motivoPeopleTable"><thead><tr><th>MATRICULA</th><th>NOME</th><th>CARGO</th><th>TURNO</th><th>IDADE</th><th>TEMPO DE CASA</th><th>GESTOR</th><th>SETOR</th></tr></thead><tbody id="motivoPeopleRows"></tbody></table></div></div>
+      <div class="jm-b"><div class="sbox"><span class="ico">⌕</span><input id="motivoPeopleSearch" type="search" placeholder="Buscar por nome ou matrícula…"></div><div class="tw"><table class="mx" id="motivoPeopleTable"><thead><tr><th>MATRICULA</th><th>NOME</th><th>CARGO</th><th>TURNO</th><th>IDADE</th><th>TEMPO DE CASA</th><th>GESTOR</th><th>SETOR</th></tr></thead><tbody id="motivoPeopleRows"></tbody></table></div></div>
       <div class="jm-f"><button class="btn" id="motivoPeopleClose" type="button">Fechar</button></div></div>
   </div>
+  <div class="jm" id="mqBulkModal" hidden role="dialog" aria-modal="true"><div class="jm-card" style="width:min(1200px,98vw);max-height:92vh"><div class="jm-h"><div><h3>Cadastro em massa</h3><small>Gestor responsável: selecionado em Meu quadro</small></div><button class="jm-x" id="mqBulkClose">✕</button></div><div class="jm-b"><div id="mqBulkRows"></div><div class="jm-msg" id="mqBulkMsg" hidden></div></div><div class="jm-f"><button class="btn" id="mqBulkAdd">♙ Adicionar Colaborador</button><button class="btn" id="mqBulkCancel">Cancelar</button><button class="btn btn-primary" id="mqBulkSave">Salvar alterações em massa</button></div></div></div>
+  <div class="jm" id="mqTransfer" hidden role="dialog" aria-modal="true"><div class="jm-card" style="width:min(1200px,98vw)"><div class="jm-h"><div><h3>Redirecionar colaboradores removidos</h3><small>Informe o novo gestor e setor antes de concluir a atualização da equipe.</small></div></div><div class="jm-b"><div class="tw"><table class="mx"><thead><tr><th>MATRÍCULA</th><th>NOME</th><th>CARGO</th><th>NOVO GESTOR</th><th>SETOR</th></tr></thead><tbody id="mqTransferRows"></tbody></table></div><div class="jm-msg" id="mqTransferMsg" hidden></div></div><div class="jm-f"><button class="btn btn-primary" id="mqTransferSave">Salvar gestores e setores</button></div></div></div>
+  <div class="jm" id="detailPeople" hidden role="dialog" aria-modal="true"><div class="jm-card"><div class="jm-h"><div><h3 id="detailPeopleTitle">Colaboradores</h3><small id="detailPeopleSub"></small></div><button class="jm-x" id="detailPeopleFecha" type="button">✕</button></div><div class="jm-b"><div class="sbox"><span class="ico">⌕</span><input id="detailPeopleSearch" type="search" placeholder="Buscar nome ou matrícula…"></div><div class="tw"><table class="mx"><thead><tr><th>MATRÍCULA</th><th>NOME</th><th>TURNO</th><th>CARGO</th><th>SETOR</th><th>STATUS</th></tr></thead><tbody id="detailPeopleRows"></tbody></table></div></div><div class="jm-f"><button class="btn" id="detailPeopleClose" type="button">Fechar</button></div></div></div>
   <div class="jm" id="heatPeople" hidden role="dialog" aria-modal="true" aria-labelledby="heatPeopleTitle">
     <div class="jm-card"><div class="jm-h"><div><h3 id="heatPeopleTitle">Colaboradores ausentes</h3><small id="heatPeopleSub"></small></div><button class="jm-x" id="heatPeopleFecha" type="button" aria-label="Fechar">✕</button></div>
       <div class="jm-b"><div class="tw"><table class="mx"><thead><tr><th>MATRICULA</th><th>NOME</th><th>CARGO</th></tr></thead><tbody id="heatPeopleRows"></tbody></table></div></div>
@@ -601,7 +610,7 @@ td.nd{color:var(--quiet)}
   </div>
   <div class="jm" id="mq" hidden role="dialog" aria-modal="true">
     <div class="jm-card" id="mqCard">
-      <div class="jm-h"><div><h3>Meu quadro</h3><small>Equipe hierárquica (todos os níveis abaixo do gestor) · duplo clique em quem lidera uma equipe para navegar · ABS_GESTOR_COLAB</small></div><button class="jm-x" id="mqFecha" type="button" aria-label="Fechar">✕</button></div>
+      <div class="jm-h"><div><h3>Meu quadro</h3><small>Equipe hierárquica (todos os níveis abaixo do gestor) · duplo clique em quem lidera uma equipe para navegar · ABS_GESTOR_COLAB</small></div><button class="btn sm" id="mqEditSector" type="button" title="Editar setores">✎</button><button class="jm-x" id="mqFecha" type="button" aria-label="Fechar">✕</button></div>
       <div class="jm-b">
         <div><label>GESTOR</label><select id="mqGestor"></select></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" id="mqNoGestor" type="button">COLAB SEM GESTOR</button></div>
@@ -616,6 +625,7 @@ td.nd{color:var(--quiet)}
             <div class="field"><label>VISÃO DO ABS</label><div class="seg" id="mqVisao"><button type="button" data-v="qtd" class="on">QUANTIDADE</button><button type="button" data-v="pct">PERCENTUAL</button></div></div>
             <button class="btn" id="mqAcomp" type="button">📅 ACOMPANHAR</button>
             <button class="btn btn-primary" id="mqAdd" type="button">＋ ADICIONAR COLABORADOR À MINHA EQUIPE</button>
+            <button class="btn" id="mqBulk" type="button">▤ CADASTRO EM MASSA</button>
           </div>
           <div class="mq-sum" id="mqSum"></div>
           <div class="tw"><table class="mx" id="mqTable"><caption>Meu quadro</caption><thead id="mqHead"></thead><tbody id="mqRows"></tbody></table></div>
@@ -628,7 +638,7 @@ td.nd{color:var(--quiet)}
     <div class="jm-card" id="acCard">
       <div class="jm-h"><div><h3>Acompanhar equipe · dia a dia</h3><small id="acSub"></small></div><button class="jm-x" id="acFecha" type="button" aria-label="Fechar">✕</button></div>
       <div class="jm-b">
-        <div class="lgd" style="padding:0"><span><i style="background:rgba(248,113,113,.7)"></i>F/AT/AF · ABS · BEM CARE: até 14 dias AT, acima de 14 dias AF</span><span><i style="background:rgba(52,211,153,.7)"></i>P · presença</span><span><i style="background:rgba(96,165,250,.7)"></i>FE · férias</span><span><i style="background:rgba(251,191,36,.7)"></i>FO/TR · não ABS</span><span>DOM/FER · sem falta · duplo clique justifica</span></div>
+        <div class="mq-f"><div class="field w"><label>BUSCAR (MATRÍCULA/NOME)</label><input id="acSearch" type="search" placeholder="Nome ou matrícula…"></div><div class="field"><label>CARGO</label><select id="acCargo"><option value="">Todos os cargos</option></select></div><div class="field"><label>SETOR</label><select id="acSetor"><option value="">Todos os setores</option></select></div></div><div class="lgd" style="padding:0"><span><i style="background:rgba(248,113,113,.7)"></i>F/AT/AF · ABS · BEM CARE: até 14 dias AT, acima de 14 dias AF</span><span><i style="background:rgba(52,211,153,.7)"></i>P · presença</span><span><i style="background:rgba(96,165,250,.7)"></i>FE · férias</span><span><i style="background:rgba(251,191,36,.7)"></i>FO/TR · não ABS</span><span>DOM/FER · sem falta · duplo clique justifica</span></div>
         <div class="tw"><table class="mx" id="acTable"><caption>Acompanhamento da equipe</caption><thead id="acHead"></thead><tbody id="acRows"></tbody></table></div>
       </div>
       <div class="jm-f"><button class="btn" id="acFechar2" type="button">Fechar</button></div>
@@ -797,9 +807,9 @@ function classificar(p,d){
   const k=kk(p.matricula,d.day);
   if(state.present.has(k))return{code:'P',regra:'presença no Suricato (matrícula + dia operacional)'};
   if(state.ferias.has(k))return{code:'FE',regra:'férias (ABS_FÉRIAS)'};
+  if(d.dow===6&&['3',TURNO_4].includes(turnoNum(p.turno)))return{code:'FO',regra:`${turnoNum(p.turno)}º turno · sábado sem expediente · FO automático`};
   const bemcare=state.bemcare.get(k);if(bemcare)return{code:bemcare,regra:`BEM CARE (${bemcare}) · período de afastamento até 14 dias = AT; acima de 14 dias = AF`};
   const j=state.just.get(k);if(j)return{code:j,regra:'justificativa (ABS_JUSTIFICATIVAS)'};
-  if(d.dow===6&&turnoNum(p.turno)===TURNO_4)return{code:'-',regra:'4º turno · sábado sem registro · exceção sem falta'};
   return{code:'F',regra:'falta · não passou na validação de presença, independentemente de haver registros no período'};
 }
 function modeloDia(day){
@@ -824,13 +834,14 @@ function modeloDia(day){
     }
     return base;
   }
-  let presentes=0,ausentes=0,ferias=0,fora=0,jn=0,sab4=0;
+  let presentes=0,ausentes=0,ferias=0,fora=0,jn=0,sabSemExpediente=0;
   const porMotivo={},porCodigo={},porSetor={},porTurno={},ausentesLista=[],presentesLista=[],jnLista=[];
   for(const p of people){
     const {code}=classificar(p,base);let isAbs=false;
     if(code==='P'){presentes++;presentesLista.push(p.matricula)}
     else if(code==='FE'){ferias++}
-    else if(code==='-'){sab4++}
+    else if(code==='-'){sabSemExpediente++}
+    else if(code==='FO'&&d.dow===6&&['3',TURNO_4].includes(turnoNum(p.turno))){sabSemExpediente++;jn++}
     else if(code==='?'){fora++}
     else if(code==='F'){isAbs=state.ativos.has('F')}
     else{isAbs=state.ativos.has(code);if(!isAbs){jn++;jnLista.push(p.matricula)}}
@@ -839,16 +850,16 @@ function modeloDia(day){
     if(isAbs){ausentes++;ausentesLista.push(p.matricula);porMotivo[code]=(porMotivo[code]||0)+1;porSetor[p.setor]=(porSetor[p.setor]||0)+1;porTurno[p.turno]=(porTurno[p.turno]||0)+1}
   }
   base.presentes=presentes;base.ausentes=ausentes;base.ferias=ferias;base.fora=fora;base.jn=jn;base.jnLista=jnLista;
-  base.sab4=sab4;
-  base.elegivel=people.length-ferias-fora-sab4;
+  base.sab4=sabSemExpediente;
+  base.elegivel=people.length-ferias-fora-sabSemExpediente;
   base.porCodigo=porCodigo;base.porMotivo=porMotivo;base.porSetor=porSetor;base.porTurno=porTurno;
   base.ausentesLista=ausentesLista;base.presentesLista=presentesLista;
-  base.denominador=base.total-sab4-(state.motivoFiltro.has('FE')?ferias:0);
+  base.denominador=base.total-sabSemExpediente-(state.motivoFiltro.has('FE')?ferias:0);
   base.taxa=base.denominador>0?ausentes/base.denominador*100:null;
   return base;
 }
 function consistente(d){ if(d.futuro||d.domingo||d.feriado||!d.quadroOk)return true;
-  return (d.presentes+d.ausentes+d.jn+d.ferias)===d.total && d.fora===0 && d.elegivel===(d.presentes+d.ausentes+d.jn) }
+  return (d.presentes+d.ausentes+d.jn+d.ferias)===d.total && d.fora===0 && d.elegivel===(d.presentes+d.ausentes+d.jn-(d.sab4||0)) }
 /* ===== MODEL_END ===== */
 
 const state={pcdF:'',sitF:'',cols:{},ano:0,mes:0,dias:[],hoje:hoje(),snapshots:new Map(),just:new Map(),present:new Set(),presenceDays:new Set(),justObs:new Map(),
@@ -1096,7 +1107,7 @@ function statusDe(p,d){
   const {code,regra}=classificar(p,d);
   if(code==='P')return{c:'P',cls:'pre',txt:'PRESENÇA registrada no Suricato'};
   if(code==='FE')return{c:'FE',cls:'fer',txt:'FÉRIAS'};
-  if(code==='-')return{c:'-',cls:'nw',txt:'4º turno · sábado sem registro · sem falta'};
+  if(code==='-')return{c:'-',cls:'nw',txt:`${turnoNum(p.turno)}º turno · sábado sem expediente · sem falta`};
   if(code==='?')return{c:'F',cls:'abs',txt:'falta · ausência de validação de presença'};
   if(code==='F')return{c:'F',cls:'abs',txt:'falta inferida · sem presença e sem justificativa'};
   return{c:code,cls:state.ativos.has(code)?'abs':'jus',txt:(MOTIVO_NOME[code]||code)+(state.ativos.has(code)?' · contabilizado como ABS':' · não contabilizado como ABS')};
@@ -1108,10 +1119,11 @@ function render(){
   $('#monthLabel').textContent=new Intl.DateTimeFormat('pt-BR',{month:'long',year:'numeric'}).format(new Date(Date.UTC(state.ano,state.mes-1,1,12))).toUpperCase();
   renderKpis(a);renderFiltrosOn();
   const v=state.vista;
-  $('#peopleTools').hidden=v!=='pessoas';
-  const semTab=v==='macro'||v==='gestores'||v==='motivos';$('#tableWrap').hidden=semTab;
+  $('#peopleTools').hidden=v!=='pessoas';$('#quadroView').hidden=v!=='quadro';$('#viewBody').hidden=v==='quadro';$('#tableWrap').hidden=v==='quadro'||v==='macro'||v==='gestores'||v==='motivos';
+  const semTab=v==='macro'||v==='gestores'||v==='motivos'||v==='quadro';$('#tableWrap').hidden=semTab;
   $('#moreWrap').hidden=v!=='pessoas';
-  if(v==='macro')renderMacro(a);
+  if(v==='quadro')renderQuadro();
+  else if(v==='macro')renderMacro(a);
   else if(v==='setores')renderSetores(a);
   else if(v==='turnos')renderTurnos(a);
   else if(v==='gestores')renderGestores(a);
@@ -1298,7 +1310,7 @@ function calorGrupo(ds,fn){
     const abs=new Set(d.ausentesLista);
     for(const p of d.people){
       const code=classificar(p,d).code;
-      if(code==='FE'||code==='-'||code==='?')continue;
+      if(code==='FE'||code==='-'||code==='?'||(code==='FO'&&dowDe(day)===6&&['3',TURNO_4].includes(turnoNum(p.turno))))continue;
       const k=fn(p)||'—';
       let o=g.get(k);if(!o){o={dias:new Map(),aus:0,den:0};g.set(k,o)}
       let c=o.dias.get(d.day);if(!c){c={aus:0,den:0};o.dias.set(d.day,c)}
@@ -1327,7 +1339,7 @@ function cardCalor(rotulo,titulo,desc,ds,fn,tipoFiltro){
   const tg=`<span class="seg"><button type="button" data-act="hm" data-m="qtd" class="${pct?'':'on'}">Nº AUSENTES</button><button type="button" data-act="hm" data-m="pct" class="${pct?'on':''}">% ABS ÷ QUADRO</button></span>`;
   return `<div class="card c12"><h3>${esc(titulo)} <em>${esc(desc)}</em>${tg}</h3>
     <div class="heat full"><div class="hg full" style="grid-template-columns:minmax(180px,280px) repeat(${dias.length||1},minmax(34px,1fr)) minmax(56px,.8fr)">${head}${rows||''}</div></div>
-    <div class="hlg"><span>0</span><i style="background:hsl(145 72% 60%)"></i><i style="background:hsl(109 72% 60%)"></i><i style="background:hsl(72 72% 60%)"></i><i style="background:hsl(36 72% 60%)"></i><i style="background:hsl(0 72% 60%)"></i><span>${fmt(mx)}${pct?'%':''}</span><span style="margin-left:auto">Mais quente = maior ABS. Taxa = ausentes ÷ (quadro − férias − 4º turno no sábado).</span></div></div>`;
+    <div class="hlg"><span>0</span><i style="background:hsl(145 72% 60%)"></i><i style="background:hsl(109 72% 60%)"></i><i style="background:hsl(72 72% 60%)"></i><i style="background:hsl(36 72% 60%)"></i><i style="background:hsl(0 72% 60%)"></i><span>${fmt(mx)}${pct?'%':''}</span><span style="margin-left:auto">Mais quente = maior ABS. Taxa = ausentes ÷ (quadro − férias − 3º/4º turnos no sábado).</span></div></div>`;
 }
 function graficoTaxa(ds,alvo){
   const usable=ds.filter(d=>!d.futuro&&!d.domingo&&!d.feriado&&d.quadroOk),max=Math.max(1,...usable.map(d=>d.taxa||0),...ds.filter(d=>d.feriado&&!d.futuro).map(d=>d.presentes||0));
@@ -1445,8 +1457,8 @@ function renderPessoas(a){$('#viewBody').innerHTML=''}
 function presentTooltip(mat,day){const horas=state.presentHours&&state.presentHours.get(kk(mat,day));return horas&&horas.length?`P · registros do Suricato em ${brData(day)}: ${horas.map(formatHora).join(', ')}`:'P · presença registrada no Suricato'}
 const formatHora=v=>{const d=parseData(v);return d?FMT_HORA.format(d):String(v)};
 function valorCelula(people,m){
-  const somente4=people.length>0&&people.every(p=>semAcento(p.turno).replace(/[^0-9]/g,'')===TURNO_4);
-  if(dowDe(m.day)===6&&somente4)return{c:'-',s:'4º turno · não opera aos sábados',cls:'nw'};
+  const somenteSemExpediente=people.length>0&&people.every(p=>['3',TURNO_4].includes(turnoNum(p.turno)));
+  if(dowDe(m.day)===6&&somenteSemExpediente)return{c:'FO',s:'3º/4º turno · FO automático',cls:'jus'};
   if(m.futuro)return{c:'-',s:'futuro',cls:'fut'};
   const set=new Set(people.map(p=>p.matricula));
   const alvo=m.people.filter(p=>set.has(p.matricula));
@@ -1455,7 +1467,7 @@ function valorCelula(people,m){
   if(m.domingo)return{c:'—',s:'DOM',cls:'nw'};
   if(!m.quadroOk)return{c:'—',s:'sem quadro',cls:'cd'};
   const fer=alvo.filter(p=>state.ferias.has(kk(p.matricula,m.day))).length;
-  const tot=alvo.length;const den=tot-fer;
+  const tot=alvo.length;const semExpediente=dowDe(m.day)===6?alvo.filter(p=>['3',TURNO_4].includes(turnoNum(p.turno))).length:0;const den=tot-fer-semExpediente;
   const ausF=alvo.filter(p=>{const st=statusDe(p,m);return st.cls==='abs'&&state.motivoFiltro.has(st.c)}).length;
   if(state.metric==='pre')return{c:nf.format(pre),s:den?pc.format(pre/den*100)+'%':'—',cls:''};
   if(state.metric==='tot')return{c:nf.format(tot),s:`quadro − ${nf.format(fer)} FE`,cls:''};
@@ -1798,9 +1810,9 @@ async function descobrirColunas(){
     return base+Object.values(state.cols).filter(Boolean).map(k=>`,"${k}"`).join('');
   }catch(e){console.warn('[ABS_QUADRO] descoberta de colunas falhou:',e.message||e);state.cols={};return base}
 }
-const mq={visao:'qtd',vis:[],gestor:'',busca:'',idMin:'',idMax:'',casa:'',cargo:'',sort:'nome',dir:1,rows:[]};
+const mq={visao:'qtd',vis:[],gestor:'',busca:'',idMin:'',idMax:'',casa:'',cargo:'',sort:'nome',dir:1,rows:[],editSector:false};
 const MQ_CASA=[['','Todos'],['0-12','< 1 ano'],['12-36','1 a 3 anos'],['36-60','3 a 5 anos'],['60-120','5 a 10 anos'],['120-99999','> 10 anos']];
-const MQ_COLS=[['matricula','MATRICULA'],['nome','NOME'],['idade','IDADE'],['admIso','DATA DE ADMISSÃO'],['casa','TEMPO DE CASA'],['cargo','CARGO'],['pct','MÉDIA DE ABS']];
+const MQ_COLS=[['matricula','MATRICULA'],['nome','NOME'],['idade','IDADE'],['admIso','DATA DE ADMISSÃO'],['casa','TEMPO DE CASA'],['cargo','CARGO'],['setor','SETOR ATUAL'],['pct','MÉDIA DE ABS']];
 function mesesEntre(a,b){let m=(+b.slice(0,4)-+a.slice(0,4))*12+(+b.slice(5,7)-+a.slice(5,7));if(+b.slice(8,10)<+a.slice(8,10))m--;return Math.max(0,m)}
 const casaTxt=m=>m==null?'—':(m>=12?Math.floor(m/12)+' a ':'')+(m%12)+' m';
 function mediaAbsPessoa(p){
@@ -1808,7 +1820,7 @@ function mediaAbsPessoa(p){
   for(const day of state.dias){
     if(day>state.hoje||dowDe(day)===0||state.feriados.has(day)||!snapshotPara(day)||!turnoConsiderado(p.turno,day))continue;
     const{code}=classificar(p,{day,dow:dowDe(day)});
-    if(code==='FE'||code==='-'||code==='?')continue;
+    if(code==='FE'||code==='-'||code==='?'||(code==='FO'&&dowDe(day)===6&&['3',TURNO_4].includes(turnoNum(p.turno))))continue;
     den++;if(code==='P')continue;
     if(state.ativos.has(code)&&state.motivoFiltro.has(code))aus++;
   }
@@ -1825,7 +1837,7 @@ function mqEquipe(){
   }
   return todasPessoas().filter(p=>descendentes.has(p.matricula)).map(p=>{
     const nasc=diaLocal(p.nasc),adm=diaLocal(p.adm);
-    return{...p,admIso:adm,idade:nasc?Math.floor(mesesEntre(nasc,state.hoje)/12):null,casa:adm?mesesEntre(adm,state.hoje):null,...mediaAbsPessoa(p)};
+    return{...p,setor:(state.gestorMap.get(p.matricula)||{}).s||p.setor,admIso:adm,idade:nasc?Math.floor(mesesEntre(nasc,state.hoje)/12):null,casa:adm?mesesEntre(adm,state.hoje):null,...mediaAbsPessoa(p)};
   });
 }
 function mqTabela(){
@@ -1840,7 +1852,7 @@ function mqTabela(){
   else l.sort((a,b)=>{const kS=(mq.sort==='pct'&&mq.visao==='qtd')?'aus':mq.sort,x=a[kS],y=b[kS];if(x==null&&y==null)return 0;if(x==null)return 1;if(y==null)return -1;
     return(typeof x==='number'?x-y:String(x).localeCompare(String(y),'pt-BR',{numeric:true}))*mq.dir});
   mq.vis=l;$('#mqHead').innerHTML='<tr>'+MQ_COLS.map(([k,t])=>`<th data-k="${k}">${t}${mq.sort===k?(mq.dir>0?' ▲':' ▼'):''}</th>`).join('')+'</tr>';
-  $('#mqRows').innerHTML=l.map(p=>`<tr><td>${esc(p.matricula)}</td><td>${esc(p.nome)}</td><td>${p.idade==null?'—':p.idade}</td><td>${p.admIso?p.admIso.split('-').reverse().join('/'):'—'}</td><td>${casaTxt(p.casa)}</td><td>${esc(p.cargo)}</td><td>${mqCelulaAbs(p)}</td></tr>`).join('')||'<tr><td colspan="7" class="empty">Nenhum colaborador para os filtros.</td></tr>';
+  $('#mqRows').innerHTML=l.map(p=>`<tr data-mq-mat="${esc(p.matricula)}"><td>${esc(p.matricula)}</td><td>${esc(p.nome)}</td><td>${p.idade==null?'—':p.idade}</td><td>${p.admIso?p.admIso.split('-').reverse().join('/'):'—'}</td><td>${casaTxt(p.casa)}</td><td>${esc(p.cargo)}</td><td>${mq.editSector?`<select class="mq-sector" data-mat="${esc(p.matricula)}"><option value="">Selecione…</option>${SETORES_FIXOS.map(x=>`<option value="${esc(x)}" ${x===((state.gestorMap.get(p.matricula)||{}).s)?'selected':''}>${esc(x)}</option>`).join('')}</select>`:esc((state.gestorMap.get(p.matricula)||{}).s||'—')}</td><td>${mqCelulaAbs(p)}</td></tr>`).join('')||'<tr><td colspan="8" class="empty">Nenhum colaborador para os filtros.</td></tr>';
   const A=l.reduce((s,p)=>s+p.aus,0),D=l.reduce((s,p)=>s+p.den,0);
   $('#mqSum').textContent=`${nf.format(l.length)} de ${nf.format(mq.rows.length)} colaborador(es) · média de ABS da equipe: ${D?pc.format(A/D*100)+'%':'—'} (${nf.format(A)} ausência(s) em ${nf.format(D)} pessoa-dia)`+(state.cols.nasc&&state.cols.adm?'':' · colunas de nascimento/admissão não encontradas no ABS_QUADRO');
 }
@@ -1874,6 +1886,25 @@ $('#mqCasa').onchange=e=>{mq.casa=e.target.value;mqTabela()};
 $('#mqCargo').onchange=e=>{mq.cargo=e.target.value;mqTabela()};
 $('#mqMes').onchange=e=>{const v=e.target.value;if(!/^\d{4}-\d{2}$/.test(v))return;$('#monthInput').value=v;CACHE_PRES.delete(v);carga().then(mqRefresh)};
 $('#mqAdd').onclick=()=>abrirGestModal(mq.gestor);
+$('#mqEditSector').onclick=async()=>{if(!mq.editSector){mq.editSector=true;mqTabela();$('#mqEditSector').textContent='💾';$('#mqEditSector').title='Salvar setores';return}await salvarSetoresMq()};
+async function salvarSetoresMq(){const btn=$('#mqEditSector');try{for(const el of $$('#mqRows .mq-sector')){const mat=normMat(el.dataset.mat),setor=el.value;if(!setor)continue;const v=state.gestorMap.get(mat);if(!v)continue;const r=await fetch(`${URL_SB}/rest/v1/${encodeURIComponent(T.gestor)}?COLABORADOR=eq.${encodeURIComponent(mat)}`,{method:'PATCH',headers:{...headers(),Prefer:'return=minimal','Content-Type':'application/json'},body:JSON.stringify({SETOR:setor}),cache:'no-store'});if(!r.ok)throw Error(await detalhe(r))}aplicarGestorRows(await pegaGestorColab());mq.editSector=false;invalidar();mqRefresh();btn.textContent='✎'}catch(e){alert('Falha ao salvar setor: '+(e.message||e));mq.editSector=true;mqTabela();btn.textContent='💾'}}
+$('#mqBulk').onclick=()=>abrirBulkMq();
+let mqBulkSeq=0;
+function addBulkRow(){const id=++mqBulkSeq;const opts=SETORES_FIXOS.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');$('#mqBulkRows').insertAdjacentHTML('beforeend',`<div class="mq-bulk-row" data-bulk-row="${id}" style="display:grid;grid-template-columns:2fr 1fr 1.3fr auto;gap:8px;align-items:end;border:1px solid var(--line);padding:9px;border-radius:10px"><div class="field"><label>COLABORADOR (NOME OU MATRÍCULA)</label><input class="bulk-person" list="mqBulkPeople" placeholder="Digite para selecionar…"><small class="bulk-info" style="color:var(--muted)"></small></div><div class="field"><label>CARGO</label><input class="bulk-cargo" readonly placeholder="Automático"></div><div class="field"><label>SETOR</label><select class="bulk-sector"><option value="">Selecione setor…</option>${opts}</select></div><button class="btn" type="button" data-bulk-remove="${id}" title="Remover linha">✕</button></div>`);}
+function abrirBulkMq(){if(!mq.gestor){alert('Selecione primeiro o gestor no modal Meu quadro.');return}$('#mqBulkRows').innerHTML='';$('#mqBulkMsg').hidden=true;mqBulkSeq=0;let dl=document.getElementById('mqBulkPeople');if(!dl){dl=document.createElement('datalist');dl.id='mqBulkPeople';document.body.appendChild(dl)}dl.innerHTML=todasPessoas().map(p=>`<option value="${esc(p.matricula+' · '+p.nome)}"></option><option value="${esc(p.nome)}"></option>`).join('');addBulkRow();$('#mqBulkModal').hidden=false;}
+$('#mqBulkAdd').onclick=addBulkRow;$('#mqBulkClose').onclick=$('#mqBulkCancel').onclick=()=>$('#mqBulkModal').hidden=true;
+function bulkPersonFor(inp){const v=norm(inp.value),digits=v.match(/^(\d+)\s*(?:[·|—-].*)?$/);if(digits)return todasPessoas().find(p=>p.matricula===normMat(digits[1]))||null;const clean=v.replace(/\s*[·|—-].*$/,'');const q=semAcento(clean);return todasPessoas().find(p=>semAcento(p.nome)===q)||null}
+$('#mqBulkRows').addEventListener('input',e=>{if(!e.target.matches('.bulk-person'))return;const row=e.target.closest('.mq-bulk-row'),p=bulkPersonFor(e.target);row.dataset.mat=p?.matricula||'';row.querySelector('.bulk-cargo').value=p?.cargo||'';row.querySelector('.bulk-info').textContent=p?`Selecionado: ${p.nome} · ${p.matricula}`:'Selecione um nome exato ou matrícula existente';});
+$('#mqBulkRows').addEventListener('change',e=>{if(e.target.matches('.bulk-person')){const row=e.target.closest('.mq-bulk-row'),p=bulkPersonFor(e.target);if(p){e.target.value=p.matricula+' · '+p.nome;row.dataset.mat=p.matricula;row.querySelector('.bulk-cargo').value=p.cargo||'';row.querySelector('.bulk-info').textContent=`Selecionado: ${p.nome} · ${p.matricula}`}}});
+$('#mqBulkRows').addEventListener('click',e=>{const b=e.target.closest('[data-bulk-remove]');if(b)b.closest('.mq-bulk-row').remove()});
+function mqTransferOpen(rows){$('#mqTransferRows').innerHTML=rows.map(p=>`<tr data-transfer-mat="${esc(p.matricula)}"><td>${esc(p.matricula)}</td><td>${esc(p.nome)}</td><td>${esc(p.cargo||'—')}</td><td><input class="transfer-manager" list="mqBulkPeople" placeholder="Nome ou matrícula"></td><td><select class="transfer-sector"><option value="">Selecione setor…</option>${SETORES_FIXOS.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('')}</select></td></tr>`).join('');$('#mqTransferMsg').hidden=true;$('#mqTransfer').hidden=false}
+$('#mqBulkSave').onclick=async()=>{const btn=$('#mqBulkSave'),msg=$('#mqBulkMsg');if(btn.disabled)return;msg.hidden=true;const rows=$$('#mqBulkRows .mq-bulk-row'),items=[],errs=[];for(const row of rows){const mat=normMat(row.dataset.mat),setor=row.querySelector('.bulk-sector').value;if(!mat){errs.push('Escolha um colaborador válido em cada linha.');continue}if(!setor){errs.push(`${mat}: selecione o setor.`);continue}if(items.some(x=>x.COLABORADOR===mat)){errs.push(`${mat}: colaborador repetido.`);continue}items.push({COLABORADOR:mat,GESTOR:[...state.gestoresMat].find(([,n])=>n===mq.gestor)?.[0],'NOME GESTOR':mq.gestor,SETOR:setor})}if(errs.length||!items.length){msg.className='jm-msg err';msg.hidden=false;msg.textContent=errs.join(' ')||'Adicione ao menos um colaborador.';return}
+const old=(mq.rows||[]).map(p=>({...p}));btn.disabled=true;btn.innerHTML='<span class="jm-loading"></span>Salvando…';let done=[];try{const base=`${URL_SB}/rest/v1/${encodeURIComponent(T.gestor)}`;for(const item of items){const u=`${base}?COLABORADOR=eq.${encodeURIComponent(item.COLABORADOR)}`;const r=await fetch(u,{method:'PATCH',headers:{...headers(),Prefer:'return=representation','Content-Type':'application/json'},body:JSON.stringify({GESTOR:item.GESTOR,'NOME GESTOR':item['NOME GESTOR'],SETOR:item.SETOR}),cache:'no-store'});if(!r.ok)throw Error(`${item.COLABORADOR}: ${await detalhe(r)}`);const j=await r.json();if(!j.length){const ins=await fetch(base,{method:'POST',headers:{...headers(),Prefer:'return=minimal','Content-Type':'application/json'},body:JSON.stringify([item]),cache:'no-store'});if(!ins.ok)throw Error(`${item.COLABORADOR}: ${await detalhe(ins)}`)}done.push(item)}
+await refreshGestAfterMass();const chosen=new Set(items.map(x=>x.COLABORADOR));const gone=old.filter(p=>!chosen.has(p.matricula)&&state.gestorMap.get(p.matricula)?.g===items[0].GESTOR);$('#mqBulkModal').hidden=true;if(gone.length){mqTransferOpen(gone)}else{msg.className='jm-msg ok';msg.hidden=false;msg.textContent=`Salvos ${done.length} colaborador(es).`;mqRefresh()}}
+catch(e){msg.className='jm-msg err';msg.hidden=false;msg.textContent=`Falha após ${done.length} salvamento(s): ${e.message||e}`;await refreshGestAfterMass()}finally{btn.disabled=false;btn.textContent='Salvar alterações em massa'}};
+async function refreshGestAfterMass(){aplicarGestorRows(await pegaGestorColab());preencherGestores();invalidar();render();mqRefresh()}
+$('#mqTransferSave').onclick=async()=>{const btn=$('#mqTransferSave'),rows=$$('#mqTransferRows tr[data-transfer-mat]'),items=[],errs=[];for(const tr of rows){const text=norm(tr.querySelector('.transfer-manager').value),g=resolverGestorDigitado(text),setor=tr.querySelector('.transfer-sector').value;if(!g||!setor)errs.push(`${tr.dataset.transferMat}: informe gestor válido e setor.`);else if(g.matricula===normMat(tr.dataset.transferMat))errs.push(`${tr.dataset.transferMat}: não pode ser o próprio gestor.`);else items.push({mat:normMat(tr.dataset.transferMat),g,setor})}const msg=$('#mqTransferMsg');if(errs.length){msg.className='jm-msg err';msg.hidden=false;msg.textContent=errs.join(' ');return}btn.disabled=true;try{const base=`${URL_SB}/rest/v1/${encodeURIComponent(T.gestor)}`;for(const x of items){const r=await fetch(`${base}?COLABORADOR=eq.${encodeURIComponent(x.mat)}`,{method:'PATCH',headers:{...headers(),Prefer:'return=representation','Content-Type':'application/json'},body:JSON.stringify({GESTOR:x.g.matricula,'NOME GESTOR':x.g.nome,SETOR:x.setor}),cache:'no-store'});if(!r.ok)throw Error(await detalhe(r));if(!(await r.json()).length)throw Error(`Vínculo não localizado: ${x.mat}`)}await refreshGestAfterMass();$('#mqTransfer').hidden=true}catch(e){msg.className='jm-msg err';msg.hidden=false;msg.textContent='Falha ao salvar: '+(e.message||e)}finally{btn.disabled=false}};
+
 $('#mqHead').onclick=e=>{const th=e.target.closest('th[data-k]');if(!th)return;const k=th.dataset.k;mq.dir=mq.sort===k?-mq.dir:1;mq.sort=k;mqTabela()};
 $('#mqRows').addEventListener('dblclick',e=>{const tr=e.target.closest('tr');if(!tr)return;const mat=normMat(tr.cells[0]?.textContent);const p=mq.vis.find(x=>x.matricula===mat);if(!p)return;const temEquipe=state.gestoresMat.has(p.matricula);if(!temEquipe)return;mq.gestor=state.gestoresMat.get(p.matricula);mqRefresh();$('#mqBusca').value='';mq.busca='';});
 /* Lista e vinculação opcional de colaboradores sem gestor */
@@ -1997,14 +2028,16 @@ function mqCelulaAbs(p){
 }
 $('#mqVisao').onclick=e=>{const b=e.target.closest('[data-v]');if(!b)return;mq.visao=b.dataset.v;$$('#mqVisao button').forEach(x=>x.classList.toggle('on',x===b));mqTabela()};
 function acRender(){
-  const l=mq.vis||[];
+  const q=semAcento($('#acSearch')?.value||''),c=$('#acCargo')?.value||'',s=$('#acSetor')?.value||'';
+  const source=mq.vis||[],l=source.filter(p=>(!q||semAcento(p.nome).includes(q)||semAcento(p.matricula).includes(q))&&(!c||p.cargo===c)&&(!s||((state.gestorMap.get(p.matricula)||{}).s||p.setor)===s));
   const dias=state.dias.map(d=>({day:d,dow:dowDe(d),domingo:dowDe(d)===0,feriado:state.feriados.has(d),futuro:d>state.hoje}));
   $('#acHead').innerHTML='<tr><th>MATRICULA</th><th>NOME</th><th>CARGO</th>'+dias.map(m=>`<th class="${m.domingo||m.feriado?'off':''}"><b>${m.day.slice(8)}</b><small>${dowNome(m.day)}</small></th>`).join('')+'</tr>';
   $('#acRows').innerHTML=l.map(p=>`<tr><td>${esc(p.matricula)}</td><td>${esc(p.nome)}</td><td>${esc(p.cargo)}</td>`+dias.map(m=>{const st=statusDe(p,m),tj=state.just.has(kk(p.matricula,m.day));
     return `<td class="st ${st.cls} mc-${st.c}${m.domingo||m.feriado?' off':''}${tj?' jc':''}" title="${esc(brData(m.day)+' · '+dowNome(m.day)+' · '+st.txt)}" data-jday="${m.day}" data-jmat="${esc(p.matricula)}">${st.c}</td>`}).join('')+'</tr>').join('')||'<tr><td colspan="40" class="empty">Nenhum colaborador para os filtros.</td></tr>';
   $('#acSub').textContent=`${nf.format(l.length)} colaborador(es) · gestor ${mq.gestor} · ${String(state.mes).padStart(2,'0')}/${state.ano}`;
 }
-$('#mqAcomp').onclick=()=>{if(!mq.gestor)return;acRender();$('#ac').hidden=false};
+$('#mqAcomp').onclick=()=>{if(!mq.gestor)return;const rows=mq.vis||[];const cargos=[...new Set(rows.map(p=>p.cargo).filter(Boolean))].sort();const setores=[...new Set(rows.map(p=>(state.gestorMap.get(p.matricula)||{}).s||p.setor).filter(Boolean))].sort();$('#acCargo').innerHTML='<option value="">Todos os cargos</option>'+cargos.map(x=>`<option>${esc(x)}</option>`).join('');$('#acSetor').innerHTML='<option value="">Todos os setores</option>'+setores.map(x=>`<option>${esc(x)}</option>`).join('');$('#acSearch').value='';acRender();$('#ac').hidden=false};
+['acSearch','acCargo','acSetor'].forEach(id=>document.getElementById(id).addEventListener(id==='acSearch'?'input':'change',acRender));
 const fechaAc=()=>{$('#ac').hidden=true};$('#acFecha').onclick=fechaAc;$('#acFechar2').onclick=fechaAc;
 $('#acTable').addEventListener('dblclick',e=>{const t=e.target.closest('td[data-jday]');if(t)abrirJustModal(t.dataset.jday,t.dataset.jmat)});
 /* exportar dados */
@@ -2060,6 +2093,15 @@ $('#exGo').onclick=async()=>{
 
 
 
+
+let detailPeopleData=[];
+function renderDetailPeople(){const q=semAcento($('#detailPeopleSearch').value);const a=detailPeopleData.filter(x=>!q||semAcento(x.nome).includes(q)||semAcento(x.matricula).includes(q));$('#detailPeopleRows').innerHTML=a.map(x=>`<tr><td>${esc(x.matricula)}</td><td>${esc(x.nome)}</td><td>${esc(x.turno||'—')}</td><td>${esc(x.cargo||'—')}</td><td>${esc(x.setor||'—')}</td><td>${esc(x.code||'—')}</td></tr>`).join('')||'<tr><td colspan="6">Nenhum colaborador.</td></tr>';$('#detailPeopleTitle').textContent=`${a.length} colaborador(es)`}
+$('#detailPeopleSearch').oninput=renderDetailPeople;const closeDetail=()=>$('#detailPeople').hidden=true;$('#detailPeopleFecha').onclick=closeDetail;$('#detailPeopleClose').onclick=closeDetail;
+function abrirDetailPeople(people,title,sub){detailPeopleData=people;$('#detailPeopleSearch').value='';$('#detailPeopleSub').textContent=sub||'';renderDetailPeople();$('#detailPeopleTitle').textContent=title||`${people.length} colaborador(es)`;$('#detailPeople').hidden=false}
+let activeQuadroCache=null;
+async function renderQuadro(){const host=$('#quadroView');if(!activeQuadroCache){host.innerHTML='<div class="empty">Consultando quadro ativo do ABS_QUADRO…</div>';try{const u=new URL(`${URL_SB}/rest/v1/${encodeURIComponent(T.quadro)}`);u.searchParams.set('select','DTA');u.searchParams.set('order','DTA.desc');u.searchParams.set('limit','1');const r=await fetch(u,{headers:headers(),cache:'no-store'});if(!r.ok)throw Error(await detalhe(r));const latest=(await r.json())[0]?.DTA;if(!latest)throw Error('Nenhum snapshot em ABS_QUADRO.');activeQuadroCache=await pega(T.quadro,'*',{DTA:'eq.'+latest},'id.asc');}catch(e){host.innerHTML=`<div class="err">Não foi possível consultar o quadro ativo: ${esc(e.message||e)}</div>`;return}}
+const rows=unicoPor(activeQuadroCache,r=>normMat(r.MATRICULA)).map(r=>{const nasc=diaLocal(r[state.cols.nasc||'NASCIMENTO']),adm=diaLocal(r[state.cols.adm||'DATA DE ADMISSÃO']);return{matricula:normMat(r.MATRICULA),nome:norm(r.NOME),idade:nasc?Math.floor(mesesEntre(nasc,state.hoje)/12):'',admIso:adm||'',turno:norm(r.TURNO),cargo:norm(r.CARGO),setor:norm(r.SETOR),pcd:norm(r[state.cols.pcd||'PCD']),sit:norm(r[state.cols.sit||'SITUAÇÃO'])}});const cols=[['matricula','MATRICULA'],['nome','NOME'],['idade','IDADE'],['admIso','DATA DE ADMISSÃO'],['turno','TURNO'],['cargo','CARGO'],['setor','SETOR'],['pcd','PCD'],['sit','SITUAÇÃO']];const fs=window.qfiltros||{};const filtered=rows.filter(r=>cols.every(([k])=>!fs[k]||semAcento(String(r[k]??'')).includes(semAcento(fs[k]))));host.innerHTML=`<div class="mq-sum">Subtotal filtrado: <b>${nf.format(filtered.length)}</b> colaborador(es) · quadro ativo em ${esc(String(activeQuadroCache[0]?.DTA||'').slice(0,10))}: ${nf.format(rows.length)}</div><div class="tw"><table class="mx"><thead><tr>${cols.map(([k,l])=>`<th>${l}<input class="qf" data-qf="${k}" value="${esc(fs[k]||'')}" placeholder="Filtrar…"></th>`).join('')}</tr></thead><tbody>${filtered.map(r=>`<tr>${cols.map(([k])=>`<td>${esc(k==='admIso'&&r[k]?r[k].split('-').reverse().join('/'):r[k]??'—')}</td>`).join('')}</tr>`).join('')||'<tr><td colspan="9">Nenhum resultado.</td></tr>'}</tbody></table></div>`;host.querySelectorAll('.qf').forEach(e=>e.oninput=()=>{window.qfiltros=window.qfiltros||{};window.qfiltros[e.dataset.qf]=e.value;const pos=e.selectionStart;renderQuadro();const n=host.querySelector(`[data-qf="${e.dataset.qf}"]`);n?.focus();n?.setSelectionRange(pos,pos)});host.querySelector('tbody')?.addEventListener('dblclick',e=>{const tr=e.target.closest('tr');if(!tr)return;const r=filtered[tr.rowIndex-1];if(r)abrirDetailPeople([{...r,code:'—'}],'Colaborador do quadro','ABS_QUADRO · ativo')})}
+
 /* ---------- eventos ---------- */
 function ligar(){
   let claro=QS.get('theme')==='light';try{const s=localStorage.getItem('abs-theme');if(s)claro=s==='light'}catch{}
@@ -2094,6 +2136,7 @@ function ligar(){
       turnos:['Turnos · setores · cargos','TOTAL CD aparece antes do primeiro turno; expanda turno, setor e cargo para investigar.'],
       gestores:['Gestores · mapa de calor','Absenteísmo por gestor e por cargo, dia a dia, em quantidade ou % do quadro.'],
       motivos:['Motivos · composição diária','QUADRO e contagem diária de P, F, FA, AT, AF, FE, FO e TR, com detalhe de colaboradores.'],
+      quadro:['QUADRO · base ativa do ABS_QUADRO','Quadro ativo do banco com filtros por coluna e subtotal filtrado.'],
       pessoas:['Pessoas','Busca por nome ou matrícula, calendário individual e matriz por dia com destaque de linha e coluna.']}[b.dataset.view];
     $('#viewTitle').textContent=t[0];$('#viewSub').textContent=t[1];render()};
   const aoClicar=e=>{
@@ -2127,8 +2170,8 @@ function ligar(){
   $('#filtersOn').onclick=aoClicar;
   const abreJust=e=>{const t=e.target.closest('[data-dbl="just"]');if(!t)return;e.preventDefault();
     abrirJustModal(t.dataset.jday||state.dia||state.hoje,t.dataset.jmat||state.pessoa||'')};
-  $('#viewBody').addEventListener('dblclick',abreJust);
-  $('#tableWrap').addEventListener('dblclick',abreJust);
+  $('#viewBody').addEventListener('dblclick',e=>{const cell=e.target.closest('td,th');const table=e.target.closest('table');if(!cell||!table)return;const motive=e.target.closest('[data-act="motivoDetail"]');if(motive){abrirMotivoPeople(motive.dataset.code,motive.dataset.day);return}const tr=cell.closest('tr');if(!tr)return;const rows=[...table.querySelectorAll('tbody tr')];const rowIndex=rows.indexOf(tr);if(rowIndex<0)return;const day=cell.cellIndex>0?state.dias[cell.cellIndex-1]:null;if(state.vista==='motivos'){const code=(tr.querySelector('th')?.innerText||'').trim().split(' · ')[0];if(day&&code)abrirMotivoPeople(code,day);return}if(state.vista==='quadro')return;const label=norm(tr.cells[0]?.innerText);let people=pessoasBase();if(state.vista==='turnos')people=people.filter(p=>p.turno===label.replace(/^Turno\s*/,''));else if(state.vista==='setores'&&label!=='TOTAL')people=people.filter(p=>p.setor===label);if(day){const d=dia(day);people=people.map(p=>({...p,code:statusDe(p,d).c})).filter(p=>p.code&&p.code!=='-')}else people=people.map(p=>({...p,code:'—'}));if(people.length)abrirDetailPeople(people,`${label} · ${people.length} colaborador(es)`,day?brData(day)+' · '+dowNome(day):'duplo clique na dimensão')});$('#viewBody').addEventListener('dblclick',abreJust);
+  $('#tableWrap').addEventListener('dblclick',e=>{const td=e.target.closest('td');const tr=e.target.closest('tr');if(!td||!tr)return;if(state.vista==='pessoas'){const p=pessoasBase().find(x=>x.matricula===normMat(tr.dataset.mat));if(p){const d=td.cellIndex>0?state.dias[td.cellIndex-1]:null;const st=d?statusDe(p,dia(d)).c:'—';abrirDetailPeople([{...p,code:st}],p.nome,`${p.matricula}${d?' · '+brData(d):''}`);e.stopImmediatePropagation()}return}if(td.cellIndex===0)return;const label=norm(tr.cells[0]?.innerText);const group=state.vista==='turnos'?label.replace(/^Turno\s*/,''):label;let people=pessoasBase();if(state.vista==='turnos')people=people.filter(p=>p.turno===group);else if(state.vista==='setores'&&label!=='TOTAL')people=people.filter(p=>p.setor===label);const day=state.dias[td.cellIndex-1];if(day){const d=dia(day);people=people.map(p=>({...p,code:statusDe(p,d).c})).filter(p=>p.code&&p.code!=='-');}else people=people.map(p=>({...p,code:'—'}));if(people.length)abrirDetailPeople(people,`${label} · ${people.length} colaborador(es)`,day?brData(day)+' · '+dowNome(day):'duplo clique na dimensão');});$('#tableWrap').addEventListener('dblclick',abreJust);
   const si=$('#peopleSearch');
   si.oninput=aoDigitar;
   si.onfocus=()=>{if(si.value)renderSug()};
@@ -2155,7 +2198,7 @@ async function carga(){
   const t0=performance.now();
   try{
     const mv=$('#monthInput').value.match(/^(\d{4})-(\d{2})$/);if(!mv)throw Error('Selecione um mês válido.');
-    state.ano=+mv[1];state.mes=+mv[2];state.dias=diasDoMes(state.ano,state.mes);
+    state.ano=+mv[1];state.mes=+mv[2];state.dias=diasDoMes(state.ano,state.mes);activeQuadroCache=null;
     state.hoje=hoje();
     const L=limites(state.ano,state.mes);
     const SEL=await descobrirColunas();
@@ -2375,7 +2418,7 @@ $('#monthInput').value=mesInicial;
 const mvIni=mesInicial.match(/^(\d{4})-(\d{2})$/);
 if(mvIni){state.ano=+mvIni[1];state.mes=+mvIni[2];state.dias=diasDoMes(state.ano,state.mes)}
 const qv=QS.get('view');
-if(qv&&['macro','setores','turnos','pessoas','gestores','motivos'].includes(qv)){state.vista=qv;$$('.tab').forEach(x=>x.classList.toggle('on',x.dataset.view===qv))}
+if(qv&&['macro','setores','turnos','pessoas','gestores','motivos','quadro'].includes(qv)){state.vista=qv;$$('.tab').forEach(x=>x.classList.toggle('on',x.dataset.view===qv))}
 if(window.__ABS_TEST__){window.__ABS_TEST__({parseDTA,cicloOperacional,diaPresenca,validarPresenca,configurarEscala,diaLocal,horaLocal,normMat,classificar,aplicarBemCareRows,padroesSuricatoDia,diasCivisSuricato,turnoConsiderado,pega,pegaKeyset,PAG,pegaSuricatoMes,modeloDia,statusDe,state,aplicarGestorRows,recalcGestor,filtroFixo});}
 else{ligar();carga();
   /* Atualização automática a cada 60 min, sem sobrepor uma carga em andamento. */
