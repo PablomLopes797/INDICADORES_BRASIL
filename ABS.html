@@ -841,7 +841,7 @@ function modeloDia(day){
     if(code==='P'){presentes++;presentesLista.push(p.matricula)}
     else if(code==='FE'){ferias++}
     else if(code==='-'){sabSemExpediente++}
-    else if(code==='FO'&&d.dow===6&&['3',TURNO_4].includes(turnoNum(p.turno))){sabSemExpediente++;jn++}
+    else if(code==='FO'&&base.dow===6&&['3',TURNO_4].includes(turnoNum(p.turno))){sabSemExpediente++;jn++}
     else if(code==='?'){fora++}
     else if(code==='F'){isAbs=state.ativos.has('F')}
     else{isAbs=state.ativos.has(code);if(!isAbs){jn++;jnLista.push(p.matricula)}}
