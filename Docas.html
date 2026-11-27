@@ -542,6 +542,26 @@ body.tv-mode ::-webkit-scrollbar{display:none}
           <label for="newDoca">DOCA</label>
           <input id="newDoca" type="text" required placeholder="Ex.: D01" autocomplete="off">
         </div>
+        <div class="field">
+          <label for="newLado">LADO</label>
+          <select id="newLado" required>
+            <option value="A" selected>A</option>
+            <option value="B">B</option>
+            <option value="S">S</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="newStatus">STATUS</label>
+          <select id="newStatus" required>
+            <option value="DISPONIVEL" selected>DISPONIVEL</option>
+            <option value="OCUPADO">OCUPADO</option>
+            <option value="BLOQUEADO">BLOQUEADO</option>
+          </select>
+        </div>
+        <div class="field" id="newMotivoField" style="display:none">
+          <label for="newMotivoStatus">MOTIVO_STATUS</label>
+          <input id="newMotivoStatus" type="text" placeholder="Informe o motivo">
+        </div>
       </div>
       <div class="form-actions">
         <span class="form-state" id="registerState">Nenhuma alteração enviada.</span>
@@ -626,7 +646,7 @@ body.tv-mode ::-webkit-scrollbar{display:none}
 </main></div>
 
 <script>
-const SUPABASE_URL='https://jgtisruauiajjfoesvol.supabase.co',SUPABASE_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpndGlzcnVhdWlhampmb2Vzdm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1OTY3NjYsImV4cCI6MjEwMzE3Mjc2Nn0.yiAsD6c06UEauyAUCFYs0KQnuWBVfLAeP_oYE8yGOwQ',TABLE=encodeURIComponent('DISPON. DOCAS'),AGENDA_TABLE=encodeURIComponent('AGENDA');
+const SUPABASE_URL='https://jgtisruauiajjfoesvol.supabase.co',SUPABASE_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpndGlzcnVhdWlhampmb2Vzdm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1OTY3NjYsImV4cCI6MjEwMzE3Mjc2Nn0.yiAsD6c06UEauyAUCFYs0KQnuWBVfLAeP_oYE8yGOwQ',TABLE=encodeURIComponent('DISPON. DOCAS'),REGISTRO_TABLE=encodeURIComponent('DOCAS_REC_VISION'),AGENDA_TABLE=encodeURIComponent('AGENDA');
 const $=id=>document.getElementById(id);let rows=[],pendingRelease=null,currentEditDoca=null;
 const headers={apikey:SUPABASE_ANON,Authorization:'Bearer '+SUPABASE_ANON};
 function val(row,key){const k=Object.keys(row||{}).find(x=>x.toUpperCase()===key.toUpperCase());return k===undefined?'':row[k]}
@@ -864,6 +884,16 @@ function openConfirmModal(doca) { pendingRelease = doca; $('confirmDoca').textCo
 function closeConfirmModal() { $('confirmModal').classList.add('hidden'); pendingRelease = null; }
 
 // Eventos
+function syncRegisterStatus() {
+  const status = $('newStatus').value;
+  const precisaMotivo = status !== 'DISPONIVEL';
+  $('newMotivoField').style.display = precisaMotivo ? 'flex' : 'none';
+  $('newMotivoStatus').required = precisaMotivo;
+  if (!precisaMotivo) $('newMotivoStatus').value = '';
+}
+$('newStatus').addEventListener('change', syncRegisterStatus);
+syncRegisterStatus();
+
 $('registerOpen').onclick = () => togglePanel('registerPanel', true);
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => togglePanel(b.dataset.close, false));
 $('closeEditModal').onclick = closeEditModal;
@@ -901,18 +931,73 @@ document.addEventListener('click', (e) => {
 });
 $('registerForm').onsubmit = async e => {
   e.preventDefault();
+
   const doca = normDoca($('newDoca').value);
-  if (!doca) return;
-  const duplicate = uniqueRows().some(r => normDoca(val(r, 'DOCA')) === doca);
-  if (duplicate) { $('registerState').textContent = 'Essa doca já está cadastrada.'; return; }
-  $('registerState').textContent = 'Enviando...';
+  const lado = $('newLado').value;
+  const status = $('newStatus').value;
+  const motivo = clean($('newMotivoStatus').value);
+
+  if (!doca) {
+    $('registerState').textContent = 'Informe a doca.';
+    return;
+  }
+  if (!['A', 'B', 'S'].includes(lado)) {
+    $('registerState').textContent = 'Selecione um lado válido.';
+    return;
+  }
+  if (!['DISPONIVEL', 'OCUPADO', 'BLOQUEADO'].includes(status)) {
+    $('registerState').textContent = 'Selecione um status válido.';
+    return;
+  }
+  if (status !== 'DISPONIVEL' && !motivo) {
+    $('registerState').textContent = 'Informe o motivo do status.';
+    return;
+  }
+
+  $('registerState').textContent = 'Verificando cadastro...';
   try {
-    await post({ DOCA: doca, STATUS: 'DISPONIVEL', SENHA: null, CARGA: null, INICIO: null, 'MOTIVO BLOQ': null });
-    $('registerState').textContent = 'Doca cadastrada como disponível.';
+    // Consulta a tabela de cadastro nova para evitar duplicidade nela.
+    const consultaUrl = `${SUPABASE_URL}/rest/v1/${REGISTRO_TABLE}?DOCA=eq.${encodeURIComponent(doca)}&select=DOCA&limit=1`;
+    const consulta = await fetch(consultaUrl, { headers });
+    if (!consulta.ok) throw new Error(await consulta.text());
+    const existentes = await consulta.json();
+
+    if (existentes.length) {
+      $('registerState').textContent = 'Essa doca já está cadastrada.';
+      return;
+    }
+
+    $('registerState').textContent = 'Cadastrando...';
+    const payload = {
+      DOCA: doca,
+      LADO: lado,
+      STATUS: status,
+      MOTIVO_STATUS: status === 'DISPONIVEL' ? null : motivo
+    };
+
+    const resposta = await fetch(`${SUPABASE_URL}/rest/v1/${REGISTRO_TABLE}`, {
+      method: 'POST',
+      headers: {
+        ...headers,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal'
+      },
+      body: JSON.stringify(payload)
+    });
+    if (!resposta.ok) throw new Error(await resposta.text());
+
+    $('registerState').textContent = 'Doca cadastrada com sucesso!';
     $('newDoca').value = '';
-    setNotice('Doca '+doca+' cadastrada com sucesso.', 'success');
-    await reload();
-  } catch (err) { console.error(err); $('registerState').textContent = 'Falha ao cadastrar'; setNotice('Erro: '+err.message, 'error'); }
+    $('newLado').value = 'A';
+    $('newStatus').value = 'DISPONIVEL';
+    $('newMotivoStatus').value = '';
+    syncRegisterStatus();
+    setNotice(`Doca ${doca} cadastrada na DOCAS_REC_VISION.`, 'success');
+  } catch (err) {
+    console.error(err);
+    $('registerState').textContent = 'Falha ao cadastrar.';
+    setNotice('Erro ao cadastrar: ' + err.message, 'error');
+  }
 };
 $('editForm').onsubmit = async e => {
   e.preventDefault();
