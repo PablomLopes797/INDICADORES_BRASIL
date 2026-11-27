@@ -358,14 +358,14 @@ td.nd{color:var(--quiet)}
 #motivoPeopleCard .jm-b{flex:1;min-height:0;overflow:auto}#motivoPeopleCard .tw{max-height:100%;overflow:auto}
 #motivoPeopleTable{width:100%;table-layout:fixed}#motivoPeopleTable th,#motivoPeopleTable td{white-space:normal;overflow-wrap:anywhere;padding:8px 5px}#motivoPeopleTable th:first-child,#motivoPeopleTable td:first-child{min-width:0;width:12%}#motivoPeopleTable th:nth-child(2),#motivoPeopleTable td:nth-child(2){width:20%}#motivoPeopleTable th:nth-child(3),#motivoPeopleTable td:nth-child(3){width:15%}#motivoPeopleTable th:nth-child(4),#motivoPeopleTable td:nth-child(4){width:9%}#motivoPeopleTable th:nth-child(5),#motivoPeopleTable td:nth-child(5){width:7%}#motivoPeopleTable th:nth-child(6),#motivoPeopleTable td:nth-child(6){width:12%}#motivoPeopleTable th:nth-child(7),#motivoPeopleTable td:nth-child(7){width:13%}#motivoPeopleTable th:nth-child(8),#motivoPeopleTable td:nth-child(8){width:12%}
 .motive-table-wrap{max-height:62vh}.motive-table{min-width:max-content}.motive-table th,.motive-table td{min-width:50px}.motive-table .motive-rowhead{position:sticky;left:0;z-index:4;background:var(--panel);text-align:left;min-width:120px}.motivo-val{width:100%;border:0;border-radius:6px;background:transparent;color:var(--text);font-family:inherit;font-size:11px;font-weight:800;padding:4px;cursor:pointer}.motivo-val:hover{background:var(--chip);outline:1px solid var(--chip-line)}.motive-chart{width:100%;min-height:300px}.motive-chart-scroll{width:100%;overflow-x:auto}.motive-chart svg{display:block;width:100%;min-width:900px;height:auto}.motivo-axis{fill:var(--muted);font:10px Inter,"Segoe UI",sans-serif}
-#heatPeople .jm-card{width:min(1100px,96vw);max-width:1100px;max-height:88vh;}
-#heatPeople .jm-b{padding:12px 18px;overflow:auto}
-#heatPeople .tw{width:100%;max-height:65vh;overflow-y:auto;overflow-x:hidden}
-#heatPeople table.mx{width:100%;table-layout:fixed}
-#heatPeople table.mx th,#heatPeople table.mx td{white-space:normal;overflow-wrap:anywhere;padding:10px 12px}
-#heatPeople table.mx th:nth-child(1),#heatPeople table.mx td:nth-child(1){width:22%;min-width:0}
-#heatPeople table.mx th:nth-child(2),#heatPeople table.mx td:nth-child(2){width:48%;min-width:0}
-#heatPeople table.mx th:nth-child(3),#heatPeople table.mx td:nth-child(3){width:30%;min-width:0}
+#heatPeople .jm-card{width:min(1500px,98vw);max-width:1500px;max-height:90vh;display:flex;flex-direction:column}
+#heatPeople .jm-b{padding:12px 18px;overflow:auto;min-height:0;flex:1}
+#heatPeople .tw{width:100%;max-height:70vh;overflow:auto}
+#heatPeople table.mx{width:100%;min-width:900px}
+#heatPeople table.mx th,#heatPeople table.mx td{white-space:normal;overflow-wrap:anywhere;padding:9px 10px}
+#heatPeople table.mx th:first-child,#heatPeople table.mx td:first-child{min-width:110px}
+#viewBody .heat-detail{cursor:pointer}
+#viewBody .heat-detail:hover{outline:2px solid var(--text);transform:scale(1.06)}
 #viewBody .heat-detail{cursor:pointer}#viewBody .heat-detail:hover{outline:2px solid var(--text);transform:scale(1.06)}
 @media(max-width:650px){#ld .ld-box{padding-top:245px}#umCard{height:94vh}#ngCard{height:96vh}}
 @media(prefers-reduced-motion:reduce){#ld .black-hole * ,#ld .bh-object{animation-duration:8s!important}}
@@ -607,7 +607,7 @@ td.nd{color:var(--quiet)}
   <div class="jm" id="detailPeople" hidden role="dialog" aria-modal="true"><div class="jm-card"><div class="jm-h"><div><h3 id="detailPeopleTitle">Colaboradores</h3><small id="detailPeopleSub"></small></div><button class="jm-x" id="detailPeopleFecha" type="button">✕</button></div><div class="jm-b"><div class="sbox"><span class="ico">⌕</span><input id="detailPeopleSearch" type="search" placeholder="Buscar nome ou matrícula…"></div><div class="tw"><table class="mx"><thead><tr><th>MATRÍCULA</th><th>NOME</th><th>TURNO</th><th>CARGO</th><th>SETOR</th><th>STATUS</th></tr></thead><tbody id="detailPeopleRows"></tbody></table></div></div><div class="jm-f"><button class="btn" id="detailPeopleClose" type="button">Fechar</button></div></div></div>
   <div class="jm" id="heatPeople" hidden role="dialog" aria-modal="true" aria-labelledby="heatPeopleTitle">
     <div class="jm-card"><div class="jm-h"><div><h3 id="heatPeopleTitle">Colaboradores ausentes</h3><small id="heatPeopleSub"></small></div><button class="jm-x" id="heatPeopleFecha" type="button" aria-label="Fechar">✕</button></div>
-      <div class="jm-b"><div class="tw"><table class="mx"><thead><tr><th>MATRICULA</th><th>NOME</th><th>CARGO</th></tr></thead><tbody id="heatPeopleRows"></tbody></table></div></div>
+      <div class="jm-b"><div class="tw"><table class="mx" id="heatPeopleTable"><thead><tr><th>MATRÍCULA</th><th>NOME</th><th>CARGO</th><th>TURNO</th><th>IDADE</th><th>SETOR</th><th>GESTOR</th></tr></thead><tbody id="heatPeopleRows"></tbody></table></div></div>
       <div class="jm-f"><button class="btn" id="heatPeopleClose" type="button">Fechar</button></div>
     </div>
   </div>
@@ -1329,7 +1329,7 @@ function calorGrupo(ds,fn){
     const abs=new Set(d.ausentesLista);
     for(const p of d.people){
       const code=classificar(p,d).code;
-      if(code==='FE'||code==='-'||code==='?'||(code==='FO'&&dowDe(day)===6&&['3',TURNO_4].includes(turnoNum(p.turno))))continue;
+      if(code==='FE'||code==='-'||code==='?'||(code==='FO'&&dowDe(d.day)===6&&['3',TURNO_4].includes(turnoNum(p.turno))))continue;
       const k=fn(p)||'—';
       let o=g.get(k);if(!o){o={dias:new Map(),aus:0,den:0};g.set(k,o)}
       let c=o.dias.get(d.day);if(!c){c={aus:0,den:0};o.dias.set(d.day,c)}
@@ -1352,8 +1352,9 @@ function cardCalor(rotulo,titulo,desc,ds,fn,tipoFiltro){
   const rows=linhas.map(([k,o])=>{
     const cel=dias.map(d=>{const c=o.dias.get(d.day);if(!c||!c.den)return'<div class="hc e"></div>';
       const v=val(c),r=v/mx,h=145-r*145;
-      if(detailDim==='gestor'&&c.aus){const abs=new Set(d.ausentesLista);const people=d.people.filter(p=>(fn(p)||'—')===k&&abs.has(p.matricula)).map(p=>({matricula:p.matricula,nome:p.nome,cargo:p.cargo||state.cargo.get(p.matricula)||'—'}));heatDetailStore.set(`${detailDim}|${k}|${d.day}`,people)}
-      return `<div class="hc ${v?'':'e'} ${detailDim==='gestor'&&c.aus?'heat-detail':''}" ${detailDim==='gestor'&&c.aus?`data-act="heatdetail" data-day="${d.day}" data-grupo="${esc(k)}"`:''} style="${v?`background:hsl(${h} 72% ${r>.7?52:60}%)`:''}" title="${esc(k+' · '+brData(d.day)+' '+dowNome(d.day))} — ${c.aus} ausente(s) de ${c.den} (${pc.format(c.aus/c.den*100)}%)">${v?fmt(v):''}</div>`}).join('');
+      const abs=new Set(d.ausentesLista);const people=d.people.filter(p=>(fn(p)||'—')===k&&abs.has(p.matricula)).map(p=>({matricula:p.matricula,nome:p.nome,cargo:p.cargo||state.cargo.get(p.matricula)||'—',turno:p.turno||'—',nasc:p.nasc,setor:(state.gestorMap.get(p.matricula)||{}).s||p.setor||'—',gestor:(state.gestorMap.get(p.matricula)||{}).n||'Sem gestor'}));
+      if(c.aus)heatDetailStore.set(`${detailDim}|${k}|${d.day}`,people);
+      return `<div class="hc ${v?'':'e'} ${c.aus?'heat-detail':''}" ${c.aus?`data-act="heatdetail" data-day="${d.day}" data-grupo="${esc(k)}" data-dim="${detailDim}"`:''} style="${v?`background:hsl(${h} 72% ${r>.7?52:60}%)`:''}" title="${esc(k+' · '+brData(d.day)+' '+dowNome(d.day))} — ${c.aus} ausente(s) de ${c.den} (${pc.format(c.aus/c.den*100)}%)">${v?fmt(v):''}</div>`}).join('');
     return `<div class="hr pick ${state[tipoFiltro]===k?'on':''}" data-act="flt" data-t="${tipoFiltro}" data-v="${esc(k)}" title="${esc(k)} · clique para filtrar">${esc(k)}</div>${cel}<div class="hc tot" title="${o.aus} ausências em ${o.den} pessoa-dia (${pc.format(o.den?o.aus/o.den*100:0)}%)">${fmt(tot(o))}</div>`}).join('');
   const tg=`<span class="seg"><button type="button" data-act="hm" data-m="qtd" class="${pct?'':'on'}">Nº AUSENTES</button><button type="button" data-act="hm" data-m="pct" class="${pct?'on':''}">% ABS ÷ QUADRO</button></span>`;
   return `<div class="card c12"><h3>${esc(titulo)} <em>${esc(desc)}</em>${tg}</h3>
@@ -2191,7 +2192,7 @@ function ligar(){
     $('#viewTitle').textContent=t[0];$('#viewSub').textContent=t[1];render()};
   const aoClicar=e=>{
     const md=e.target.closest('[data-act="motivoDetail"]');if(md){abrirMotivoPeople(md.dataset.code,md.dataset.day);return}
-    const hd=e.target.closest('[data-act="heatdetail"]');if(hd){const rows=heatDetailStore.get(`gestor|${hd.dataset.grupo}|${hd.dataset.day}`)||[];$('#heatPeopleTitle').textContent=`${rows.length} colaborador(es) ausente(s)`;$('#heatPeopleSub').textContent=`${hd.dataset.grupo} · ${brData(hd.dataset.day)}`;$('#heatPeopleRows').innerHTML=rows.map(p=>`<tr><td>${esc(p.matricula)}</td><td>${esc(p.nome)}</td><td>${esc(p.cargo)}</td></tr>`).join('')||'<tr><td colspan="3">Nenhum colaborador listado.</td></tr>';$('#heatPeople').hidden=false;return}
+    const hd=e.target.closest('[data-act="heatdetail"]');if(hd){const rows=heatDetailStore.get(`${hd.dataset.dim}|${hd.dataset.grupo}|${hd.dataset.day}`)||[];$('#heatPeopleTitle').textContent=`${rows.length} colaborador(es) ausente(s)`;$('#heatPeopleSub').textContent=`${hd.dataset.grupo} · ${brData(hd.dataset.day)} · ${hd.dataset.dim==='gestor'?'Mapa Gestor × Dia':'Mapa Setor × Dia'}`;$('#heatPeopleRows').innerHTML=rows.map(p=>{const nasc=diaLocal(p.nasc),idade=nasc?Math.floor(mesesEntre(nasc,hd.dataset.day)/12):null;return `<tr><td>${esc(p.matricula)}</td><td>${esc(p.nome)}</td><td>${esc(p.cargo||'—')}</td><td>${esc(p.turno||'—')}</td><td>${idade==null?'—':idade}</td><td>${esc(p.setor||'—')}</td><td>${esc(p.gestor||'Sem gestor')}</td></tr>`}).join('')||'<tr><td colspan="7">Nenhum colaborador listado.</td></tr>';$('#heatPeople').hidden=false;return}
     const pr=e.target.closest('[data-act="par"]');if(pr){const s=PAR[pr.dataset.d],v=pr.dataset.v;
       if(e.ctrlKey||e.metaKey){s.has(v)?s.delete(v):s.add(v)}
       else if(s.size===1&&s.has(v))s.clear();
